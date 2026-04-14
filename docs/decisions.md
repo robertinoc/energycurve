@@ -269,6 +269,24 @@ Keep email/password under product-owned UI, but add a dedicated `Continue with G
 - Google Social Login must be enabled in WorkOS for that button to work.
 - Email/password and Google now coexist cleanly without reverting the whole auth experience to the hosted handoff.
 
+## 17. Start landing copy with a locale-aware global navigation map
+
+**Decision**
+
+Introduce a small content dictionary for shared landing navigation labels before expanding the rest of the marketing copy.
+
+**Why**
+
+- The next copy pass will arrive in multiple parts and should not be hardcoded ad hoc inside the landing component.
+- A minimal locale-aware structure gives EnergyCurve a clean base for English and Spanish copy without forcing full-blown i18n infrastructure too early.
+- Shared navigation labels are the safest first slice because they touch multiple anchors and CTA surfaces.
+
+**Consequence**
+
+- Landing navigation labels now come from `lib/content/site-copy.ts`.
+- The current marketing screen still renders in English by default, but the structure is ready for future locale switching.
+- Future landing copy updates should extend the same content map rather than introducing scattered string constants.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

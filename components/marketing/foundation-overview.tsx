@@ -20,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { getSiteCopy } from "@/lib/content/site-copy"
 import { cn } from "@/lib/utils"
 
 const featureCards = [
@@ -51,6 +52,13 @@ const brandColors = ["#7B3FE4", "#00D1FF", "#FF2D75", "#2A2A35"] as const
 export function FoundationOverview() {
   const loginHref = "/login?returnTo=%2Fdashboard"
   const signupHref = "/signup?returnTo=%2Fdashboard"
+  const copy = getSiteCopy("en")
+  const navItems = [
+    { href: "#features", label: copy.nav.features },
+    { href: "#how-it-works", label: copy.nav.how },
+    { href: "#story", label: copy.nav.story },
+    { href: "#contact", label: copy.nav.contact },
+  ]
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#0B0B0F] text-white">
@@ -63,6 +71,19 @@ export function FoundationOverview() {
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-8 lg:px-10">
         <header className="flex items-center justify-between rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 backdrop-blur">
           <EnergyCurveLogo tone="light" size="md" caption="Set intelligence" />
+          <div className="hidden items-center gap-6 lg:flex">
+            <nav aria-label="Primary" className="flex items-center gap-5 text-sm text-white/60">
+              {navItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="transition hover:text-white"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </div>
           <div className="hidden items-center gap-3 sm:flex">
             <Link
               href={loginHref}
@@ -80,12 +101,15 @@ export function FoundationOverview() {
                 "bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] text-[#071018]"
               )}
             >
-              Create your account
+              {copy.nav.cta}
             </Link>
           </div>
         </header>
 
-        <section className="rounded-[28px] border border-white/10 bg-white/[0.03] px-5 py-7 shadow-[0_28px_80px_rgba(0,0,0,0.36)] backdrop-blur">
+        <section
+          id="story"
+          className="scroll-mt-24 rounded-[28px] border border-white/10 bg-white/[0.03] px-5 py-7 shadow-[0_28px_80px_rgba(0,0,0,0.36)] backdrop-blur"
+        >
           <div className="flex flex-col items-center gap-5 text-center">
             <EnergyCurveLogo tone="light" size="xl" />
             <div className="h-px w-full max-w-5xl bg-linear-to-r from-transparent via-[#7B3FE4]/40 to-transparent" />
@@ -139,7 +163,10 @@ export function FoundationOverview() {
           </div>
         </section>
 
-        <section className="rounded-[28px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.38)] backdrop-blur">
+        <section
+          id="how-it-works"
+          className="scroll-mt-24 rounded-[28px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.38)] backdrop-blur"
+        >
           <div className="rounded-[24px] border border-[#FF2D75]/18 bg-[linear-gradient(180deg,rgba(123,63,228,0.22),rgba(12,12,18,0.96))] px-5 py-6 shadow-[0_0_90px_rgba(123,63,228,0.12)]">
             <div className="space-y-4 text-center">
               <h1 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
@@ -157,7 +184,7 @@ export function FoundationOverview() {
                     "justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] px-5 text-[#071018]"
                   )}
                 >
-                  Create your account
+                  {copy.nav.cta}
                   <ArrowRight className="size-4" />
                 </Link>
                 <Link
@@ -178,7 +205,10 @@ export function FoundationOverview() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-3">
+        <section
+          id="features"
+          className="scroll-mt-24 grid gap-4 md:grid-cols-3"
+        >
           {featureCards.map(({ title, description, icon: Icon }) => (
             <Card
               key={title}
@@ -199,7 +229,10 @@ export function FoundationOverview() {
           ))}
         </section>
 
-        <section className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
+        <section
+          id="contact"
+          className="scroll-mt-24 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]"
+        >
           <Card className="overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
             <CardHeader>
               <CardTitle className="text-white">EnergyCurve desktop preview</CardTitle>
