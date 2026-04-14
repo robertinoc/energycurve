@@ -48,8 +48,8 @@ const brandTraits = [
 const brandColors = ["#7B3FE4", "#00D1FF", "#FF2D75", "#2A2A35"] as const
 
 export function FoundationOverview() {
-  const hostedLoginHref = "/auth/login?returnTo=%2Fdashboard&fresh=1"
-  const hostedSignupHref = "/auth/signup?returnTo=%2Fdashboard&fresh=1"
+  const hostedLoginHref = "/auth/start?mode=login&returnTo=%2Fdashboard"
+  const hostedSignupHref = "/auth/start?mode=signup&returnTo=%2Fdashboard"
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#0B0B0F] text-white">

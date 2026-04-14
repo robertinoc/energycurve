@@ -35,10 +35,10 @@ async function logoutAction() {
   "use server"
 
   try {
-    await signOut({ returnTo: "/login?loggedOut=1&returnTo=%2Fdashboard" })
+    await signOut({ returnTo: "/" })
   } catch (error) {
     logWorkOSRuntimeError("Logout failed", error)
-    redirect("/login?loggedOut=1&returnTo=%2Fdashboard")
+    redirect("/")
   }
 }
 

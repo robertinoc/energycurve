@@ -48,7 +48,7 @@ export default async function LoginPage({
     : params.loggedOut
 
   if (!error && loggedOut !== "1") {
-    redirect(`${buildReturnToHref("/auth/login", returnTo)}&fresh=1`)
+    redirect(buildReturnToHref("/auth/start", returnTo) + "&mode=login")
   }
 
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
@@ -72,7 +72,7 @@ export default async function LoginPage({
     redirect("/dashboard")
   }
 
-  const freshLoginHref = `${buildReturnToHref("/auth/login", returnTo)}&fresh=1`
+  const freshLoginHref = `${buildReturnToHref("/auth/start", returnTo)}&mode=login`
 
   return (
     <AuthPageShell
@@ -81,7 +81,7 @@ export default async function LoginPage({
       description="Hosted authentication is wired with WorkOS so the protected dashboard stays simple, secure, and ready for future product work."
       primaryHref={freshLoginHref}
       primaryLabel="Login"
-      secondaryHref={buildReturnToHref("/signup", returnTo)}
+      secondaryHref={`${buildReturnToHref("/auth/start", returnTo)}&mode=signup`}
       secondaryLabel="Create your account"
       hint="After a successful sign-in, EnergyCurve creates or syncs the application profile in Supabase."
       alertTitle={
