@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EnergyCurve
 
-## Getting Started
+EnergyCurve is a Next.js App Router project for DJs. This repository is currently limited to setup and infrastructure. Product logic such as playlist analysis, BPM workflows, and energy scoring is intentionally deferred.
 
-First, run the development server:
+## What Was Set Up
+
+- Next.js 16 App Router project with TypeScript strict mode and Tailwind CSS v4
+- `shadcn/ui` configured with a minimal reusable UI base
+- WorkOS AuthKit wired for login, sign up, callback handling, logout, and session-aware route protection
+- Official `AuthKitProvider` mounted in the root layout for App Router auth edge-case handling
+- Supabase Postgres integrated as the application data layer only
+- Server-only profile synchronization between WorkOS users and the `profiles` table
+- Protected `/dashboard` route with server-side access validation
+- Recoverable setup states for missing or invalid WorkOS configuration instead of raw framework crashes
+- Initial SQL schema for `profiles`, `playlists`, and `tracks`
+- Documentation for setup, architecture, technical decisions, deployment, and validation
+
+## Stack
+
+- Next.js 16.2.3
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- `shadcn/ui`
+- WorkOS AuthKit
+- Supabase Postgres
+- Vercel-ready deployment configuration
+
+## Project Structure
+
+```text
+app/
+components/
+docs/
+lib/
+services/
+supabase/migrations/
+types/
+```
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and fill in the values:
+
+```bash
+cp .env.example .env.local
+```
+
+Required variables:
+
+- `WORKOS_CLIENT_ID`
+- `WORKOS_API_KEY`
+- `WORKOS_COOKIE_PASSWORD`
+- `NEXT_PUBLIC_WORKOS_REDIRECT_URI`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Detailed explanations live in [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md).
+
+## Local Development
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Populate `.env.local` from `.env.example`.
+
+3. Apply the initial database migration from [supabase/migrations/0001_initial_schema.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0001_initial_schema.sql) in Supabase SQL Editor or via the Supabase CLI.
+
+4. Configure WorkOS:
+   - Add `http://localhost:3010/auth/callback` as the redirect URI.
+   - Add `http://localhost:3010/` as the default logout URI.
+
+5. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3010](http://localhost:3010).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Validation Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
 
-## Learn More
+## Manual Verification
 
-To learn more about Next.js, take a look at the following resources:
+Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md) to verify:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- protected routing
+- login and sign-up flows
+- callback handling
+- profile synchronization
+- logout behavior
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment Notes
 
-## Deploy on Vercel
+- Set the same environment variables in Vercel for each environment.
+- Configure the WorkOS redirect URI per deployed environment.
+- Keep `SUPABASE_SERVICE_ROLE_KEY` server-side only.
+- `proxy.ts` is used because Next.js 16 renamed `middleware.ts` to `proxy.ts`.
+- Session persistence is handled by WorkOS AuthKit cookies plus `proxy.ts` for matched routes.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Known Limitations
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- No business logic has been added yet for playlist ingestion or analysis.
+- Database access currently uses a server-only service role client; if future client-side data access is introduced, add RLS policies and a browser-safe client strategy.
+- Automated tests were not added in this phase; validation is currently lint, typecheck, build, and manual auth/infrastructure checks.
+- End-to-end auth verification still depends on real WorkOS and Supabase credentials being configured in the target environment.
+
+## Related Docs
+
+- [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md)
+- [docs/architecture.md](/Users/robertinoc/Documents/code/energycurve/docs/architecture.md)
+- [docs/decisions.md](/Users/robertinoc/Documents/code/energycurve/docs/decisions.md)
+- [AGENTS.md](/Users/robertinoc/Documents/code/energycurve/AGENTS.md)
