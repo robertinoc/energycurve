@@ -1,4 +1,3 @@
-import Link from "next/link"
 import {
   ArrowRight,
   Brain,
@@ -63,7 +62,7 @@ export function FoundationOverview() {
         <header className="flex items-center justify-between rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 backdrop-blur">
           <EnergyCurveLogo tone="light" size="md" caption="Set intelligence" />
           <div className="hidden items-center gap-3 sm:flex">
-            <Link
+            <a
               href={hostedLoginHref}
               className={cn(
                 buttonVariants({ variant: "ghost", size: "sm" }),
@@ -71,8 +70,8 @@ export function FoundationOverview() {
               )}
             >
               Login
-            </Link>
-            <Link
+            </a>
+            <a
               href={hostedSignupHref}
               className={cn(
                 buttonVariants({ size: "sm" }),
@@ -80,7 +79,7 @@ export function FoundationOverview() {
               )}
             >
               Create your account
-            </Link>
+            </a>
           </div>
         </header>
 
@@ -149,7 +148,7 @@ export function FoundationOverview() {
                 real data, not guesswork at the booth.
               </p>
               <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                <Link
+                <a
                   href={hostedSignupHref}
                   className={cn(
                     buttonVariants({ size: "lg" }),
@@ -158,8 +157,8 @@ export function FoundationOverview() {
                 >
                   Create your account
                   <ArrowRight className="size-4" />
-                </Link>
-                <Link
+                </a>
+                <a
                   href={hostedLoginHref}
                   className={cn(
                     buttonVariants({ variant: "outline", size: "lg" }),
@@ -167,7 +166,7 @@ export function FoundationOverview() {
                   )}
                 >
                   Login
-                </Link>
+                </a>
               </div>
             </div>
 

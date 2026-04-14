@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { ArrowRight, LockKeyhole } from "lucide-react"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
@@ -72,7 +71,7 @@ export function AuthPageShell({
               <ArrowRight className="size-4" />
             </a>
 
-            <Link
+            <a
               href={secondaryHref}
               className={cn(
                 buttonVariants({ size: "lg", variant: "outline" }),
@@ -80,7 +79,7 @@ export function AuthPageShell({
               )}
             >
               {secondaryLabel}
-            </Link>
+            </a>
           </div>
 
           <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.05] p-5 shadow-sm backdrop-blur">
