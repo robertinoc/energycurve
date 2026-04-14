@@ -136,7 +136,7 @@ Mount `AuthKitProvider` in the root layout even though the current app is mostly
 
 **Decision**
 
-Use normal browser navigation for the primary sign-in and sign-up CTAs instead of `next/link`.
+Use normal browser navigation for hosted auth entry points instead of `next/link`.
 
 **Why**
 
@@ -146,8 +146,8 @@ Use normal browser navigation for the primary sign-in and sign-up CTAs instead o
 
 **Consequence**
 
-- The auth CTA performs a regular browser navigation on purpose.
-- Secondary in-app navigation can still use `next/link` where the destination stays inside EnergyCurve.
+- Landing CTAs and auth-page CTAs that hand off to WorkOS perform regular browser navigation on purpose.
+- `next/link` remains appropriate only when the destination stays inside EnergyCurve.
 
 ## 10. Separate infrastructure by environment
 
