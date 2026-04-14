@@ -68,6 +68,7 @@ cp .env.example .env.local
 4. In the WorkOS dashboard:
    - add `http://localhost:3010/auth/callback` as a Redirect URI
    - add `http://localhost:3010/` as a Logout URI
+   - optional: enable `Google Social Login` if you want the `Continue with Google` button to work
 
 5. Apply the initial schema in Supabase:
    - open [supabase/migrations/0001_initial_schema.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0001_initial_schema.sql)
@@ -108,10 +109,11 @@ Expected outcome:
 6. Confirm WorkOS returns you to `/dashboard`.
 7. Confirm a row exists in `public.profiles` for the authenticated WorkOS user.
 8. Visit `/signup` while signed out and confirm the sign-up CTA redirects through WorkOS.
-9. While signed in, visit `/login` or `/signup` and confirm you are redirected to `/dashboard`.
-10. Click `Log out` from `/dashboard`.
-11. Confirm the WorkOS logout completes and you land back on `/`.
-12. After logout, revisit `/dashboard` and confirm the route is protected again.
+9. If Google Social Login is enabled in WorkOS, click `Continue with Google` and confirm it still returns to `/dashboard`.
+10. While signed in, visit `/login` or `/signup` and confirm you are redirected to `/dashboard`.
+11. Click `Log out` from `/dashboard`.
+12. Confirm the WorkOS logout completes and you land back on `/`.
+13. After logout, revisit `/dashboard` and confirm the route is protected again.
 
 ## Deployment Notes
 

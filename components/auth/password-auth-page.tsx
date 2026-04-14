@@ -76,6 +76,11 @@ function getAlertCopy(
         title: "WorkOS configuration still needs attention",
         description: "The current WorkOS values could not complete this request. Recheck the server configuration.",
       }
+    case "social_config":
+      return {
+        title: "Google sign-in is not ready yet",
+        description: "WorkOS could not start the Google flow. Confirm that Google Social Login is enabled in WorkOS.",
+      }
     default:
       if (mode === "login") {
         return undefined
@@ -97,6 +102,7 @@ export function PasswordAuthPage({
   const title = isSignup
     ? "Create your EnergyCurve account"
     : "Sign in to EnergyCurve"
+  const googleHref = `/auth/social/google?mode=${mode}&returnTo=${encodeURIComponent(returnTo)}`
   const description = isSignup
     ? "Create an account with email and password, backed by WorkOS and stored as a secure app session."
     : "Sign in with email and password through WorkOS, while keeping the app experience simple and controlled."
@@ -141,6 +147,20 @@ export function PasswordAuthPage({
                 </AlertDescription>
               </Alert>
             ) : null}
+
+            <a
+              href={googleHref}
+              className="flex h-11 items-center justify-center gap-3 rounded-2xl border border-white/12 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] hover:shadow-[0_14px_34px_rgba(0,0,0,0.24),0_0_24px_rgba(0,209,255,0.08)]"
+            >
+              <GoogleMark />
+              Continue with Google
+            </a>
+
+            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-white/32">
+              <Separator className="flex-1 bg-white/10" />
+              <span>Email and password</span>
+              <Separator className="flex-1 bg-white/10" />
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor={`${mode}-email`} className="text-white/82">
@@ -269,5 +289,33 @@ export function PasswordAuthPage({
         </Card>
       </div>
     </main>
+  )
+}
+
+function GoogleMark() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="size-4"
+      fill="none"
+    >
+      <path
+        d="M21.805 12.23c0-.71-.064-1.393-.182-2.05H12v3.878h5.498a4.7 4.7 0 0 1-2.036 3.083v2.558h3.296c1.93-1.777 3.047-4.396 3.047-7.469Z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 22c2.76 0 5.074-.914 6.765-2.47l-3.296-2.558c-.914.612-2.083.974-3.469.974-2.664 0-4.922-1.799-5.729-4.218H2.864v2.638A10 10 0 0 0 12 22Z"
+        fill="#34A853"
+      />
+      <path
+        d="M6.27 13.728A5.99 5.99 0 0 1 5.95 12c0-.6.108-1.18.32-1.728V7.634H2.864a10 10 0 0 0 0 8.732l3.406-2.638Z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 6.055c1.502 0 2.85.517 3.912 1.532l2.935-2.935C17.07 2.996 14.756 2 12 2A10 10 0 0 0 2.864 7.634l3.406 2.638c.803-2.423 3.061-4.217 5.73-4.217Z"
+        fill="#EA4335"
+      />
+    </svg>
   )
 }

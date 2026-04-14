@@ -7,6 +7,7 @@ EnergyCurve is a Next.js App Router project for DJs. This repository is currentl
 - Next.js 16 App Router project with TypeScript strict mode and Tailwind CSS v4
 - `shadcn/ui` configured with a minimal reusable UI base
 - WorkOS AuthKit wired for login, sign up, callback handling, logout, and session-aware route protection
+- App-controlled email/password auth plus optional Google sign-in via WorkOS social login
 - Official `AuthKitProvider` mounted in the root layout for App Router auth edge-case handling
 - Supabase Postgres integrated as the application data layer only
 - Server-only profile synchronization between WorkOS users and the `profiles` table
@@ -82,6 +83,7 @@ npm install
 4. Configure WorkOS:
    - Add `http://localhost:3010/auth/callback` as the redirect URI.
    - Add `http://localhost:3010/` as the default logout URI.
+   - Optional for Google login: enable `Google Social Login` in WorkOS Authentication.
 
 5. Start the app:
 
@@ -108,6 +110,7 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 - callback handling
 - profile synchronization
 - logout behavior
+- optional Google sign-in
 - branded landing and dashboard presentation
 
 ## Deployment Notes
