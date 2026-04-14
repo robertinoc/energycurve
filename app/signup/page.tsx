@@ -44,7 +44,7 @@ export default async function SignupPage({
   const error = Array.isArray(params.error) ? params.error[0] : params.error
 
   if (!error) {
-    redirect(`${buildReturnToHref("/auth/signup", returnTo)}&fresh=1`)
+    redirect(buildReturnToHref("/auth/start", returnTo) + "&mode=signup")
   }
 
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
@@ -73,9 +73,9 @@ export default async function SignupPage({
       eyebrow="WorkOS AuthKit"
       title="Create your EnergyCurve account"
       description="Sign up uses the official hosted WorkOS flow while keeping app data ownership inside Supabase Postgres."
-      primaryHref={buildReturnToHref("/auth/signup", returnTo)}
+      primaryHref={`${buildReturnToHref("/auth/start", returnTo)}&mode=signup`}
       primaryLabel="Create your account"
-      secondaryHref={buildReturnToHref("/login", returnTo)}
+      secondaryHref={`${buildReturnToHref("/auth/start", returnTo)}&mode=login`}
       secondaryLabel="Login"
       hint="The first successful authentication syncs the profile record so future app data can stay separate from the auth provider."
     />
