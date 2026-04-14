@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth/workos-runtime"
 
 type AuthPageParams = Promise<{
+  error?: string | string[]
   returnTo?: string | string[]
 }>
 
@@ -26,6 +27,7 @@ export default async function SignupPage({
 }: {
   searchParams: AuthPageParams
 }) {
+  const params = await searchParams
   const infrastructureStatus = getInfrastructureStatus()
 
   if (!infrastructureStatus.workosConfigured) {
@@ -36,6 +38,13 @@ export default async function SignupPage({
         description="The app is running, but the hosted WorkOS setup is not complete enough to launch a registration session."
       />
     )
+  }
+
+  const returnTo = getSafeReturnTo(params.returnTo)
+  const error = Array.isArray(params.error) ? params.error[0] : params.error
+
+  if (!error) {
+    redirect(`${buildReturnToHref("/auth/signup", returnTo)}&fresh=1`)
   }
 
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
@@ -58,9 +67,6 @@ export default async function SignupPage({
   if (user) {
     redirect("/dashboard")
   }
-
-  const params = await searchParams
-  const returnTo = getSafeReturnTo(params.returnTo)
 
   return (
     <AuthPageShell
