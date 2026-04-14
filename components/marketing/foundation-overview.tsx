@@ -67,7 +67,7 @@ export function FoundationOverview() {
                 "text-white/72 hover:text-white"
               )}
             >
-              Sign in
+              Login
             </Link>
             <Link
               href="/signup"
@@ -76,7 +76,7 @@ export function FoundationOverview() {
                 "bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] text-[#071018]"
               )}
             >
-              Start free
+              Create your account
             </Link>
           </div>
         </header>
@@ -153,7 +153,7 @@ export function FoundationOverview() {
                     "justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] px-5 text-[#071018]"
                   )}
                 >
-                  Start Free
+                  Create your account
                   <ArrowRight className="size-4" />
                 </Link>
                 <Link
@@ -163,7 +163,7 @@ export function FoundationOverview() {
                     "border-white/10 bg-white/[0.03] px-5 text-white"
                   )}
                 >
-                  Upload Your First Set
+                  Login
                 </Link>
               </div>
             </div>
