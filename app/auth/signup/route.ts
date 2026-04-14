@@ -16,7 +16,11 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const returnTo = getSafeReturnTo(searchParams.get("returnTo"))
-    const signUpUrl = await getSignUpUrl({ returnTo })
+    const freshSignup = searchParams.get("fresh") === "1"
+    const signUpUrl = await getSignUpUrl({
+      returnTo,
+      ...(freshSignup ? { prompt: "consent" } : {}),
+    })
 
     return NextResponse.redirect(signUpUrl)
   } catch (error) {

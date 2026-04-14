@@ -48,6 +48,9 @@ const brandTraits = [
 const brandColors = ["#7B3FE4", "#00D1FF", "#FF2D75", "#2A2A35"] as const
 
 export function FoundationOverview() {
+  const hostedLoginHref = "/auth/login?returnTo=%2Fdashboard&fresh=1"
+  const hostedSignupHref = "/auth/signup?returnTo=%2Fdashboard&fresh=1"
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#0B0B0F] text-white">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -61,7 +64,7 @@ export function FoundationOverview() {
           <EnergyCurveLogo tone="light" size="md" caption="Set intelligence" />
           <div className="hidden items-center gap-3 sm:flex">
             <Link
-              href="/login"
+              href={hostedLoginHref}
               className={cn(
                 buttonVariants({ variant: "ghost", size: "sm" }),
                 "text-white/72 hover:text-white"
@@ -70,7 +73,7 @@ export function FoundationOverview() {
               Login
             </Link>
             <Link
-              href="/signup"
+              href={hostedSignupHref}
               className={cn(
                 buttonVariants({ size: "sm" }),
                 "bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] text-[#071018]"
@@ -147,7 +150,7 @@ export function FoundationOverview() {
               </p>
               <div className="flex flex-col justify-center gap-3 sm:flex-row">
                 <Link
-                  href="/signup"
+                  href={hostedSignupHref}
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] px-5 text-[#071018]"
@@ -157,7 +160,7 @@ export function FoundationOverview() {
                   <ArrowRight className="size-4" />
                 </Link>
                 <Link
-                  href="/login"
+                  href={hostedLoginHref}
                   className={cn(
                     buttonVariants({ variant: "outline", size: "lg" }),
                     "border-white/10 bg-white/[0.03] px-5 text-white"
