@@ -17,7 +17,10 @@ EnergyCurve is a Next.js App Router project for DJs. This repository is currentl
 - Initial brand/logo system with gradient and monochrome SVG assets
 - A first visual product pass for the landing page and dashboard, aligned to EnergyCurve's dark neon brand direction
 - A locale-aware content base for global landing navigation copy
-- Product landing copy now structured across hero, features, how-it-works, story, contact, CTA, and footer sections
+- Public marketing landing page rebuilt as a modular premium SaaS experience
+- Product landing copy now structured across hero, features, how-it-works, differentiation, story, contact, CTA, and footer sections
+- EN / ES language switching with persisted preference on the landing page
+- Secure public contact form with route-handler validation, honeypot, basic rate limiting, and structured logging fallback
 - Documentation for setup, architecture, technical decisions, deployment, and validation
 
 ## Stack
@@ -61,6 +64,8 @@ Required variables:
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 Detailed explanations live in [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md).
+
+No additional environment variables are required for the public contact form in the current implementation.
 
 ## Recommended Environment Split
 
@@ -114,6 +119,8 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 - logout behavior
 - optional Google sign-in
 - branded landing and dashboard presentation
+- EN / ES toggle and persisted language preference on the landing
+- public contact form submission, validation, and error/success states
 
 ## Deployment Notes
 

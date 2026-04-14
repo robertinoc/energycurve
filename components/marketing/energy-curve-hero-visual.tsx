@@ -18,7 +18,29 @@ const points = mapTracksToCurvePoints(
 const curvePath = buildSmoothCurvePath(points)
 const areaPath = buildCurveAreaPath(points, WIDTH, HEIGHT, PADDING)
 
-export function EnergyCurveHeroVisual() {
+interface EnergyCurveHeroVisualProps {
+  labels?: {
+    energyScore: string
+    peakIntensity: string
+    setDuration: string
+    tags: string[]
+  }
+}
+
+export function EnergyCurveHeroVisual({
+  labels = {
+    energyScore: "Energy score",
+    peakIntensity: "Peak intensity",
+    setDuration: "Set duration",
+    tags: [
+      "Cold opening",
+      "Track rise",
+      "Set arc %",
+      "Teaser",
+      "Stand easy",
+    ],
+  },
+}: EnergyCurveHeroVisualProps) {
   return (
     <div className="rounded-[24px] border border-white/10 bg-[#111118] p-4">
       <div className="grid gap-4 lg:grid-cols-[1fr_132px]">
@@ -166,20 +188,14 @@ export function EnergyCurveHeroVisual() {
         </div>
 
         <div className="space-y-3">
-          <Metric title="Energy score" value="8.5" />
-          <Metric title="Peak intensity" value="9.7" />
-          <Metric title="Set duration" value="115:32" />
+          <Metric title={labels.energyScore} value="8.5" />
+          <Metric title={labels.peakIntensity} value="9.7" />
+          <Metric title={labels.setDuration} value="115:32" />
         </div>
       </div>
 
       <div className="mt-4 grid gap-2 rounded-[16px] border border-white/8 bg-black/25 p-3 sm:grid-cols-5">
-        {[
-          "Cold opening",
-          "Track rise",
-          "Set arc %",
-          "Teaser",
-          "Stand easy",
-        ].map((label) => (
+        {labels.tags.map((label) => (
           <div key={label} className="rounded-xl bg-white/[0.03] px-3 py-2">
             <p className="text-[0.68rem] uppercase tracking-[0.16em] text-white/38">
               {label}

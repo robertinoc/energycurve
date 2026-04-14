@@ -1,6 +1,7 @@
 export const supportedLocales = ["en", "es"] as const
 
 export type SiteLocale = (typeof supportedLocales)[number]
+export type ResolvedSiteCopy = ReturnType<typeof getSiteCopy>
 
 type LocalizedLabel = Record<SiteLocale, string>
 
@@ -16,6 +17,12 @@ interface SiteCopySchema {
     title: LocalizedLabel
     subtitle: LocalizedLabel
     support: LocalizedLabel
+    visual: {
+      energyScore: LocalizedLabel
+      peakIntensity: LocalizedLabel
+      setDuration: LocalizedLabel
+      tags: LocalizedLabel[]
+    }
     cta: {
       primary: LocalizedLabel
       secondary: LocalizedLabel
@@ -77,6 +84,10 @@ interface SiteCopySchema {
       message: LocalizedLabel
       submit: LocalizedLabel
     }
+    status: {
+      sending: LocalizedLabel
+      genericError: LocalizedLabel
+    }
   }
   cta: {
     title: LocalizedLabel
@@ -89,6 +100,22 @@ interface SiteCopySchema {
     features: LocalizedLabel
     contact: LocalizedLabel
     rights: LocalizedLabel
+  }
+  ui: {
+    login: LocalizedLabel
+    brandPersonality: LocalizedLabel
+    positioning: LocalizedLabel
+    audience: LocalizedLabel
+    differentiation: LocalizedLabel
+    directContact: LocalizedLabel
+    previewTitle: LocalizedLabel
+    previewDescription: LocalizedLabel
+    earlyAccess: LocalizedLabel
+    traits: {
+      intelligent: LocalizedLabel
+      creative: LocalizedLabel
+      nightlife: LocalizedLabel
+    }
   }
 }
 
@@ -112,6 +139,18 @@ const siteCopy: SiteCopySchema = {
     support: {
       en: "Designed for DJs, producers, and performers exploring the intersection of music energy and data.",
       es: "Diseñado para DJs, productores y performers que exploran la intersección entre energía musical y datos.",
+    },
+    visual: {
+      energyScore: { en: "Energy score", es: "Nivel de energía" },
+      peakIntensity: { en: "Peak intensity", es: "Intensidad pico" },
+      setDuration: { en: "Set duration", es: "Duración del set" },
+      tags: [
+        { en: "Cold opening", es: "Inicio frío" },
+        { en: "Track rise", es: "Subida de track" },
+        { en: "Set arc %", es: "Arco del set %" },
+        { en: "Teaser", es: "Teaser" },
+        { en: "Stand easy", es: "Salida suave" },
+      ],
     },
     cta: {
       primary: {
@@ -262,6 +301,13 @@ const siteCopy: SiteCopySchema = {
       message: { en: "Message", es: "Mensaje" },
       submit: { en: "Send message", es: "Enviar mensaje" },
     },
+    status: {
+      sending: { en: "Sending", es: "Enviando" },
+      genericError: {
+        en: "Something went wrong while sending your message. Please try again.",
+        es: "Ocurrió un problema al enviar tu mensaje. Intentá nuevamente.",
+      },
+    },
   },
   cta: {
     title: {
@@ -284,6 +330,28 @@ const siteCopy: SiteCopySchema = {
       es: "© EnergyCurve. Todos los derechos reservados.",
     },
   },
+  ui: {
+    login: { en: "Login", es: "Ingresar" },
+    brandPersonality: { en: "Brand personality", es: "Personalidad de marca" },
+    positioning: { en: "Positioning", es: "Posicionamiento" },
+    audience: { en: "Audience", es: "Audiencia" },
+    differentiation: { en: "Differentiation", es: "Diferenciación" },
+    directContact: { en: "Direct contact", es: "Contacto directo" },
+    previewTitle: {
+      en: "EnergyCurve desktop preview",
+      es: "Vista previa de EnergyCurve",
+    },
+    previewDescription: {
+      en: "Graph-led feedback makes the full set easier to read and refine.",
+      es: "Una lectura guiada por curvas hace más fácil entender y refinar el set completo.",
+    },
+    earlyAccess: { en: "Early access", es: "Acceso anticipado" },
+    traits: {
+      intelligent: { en: "Intelligent", es: "Inteligente" },
+      creative: { en: "Creative", es: "Creativo" },
+      nightlife: { en: "Nightlife", es: "Nightlife" },
+    },
+  },
 }
 
 export function getSiteCopy(locale: SiteLocale = "en") {
@@ -299,6 +367,12 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       title: siteCopy.hero.title[locale],
       subtitle: siteCopy.hero.subtitle[locale],
       support: siteCopy.hero.support[locale],
+      visual: {
+        energyScore: siteCopy.hero.visual.energyScore[locale],
+        peakIntensity: siteCopy.hero.visual.peakIntensity[locale],
+        setDuration: siteCopy.hero.visual.setDuration[locale],
+        tags: siteCopy.hero.visual.tags.map((entry) => entry[locale]),
+      },
       cta: {
         primary: siteCopy.hero.cta.primary[locale],
         secondary: siteCopy.hero.cta.secondary[locale],
@@ -363,11 +437,16 @@ export function getSiteCopy(locale: SiteLocale = "en") {
     contact: {
       title: siteCopy.contact.title[locale],
       description: siteCopy.contact.desc[locale],
+      locale,
       form: {
         name: siteCopy.contact.form.name[locale],
         email: siteCopy.contact.form.email[locale],
         message: siteCopy.contact.form.message[locale],
         submit: siteCopy.contact.form.submit[locale],
+      },
+      status: {
+        sending: siteCopy.contact.status.sending[locale],
+        genericError: siteCopy.contact.status.genericError[locale],
       },
     },
     cta: {
@@ -381,6 +460,22 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       features: siteCopy.footer.features[locale],
       contact: siteCopy.footer.contact[locale],
       rights: siteCopy.footer.rights[locale],
+    },
+    ui: {
+      login: siteCopy.ui.login[locale],
+      brandPersonality: siteCopy.ui.brandPersonality[locale],
+      positioning: siteCopy.ui.positioning[locale],
+      audience: siteCopy.ui.audience[locale],
+      differentiation: siteCopy.ui.differentiation[locale],
+      directContact: siteCopy.ui.directContact[locale],
+      previewTitle: siteCopy.ui.previewTitle[locale],
+      previewDescription: siteCopy.ui.previewDescription[locale],
+      earlyAccess: siteCopy.ui.earlyAccess[locale],
+      traits: {
+        intelligent: siteCopy.ui.traits.intelligent[locale],
+        creative: siteCopy.ui.traits.creative[locale],
+        nightlife: siteCopy.ui.traits.nightlife[locale],
+      },
     },
   }
 }
