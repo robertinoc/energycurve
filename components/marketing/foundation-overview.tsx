@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 import {
   ArrowRight,
   Brain,
@@ -47,8 +49,8 @@ const brandTraits = [
 const brandColors = ["#7B3FE4", "#00D1FF", "#FF2D75", "#2A2A35"] as const
 
 export function FoundationOverview() {
-  const hostedLoginHref = "/auth/start?mode=login&returnTo=%2Fdashboard"
-  const hostedSignupHref = "/auth/start?mode=signup&returnTo=%2Fdashboard"
+  const loginHref = "/login?returnTo=%2Fdashboard"
+  const signupHref = "/signup?returnTo=%2Fdashboard"
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#0B0B0F] text-white">
@@ -62,24 +64,24 @@ export function FoundationOverview() {
         <header className="flex items-center justify-between rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 backdrop-blur">
           <EnergyCurveLogo tone="light" size="md" caption="Set intelligence" />
           <div className="hidden items-center gap-3 sm:flex">
-            <a
-              href={hostedLoginHref}
+            <Link
+              href={loginHref}
               className={cn(
                 buttonVariants({ variant: "ghost", size: "sm" }),
                 "text-white/72 hover:text-white"
               )}
             >
               Login
-            </a>
-            <a
-              href={hostedSignupHref}
+            </Link>
+            <Link
+              href={signupHref}
               className={cn(
                 buttonVariants({ size: "sm" }),
                 "bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] text-[#071018]"
               )}
             >
               Create your account
-            </a>
+            </Link>
           </div>
         </header>
 
@@ -148,8 +150,8 @@ export function FoundationOverview() {
                 real data, not guesswork at the booth.
               </p>
               <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                <a
-                  href={hostedSignupHref}
+                <Link
+                  href={signupHref}
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] px-5 text-[#071018]"
@@ -157,16 +159,16 @@ export function FoundationOverview() {
                 >
                   Create your account
                   <ArrowRight className="size-4" />
-                </a>
-                <a
-                  href={hostedLoginHref}
+                </Link>
+                <Link
+                  href={loginHref}
                   className={cn(
                     buttonVariants({ variant: "outline", size: "lg" }),
                     "border-white/10 bg-white/[0.03] px-5 text-white"
                   )}
                 >
                   Login
-                </a>
+                </Link>
               </div>
             </div>
 

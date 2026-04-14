@@ -2,14 +2,15 @@ import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
-import { AuthPageShell } from "@/components/auth/auth-page-shell"
-import { buildReturnToHref, getSafeReturnTo } from "@/lib/auth/return-to"
-import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
+import { PasswordAuthPage } from "@/components/auth/password-auth-page"
 import { SetupRequiredState } from "@/components/setup/setup-required-state"
+import { getSafeReturnTo } from "@/lib/auth/return-to"
+import { loginWithPasswordAction } from "@/lib/auth/password-auth"
 import {
   getGenericWorkOSConfigurationIssue,
   logWorkOSRuntimeError,
 } from "@/lib/auth/workos-runtime"
+import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 
 type AuthPageParams = Promise<{
   error?: string | string[]
@@ -47,10 +48,6 @@ export default async function LoginPage({
     ? params.loggedOut[0]
     : params.loggedOut
 
-  if (!error && loggedOut !== "1") {
-    redirect(buildReturnToHref("/auth/start", returnTo) + "&mode=login")
-  }
-
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
 
   try {
@@ -72,40 +69,13 @@ export default async function LoginPage({
     redirect("/dashboard")
   }
 
-  const freshLoginHref = `${buildReturnToHref("/auth/start", returnTo)}&mode=login`
-
   return (
-    <AuthPageShell
-      eyebrow="WorkOS AuthKit"
-      title="Sign in to EnergyCurve"
-      description="Hosted authentication is wired with WorkOS so the protected dashboard stays simple, secure, and ready for future product work."
-      primaryHref={freshLoginHref}
-      primaryLabel="Login"
-      secondaryHref={`${buildReturnToHref("/auth/start", returnTo)}&mode=signup`}
-      secondaryLabel="Create your account"
-      hint="After a successful sign-in, EnergyCurve creates or syncs the application profile in Supabase."
-      alertTitle={
-        error === "auth"
-          ? "Authentication needs another try"
-          : loggedOut === "1"
-            ? "Signed out successfully"
-          : error === "setup"
-            ? "WorkOS still needs to be configured"
-            : error === "config"
-              ? "WorkOS configuration still needs attention"
-            : undefined
-      }
-      alertDescription={
-        error === "auth"
-          ? "The callback could not be completed. Start a fresh sign-in attempt."
-          : loggedOut === "1"
-            ? "Your EnergyCurve session is closed. If Google or another identity provider still has an active session, WorkOS may take you back in immediately unless you sign out there too."
-          : error === "setup"
-            ? "Complete the WorkOS environment variables first, then try the protected route again."
-          : error === "config"
-            ? "AuthKit could not initialize with the current WorkOS values. Recheck the API key, client ID, redirect URI, and cookie password."
-          : undefined
-      }
+    <PasswordAuthPage
+      mode="login"
+      returnTo={returnTo}
+      errorCode={error}
+      loggedOut={loggedOut === "1"}
+      action={loginWithPasswordAction}
     />
   )
 }

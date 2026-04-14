@@ -218,22 +218,38 @@ Push the landing page and dashboard toward a centered, launch-poster composition
 - Hero sections, dashboard headers, and showcase cards now bias toward symmetry, glow-led framing, and stronger visual hierarchy.
 - Future screens should preserve this visual grammar unless a product-specific workflow clearly demands a denser utility layout.
 
-## 14. Return logout traffic to the login screen and start fresh hosted sign-in
+## 14. Return logout traffic to the landing page
 
 **Decision**
 
-After logout, redirect the user back to `/login` with a fresh sign-in handoff instead of sending them to the homepage.
+After logout, redirect the user back to `/` instead of sending them to a login waypoint.
 
 **Why**
 
-- Returning to the login page makes the auth state change obvious.
-- It reduces confusion when hosted auth providers can silently remember the previous upstream account.
-- A fresh WorkOS sign-in link is a better default when validating auth flows during setup and infrastructure work.
+- Returning to the landing page matches the product expectation more closely.
+- It keeps the marketing surface and the auth entry surface cleanly separated.
 
 **Consequence**
 
-- Logout now returns to `/login?loggedOut=1&returnTo=%2Fdashboard`.
-- The primary login CTA starts a fresh hosted sign-in attempt, though the final re-auth behavior can still depend on the upstream identity provider session.
+- Logout now returns to `/`.
+
+## 15. Prefer app-controlled email/password entry over hosted handoff for the primary auth UX
+
+**Decision**
+
+Use app-controlled `/login` and `/signup` forms backed by WorkOS user-management APIs for the primary authentication experience.
+
+**Why**
+
+- The hosted handoff proved too opaque and unpredictable for a typical SaaS-style login and signup flow.
+- Product-owned forms make sign-in and account creation debuggable, testable, and consistent for users who are not already known to the auth provider.
+- WorkOS still handles credentials, token issuance, and session security underneath.
+
+**Consequence**
+
+- `/login` and `/signup` now submit directly to WorkOS-backed server actions that authenticate users and persist the session with `saveSession`.
+- The hosted callback flow remains in the codebase for future auth methods, but it is no longer the primary entry point for email/password users.
+- Sign-up currently marks accounts as verified immediately to keep the foundation phase unblocked; a stricter verification flow should be added before production hardening.
 
 ## Pending Technical Debt / Follow-ups
 

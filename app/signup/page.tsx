@@ -2,14 +2,15 @@ import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
-import { AuthPageShell } from "@/components/auth/auth-page-shell"
-import { buildReturnToHref, getSafeReturnTo } from "@/lib/auth/return-to"
-import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
+import { PasswordAuthPage } from "@/components/auth/password-auth-page"
 import { SetupRequiredState } from "@/components/setup/setup-required-state"
+import { getSafeReturnTo } from "@/lib/auth/return-to"
+import { signupWithPasswordAction } from "@/lib/auth/password-auth"
 import {
   getGenericWorkOSConfigurationIssue,
   logWorkOSRuntimeError,
 } from "@/lib/auth/workos-runtime"
+import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 
 type AuthPageParams = Promise<{
   error?: string | string[]
@@ -43,10 +44,6 @@ export default async function SignupPage({
   const returnTo = getSafeReturnTo(params.returnTo)
   const error = Array.isArray(params.error) ? params.error[0] : params.error
 
-  if (!error) {
-    redirect(buildReturnToHref("/auth/start", returnTo) + "&mode=signup")
-  }
-
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
 
   try {
@@ -69,15 +66,11 @@ export default async function SignupPage({
   }
 
   return (
-    <AuthPageShell
-      eyebrow="WorkOS AuthKit"
-      title="Create your EnergyCurve account"
-      description="Sign up uses the official hosted WorkOS flow while keeping app data ownership inside Supabase Postgres."
-      primaryHref={`${buildReturnToHref("/auth/start", returnTo)}&mode=signup`}
-      primaryLabel="Create your account"
-      secondaryHref={`${buildReturnToHref("/auth/start", returnTo)}&mode=login`}
-      secondaryLabel="Login"
-      hint="The first successful authentication syncs the profile record so future app data can stay separate from the auth provider."
+    <PasswordAuthPage
+      mode="signup"
+      returnTo={returnTo}
+      errorCode={error}
+      action={signupWithPasswordAction}
     />
   )
 }
