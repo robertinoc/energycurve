@@ -68,9 +68,9 @@ export default async function SignupPage({
       title="Create your EnergyCurve account"
       description="Sign up uses the official hosted WorkOS flow while keeping app data ownership inside Supabase Postgres."
       primaryHref={buildReturnToHref("/auth/signup", returnTo)}
-      primaryLabel="Continue to sign up"
+      primaryLabel="Create your account"
       secondaryHref={buildReturnToHref("/login", returnTo)}
-      secondaryLabel="Already have an account?"
+      secondaryLabel="Login"
       hint="The first successful authentication syncs the profile record so future app data can stay separate from the auth provider."
     />
   )
