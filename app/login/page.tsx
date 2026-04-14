@@ -75,9 +75,9 @@ export default async function LoginPage({
       title="Sign in to EnergyCurve"
       description="Hosted authentication is wired with WorkOS so the protected dashboard stays simple, secure, and ready for future product work."
       primaryHref={freshLoginHref}
-      primaryLabel="Open WorkOS sign in"
+      primaryLabel="Login"
       secondaryHref={buildReturnToHref("/signup", returnTo)}
-      secondaryLabel="Open sign up"
+      secondaryLabel="Create your account"
       hint="After a successful sign-in, EnergyCurve creates or syncs the application profile in Supabase."
       alertTitle={
         error === "auth"
@@ -94,7 +94,7 @@ export default async function LoginPage({
         error === "auth"
           ? "The callback could not be completed. Start a fresh sign-in attempt."
           : loggedOut === "1"
-            ? "Use the primary action to start a fresh WorkOS sign-in attempt."
+            ? "Your EnergyCurve session is closed. If Google or another identity provider still has an active session, WorkOS may take you back in immediately unless you sign out there too."
           : error === "setup"
             ? "Complete the WorkOS environment variables first, then try the protected route again."
           : error === "config"
