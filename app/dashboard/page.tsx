@@ -1,14 +1,11 @@
 import { signOut, withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
-import {
-  Activity,
-  Database,
-  LayoutDashboard,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react"
+import { Database, ShieldCheck, UserRound, Waves } from "lucide-react"
 import { redirect } from "next/navigation"
 
+import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
+import { EnergyCurveDashboard } from "@/components/dashboard/energy-curve-dashboard"
+import { SetupRequiredState } from "@/components/setup/setup-required-state"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,15 +17,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { buildReturnToHref } from "@/lib/auth/return-to"
-import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
-import { getDashboardSnapshot } from "@/services/dashboard-service"
-import { SetupRequiredState } from "@/components/setup/setup-required-state"
 import {
   getGenericWorkOSConfigurationIssue,
   logWorkOSRuntimeError,
 } from "@/lib/auth/workos-runtime"
+import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
+import { getDashboardSnapshot } from "@/services/dashboard-service"
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -106,176 +101,157 @@ export default async function DashboardPage() {
   const profile = snapshot?.profile ?? null
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,1),_rgba(248,250,252,1)_40%,_rgba(226,232,240,1)_100%)]">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-6 py-8 lg:px-10">
-        <header className="flex flex-col gap-6 rounded-[2rem] border border-border/60 bg-card/85 p-6 shadow-sm backdrop-blur sm:flex-row sm:items-start sm:justify-between">
-          <div className="max-w-2xl space-y-3">
-            <span className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Protected foundation route
-            </span>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                Welcome back, {displayName}
-              </h1>
-              <p className="max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-                This dashboard is intentionally limited to infrastructure
-                concerns: authenticated access, session-aware rendering, and
-                safe database initialization for future product work.
-              </p>
+    <main className="min-h-screen bg-[#0B0B0F] text-white">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
+        <header className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-4">
+              <EnergyCurveLogo
+                tone="light"
+                size="md"
+                caption="Authenticated workspace"
+              />
+              <div className="space-y-3">
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs uppercase tracking-[0.22em] text-white/42">
+                  Dashboard preview
+                </div>
+                <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+                  Welcome back, {displayName}
+                </h1>
+                <p className="max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
+                  The infrastructure is live, so the dashboard can now show the
+                  product direction too: how an EnergyCurve-style set map could
+                  feel once playlist workflows land.
+                </p>
+              </div>
             </div>
-          </div>
 
-          <form action={logoutAction}>
-            <Button type="submit" variant="outline" size="lg">
-              Log out
-            </Button>
-          </form>
+            <form action={logoutAction}>
+              <Button
+                type="submit"
+                variant="outline"
+                size="lg"
+                className="border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
+              >
+                Log out
+              </Button>
+            </form>
+          </div>
         </header>
 
         {infrastructureMessage ? (
-          <Alert>
-            <Database className="size-4" />
+          <Alert className="border-white/10 bg-[#17171F] text-white">
+            <Database className="size-4 text-white/72" />
             <AlertTitle>Database setup still needs attention</AlertTitle>
-            <AlertDescription>{infrastructureMessage}</AlertDescription>
+            <AlertDescription className="text-white/62">
+              {infrastructureMessage}
+            </AlertDescription>
           </Alert>
         ) : null}
 
+        <EnergyCurveDashboard
+          playlistCount={snapshot?.playlistCount ?? 0}
+          trackCount={snapshot?.trackCount ?? 0}
+        />
+
         <section className="grid gap-4 lg:grid-cols-3">
-          <Card className="border-border/60 bg-card/90 shadow-sm">
+          <Card className="border-white/10 bg-[#17171F] text-white ring-0">
             <CardHeader>
-              <CardTitle>Authenticated session</CardTitle>
-              <CardDescription>
-                WorkOS is managing the secure session lifecycle for this route.
+              <CardTitle className="text-white">Authenticated session</CardTitle>
+              <CardDescription className="text-white/58">
+                WorkOS is handling the secure session lifecycle for this route.
               </CardDescription>
               <CardAction>
-                <ShieldCheck className="size-5 text-muted-foreground" />
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                  <ShieldCheck className="size-5 text-white/58" />
+                </div>
               </CardAction>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-white/38">
                   Email
                 </p>
-                <p className="font-medium">{user.email}</p>
+                <p className="mt-2 text-sm text-white">{user.email}</p>
               </div>
-              <Separator />
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-white/38">
                   WorkOS user ID
                 </p>
-                <p className="font-mono text-xs text-muted-foreground">
-                  {user.id}
-                </p>
+                <p className="mt-2 font-mono text-xs text-white/62">{user.id}</p>
               </div>
             </CardContent>
-            <CardFooter className="text-muted-foreground">
+            <CardFooter className="border-white/8 bg-white/[0.03] text-white/48">
               Route protection is enforced in both `proxy.ts` and the server
               component.
             </CardFooter>
           </Card>
 
-          <Card className="border-border/60 bg-card/90 shadow-sm">
+          <Card className="border-white/10 bg-[#17171F] text-white ring-0">
             <CardHeader>
-              <CardTitle>Profile sync</CardTitle>
-              <CardDescription>
-                App-level identity is stored separately from the auth provider.
+              <CardTitle className="text-white">Profile sync</CardTitle>
+              <CardDescription className="text-white/58">
+                App identity stays separate from the auth provider.
               </CardDescription>
               <CardAction>
-                <UserRound className="size-5 text-muted-foreground" />
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                  <UserRound className="size-5 text-white/58" />
+                </div>
               </CardAction>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-white/38">
                   Status
                 </p>
-                <p className="font-medium">
+                <p className="mt-2 text-sm text-white">
                   {profile ? "Synchronized" : "Pending database setup"}
                 </p>
               </div>
-              <Separator />
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-white/38">
                   Profile ID
                 </p>
-                <p className="font-mono text-xs text-muted-foreground">
+                <p className="mt-2 font-mono text-xs text-white/62">
                   {profile?.id ?? "Available after the first successful sync"}
                 </p>
               </div>
             </CardContent>
-            <CardFooter className="text-muted-foreground">
-              `profiles.workos_user_id` is the bridge between WorkOS users and
-              application data.
+            <CardFooter className="border-white/8 bg-white/[0.03] text-white/48">
+              `profiles.workos_user_id` bridges WorkOS users and application
+              data.
             </CardFooter>
           </Card>
 
-          <Card className="border-border/60 bg-card/90 shadow-sm">
+          <Card className="border-white/10 bg-[#17171F] text-white ring-0">
             <CardHeader>
-              <CardTitle>App data scaffold</CardTitle>
-              <CardDescription>
-                The initial schema is ready for profiles, playlists, and tracks.
+              <CardTitle className="text-white">What this screen is</CardTitle>
+              <CardDescription className="text-white/58">
+                A branded product-facing preview layered on top of the
+                infrastructure foundation.
               </CardDescription>
               <CardAction>
-                <Activity className="size-5 text-muted-foreground" />
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                  <Waves className="size-5 text-white/58" />
+                </div>
               </CardAction>
             </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Playlists
-                </p>
-                <p className="mt-2 text-3xl font-semibold tracking-tight">
-                  {snapshot?.playlistCount ?? 0}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Tracks
-                </p>
-                <p className="mt-2 text-3xl font-semibold tracking-tight">
-                  {snapshot?.trackCount ?? 0}
-                </p>
-              </div>
+            <CardContent className="space-y-3 text-sm leading-6 text-white/58">
+              <p>
+                The curve, tracklist, and energy metrics currently use
+                illustrative data to explore the product direction.
+              </p>
+              <p>
+                Authentication, route protection, session persistence, and
+                profile sync remain fully real and validated underneath.
+              </p>
             </CardContent>
-            <CardFooter className="text-muted-foreground">
-              Counts are server-rendered from Supabase with the service role key
-              kept off the client.
+            <CardFooter className="border-white/8 bg-white/[0.03] text-white/48">
+              Product logic like playlist analysis still belongs to the next
+              implementation phase.
             </CardFooter>
           </Card>
         </section>
-
-        <Card className="border-border/60 bg-card/90 shadow-sm">
-          <CardHeader>
-            <CardTitle>What is ready today</CardTitle>
-            <CardDescription>
-              The foundation is in place so future product work can stay focused
-              on DJ workflows instead of infrastructure rework.
-            </CardDescription>
-            <CardAction>
-              <LayoutDashboard className="size-5 text-muted-foreground" />
-            </CardAction>
-          </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-5">
-              <p className="text-sm font-medium">Included now</p>
-              <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                <li>Official WorkOS AuthKit integration for App Router</li>
-                <li>Protected dashboard route with server validation</li>
-                <li>Supabase schema and server-only data access helpers</li>
-                <li>Documentation for local setup, deployment, and validation</li>
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/70 p-5">
-              <p className="text-sm font-medium">Explicitly deferred</p>
-              <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                <li>Playlist ingestion and file parsing</li>
-                <li>Track analysis, BPM extraction, and energy scoring logic</li>
-                <li>Collaborative features, sharing, and export flows</li>
-                <li>Any client-side database access or RLS policy design</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </main>
   )

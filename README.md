@@ -13,6 +13,7 @@ EnergyCurve is a Next.js App Router project for DJs. This repository is currentl
 - Protected `/dashboard` route with server-side access validation
 - Recoverable setup states for missing or invalid WorkOS configuration instead of raw framework crashes
 - Initial SQL schema for `profiles`, `playlists`, and `tracks`
+- Initial brand/logo system with gradient and monochrome SVG assets
 - Documentation for setup, architecture, technical decisions, deployment, and validation
 
 ## Stack
@@ -56,6 +57,14 @@ Required variables:
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 Detailed explanations live in [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md).
+
+## Recommended Environment Split
+
+- Local development: WorkOS `Staging` + `http://localhost:3010`
+- Vercel production: WorkOS `Production` + `https://energycurve.vercel.app`
+- Prefer a dedicated Supabase project for local/dev and another for production
+
+Using separate WorkOS and Supabase environments keeps local tests from colliding with production identities or production data.
 
 ## Local Development
 
@@ -106,6 +115,8 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 - Keep `SUPABASE_SERVICE_ROLE_KEY` server-side only.
 - `proxy.ts` is used because Next.js 16 renamed `middleware.ts` to `proxy.ts`.
 - Session persistence is handled by WorkOS AuthKit cookies plus `proxy.ts` for matched routes.
+- For the cleanest setup, map Vercel `Production` to WorkOS `Production` and keep local `.env.local` on WorkOS `Staging`.
+- Prefer a dedicated Supabase production project instead of sharing the same database with local/staging auth identities.
 
 ## Known Limitations
 
@@ -113,10 +124,13 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 - Database access currently uses a server-only service role client; if future client-side data access is introduced, add RLS policies and a browser-safe client strategy.
 - Automated tests were not added in this phase; validation is currently lint, typecheck, build, and manual auth/infrastructure checks.
 - End-to-end auth verification still depends on real WorkOS and Supabase credentials being configured in the target environment.
+- Until WorkOS `Production` is unlocked and wired, the Vercel deployment should be treated as pre-production rather than final production infrastructure.
 
 ## Related Docs
 
 - [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md)
+- [docs/brand-design.md](/Users/robertinoc/Documents/code/energycurve/docs/brand-design.md)
+- [docs/design-system.md](/Users/robertinoc/Documents/code/energycurve/docs/design-system.md)
 - [docs/architecture.md](/Users/robertinoc/Documents/code/energycurve/docs/architecture.md)
 - [docs/decisions.md](/Users/robertinoc/Documents/code/energycurve/docs/decisions.md)
 - [AGENTS.md](/Users/robertinoc/Documents/code/energycurve/AGENTS.md)
