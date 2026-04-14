@@ -251,6 +251,24 @@ Use app-controlled `/login` and `/signup` forms backed by WorkOS user-management
 - The hosted callback flow remains in the codebase for future auth methods, but it is no longer the primary entry point for email/password users.
 - Sign-up currently marks accounts as verified immediately to keep the foundation phase unblocked; a stricter verification flow should be added before production hardening.
 
+## 16. Add Google as a secondary WorkOS-backed auth path
+
+**Decision**
+
+Keep email/password under product-owned UI, but add a dedicated `Continue with Google` path that redirects into WorkOS social login.
+
+**Why**
+
+- EnergyCurve needs a faster sign-in option without giving up the predictability of app-controlled email/password forms.
+- WorkOS already owns the OAuth callback, session creation, and identity handling, so social login can reuse the existing secure foundation.
+- Keeping Google behind its own route makes the behavior explicit and easier to debug than mixing everything back into the hosted auth landing.
+
+**Consequence**
+
+- `/login` and `/signup` now include a Google CTA that routes through `/auth/social/google`.
+- Google Social Login must be enabled in WorkOS for that button to work.
+- Email/password and Google now coexist cleanly without reverting the whole auth experience to the hosted handoff.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.
