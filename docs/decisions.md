@@ -201,6 +201,40 @@ Use intentionally static demo track and energy data for the branded dashboard in
 - The dashboard graph, tracklist, and set metrics currently showcase interaction design rather than live playlist analysis.
 - Infrastructure facts such as auth state, profile sync, and database-backed counts remain real underneath.
 
+## 13. Prefer a centered product-poster layout for early brand expression
+
+**Decision**
+
+Push the landing page and dashboard toward a centered, launch-poster composition instead of a standard left-aligned SaaS marketing layout.
+
+**Why**
+
+- EnergyCurve needs to feel like a music-tech product, not just a generic operations tool.
+- A centered composition gives the logo, tagline, curve visual, and product mockups more presence.
+- This direction better matches the intended nightclub-meets-SaaS tone without overcomplicating the component system.
+
+**Consequence**
+
+- Hero sections, dashboard headers, and showcase cards now bias toward symmetry, glow-led framing, and stronger visual hierarchy.
+- Future screens should preserve this visual grammar unless a product-specific workflow clearly demands a denser utility layout.
+
+## 14. Return logout traffic to the login screen and start fresh hosted sign-in
+
+**Decision**
+
+After logout, redirect the user back to `/login` with a fresh sign-in handoff instead of sending them to the homepage.
+
+**Why**
+
+- Returning to the login page makes the auth state change obvious.
+- It reduces confusion when hosted auth providers can silently remember the previous upstream account.
+- A fresh WorkOS sign-in link is a better default when validating auth flows during setup and infrastructure work.
+
+**Consequence**
+
+- Logout now returns to `/login?loggedOut=1&returnTo=%2Fdashboard`.
+- The primary login CTA starts a fresh hosted sign-in attempt, though the final re-auth behavior can still depend on the upstream identity provider session.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

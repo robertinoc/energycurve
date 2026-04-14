@@ -1,12 +1,11 @@
 import Link from "next/link"
 import {
   ArrowRight,
-  AudioLines,
-  Gauge,
-  Orbit,
-  ShieldCheck,
+  Brain,
+  Headphones,
   Sparkles,
-  WandSparkles,
+  Waves,
+  Zap,
 } from "lucide-react"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
@@ -15,6 +14,7 @@ import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardAction,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -23,70 +23,42 @@ import { cn } from "@/lib/utils"
 
 const featureCards = [
   {
-    title: "See the set arc before the room does",
-    description:
-      "Map energy intentionally instead of improvising every transition when the pressure is already live.",
-    icon: Gauge,
-  },
-  {
-    title: "Shape tension with precision",
-    description:
-      "Use the curve as a control surface for lifts, fake-outs, resets, and final-release moments.",
-    icon: AudioLines,
-  },
-  {
-    title: "Keep the tech invisible",
-    description:
-      "Hosted auth, protected routes, and app data are already handled so the product can grow without foundation churn.",
-    icon: ShieldCheck,
-  },
-] as const
-
-const differentiators = [
-  {
-    eyebrow: "Plan momentum",
-    title: "Not just playlists. A pressure map for the night.",
-    description:
-      "EnergyCurve is designed around motion, not just track storage. Think in waves, not lists.",
-    icon: Orbit,
-  },
-  {
-    eyebrow: "Move faster",
-    title: "Build a set shape in minutes, not in your head at 2 AM.",
-    description:
-      "The interface is built to expose spikes, dips, and pacing mistakes before they hit the crowd.",
+    title: "Energy Scoring",
+    description: "Every set gets a score.",
     icon: Sparkles,
   },
   {
-    eyebrow: "Stay sharp",
-    title: "Sleek enough for modern SaaS. Edgy enough for after-hours culture.",
-    description:
-      "Linear discipline, Stripe clarity, and just enough nightlife voltage to feel like a music-tech product instead of another admin tool.",
-    icon: WandSparkles,
+    title: "Peak Detection",
+    description: "Find the highs and drops.",
+    icon: Waves,
+  },
+  {
+    title: "Set Structure",
+    description: "Build, peak, closing.",
+    icon: Zap,
   },
 ] as const
 
-const placeholderLogos = [
-  "Night Rooms",
-  "Afterform",
-  "Pulse Unit",
-  "Basement FM",
+const brandTraits = [
+  { label: "Intelligent", icon: Brain },
+  { label: "Creative", icon: Headphones },
+  { label: "Nightlife", icon: Zap },
 ] as const
+
+const brandColors = ["#7B3FE4", "#00D1FF", "#FF2D75", "#2A2A35"] as const
 
 export function FoundationOverview() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#0B0B0F] text-white">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 top-[-4rem] h-96 w-96 rounded-full bg-[#7B3FE4]/26 blur-3xl" />
-        <div className="absolute right-[-8rem] top-10 h-[28rem] w-[28rem] rounded-full bg-[#00D1FF]/12 blur-3xl" />
-        <div className="absolute bottom-[-10rem] left-1/3 h-[26rem] w-[26rem] rounded-full bg-[#FF2D75]/10 blur-3xl" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
+        <div className="absolute inset-x-0 top-0 h-[620px] bg-[radial-gradient(circle_at_50%_0%,rgba(123,63,228,0.42),transparent_38%),radial-gradient(circle_at_67%_18%,rgba(255,45,117,0.18),transparent_24%),radial-gradient(circle_at_30%_18%,rgba(0,209,255,0.18),transparent_24%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:72px_72px] opacity-16" />
+        <div className="absolute inset-x-0 top-16 h-px bg-linear-to-r from-transparent via-[#7B3FE4]/36 to-transparent" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-8 lg:px-10">
         <header className="flex items-center justify-between rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 backdrop-blur">
           <EnergyCurveLogo tone="light" size="md" caption="Set intelligence" />
-
           <div className="hidden items-center gap-3 sm:flex">
             <Link
               href="/login"
@@ -109,184 +81,220 @@ export function FoundationOverview() {
           </div>
         </header>
 
-        <section className="grid gap-8 pb-6 pt-4 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-          <div className="space-y-8">
-            <div className="inline-flex w-fit items-center rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-white/56">
-              From playlist prep to energy architecture
-            </div>
-
-            <div className="space-y-5">
-              <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-white sm:text-6xl xl:text-7xl">
-                Stop guessing the night.
-                <span className="block bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] bg-clip-text text-transparent">
-                  Design the curve.
-                </span>
-              </h1>
-              <p className="max-w-2xl text-base leading-8 text-white/66 sm:text-lg">
-                EnergyCurve helps DJs shape the rise, release, and rebound of a
-                set with the same clarity elite teams expect from modern SaaS.
-                Built for nightlife pressure, not spreadsheet thinking.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/signup"
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  "justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] px-5 text-[#071018]"
-                )}
-              >
-                Start shaping your next set
-                <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                href="/dashboard"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "border-white/10 bg-white/[0.03] px-5 text-white hover:border-white/18 hover:bg-white/[0.06]"
-                )}
-              >
-                Explore the dashboard
-              </Link>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <ValuePill label="Visual planning" value="Curve-first" />
-              <ValuePill label="Auth & data" value="Already wired" />
-              <ValuePill label="Product tone" value="SaaS x nightlife" />
-            </div>
-          </div>
-
-          <EnergyCurveHeroVisual />
-        </section>
-
-        <section className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 backdrop-blur">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-white/42">
-                Social proof
-              </p>
-              <p className="mt-2 font-heading text-2xl font-semibold text-white">
-                Placeholder credibility while the product is still early
-              </p>
-            </div>
-            <p className="max-w-xl text-sm leading-6 text-white/54">
-              This strip is intentionally placeholder-only for now, but the
-              layout is ready for artist logos, venue marks, or launch quotes.
+        <section className="rounded-[28px] border border-white/10 bg-white/[0.03] px-5 py-7 shadow-[0_28px_80px_rgba(0,0,0,0.36)] backdrop-blur">
+          <div className="flex flex-col items-center gap-5 text-center">
+            <EnergyCurveLogo tone="light" size="xl" />
+            <div className="h-px w-full max-w-5xl bg-linear-to-r from-transparent via-[#7B3FE4]/40 to-transparent" />
+            <p className="text-2xl font-heading font-semibold tracking-tight text-white sm:text-3xl">
+              Shape the curve. Own the dancefloor.
             </p>
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {placeholderLogos.map((logo) => (
-              <div
-                key={logo}
-                className="rounded-[20px] border border-white/8 bg-black/18 px-5 py-4 text-center text-sm uppercase tracking-[0.24em] text-white/42"
-              >
-                {logo}
+          <div className="mt-6 grid gap-0 rounded-[22px] border border-white/8 bg-black/18 lg:grid-cols-[1fr_1fr_220px]">
+            <div className="border-b border-white/8 px-5 py-5 lg:border-b-0 lg:border-r">
+              <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
+                Brand Personality
+              </p>
+              <div className="mt-4 space-y-3">
+                {brandTraits.map(({ label, icon: Icon }) => (
+                  <div key={label} className="flex items-center gap-3 text-white/72">
+                    <div className="rounded-xl border border-white/8 bg-white/[0.04] p-2">
+                      <Icon className="size-4 text-[#C06BFF]" />
+                    </div>
+                    <span className="text-sm">{label}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div className="border-b border-white/8 px-5 py-5 lg:border-b-0 lg:border-r">
+              <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
+                Tagline
+              </p>
+              <p className="mt-4 text-2xl font-heading font-semibold leading-tight text-white">
+                Shape the curve.
+                <br />
+                Own the dancefloor.
+              </p>
+            </div>
+
+            <div className="px-5 py-5">
+              <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
+                Colors
+              </p>
+              <div className="mt-4 flex items-center gap-3">
+                {brandColors.map((color) => (
+                  <span
+                    key={color}
+                    className="h-10 w-10 rounded-xl border border-white/8"
+                    style={{ background: color }}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
+        <section className="rounded-[28px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.38)] backdrop-blur">
+          <div className="rounded-[24px] border border-[#FF2D75]/18 bg-[linear-gradient(180deg,rgba(123,63,228,0.22),rgba(12,12,18,0.96))] px-5 py-6 shadow-[0_0_90px_rgba(123,63,228,0.12)]">
+            <div className="space-y-4 text-center">
+              <h1 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
+                Shape the curve. Own the dancefloor.
+              </h1>
+              <p className="mx-auto max-w-2xl text-sm leading-6 text-white/64 sm:text-base">
+                Analyze, design and optimize the energy of your DJ sets using
+                real data, not guesswork at the booth.
+              </p>
+              <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                <Link
+                  href="/signup"
+                  className={cn(
+                    buttonVariants({ size: "lg" }),
+                    "justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] px-5 text-[#071018]"
+                  )}
+                >
+                  Start Free
+                  <ArrowRight className="size-4" />
+                </Link>
+                <Link
+                  href="/login"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "lg" }),
+                    "border-white/10 bg-white/[0.03] px-5 text-white"
+                  )}
+                >
+                  Upload Your First Set
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-[22px] border border-white/8 bg-black/18 p-3">
+              <EnergyCurveHeroVisual />
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-3">
           {featureCards.map(({ title, description, icon: Icon }) => (
             <Card
               key={title}
-              className="border-white/10 bg-white/[0.04] text-white ring-0"
+              className="border-white/10 bg-white/[0.03] text-white ring-0"
             >
-              <CardHeader>
-                <CardTitle className="text-white">{title}</CardTitle>
+              <CardHeader className="gap-3">
+                <CardAction className="static justify-self-start">
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                    <Icon className="size-5 text-white/62" />
+                  </div>
+                </CardAction>
+                <CardTitle className="text-xl text-white">{title}</CardTitle>
                 <CardDescription className="text-white/60">
                   {description}
                 </CardDescription>
-                <CardAction>
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                    <Icon className="size-5 text-white/60" />
-                  </div>
-                </CardAction>
               </CardHeader>
             </Card>
           ))}
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
-          {differentiators.map(({ eyebrow, title, description, icon: Icon }) => (
-            <Card
-              key={title}
-              className="border-white/10 bg-[#14141B]/90 text-white ring-0"
-            >
-              <CardHeader>
-                <CardDescription className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {eyebrow}
-                </CardDescription>
-                <CardTitle className="text-2xl text-white">{title}</CardTitle>
-                <CardDescription className="text-base leading-7 text-white/60">
-                  {description}
-                </CardDescription>
-                <CardAction>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                    <Icon className="size-5 text-white/56" />
+        <section className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
+          <Card className="overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
+            <CardHeader>
+              <CardTitle className="text-white">EnergyCurve desktop preview</CardTitle>
+              <CardDescription className="text-white/56">
+                A showcase frame shaped to feel closer to the final product
+                reveal: centered, luminous, and graph-led.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_50%_18%,rgba(123,63,228,0.22),transparent_28%),#111118] p-4">
+                <div className="rounded-[16px] border border-white/8 bg-black/20 p-3">
+                  <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-3">
+                      <EnergyCurveLogo tone="light" size="sm" caption="Analysis screen" />
+                      <p className="max-w-xl text-sm leading-6 text-white/56">
+                        A reference composition for the core product surface:
+                        graph first, metrics visible, and enough structure to
+                        support quick booth decisions.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-right text-xs uppercase tracking-[0.16em] text-white/40">
+                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2">
+                        Average Energy
+                        <p className="mt-1 font-heading text-2xl text-white">7.2</p>
+                      </div>
+                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2">
+                        Peak Intensity
+                        <p className="mt-1 font-heading text-2xl text-white">9.7</p>
+                      </div>
+                    </div>
                   </div>
-                </CardAction>
-              </CardHeader>
-            </Card>
-          ))}
-        </section>
+                  <EnergyCurveHeroVisual />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <section className="rounded-[32px] border border-white/10 bg-linear-to-r from-[#15131E] via-[#101823] to-[#18101B] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
-          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div className="space-y-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-white/42">
-                Final call
-              </p>
-              <h2 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                If your set has an arc, your software should too.
-              </h2>
-              <p className="max-w-2xl text-base leading-7 text-white/62">
-                EnergyCurve is ready to move from infrastructure into product.
-                The visual system, auth foundation, and data model are already
-                in place.
-              </p>
-            </div>
+          <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
+            <CardHeader>
+              <CardTitle className="text-white">Set Analysis</CardTitle>
+              <CardDescription className="text-white/56">
+                A phone-like companion surface for reading the same set arc in a
+                more focused, stacked format.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mx-auto w-full max-w-[280px] rounded-[34px] border border-white/10 bg-[#13131A] p-4 shadow-[0_0_48px_rgba(123,63,228,0.18)]">
+                <div className="rounded-[24px] border border-white/10 bg-black/22 p-4">
+                  <p className="text-sm font-medium text-white">Set Analysis</p>
+                  <div className="mt-5 space-y-4">
+                    <PhoneMetric label="Peak Energy" value="9.8" tone="pink" />
+                    <PhoneMetric label="Flat Zone" value="3.2" tone="cyan" />
+                    <PhoneMetric label="Drop Intensity" value="Very High" tone="violet" />
+                  </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-              <Link
-                href="/signup"
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  "justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] px-5 text-[#071018]"
-                )}
-              >
-                Create your account
-                <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                href="/login"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "border-white/10 bg-white/[0.03] px-5 text-white"
-                )}
-              >
-                Sign in
-              </Link>
-            </div>
-          </div>
+                  <div className="mt-6 space-y-2">
+                    {["Opening", "Build-Up", "Peak", "Closing"].map((item) => (
+                      <div
+                        key={item}
+                        className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2 text-sm text-white/68"
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </section>
       </div>
     </main>
   )
 }
 
-function ValuePill({ label, value }: { label: string; value: string }) {
+function PhoneMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: string
+  tone: "pink" | "cyan" | "violet"
+}) {
+  const toneClassName =
+    tone === "pink"
+      ? "from-[#FF2D75]/20 to-[#FF2D75]/4 text-[#FF7CAB]"
+      : tone === "cyan"
+        ? "from-[#00D1FF]/18 to-[#00D1FF]/4 text-[#76E7FF]"
+        : "from-[#7B3FE4]/18 to-[#7B3FE4]/4 text-[#B28CFF]"
+
   return (
-    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] p-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/40">
+    <div className="rounded-[18px] border border-white/8 bg-white/[0.03] p-3">
+      <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/40">
         {label}
       </p>
-      <p className="mt-2 font-heading text-lg font-semibold text-white">
-        {value}
-      </p>
+      <div className={cn("mt-3 rounded-xl bg-linear-to-r p-3", toneClassName)}>
+        <p className="font-heading text-xl font-semibold">{value}</p>
+      </div>
     </div>
   )
 }

@@ -10,6 +10,7 @@ feel is modern SaaS discipline with music-tech energy:
 - minimal chrome
 - precise spacing
 - controlled glow instead of noisy effects
+- centered, launch-poster hero compositions on top-level marketing screens
 
 ## Core Tokens
 
@@ -62,16 +63,17 @@ feel is modern SaaS discipline with music-tech energy:
 
 ### Landing Page
 
-- Hero first, with a single sharp statement
-- Visual proof immediately visible
+- Center the brand, tagline, and hero message early
+- Visual proof should feel like a product launch poster, not a generic marketing chart
 - Feature sections separated by strong rhythm, not by dense copy
 - Social proof can remain placeholder while the product is early
 
 ### Dashboard
 
 - Tracklist panel
-- Center energy graph
+- Center energy graph with a stronger theatrical glow treatment
 - Metrics rail
+- Branded header band so the dashboard feels like the same product world as the landing page
 - Foundation / infrastructure status pushed lower in the hierarchy
 
 ## Implementation Notes
@@ -80,3 +82,4 @@ feel is modern SaaS discipline with music-tech energy:
 - They exist to validate product direction and interaction design before real
   playlist analysis logic is implemented.
 - Brand tokens live primarily in [app/globals.css](/Users/robertinoc/Documents/code/energycurve/app/globals.css).
+- The current landing and dashboard were tuned against a higher-fidelity visual target so future design work should preserve the centered composition, banded sections, and neon-on-dark contrast ratio.

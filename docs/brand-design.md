@@ -42,9 +42,9 @@ music-tech tone through the heading style.
 
 ## Current Integration
 
-- The landing page now uses the logo and palette as the first branded surface.
+- The landing page now uses a centered launch-poster composition: logo, brand strip, hero showcase, feature tiles, and dual product mockups.
 - Auth screens use the logo lockup and dark nightlife-inspired backgrounds.
-- The dashboard now includes a branded interactive curve concept, tracklist panel, and metrics rail.
+- The dashboard now inherits the same visual language through a branded header band, glow-led curve surface, tracklist panel, and metrics rail.
 - The browser icon uses the gradient mark through `app/icon.svg`.
 - Core visual tokens now live in `app/globals.css` so the whole app shares the same dark design system.
 
@@ -59,10 +59,12 @@ music-tech tone through the heading style.
 ## Product UI Direction
 
 - Dark UI by default
+- Centered product storytelling on marketing surfaces
 - Clean surfaces with visible borders
 - Soft hover glows, not aggressive shadows
 - Rounded corners and deliberate spacing
 - Curves and motion used as the primary visual motif
+- Product mockups should feel closer to launch visuals than generic B2B SaaS chrome
 
 The current dashboard graph is intentionally illustrative. It exists to define
 how EnergyCurve should feel before real analysis and playlist logic are built.

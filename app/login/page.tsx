@@ -13,6 +13,7 @@ import {
 
 type AuthPageParams = Promise<{
   error?: string | string[]
+  loggedOut?: string | string[]
   returnTo?: string | string[]
 }>
 
@@ -63,20 +64,26 @@ export default async function LoginPage({
   const params = await searchParams
   const returnTo = getSafeReturnTo(params.returnTo)
   const error = Array.isArray(params.error) ? params.error[0] : params.error
+  const loggedOut = Array.isArray(params.loggedOut)
+    ? params.loggedOut[0]
+    : params.loggedOut
+  const freshLoginHref = `${buildReturnToHref("/auth/login", returnTo)}&fresh=1`
 
   return (
     <AuthPageShell
       eyebrow="WorkOS AuthKit"
       title="Sign in to EnergyCurve"
       description="Hosted authentication is wired with WorkOS so the protected dashboard stays simple, secure, and ready for future product work."
-      primaryHref={buildReturnToHref("/auth/login", returnTo)}
-      primaryLabel="Continue to login"
+      primaryHref={freshLoginHref}
+      primaryLabel="Open WorkOS sign in"
       secondaryHref={buildReturnToHref("/signup", returnTo)}
       secondaryLabel="Open sign up"
       hint="After a successful sign-in, EnergyCurve creates or syncs the application profile in Supabase."
       alertTitle={
         error === "auth"
           ? "Authentication needs another try"
+          : loggedOut === "1"
+            ? "Signed out successfully"
           : error === "setup"
             ? "WorkOS still needs to be configured"
             : error === "config"
@@ -86,6 +93,8 @@ export default async function LoginPage({
       alertDescription={
         error === "auth"
           ? "The callback could not be completed. Start a fresh sign-in attempt."
+          : loggedOut === "1"
+            ? "Use the primary action to start a fresh WorkOS sign-in attempt."
           : error === "setup"
             ? "Complete the WorkOS environment variables first, then try the protected route again."
           : error === "config"
