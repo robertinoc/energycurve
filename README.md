@@ -14,7 +14,7 @@ EnergyCurve is a Next.js App Router project for DJs. This repository is currentl
 - Protected `/dashboard` route with server-side access validation
 - Recoverable setup states for missing or invalid WorkOS configuration instead of raw framework crashes
 - Initial SQL schema for `profiles`, `playlists`, and `tracks`
-- Initial brand/logo system with gradient and monochrome SVG assets
+- Updated logo system with square, horizontal, monochrome, and icon SVG assets
 - A first visual product pass for the landing page and dashboard, aligned to EnergyCurve's dark neon brand direction
 - A locale-aware content base for global landing navigation copy
 - Public marketing landing page rebuilt as a modular premium SaaS experience
@@ -143,6 +143,7 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 ## Related Docs
 
 - [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md)
+- [docs/branding.md](/Users/robertinoc/Documents/code/energycurve/docs/branding.md)
 - [docs/brand-design.md](/Users/robertinoc/Documents/code/energycurve/docs/brand-design.md)
 - [docs/design-system.md](/Users/robertinoc/Documents/code/energycurve/docs/design-system.md)
 - [docs/architecture.md](/Users/robertinoc/Documents/code/energycurve/docs/architecture.md)

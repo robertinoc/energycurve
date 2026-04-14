@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { LandingPage } from "@/components/marketing/landing-page"
 
 export const metadata: Metadata = {
-  title: "EnergyCurve | Performance intelligence for DJs",
+  title: "Performance intelligence for DJs",
   description:
     "EnergyCurve analyzes mixes, tracks, and transitions to reveal the hidden energy flow behind every great set.",
   alternates: {

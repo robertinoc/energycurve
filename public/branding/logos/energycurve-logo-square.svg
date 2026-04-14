@@ -1,0 +1,58 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#square_bg)" />
+  <rect x="34" y="34" width="444" height="444" rx="94" stroke="url(#square_border)" stroke-width="4" />
+  <g filter="url(#ring_glow)">
+    <path
+      d="M121 256C121 181.442 181.442 121 256 121H322.5C351.495 121 375 144.505 375 173.5V173.5"
+      stroke="url(#arc_gradient)"
+      stroke-width="14"
+      stroke-linecap="round"
+    />
+    <path
+      d="M391 256C391 330.558 330.558 391 256 391H189.5C160.505 391 137 367.495 137 338.5V338.5"
+      stroke="url(#arc_gradient)"
+      stroke-width="14"
+      stroke-linecap="round"
+    />
+  </g>
+  <g filter="url(#wave_glow)">
+    <path
+      d="M104 255H139C153.912 255 166 267.088 166 282V282C166 296.912 178.088 309 193 309V309C207.912 309 220 296.912 220 282V230C220 201.281 243.281 178 272 178V178C300.719 178 324 201.281 324 230V283C324 297.912 336.088 310 351 310V310C365.912 310 378 297.912 378 283V283C378 268.088 390.088 256 405 256H408"
+      stroke="url(#wave_gradient)"
+      stroke-width="16"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+  <defs>
+    <linearGradient id="square_bg" x1="77" y1="76" x2="435" y2="447" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2A1952" />
+      <stop offset="1" stop-color="#120C24" />
+    </linearGradient>
+    <linearGradient id="square_border" x1="76" y1="62" x2="425" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D56D8" stop-opacity="0.75" />
+      <stop offset="1" stop-color="#2D3B7D" stop-opacity="0.35" />
+    </linearGradient>
+    <linearGradient id="arc_gradient" x1="121" y1="391" x2="391" y2="121" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D14DFF" />
+      <stop offset="0.52" stop-color="#8BB6FF" />
+      <stop offset="1" stop-color="#38F1FF" />
+    </linearGradient>
+    <linearGradient id="wave_gradient" x1="104" y1="244" x2="408" y2="244" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B23CFF" />
+      <stop offset="0.34" stop-color="#7D52FF" />
+      <stop offset="0.64" stop-color="#6BC6FF" />
+      <stop offset="1" stop-color="#31F0FF" />
+    </linearGradient>
+    <filter id="ring_glow" x="83" y="83" width="346" height="346" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+      <feGaussianBlur stdDeviation="12" result="effect1_foregroundBlur" />
+    </filter>
+    <filter id="wave_glow" x="70" y="144" width="372" height="200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+      <feGaussianBlur stdDeviation="9" result="effect1_foregroundBlur" />
+    </filter>
+  </defs>
+</svg>
