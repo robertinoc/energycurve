@@ -17,6 +17,7 @@ EnergyCurve is a Next.js App Router project for DJs. This repository is currentl
 - Initial brand/logo system with gradient and monochrome SVG assets
 - A first visual product pass for the landing page and dashboard, aligned to EnergyCurve's dark neon brand direction
 - A locale-aware content base for global landing navigation copy
+- Product landing copy now structured across hero, features, how-it-works, story, contact, CTA, and footer sections
 - Documentation for setup, architecture, technical decisions, deployment, and validation
 
 ## Stack

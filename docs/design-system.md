@@ -68,6 +68,7 @@ feel is modern SaaS discipline with music-tech energy:
 - Feature sections separated by strong rhythm, not by dense copy
 - Social proof can remain placeholder while the product is early
 - Global navigation copy now lives in a locale-aware content map so future landing copy can be added in English and Spanish without scattering strings across the component tree
+- Product copy sections now follow a fixed rhythm: hero, features, how it works, story, contact, final CTA, footer
 
 ### Dashboard
 

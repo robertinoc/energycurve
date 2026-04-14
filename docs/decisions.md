@@ -286,6 +286,7 @@ Introduce a small content dictionary for shared landing navigation labels before
 - Landing navigation labels now come from `lib/content/site-copy.ts`.
 - The current marketing screen still renders in English by default, but the structure is ready for future locale switching.
 - Future landing copy updates should extend the same content map rather than introducing scattered string constants.
+- Hero, features, how-it-works, story, contact, CTA, and footer copy now all hang off the same content source instead of living inline in the page component.
 
 ## Pending Technical Debt / Follow-ups
 
