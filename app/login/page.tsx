@@ -28,6 +28,7 @@ export default async function LoginPage({
 }: {
   searchParams: AuthPageParams
 }) {
+  const params = await searchParams
   const infrastructureStatus = getInfrastructureStatus()
 
   if (!infrastructureStatus.workosConfigured) {
@@ -38,6 +39,16 @@ export default async function LoginPage({
         description="The dashboard request reached the app correctly, but WorkOS environment variables are still missing or incomplete."
       />
     )
+  }
+
+  const returnTo = getSafeReturnTo(params.returnTo)
+  const error = Array.isArray(params.error) ? params.error[0] : params.error
+  const loggedOut = Array.isArray(params.loggedOut)
+    ? params.loggedOut[0]
+    : params.loggedOut
+
+  if (!error && loggedOut !== "1") {
+    redirect(`${buildReturnToHref("/auth/login", returnTo)}&fresh=1`)
   }
 
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
@@ -61,12 +72,6 @@ export default async function LoginPage({
     redirect("/dashboard")
   }
 
-  const params = await searchParams
-  const returnTo = getSafeReturnTo(params.returnTo)
-  const error = Array.isArray(params.error) ? params.error[0] : params.error
-  const loggedOut = Array.isArray(params.loggedOut)
-    ? params.loggedOut[0]
-    : params.loggedOut
   const freshLoginHref = `${buildReturnToHref("/auth/login", returnTo)}&fresh=1`
 
   return (
