@@ -34,6 +34,21 @@ Create `.env.local` from `.env.example`.
 - `NEXT_PUBLIC_WORKOS_REDIRECT_URI` is intentionally public because the WorkOS SDK expects that variable name.
 - If WorkOS values are missing or invalid, the auth entry points now render setup guidance instead of exposing a framework runtime error.
 
+## Environment Topology
+
+Recommended setup:
+
+| Surface | WorkOS environment | Supabase project | Base URL |
+| --- | --- | --- | --- |
+| Local development | `Staging` | Dev project | `http://localhost:3010` |
+| Vercel production | `Production` | Production project | `https://energycurve.vercel.app` |
+
+Why this split matters:
+
+- WorkOS `Staging` and `Production` create different user identities, even for the same email address.
+- If both environments point at the same Supabase database, the same person can end up with multiple `profiles` rows because `profiles.workos_user_id` is unique per WorkOS environment.
+- Separating dev and production data makes auth issues easier to debug and avoids accidental writes into production during local testing.
+
 ## Local Setup
 
 1. Install dependencies:
@@ -105,6 +120,50 @@ Expected outcome:
 - Keep `SUPABASE_SERVICE_ROLE_KEY` in Vercel server-side env vars only.
 - `proxy.ts` fulfills the middleware requirement because Next.js 16 renamed the file convention from `middleware.ts` to `proxy.ts`.
 - The login, signup, callback, and protected dashboard routes now guard against both missing and invalid WorkOS setup and redirect users back to a recoverable setup state when initialization fails.
+- Prefer these mappings:
+  - local `.env.local` -> WorkOS `Staging`
+  - Vercel `Production` env vars -> WorkOS `Production`
+  - local/dev Supabase project -> local `.env.local`
+  - Supabase production project -> Vercel `Production`
+- In Vercel, prefer scoping the production secrets to the `Production` environment instead of `All Environments`.
+- If preview deployments are introduced later, either give them a separate WorkOS redirect strategy or keep auth restricted to the production deployment until that strategy is defined.
+
+## Production Readiness Audit
+
+### Safe state to keep today
+
+- Keep local `.env.local` on WorkOS `Staging` and `http://localhost:3010`.
+- Keep the current Vercel deployment working, even if it temporarily still uses WorkOS `Staging`.
+- Treat `https://energycurve.vercel.app` as a hosted pre-production environment until WorkOS `Production` is unlocked.
+- Continue product development on top of the current setup without blocking on WorkOS billing or production unlock.
+
+### Real infrastructure work still pending
+
+- Unlock WorkOS `Production`.
+- Configure WorkOS `Production` redirects:
+  - `https://energycurve.vercel.app/auth/callback`
+  - `https://energycurve.vercel.app/auth/login`
+  - `https://energycurve.vercel.app/`
+- Generate and securely store the WorkOS `Production` API key and `Production` client ID.
+- Update Vercel `Production` environment variables to use WorkOS `Production` instead of WorkOS `Staging`.
+- Prefer a dedicated Supabase production project instead of sharing the same database with local/staging auth identities.
+- Point Vercel `Production` to the production Supabase project after the schema migration is applied there.
+
+### Why this matters
+
+- WorkOS `Staging` and `Production` generate different user IDs for the same human user.
+- If both auth environments write into the same Supabase database, one person can end up with multiple `profiles` rows because `profiles.workos_user_id` is unique.
+- Keeping Vercel on WorkOS `Staging` is acceptable during setup, but it should be considered temporary and not the final production posture.
+
+### Release gate before calling the app production-ready
+
+Do not consider EnergyCurve fully production-ready until all of the following are true:
+
+1. Vercel `Production` uses WorkOS `Production`.
+2. WorkOS `Production` redirects match the deployed production URL exactly.
+3. Vercel `Production` secrets are scoped to `Production` only.
+4. A dedicated Supabase production project is in place, migrated, and connected.
+5. Login, callback, dashboard access, profile sync, and logout are re-verified on the deployed production URL.
 
 ## Follow-ups / Technical Debt
 

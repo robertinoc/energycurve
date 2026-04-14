@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { redirect } from "next/navigation"
 
+import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -110,9 +111,11 @@ export default async function DashboardPage() {
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-6 py-8 lg:px-10">
         <header className="flex flex-col gap-6 rounded-[2rem] border border-border/60 bg-card/85 p-6 shadow-sm backdrop-blur sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-2xl space-y-3">
-            <span className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Protected foundation route
-            </span>
+            <EnergyCurveLogo
+              size="md"
+              caption="Protected foundation route"
+              className="pb-1"
+            />
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
                 Welcome back, {displayName}

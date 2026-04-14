@@ -149,6 +149,41 @@ Use normal browser navigation for the primary sign-in and sign-up CTAs instead o
 - The auth CTA performs a regular browser navigation on purpose.
 - Secondary in-app navigation can still use `next/link` where the destination stays inside EnergyCurve.
 
+## 10. Separate infrastructure by environment
+
+**Decision**
+
+Use WorkOS `Staging` for local development, WorkOS `Production` for the Vercel production deployment, and prefer separate Supabase projects for dev and production.
+
+**Why**
+
+- WorkOS user IDs are environment-specific, even when the email address is the same.
+- Sharing a single database across staging and production auth identities can create duplicate `profiles` rows for the same human user.
+- Clean environment boundaries reduce the chance of testing against production state and make debugging much simpler.
+
+**Consequence**
+
+- `.env.local` should stay aligned with local URLs and WorkOS `Staging`.
+- Vercel production env vars should use WorkOS `Production` credentials and production callback URLs.
+- A separate production Supabase project is strongly recommended before product data starts to matter.
+
+## 11. Start the product identity with an ISO mark
+
+**Decision**
+
+Introduce the EnergyCurve brand with a minimal waveform ISO mark before expanding into a larger visual system.
+
+**Why**
+
+- The product needed a recognizable identity without waiting for full product design.
+- A single smooth waveform ties directly to the idea of rising and falling set energy.
+- SVG logo assets are lightweight, scalable, and easy to reuse across the app, docs, and future marketing surfaces.
+
+**Consequence**
+
+- The current brand pass focuses on the logo, favicon, landing page, and auth surfaces first.
+- Broader dashboard and product styling can build from the same palette and shape language later.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

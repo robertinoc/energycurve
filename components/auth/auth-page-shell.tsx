@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ArrowRight, LockKeyhole } from "lucide-react"
 
+import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -39,18 +40,22 @@ export function AuthPageShell({
   alertDescription,
 }: AuthPageShellProps) {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,1),_rgba(248,250,252,1)_45%,_rgba(226,232,240,1)_100%)] px-6 py-10">
-      <div className="mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+    <main className="relative min-h-screen overflow-hidden bg-[#0B0B0F] px-6 py-10 text-white">
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-[-6rem] top-[-4rem] h-72 w-72 rounded-full bg-[#8B5CFF]/24 blur-3xl" />
+        <div className="absolute right-[-4rem] top-16 h-80 w-80 rounded-full bg-[#24E4FF]/16 blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:68px_68px] opacity-20" />
+      </div>
+
+      <div className="relative mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <section className="space-y-6">
-          <span className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {eyebrow}
-          </span>
+          <EnergyCurveLogo tone="light" size="lg" caption={eyebrow} />
 
           <div className="space-y-3">
-            <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+            <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               {title}
             </h1>
-            <p className="max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+            <p className="max-w-xl text-base leading-7 text-white/68 sm:text-lg">
               {description}
             </p>
           </div>
@@ -60,7 +65,7 @@ export function AuthPageShell({
               href={primaryHref}
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "w-full justify-between rounded-2xl px-4"
+                "w-full justify-between rounded-2xl border-0 bg-linear-to-r from-[#8B5CFF] to-[#24E4FF] px-4 text-[#06111D] hover:opacity-92"
               )}
             >
               {primaryLabel}
@@ -71,21 +76,21 @@ export function AuthPageShell({
               href={secondaryHref}
               className={cn(
                 buttonVariants({ size: "lg", variant: "outline" }),
-                "w-full rounded-2xl px-4"
+                "w-full rounded-2xl border-white/14 bg-white/[0.03] px-4 text-white hover:bg-white/[0.08] hover:text-white"
               )}
             >
               {secondaryLabel}
             </Link>
           </div>
 
-          <div className="rounded-[1.75rem] border border-border/60 bg-card/85 p-5 shadow-sm backdrop-blur">
+          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.05] p-5 shadow-sm backdrop-blur">
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-2">
-                <LockKeyhole className="size-4 text-muted-foreground" />
+              <div className="rounded-2xl border border-white/10 bg-[#0B0B0F] p-2">
+                <LockKeyhole className="size-4 text-white/70" />
               </div>
               <div className="space-y-1">
-                <p className="font-medium">Setup-only foundation</p>
-                <p className="text-sm leading-6 text-muted-foreground">
+                <p className="font-medium text-white">Setup-only foundation</p>
+                <p className="text-sm leading-6 text-white/60">
                   {hint}
                 </p>
               </div>
@@ -93,24 +98,26 @@ export function AuthPageShell({
           </div>
         </section>
 
-        <Card className="border-border/60 bg-card/90 shadow-sm">
+        <Card className="border-white/10 bg-white/[0.05] text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] ring-0">
           <CardHeader>
-            <CardTitle>Why this flow exists</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Why this flow exists</CardTitle>
+            <CardDescription className="text-white/62">
               EnergyCurve keeps authentication and application data separated on
               purpose.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {alertTitle && alertDescription ? (
-              <Alert>
-                <LockKeyhole className="size-4" />
+              <Alert className="border-white/10 bg-black/25 text-white">
+                <LockKeyhole className="size-4 text-white/70" />
                 <AlertTitle>{alertTitle}</AlertTitle>
-                <AlertDescription>{alertDescription}</AlertDescription>
+                <AlertDescription className="text-white/62">
+                  {alertDescription}
+                </AlertDescription>
               </Alert>
             ) : null}
 
-            <div className="space-y-3 text-sm leading-6 text-muted-foreground">
+            <div className="space-y-3 text-sm leading-6 text-white/62">
               <p>WorkOS AuthKit handles sign-in, sign-up, callbacks, and logout.</p>
               <p>
                 Supabase Postgres is reserved for app data such as profiles,
@@ -121,16 +128,20 @@ export function AuthPageShell({
             <Separator />
 
             <div className="space-y-3">
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                <p className="text-sm font-medium">Protected route behavior</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-sm font-medium text-white">
+                  Protected route behavior
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/58">
                   Unauthenticated requests to `/dashboard` are redirected to the
                   login page and validated again on the server.
                 </p>
               </div>
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                <p className="text-sm font-medium">Profile synchronization</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-sm font-medium text-white">
+                  Profile synchronization
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/58">
                   A successful callback syncs the authenticated user into the
                   `profiles` table without leaking database credentials to the
                   client.

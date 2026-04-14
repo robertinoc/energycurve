@@ -49,6 +49,9 @@
 }
 
 :root {
+  --brand-night: #0b0b0f;
+  --brand-violet: #8b5cff;
+  --brand-cyan: #24e4ff;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

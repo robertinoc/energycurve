@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 
 import { AuthProvider } from "@/components/providers/auth-provider"
@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   },
   description:
     "Setup and infrastructure foundation for EnergyCurve, a DJ web app powered by WorkOS AuthKit and Supabase Postgres.",
+}
+
+export const viewport: Viewport = {
+  themeColor: "#0B0B0F",
 }
 
 export default function RootLayout({
