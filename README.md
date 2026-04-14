@@ -130,6 +130,7 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 
 - [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md)
 - [docs/brand-design.md](/Users/robertinoc/Documents/code/energycurve/docs/brand-design.md)
+- [docs/design-system.md](/Users/robertinoc/Documents/code/energycurve/docs/design-system.md)
 - [docs/architecture.md](/Users/robertinoc/Documents/code/energycurve/docs/architecture.md)
 - [docs/decisions.md](/Users/robertinoc/Documents/code/energycurve/docs/decisions.md)
 - [AGENTS.md](/Users/robertinoc/Documents/code/energycurve/AGENTS.md)

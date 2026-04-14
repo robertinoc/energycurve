@@ -184,6 +184,23 @@ Introduce the EnergyCurve brand with a minimal waveform ISO mark before expandin
 - The current brand pass focuses on the logo, favicon, landing page, and auth surfaces first.
 - Broader dashboard and product styling can build from the same palette and shape language later.
 
+## 12. Use illustrative dashboard data during the design pass
+
+**Decision**
+
+Use intentionally static demo track and energy data for the branded dashboard interactions until product logic is implemented.
+
+**Why**
+
+- The goal of this pass is to validate product feel, layout, and interaction patterns.
+- Real playlist analysis, BPM extraction, and scoring logic are still explicitly deferred.
+- A clear illustrative layer keeps design momentum high without pretending the product logic already exists.
+
+**Consequence**
+
+- The dashboard graph, tracklist, and set metrics currently showcase interaction design rather than live playlist analysis.
+- Infrastructure facts such as auth state, profile sync, and database-backed counts remain real underneath.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

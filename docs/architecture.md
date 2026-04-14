@@ -36,6 +36,7 @@ flowchart TD
 
 - Shared UI and route-specific presentation components
 - `components/brand/*` contains reusable brand assets such as the EnergyCurve logo lockup
+- `components/dashboard/*` contains the interactive dashboard UI scaffolding used for the current product-direction preview
 - `components/ui/*` contains the `shadcn/ui` base
 - `components/providers/auth-provider.tsx` mounts `AuthKitProvider` in the root layout to cover WorkOS auth edge cases in the App Router
 
@@ -44,6 +45,7 @@ flowchart TD
 - cross-cutting helpers and infrastructure utilities
 - `lib/env.ts` validates required server environment variables
 - `lib/auth/return-to.ts` sanitizes post-login return targets
+- `lib/energy-curve-preview.ts` contains illustrative curve data and chart helpers used during the design pass
 - `lib/supabase/server.ts` exposes the server-only Supabase client
 
 ### `services/`
