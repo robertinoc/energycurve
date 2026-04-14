@@ -70,7 +70,7 @@ export function EnergyCurveDashboard({
 
   return (
     <section className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)_260px]">
-      <aside className="rounded-[28px] border border-white/10 bg-[#14141B] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+      <aside className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(26,26,34,0.96),rgba(20,20,27,0.96))] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-white/42">
@@ -123,18 +123,18 @@ export function EnergyCurveDashboard({
         </div>
       </aside>
 
-      <div className="rounded-[30px] border border-white/10 bg-[#14141B] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
+      <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,25,0.98),rgba(14,14,20,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
         <div className="flex flex-col gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-white/42">
               Energy curve
             </p>
             <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
-              See the room before the drop lands
+              Shape the room before the drop lands
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/56">
               Hover the curve to inspect each transition. Click a track to pin
-              the segment and review where tension builds, dips, and spikes.
+              the segment and read the rise, release, and rebound of the set.
             </p>
           </div>
 
@@ -149,7 +149,7 @@ export function EnergyCurveDashboard({
         </div>
 
         <div className="relative mt-5 overflow-hidden rounded-[26px] border border-white/10 bg-[#0D0D12] p-4">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(123,63,228,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(0,209,255,0.14),transparent_38%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(123,63,228,0.22),transparent_28%),radial-gradient(circle_at_82%_24%,rgba(255,45,117,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(0,209,255,0.14),transparent_38%)]" />
 
           <div className="relative">
             <svg
@@ -302,7 +302,7 @@ export function EnergyCurveDashboard({
         </div>
       </div>
 
-      <aside className="rounded-[28px] border border-white/10 bg-[#14141B] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+      <aside className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(26,26,34,0.96),rgba(20,20,27,0.96))] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
         <div className="mb-5">
           <p className="text-xs uppercase tracking-[0.22em] text-white/42">
             Metrics

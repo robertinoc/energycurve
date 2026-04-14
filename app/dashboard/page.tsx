@@ -35,10 +35,10 @@ async function logoutAction() {
   "use server"
 
   try {
-    await signOut({ returnTo: "/" })
+    await signOut({ returnTo: "/login?loggedOut=1&returnTo=%2Fdashboard" })
   } catch (error) {
     logWorkOSRuntimeError("Logout failed", error)
-    redirect("/")
+    redirect("/login?loggedOut=1&returnTo=%2Fdashboard")
   }
 }
 
@@ -103,39 +103,62 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#0B0B0F] text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
-        <header className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-4">
-              <EnergyCurveLogo
-                tone="light"
-                size="md"
-                caption="Authenticated workspace"
-              />
-              <div className="space-y-3">
-                <div className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs uppercase tracking-[0.22em] text-white/42">
-                  Dashboard preview
+        <header className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(123,63,228,0.14),rgba(20,20,27,0.92))] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-4">
+                <EnergyCurveLogo
+                  tone="light"
+                  size="md"
+                  caption="Authenticated workspace"
+                />
+                <div className="space-y-3">
+                  <div className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs uppercase tracking-[0.22em] text-white/42">
+                    Dashboard preview
+                  </div>
+                  <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+                    Welcome back, {displayName}
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
+                    The infrastructure is live, so the dashboard can now show the
+                    product direction too: how an EnergyCurve-style set map could
+                    feel once playlist workflows land.
+                  </p>
                 </div>
-                <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                  Welcome back, {displayName}
-                </h1>
-                <p className="max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
-                  The infrastructure is live, so the dashboard can now show the
-                  product direction too: how an EnergyCurve-style set map could
-                  feel once playlist workflows land.
-                </p>
               </div>
+
+              <form action={logoutAction}>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  size="lg"
+                  className="border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
+                >
+                  Log out
+                </Button>
+              </form>
             </div>
 
-            <form action={logoutAction}>
-              <Button
-                type="submit"
-                variant="outline"
-                size="lg"
-                className="border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
-              >
-                Log out
-              </Button>
-            </form>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/38">
+                  Persona
+                </p>
+                <p className="mt-3 font-heading text-xl text-white">Intelligent nightlife tooling</p>
+              </div>
+              <div className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/38">
+                  Mission
+                </p>
+                <p className="mt-3 font-heading text-xl text-white">Shape the curve. Own the dancefloor.</p>
+              </div>
+              <div className="rounded-[22px] border border-white/10 bg-black/18 p-4">
+                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/38">
+                  Session mode
+                </p>
+                <p className="mt-3 font-heading text-xl text-white">Curve planning</p>
+              </div>
+            </div>
           </div>
         </header>
 
