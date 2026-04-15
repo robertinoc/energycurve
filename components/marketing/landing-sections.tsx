@@ -122,7 +122,10 @@ export function HeroSection({
 export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={50}>
-      <SectionContainer id="features" className="space-y-5">
+      <SectionContainer
+        id="features"
+        className="space-y-5 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(13,13,18,0.98)),radial-gradient(circle_at_12%_16%,rgba(138,57,248,0.14),transparent_28%),radial-gradient(circle_at_88%_28%,rgba(0,209,255,0.1),transparent_24%),radial-gradient(circle_at_52%_108%,rgba(255,94,138,0.08),transparent_28%)]"
+      >
         <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-6rem] top-[-4rem] h-[16rem] w-[16rem] opacity-28" />
         <AmbientGlow tone="magenta" className="ambient-drift-slow left-[18%] top-[55%] h-[14rem] w-[14rem] opacity-18" />
         <div className="space-y-3">
@@ -198,8 +201,9 @@ export function HowItWorksSection({
   return (
     <SectionReveal delay={150}>
       <div id="how-it-works" className="scroll-mt-40 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card className="relative overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
+        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(17,17,24,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_16%_12%,rgba(138,57,248,0.16),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(255,94,138,0.1),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(83,175,255,0.08),transparent_28%)] text-white ring-0">
           <AmbientGlow tone="violet" className="ambient-drift-slow left-[-6rem] top-[4rem] h-[16rem] w-[16rem] opacity-22" />
+          <EnergyWaveBackdrop className="left-[2%] top-[-1rem] h-[9rem] w-[96%] opacity-16" />
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
               {copy.nav.how}
@@ -228,7 +232,7 @@ export function HowItWorksSection({
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
+        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_86%_14%,rgba(0,209,255,0.12),transparent_24%),radial-gradient(circle_at_18%_84%,rgba(138,57,248,0.12),transparent_26%)] text-white ring-0">
           <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-4rem] top-[-3rem] h-[15rem] w-[15rem] opacity-24" />
           <CardHeader>
             <CardTitle className="text-white">{copy.ui.previewTitle}</CardTitle>
@@ -258,9 +262,14 @@ export function HowItWorksSection({
 export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={200}>
-      <div id="story" className="scroll-mt-40 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <Card className="relative overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
-          <AmbientGlow tone="magenta" className="ambient-drift-slow left-[-5rem] top-[-4rem] h-[14rem] w-[14rem] opacity-20" />
+      <Card
+        id="story"
+        className="relative scroll-mt-40 overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_14%_16%,rgba(255,94,138,0.08),transparent_26%),radial-gradient(circle_at_86%_84%,rgba(138,57,248,0.12),transparent_26%)] text-white ring-0"
+      >
+        <AmbientGlow tone="magenta" className="ambient-drift-slow left-[-5rem] top-[-4rem] h-[14rem] w-[14rem] opacity-20" />
+        <AmbientGlow tone="violet" className="ambient-drift-reverse right-[-4rem] bottom-[-4rem] h-[14rem] w-[14rem] opacity-16" />
+        <EnergyWaveBackdrop className="right-[4%] top-[0.5rem] h-[8rem] w-[42%] opacity-12" />
+        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
               {copy.nav.story}
@@ -269,10 +278,7 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
               {copy.story.title}
             </CardTitle>
           </CardHeader>
-        </Card>
 
-        <Card className="relative overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
-          <AmbientGlow tone="violet" className="ambient-drift-reverse right-[-4rem] bottom-[-4rem] h-[14rem] w-[14rem] opacity-16" />
           <CardContent className="space-y-4 pt-6">
             {copy.story.paragraphs.map((paragraph) => (
               <p key={paragraph} className="text-base leading-7 text-white/68">
@@ -280,8 +286,8 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
               </p>
             ))}
           </CardContent>
-        </Card>
-      </div>
+        </div>
+      </Card>
     </SectionReveal>
   )
 }
