@@ -127,7 +127,7 @@ const siteCopy: SiteCopySchema = {
   nav: {
     features: { en: "Features", es: "Características" },
     how: { en: "How it Works", es: "Cómo funciona" },
-    story: { en: "Founder Story", es: "Historia del fundador" },
+    story: { en: "Story", es: "Historia" },
     contact: { en: "Contact", es: "Contacto" },
     cta: { en: "Create your account", es: "Creá tu cuenta" },
   },
@@ -340,7 +340,7 @@ const siteCopy: SiteCopySchema = {
       es: "Creá tu cuenta, explorá la energía de tus sets y construí performances con más control.",
     },
     primary: { en: "Create your account", es: "Creá tu cuenta" },
-    secondary: { en: "Contact the founder", es: "Contactar al fundador" },
+    secondary: { en: "Contact us", es: "Contactanos" },
   },
   footer: {
     product: { en: "Product", es: "Producto" },

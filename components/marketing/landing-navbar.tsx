@@ -61,10 +61,10 @@ export function LandingNavbar({
                   href={item.href}
                   aria-current={active ? "location" : undefined}
                   className={cn(
-                    "rounded-full px-3 py-2 text-sm transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF2D75]/45",
+                    "rounded-full px-3 py-2 text-sm transition-all duration-250 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF2D75]/45",
                     active
-                      ? "bg-linear-to-r from-white/[0.08] to-white/[0.04] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_0_1px_rgba(255,255,255,0.05),0_0_20px_rgba(123,63,228,0.14)]"
-                      : "text-white/62 hover:bg-white/[0.05] hover:text-white hover:shadow-[0_0_18px_rgba(255,45,117,0.08)]"
+                      ? "bg-linear-to-r from-[#8A39F8]/18 via-[#54ABFF]/10 to-[#00D1FF]/16 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(255,255,255,0.05),0_0_24px_rgba(123,63,228,0.16)]"
+                      : "text-white/62 hover:-translate-y-0.5 hover:bg-linear-to-r hover:from-[#8A39F8]/16 hover:via-[#53AFFF]/10 hover:to-[#FF6B8E]/18 hover:text-white hover:shadow-[0_12px_28px_rgba(82,77,255,0.14),0_0_22px_rgba(0,209,255,0.1)]"
                   )}
                 >
                   {item.label}
@@ -118,10 +118,10 @@ export function LandingNavbar({
                       aria-current={active ? "location" : undefined}
                       onClick={() => setOpen(false)}
                       className={cn(
-                        "rounded-2xl px-3 py-2 text-sm transition duration-200",
+                        "rounded-2xl px-3 py-2 text-sm transition-all duration-250",
                         active
-                          ? "bg-white/[0.06] text-white shadow-[0_0_18px_rgba(123,63,228,0.12)]"
-                          : "text-white/72 hover:bg-white/[0.04] hover:text-white"
+                          ? "bg-linear-to-r from-[#8A39F8]/18 via-[#53AFFF]/10 to-[#00D1FF]/16 text-white shadow-[0_0_18px_rgba(123,63,228,0.14)]"
+                          : "text-white/72 hover:bg-linear-to-r hover:from-[#8A39F8]/14 hover:via-[#53AFFF]/8 hover:to-[#FF6B8E]/16 hover:text-white hover:shadow-[0_10px_22px_rgba(82,77,255,0.14)]"
                       )}
                     >
                       {item.label}
