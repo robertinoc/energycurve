@@ -119,6 +119,72 @@
   }
 }
 
+@keyframes ambient-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -18px, 0) scale(1.04);
+  }
+}
+
+@keyframes ambient-drift-reverse {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, 14px, 0) scale(0.98);
+  }
+}
+
+@keyframes wave-glide {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-1.2%, -1.5%, 0);
+  }
+}
+
+@keyframes wave-line-primary {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scaleY(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: translate3d(0, -2px, 0) scaleY(1.035);
+    opacity: 1;
+  }
+}
+
+@keyframes wave-line-secondary {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scaleY(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate3d(0, 3px, 0) scaleY(0.985);
+    opacity: 0.82;
+  }
+}
+
+@keyframes wave-fill-breathe {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scaleY(1);
+    opacity: 0.34;
+  }
+  50% {
+    transform: translate3d(0, -1px, 0) scaleY(1.03);
+    opacity: 0.52;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -165,5 +231,42 @@
   .energy-orb-pulse {
     animation: energy-pulse 2.8s ease-in-out infinite;
     transform-origin: center;
+  }
+
+  .ambient-drift-slow {
+    animation: ambient-drift 18s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .ambient-drift-reverse {
+    animation: ambient-drift-reverse 20s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .energy-wave-glide {
+    animation: wave-glide 18s ease-in-out infinite;
+    will-change: transform;
+    transform-origin: center;
+  }
+
+  .energy-wave-line-primary {
+    animation: wave-line-primary 7.2s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform, opacity;
+  }
+
+  .energy-wave-line-secondary {
+    animation: wave-line-secondary 9.4s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform, opacity;
+  }
+
+  .energy-wave-fill-breathe {
+    animation: wave-fill-breathe 8.6s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform, opacity;
   }
 }

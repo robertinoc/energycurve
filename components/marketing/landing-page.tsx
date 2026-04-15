@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react"
 
+import {
+  AmbientGlow,
+  EnergyWaveBackdrop,
+} from "@/components/marketing/ambient-decor"
 import { LandingNavbar } from "@/components/marketing/landing-navbar"
 import {
   ContactSection,
@@ -92,6 +96,24 @@ export function LandingPage() {
     >
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-[760px] bg-[radial-gradient(circle_at_50%_0%,rgba(123,63,228,0.28),transparent_36%),radial-gradient(circle_at_72%_18%,rgba(255,45,117,0.1),transparent_24%),radial-gradient(circle_at_28%_18%,rgba(0,209,255,0.08),transparent_24%)]" />
+        <AmbientGlow
+          tone="violet"
+          className="ambient-drift-slow left-[-8rem] top-[10rem] h-[26rem] w-[26rem] opacity-70"
+        />
+        <AmbientGlow
+          tone="cyan"
+          className="ambient-drift-reverse right-[-10rem] top-[22rem] h-[24rem] w-[24rem] opacity-45"
+        />
+        <AmbientGlow
+          tone="magenta"
+          className="ambient-drift-slow left-[12%] top-[58rem] h-[22rem] w-[22rem] opacity-35"
+        />
+        <AmbientGlow
+          tone="blend"
+          className="ambient-drift-reverse right-[8%] top-[96rem] h-[30rem] w-[30rem] opacity-40"
+        />
+        <EnergyWaveBackdrop className="left-0 top-[38rem] h-[14rem] w-full opacity-30" />
+        <EnergyWaveBackdrop className="left-0 top-[126rem] h-[16rem] w-full scale-y-[-1] opacity-20" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
       </div>
 

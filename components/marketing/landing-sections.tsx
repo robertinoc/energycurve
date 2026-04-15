@@ -1,5 +1,9 @@
 import { ArrowRight, BarChart3, GitBranch, LineChart, Mail, Sparkles, Waves } from "lucide-react"
 
+import {
+  AmbientGlow,
+  EnergyWaveBackdrop,
+} from "@/components/marketing/ambient-decor"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { CTAButton } from "@/components/marketing/cta-button"
 import { LandingContactForm } from "@/components/marketing/landing-contact-form"
@@ -21,7 +25,13 @@ export function HeroSection({
 }) {
   return (
     <SectionReveal>
-      <section className="rounded-[30px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.38)] backdrop-blur">
+      <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.38)] backdrop-blur">
+        <AmbientGlow tone="violet" className="ambient-drift-slow left-[-6rem] top-[-5rem] h-[18rem] w-[18rem] opacity-55" />
+        <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-4rem] top-[4rem] h-[18rem] w-[18rem] opacity-35" />
+        <EnergyWaveBackdrop
+          emphasis="hero"
+          className="left-[8%] top-[18rem] h-[10rem] w-[84%] opacity-28"
+        />
         <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,19,28,0.96),rgba(11,11,15,0.98))] px-5 py-7 shadow-[0_0_60px_rgba(123,63,228,0.08)]">
           <div className="flex flex-col items-center gap-5 text-center">
             <EnergyCurveLogo tone="light" size="xl" kind="horizontal" priority />
@@ -112,7 +122,12 @@ export function HeroSection({
 export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={50}>
-      <SectionContainer id="features" className="space-y-5">
+      <SectionContainer
+        id="features"
+        className="space-y-5 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(13,13,18,0.98)),radial-gradient(circle_at_12%_16%,rgba(138,57,248,0.14),transparent_28%),radial-gradient(circle_at_88%_28%,rgba(0,209,255,0.1),transparent_24%),radial-gradient(circle_at_52%_108%,rgba(255,94,138,0.08),transparent_28%)]"
+      >
+        <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-6rem] top-[-4rem] h-[16rem] w-[16rem] opacity-28" />
+        <AmbientGlow tone="magenta" className="ambient-drift-slow left-[18%] top-[55%] h-[14rem] w-[14rem] opacity-18" />
         <div className="space-y-3">
           <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
             {copy.nav.features}
@@ -132,7 +147,7 @@ export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
             return (
               <Card
                 key={feature.key}
-                className="border-white/10 bg-white/[0.03] text-white ring-0 transition hover:-translate-y-1 hover:border-white/16"
+                className="border-white/10 bg-white/[0.03] text-white ring-0 transition hover:-translate-y-1 hover:border-white/16 hover:shadow-[0_20px_48px_rgba(0,0,0,0.22),0_0_32px_rgba(123,63,228,0.08)]"
               >
                 <CardHeader className="gap-3">
                   <div className="flex items-center justify-between">
@@ -161,6 +176,7 @@ export function DifferentiationSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
       <SectionReveal delay={100}>
       <SectionContainer className="bg-[linear-gradient(135deg,rgba(123,63,228,0.14),rgba(0,209,255,0.06),rgba(255,45,117,0.12))]">
+        <AmbientGlow tone="blend" className="ambient-drift-slow right-[-5rem] top-[-5rem] h-[18rem] w-[18rem] opacity-45" />
         <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
           {copy.ui.differentiation}
         </p>
@@ -185,7 +201,9 @@ export function HowItWorksSection({
   return (
     <SectionReveal delay={150}>
       <div id="how-it-works" className="scroll-mt-40 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
+        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(17,17,24,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_16%_12%,rgba(138,57,248,0.16),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(255,94,138,0.1),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(83,175,255,0.08),transparent_28%)] text-white ring-0">
+          <AmbientGlow tone="violet" className="ambient-drift-slow left-[-6rem] top-[4rem] h-[16rem] w-[16rem] opacity-22" />
+          <EnergyWaveBackdrop className="left-[2%] top-[-1rem] h-[9rem] w-[96%] opacity-16" />
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
               {copy.nav.how}
@@ -214,7 +232,8 @@ export function HowItWorksSection({
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
+        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_86%_14%,rgba(0,209,255,0.12),transparent_24%),radial-gradient(circle_at_18%_84%,rgba(138,57,248,0.12),transparent_26%)] text-white ring-0">
+          <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-4rem] top-[-3rem] h-[15rem] w-[15rem] opacity-24" />
           <CardHeader>
             <CardTitle className="text-white">{copy.ui.previewTitle}</CardTitle>
             <CardDescription className="text-white/56">
@@ -222,7 +241,7 @@ export function HowItWorksSection({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_50%_18%,rgba(123,63,228,0.22),transparent_28%),#111118] p-4">
+            <div className="rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_50%_18%,rgba(123,63,228,0.22),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(0,209,255,0.08),transparent_22%),#111118] p-4 shadow-[0_0_42px_rgba(123,63,228,0.08)]">
               <div className="rounded-[16px] border border-white/8 bg-black/20 p-3">
                 <EnergyCurveHeroVisual labels={copy.hero.visual} />
               </div>
@@ -243,8 +262,14 @@ export function HowItWorksSection({
 export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={200}>
-      <div id="story" className="scroll-mt-40 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
+      <Card
+        id="story"
+        className="relative scroll-mt-40 overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_14%_16%,rgba(255,94,138,0.08),transparent_26%),radial-gradient(circle_at_86%_84%,rgba(138,57,248,0.12),transparent_26%)] text-white ring-0"
+      >
+        <AmbientGlow tone="magenta" className="ambient-drift-slow left-[-5rem] top-[-4rem] h-[14rem] w-[14rem] opacity-20" />
+        <AmbientGlow tone="violet" className="ambient-drift-reverse right-[-4rem] bottom-[-4rem] h-[14rem] w-[14rem] opacity-16" />
+        <EnergyWaveBackdrop className="right-[4%] top-[0.5rem] h-[8rem] w-[42%] opacity-12" />
+        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
               {copy.nav.story}
@@ -253,9 +278,7 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
               {copy.story.title}
             </CardTitle>
           </CardHeader>
-        </Card>
 
-        <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardContent className="space-y-4 pt-6">
             {copy.story.paragraphs.map((paragraph) => (
               <p key={paragraph} className="text-base leading-7 text-white/68">
@@ -263,8 +286,8 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
               </p>
             ))}
           </CardContent>
-        </Card>
-      </div>
+        </div>
+      </Card>
     </SectionReveal>
   )
 }
@@ -273,7 +296,8 @@ export function ContactSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={250}>
       <div id="contact" className="scroll-mt-40 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
+        <Card className="relative overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
+          <AmbientGlow tone="cyan" className="ambient-drift-slow right-[-5rem] top-[-4rem] h-[14rem] w-[14rem] opacity-18" />
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
               {copy.nav.contact}
@@ -305,7 +329,8 @@ export function ContactSection({ copy }: { copy: ResolvedSiteCopy }) {
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
+        <Card className="relative overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
+          <AmbientGlow tone="blend" className="ambient-drift-reverse left-[-5rem] bottom-[-4rem] h-[15rem] w-[15rem] opacity-18" />
           <CardContent className="pt-6">
             <LandingContactForm copy={copy.contact} />
           </CardContent>
@@ -328,6 +353,9 @@ export function FinalCTASection({
         id="early-access"
         className="bg-[linear-gradient(135deg,rgba(123,63,228,0.14),rgba(0,209,255,0.06),rgba(255,45,117,0.12))]"
       >
+        <AmbientGlow tone="violet" className="ambient-drift-slow left-[-4rem] bottom-[-5rem] h-[18rem] w-[18rem] opacity-34" />
+        <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-4rem] top-[-4rem] h-[16rem] w-[16rem] opacity-28" />
+        <EnergyWaveBackdrop className="right-[-2rem] top-0 h-full w-[52%] opacity-18" />
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">

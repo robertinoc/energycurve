@@ -71,6 +71,9 @@ feel is modern SaaS discipline with music-tech energy:
 - Product copy sections now follow a fixed rhythm: hero, features, how it works, story, contact, final CTA, footer
 - The navbar should stay sticky, refined, and product-led rather than app-like utility chrome
 - Motion should stay in the “subtle SaaS” range: section reveals, hover lift, menu transitions, and restrained glow only
+- Ambient background work should feel atmospheric, not theatrical:
+  localized glows, soft section halos, and low-contrast animated wave accents are preferred over full-page neon effects
+- If animated background elements are used, they must stay soft enough that copy readability and product credibility remain the priority
 
 ### Dashboard
 
