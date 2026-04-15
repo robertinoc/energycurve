@@ -8,16 +8,20 @@ landing and authenticated app.
 
 ## Asset Locations
 
-- Horizontal logo:
-  [energycurve-logo-horizontal.svg](/Users/robertinoc/Documents/code/energycurve/public/branding/logos/energycurve-logo-horizontal.svg)
-- Square logo:
-  [energycurve-logo-square.svg](/Users/robertinoc/Documents/code/energycurve/public/branding/logos/energycurve-logo-square.svg)
-- Monochrome logo:
+- Canonical horizontal logo source:
+  [energycurve-logo-horizontal.png](/Users/robertinoc/Documents/code/energycurve/public/branding/source/energycurve-logo-horizontal.png)
+- Canonical square logo source:
+  [energycurve-logo-square.png](/Users/robertinoc/Documents/code/energycurve/public/branding/source/energycurve-logo-square.png)
+- Canonical monochrome logo source:
+  [energycurve-logo-monochrome.png](/Users/robertinoc/Documents/code/energycurve/public/branding/source/energycurve-logo-monochrome.png)
+- Legacy reconstructed SVG exports kept only for reference:
+  [energycurve-logo-horizontal.svg](/Users/robertinoc/Documents/code/energycurve/public/branding/logos/energycurve-logo-horizontal.svg),
+  [energycurve-logo-square.svg](/Users/robertinoc/Documents/code/energycurve/public/branding/logos/energycurve-logo-square.svg),
   [energycurve-logo-monochrome.svg](/Users/robertinoc/Documents/code/energycurve/public/branding/logos/energycurve-logo-monochrome.svg)
 - App/site icon:
-  [energycurve-icon.svg](/Users/robertinoc/Documents/code/energycurve/public/branding/icons/energycurve-icon.svg)
+  [energycurve-icon.png](/Users/robertinoc/Documents/code/energycurve/public/branding/icons/energycurve-icon.png)
 - Next.js app icon source:
-  [app/icon.svg](/Users/robertinoc/Documents/code/energycurve/app/icon.svg)
+  [app/icon.png](/Users/robertinoc/Documents/code/energycurve/app/icon.png)
 - Reusable logo component:
   [energycurve-logo.tsx](/Users/robertinoc/Documents/code/energycurve/components/brand/energycurve-logo.tsx)
 
@@ -36,9 +40,16 @@ landing and authenticated app.
 - Landing navbar uses the horizontal logo and stays fixed while scrolling.
 - Hero, auth screens, setup states, and dashboard header use the horizontal logo.
 - Footer now includes the horizontal logo for a stronger brand close.
-- App metadata icons now point to the square icon asset.
-- `app/icon.svg` mirrors the square brand mark so App Router icon generation and
-  metadata stay aligned.
+- App metadata icons now point to the official square PNG asset.
+- `app/icon.png` mirrors the official square brand mark so App Router icon
+  generation and metadata stay aligned.
+
+## Fidelity Note
+
+- The provided PNG logos are currently the source of truth because the previous
+  reconstructed SVG wordmark was visually incorrect.
+- Until a high-fidelity vector redraw is completed, product UI should use the
+  canonical PNG sources above instead of the reconstructed SVG files.
 
 ## Color Notes
 
