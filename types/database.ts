@@ -38,8 +38,8 @@ export interface Database {
           id: string
           user_id: string
           name: string
-          genre: string | null
-          context: string | null
+          genre: Database["public"]["Enums"]["playlist_genre"] | null
+          context: Database["public"]["Enums"]["playlist_context"] | null
           created_at: string
           updated_at: string
         }
@@ -47,8 +47,8 @@ export interface Database {
           id?: string
           user_id: string
           name: string
-          genre?: string | null
-          context?: string | null
+          genre?: Database["public"]["Enums"]["playlist_genre"] | null
+          context?: Database["public"]["Enums"]["playlist_context"] | null
           created_at?: string
           updated_at?: string
         }
@@ -56,8 +56,8 @@ export interface Database {
           id?: string
           user_id?: string
           name?: string
-          genre?: string | null
-          context?: string | null
+          genre?: Database["public"]["Enums"]["playlist_genre"] | null
+          context?: Database["public"]["Enums"]["playlist_context"] | null
           created_at?: string
           updated_at?: string
         }
@@ -113,7 +113,15 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: Record<string, never>
-    Enums: Record<string, never>
+    Enums: {
+      playlist_context: "opening" | "main" | "closing"
+      playlist_genre:
+        | "house"
+        | "techno"
+        | "hard-techno"
+        | "melodic-techno"
+        | "progressive"
+    }
     CompositeTypes: Record<string, never>
   }
 }

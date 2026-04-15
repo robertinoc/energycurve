@@ -2,17 +2,18 @@
 
 ## Scope
 
-This phase covers only the technical foundation for EnergyCurve:
+This phase covers the technical foundation for EnergyCurve:
 
 - Next.js project setup
 - authentication infrastructure
 - protected routing
 - Supabase data access
-- initial schema
+- initial schema and domain-aligned constraints
 - environment management
+- basic structured logging
 - documentation and validation guidance
 
-Product logic is intentionally out of scope for now.
+Product logic implementation still belongs to later phases, but the repository now includes the frozen v1 strategy so infrastructure can align to the real domain.
 
 ## Environment Variables
 
@@ -70,8 +71,9 @@ cp .env.example .env.local
    - add `http://localhost:3010/` as a Logout URI
    - optional: enable `Google Social Login` if you want the `Continue with Google` button to work
 
-5. Apply the initial schema in Supabase:
+5. Apply the database schema in Supabase:
    - open [supabase/migrations/0001_initial_schema.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0001_initial_schema.sql)
+   - then apply [supabase/migrations/0002_align_v1_strategy.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0002_align_v1_strategy.sql)
    - run it in Supabase SQL Editor
    - or apply it via Supabase CLI if you use that workflow
 
@@ -98,6 +100,7 @@ Expected outcome:
 - `lint` exits successfully
 - `typecheck` exits successfully
 - `build` finishes without errors
+- server-side logs emit structured JSON lines for contact, auth, and dashboard fallback paths
 
 ### Manual checks
 
@@ -108,15 +111,14 @@ Expected outcome:
 5. Submit the contact form with invalid data and confirm field-level validation errors appear.
 6. Visit `http://localhost:3010/dashboard` while signed out.
 7. Confirm you are redirected to `/login`.
-8. Click the login CTA and complete the WorkOS sign-in flow.
-9. Confirm WorkOS returns you to `/dashboard`.
-10. Confirm a row exists in `public.profiles` for the authenticated WorkOS user.
-11. Visit `/signup` while signed out and confirm the sign-up CTA redirects through WorkOS.
-12. If Google Social Login is enabled in WorkOS, click `Continue with Google` and confirm it still returns to `/dashboard`.
-13. While signed in, visit `/login` or `/signup` and confirm you are redirected to `/dashboard`.
-14. Click `Log out` from `/dashboard`.
-15. Confirm the WorkOS logout completes and you land back on `/`.
-16. After logout, revisit `/dashboard` and confirm the route is protected again.
+8. Visit `/login`, complete the email/password sign-in flow, and confirm you reach `/dashboard`.
+9. Confirm a row exists in `public.profiles` for the authenticated WorkOS user.
+10. Visit `/signup` while signed out, create an account, and confirm the new user reaches `/dashboard`.
+11. If Google Social Login is enabled in WorkOS, click `Continue with Google` and confirm it still returns to `/dashboard`.
+12. While signed in, visit `/login` or `/signup` and confirm you are redirected to `/dashboard`.
+13. Click `Log out` from `/dashboard`.
+14. Confirm the WorkOS logout completes and you land back on `/`.
+15. After logout, revisit `/dashboard` and confirm the route is protected again.
 
 ## Deployment Notes
 

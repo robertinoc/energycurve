@@ -3,6 +3,7 @@ import { ZodError } from "zod"
 
 import { createContactFormSchema } from "@/lib/contact-form"
 import { SiteLocale } from "@/lib/content/site-copy"
+import { logError, logWarn } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { submitContactMessage } from "@/services/contact-service"
 
@@ -71,6 +72,12 @@ export async function POST(request: Request) {
   const fallbackLocale = "en"
 
   if (!isTrustedOrigin(request)) {
+    logWarn("contact.untrusted_origin", {
+      requestOrigin: new URL(request.url).origin,
+      origin: request.headers.get("origin"),
+      referer: request.headers.get("referer"),
+    })
+
     return NextResponse.json(
       { ok: false, message: getApiMessage(fallbackLocale, "untrusted") },
       { status: 403 }
@@ -85,6 +92,13 @@ export async function POST(request: Request) {
   })
 
   if (!rateLimit.allowed) {
+    logWarn("contact.rate_limited", {
+      ipAddress,
+      retryAfterMs: rateLimit.retryAfterMs,
+      windowMs: RATE_LIMIT_WINDOW_MS,
+      limit: RATE_LIMIT_MAX_REQUESTS,
+    })
+
     return NextResponse.json(
       {
         ok: false,
@@ -158,7 +172,11 @@ export async function POST(request: Request) {
       )
     }
 
-    console.error("Contact form submission failed", error)
+    logError("contact.submission_failed", error, {
+      ipAddress,
+      origin: request.headers.get("origin"),
+      referer: request.headers.get("referer"),
+    })
 
     return NextResponse.json(
       {
