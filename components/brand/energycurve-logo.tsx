@@ -8,16 +8,16 @@ type LogoSize = "sm" | "md" | "lg" | "xl"
 
 const logoAssets: Record<LogoKind, { src: string; sizes: Record<LogoSize, { width: number; height: number }> }> = {
   horizontal: {
-    src: "/branding/logos/energycurve-logo-horizontal.svg",
+    src: "/branding/source/energycurve-logo-horizontal.png",
     sizes: {
-      sm: { width: 132, height: 26 },
-      md: { width: 172, height: 34 },
-      lg: { width: 214, height: 42 },
-      xl: { width: 282, height: 54 },
+      sm: { width: 138, height: 28 },
+      md: { width: 186, height: 38 },
+      lg: { width: 244, height: 50 },
+      xl: { width: 324, height: 66 },
     },
   },
   square: {
-    src: "/branding/logos/energycurve-logo-square.svg",
+    src: "/branding/source/energycurve-logo-square.png",
     sizes: {
       sm: { width: 28, height: 28 },
       md: { width: 40, height: 40 },
@@ -26,12 +26,12 @@ const logoAssets: Record<LogoKind, { src: string; sizes: Record<LogoSize, { widt
     },
   },
   monochrome: {
-    src: "/branding/logos/energycurve-logo-monochrome.svg",
+    src: "/branding/source/energycurve-logo-monochrome.png",
     sizes: {
       sm: { width: 138, height: 31 },
       md: { width: 182, height: 40 },
-      lg: { width: 224, height: 50 },
-      xl: { width: 292, height: 65 },
+      lg: { width: 244, height: 54 },
+      xl: { width: 312, height: 69 },
     },
   },
 }

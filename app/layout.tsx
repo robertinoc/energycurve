@@ -29,12 +29,12 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/branding/icons/energycurve-icon.svg",
-        type: "image/svg+xml",
+        url: "/branding/icons/energycurve-icon.png",
+        type: "image/png",
       },
     ],
-    shortcut: ["/branding/icons/energycurve-icon.svg"],
-    apple: ["/branding/icons/energycurve-icon.svg"],
+    shortcut: ["/branding/icons/energycurve-icon.png"],
+    apple: ["/branding/icons/energycurve-icon.png"],
   },
 }
 
