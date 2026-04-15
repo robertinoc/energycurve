@@ -43,6 +43,8 @@ landing and authenticated app.
 - App metadata icons now point to the official square PNG asset.
 - `app/icon.png` mirrors the official square brand mark so App Router icon
   generation and metadata stay aligned.
+- Horizontal and monochrome raster logos use a screen-blend treatment in dark UI
+  contexts so the black matte from the source files does not show as a hard box.
 
 ## Fidelity Note
 

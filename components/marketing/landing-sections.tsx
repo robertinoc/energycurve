@@ -339,7 +339,7 @@ export function FinalCTASection({
             <p className="text-base leading-7 text-white/68">{copy.cta.subtitle}</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <CTAButton href={signupHref} className="bg-[#0B0B0F] text-white hover:bg-[#14141b]">
+            <CTAButton href={signupHref}>
               <>
                 {copy.cta.primary}
                 <ArrowRight className="size-4" />

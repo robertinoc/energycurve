@@ -31,9 +31,9 @@ export function LanguageToggle({
             type="button"
             onClick={() => onChange(value)}
             className={cn(
-              "rounded-full px-3 py-1.5 text-xs font-medium uppercase tracking-[0.2em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D1FF]/50",
+              "rounded-full px-3 py-1.5 text-xs font-medium uppercase tracking-[0.2em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7E8A]/40",
               active
-                ? "bg-white text-[#0B0B0F]"
+                ? "bg-linear-to-r from-[#FFB08A] via-[#FF867B] to-[#FF5E8A] text-[#190A13] shadow-[0_8px_24px_rgba(255,94,138,0.18)]"
                 : "text-white/62 hover:text-white"
             )}
             aria-pressed={active}
