@@ -28,13 +28,9 @@ export function HeroSection({
             <div className="grid w-full gap-4 rounded-[22px] border border-white/8 bg-black/18 px-5 py-5 lg:grid-cols-[0.9fr_1.1fr_0.7fr]">
               <div className="space-y-3 text-left">
                 <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {copy.ui.brandPersonality}
+                  {copy.ui.builtFor}
                 </p>
-                {[
-                  copy.ui.traits.intelligent,
-                  copy.ui.traits.creative,
-                  copy.ui.traits.nightlife,
-                ].map((label, index) => (
+                {copy.hero.audienceTags.map((label, index) => (
                   <div key={label} className="flex items-center gap-3 text-white/70">
                     <div className="rounded-xl border border-white/8 bg-white/[0.04] p-2">
                       {index === 0 ? (
@@ -52,20 +48,21 @@ export function HeroSection({
 
               <div className="space-y-3 border-y border-white/8 py-4 text-left lg:border-x lg:border-y-0 lg:px-5 lg:py-0">
                 <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {copy.ui.positioning}
+                  {copy.ui.firstOutput}
                 </p>
                 <p className="text-2xl font-heading font-semibold leading-tight text-white">
-                  {copy.diff.title}
+                  {copy.hero.support}
                 </p>
               </div>
 
               <div className="space-y-3 text-left">
                 <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {copy.ui.audience}
+                  {copy.ui.whyTrust}
                 </p>
-                <p className="text-sm leading-6 text-white/68">
-                  {copy.hero.support}
-                </p>
+                <div className="space-y-2 text-sm leading-6 text-white/68">
+                  <p>{copy.ui.trustSignals.founder}</p>
+                  <p>{copy.ui.trustSignals.workflows}</p>
+                </div>
               </div>
             </div>
 
@@ -77,7 +74,7 @@ export function HeroSection({
                 {copy.hero.subtitle}
               </p>
               <p className="mx-auto max-w-3xl text-sm leading-6 text-white/46">
-                {copy.hero.support}
+                {copy.hero.audienceLine}
               </p>
             </div>
 
@@ -96,6 +93,12 @@ export function HeroSection({
               >
                 {copy.hero.cta.secondary}
               </a>
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-[20px] border border-white/8 bg-white/[0.03] px-5 py-4 text-left text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between">
+              <p>{copy.ui.trustSignals.founder}</p>
+              <p>{copy.ui.trustSignals.workflows}</p>
+              <p>{copy.ui.trustSignals.access}</p>
             </div>
           </div>
 
@@ -361,6 +364,9 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
     <footer className="flex flex-col gap-5 border-t border-white/8 pt-6 text-sm text-white/46 md:flex-row md:items-end md:justify-between">
       <div className="space-y-4">
         <EnergyCurveLogo kind="horizontal" size="md" tone="light" />
+        <p className="max-w-md text-sm leading-6 text-white/52">
+          {copy.footer.description}
+        </p>
         <div className="flex items-center gap-6">
           <span>{copy.footer.product}</span>
           <a href="#features" className="transition hover:text-white">

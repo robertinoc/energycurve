@@ -17,6 +17,8 @@ interface SiteCopySchema {
     title: LocalizedLabel
     subtitle: LocalizedLabel
     support: LocalizedLabel
+    audienceLine: LocalizedLabel
+    audienceTags: LocalizedLabel[]
     visual: {
       energyScore: LocalizedLabel
       peakIntensity: LocalizedLabel
@@ -100,32 +102,33 @@ interface SiteCopySchema {
     features: LocalizedLabel
     contact: LocalizedLabel
     rights: LocalizedLabel
+    description: LocalizedLabel
   }
   ui: {
     login: LocalizedLabel
-    brandPersonality: LocalizedLabel
-    positioning: LocalizedLabel
-    audience: LocalizedLabel
+    builtFor: LocalizedLabel
+    firstOutput: LocalizedLabel
+    whyTrust: LocalizedLabel
     differentiation: LocalizedLabel
     directContact: LocalizedLabel
     previewTitle: LocalizedLabel
     previewDescription: LocalizedLabel
     earlyAccess: LocalizedLabel
-    traits: {
-      intelligent: LocalizedLabel
-      creative: LocalizedLabel
-      nightlife: LocalizedLabel
+    trustSignals: {
+      founder: LocalizedLabel
+      workflows: LocalizedLabel
+      access: LocalizedLabel
     }
   }
 }
 
 const siteCopy: SiteCopySchema = {
   nav: {
-    features: { en: "Features", es: "Features" },
+    features: { en: "Features", es: "Características" },
     how: { en: "How it Works", es: "Cómo funciona" },
-    story: { en: "Story", es: "Historia" },
+    story: { en: "Founder Story", es: "Historia del fundador" },
     contact: { en: "Contact", es: "Contacto" },
-    cta: { en: "Get Early Access", es: "Acceso anticipado" },
+    cta: { en: "Create your account", es: "Creá tu cuenta" },
   },
   hero: {
     title: {
@@ -137,9 +140,18 @@ const siteCopy: SiteCopySchema = {
       es: "EnergyCurve analiza tus mixes, tracks y transiciones para revelar el flujo de energía detrás de cada gran set.",
     },
     support: {
-      en: "Designed for DJs, producers, and performers exploring the intersection of music energy and data.",
-      es: "Diseñado para DJs, productores y performers que exploran la intersección entre energía musical y datos.",
+      en: "Upload a mix or playlist and get a visual map of peaks, drops, transitions, and overall set energy.",
+      es: "Subí un mix o playlist y obtené un mapa visual de picos, caídas, transiciones y energía general del set.",
     },
+    audienceLine: {
+      en: "Built for DJs, producers, and performers who want to shape momentum instead of just managing tracks.",
+      es: "Pensado para DJs, productores y performers que quieren diseñar el momentum, no sólo organizar tracks.",
+    },
+    audienceTags: [
+      { en: "DJs", es: "DJs" },
+      { en: "Producers", es: "Productores" },
+      { en: "Performers", es: "Performers" },
+    ],
     visual: {
       energyScore: { en: "Energy score", es: "Nivel de energía" },
       peakIntensity: { en: "Peak intensity", es: "Intensidad pico" },
@@ -154,8 +166,8 @@ const siteCopy: SiteCopySchema = {
     },
     cta: {
       primary: {
-        en: "Start analyzing your sets",
-        es: "Empezar a analizar tus sets",
+        en: "Create your account",
+        es: "Creá tu cuenta",
       },
       secondary: {
         en: "See how it works",
@@ -165,13 +177,13 @@ const siteCopy: SiteCopySchema = {
   },
   features: {
     title: {
-      en: "Understand your sets like never before",
-      es: "Entendé tus sets como nunca antes",
+      en: "Turn your sets into something you can actually read",
+      es: "Convertí tus sets en algo que realmente puedas leer",
     },
     energy: {
       title: {
-        en: "See your set like never before",
-        es: "Visualizá tu set como nunca antes",
+        en: "See the full energy arc",
+        es: "Visualizá el arco completo de energía",
       },
       desc: {
         en: "Visualize the rise and fall of energy across your entire set. Instantly identify peaks, drops, and flat moments.",
@@ -285,15 +297,15 @@ const siteCopy: SiteCopySchema = {
       es: "No es software de DJ. Es inteligencia de performance.",
     },
     body: {
-      en: "It upgrades how you understand what you play — and helps you predict your audience energy.",
-      es: "Mejora cómo entendés lo que tocás y te ayuda a predecir la energía del público.",
+      en: "EnergyCurve does not replace your DJ software. It helps you understand what your set is doing emotionally and structurally, so you can improve transitions, shape momentum, and repeat what actually works.",
+      es: "EnergyCurve no reemplaza tu software de DJ. Te ayuda a entender qué está haciendo tu set a nivel emocional y estructural para mejorar transiciones, diseñar el momentum y repetir lo que realmente funciona.",
     },
   },
   contact: {
     title: { en: "Get in touch", es: "Contacto" },
     desc: {
-      en: "Have questions, ideas, or want to collaborate? Reach out.",
-      es: "¿Tenés preguntas o ideas? Escribinos.",
+      en: "Want early access, have feedback, or want to collaborate on the future of DJ performance intelligence? Reach out.",
+      es: "¿Querés acceso anticipado, tenés feedback o querés colaborar en el futuro de la inteligencia para performances de DJs? Escribinos.",
     },
     form: {
       name: { en: "Name", es: "Nombre" },
@@ -318,23 +330,27 @@ const siteCopy: SiteCopySchema = {
       en: "Gain more control over your sets and the energy on the dancefloor",
       es: "Tomá control de la energía en la pista",
     },
-    primary: { en: "Get early access", es: "Acceso anticipado" },
-    secondary: { en: "Join the waitlist", es: "Unirme a la lista" },
+    primary: { en: "Create your account", es: "Creá tu cuenta" },
+    secondary: { en: "Contact the founder", es: "Contactar al fundador" },
   },
   footer: {
     product: { en: "Product", es: "Producto" },
-    features: { en: "Features", es: "Features" },
+    features: { en: "Features", es: "Características" },
     contact: { en: "Contact", es: "Contacto" },
     rights: {
       en: "© EnergyCurve. All rights reserved.",
       es: "© EnergyCurve. Todos los derechos reservados.",
     },
+    description: {
+      en: "EnergyCurve helps DJs understand set energy, transitions, and performance flow.",
+      es: "EnergyCurve ayuda a DJs a entender la energía del set, las transiciones y el flujo de la performance.",
+    },
   },
   ui: {
     login: { en: "Login", es: "Ingresar" },
-    brandPersonality: { en: "Brand personality", es: "Personalidad de marca" },
-    positioning: { en: "Positioning", es: "Posicionamiento" },
-    audience: { en: "Audience", es: "Audiencia" },
+    builtFor: { en: "Built for", es: "Creado para" },
+    firstOutput: { en: "What you get first", es: "Qué obtenés primero" },
+    whyTrust: { en: "Why trust it", es: "Por qué confiar" },
     differentiation: { en: "Differentiation", es: "Diferenciación" },
     directContact: { en: "Direct contact", es: "Contacto directo" },
     previewTitle: {
@@ -342,14 +358,23 @@ const siteCopy: SiteCopySchema = {
       es: "Vista previa de EnergyCurve",
     },
     previewDescription: {
-      en: "Graph-led feedback makes the full set easier to read and refine.",
-      es: "Una lectura guiada por curvas hace más fácil entender y refinar el set completo.",
+      en: "Preview of the EnergyCurve analysis interface.",
+      es: "Vista previa de la interfaz de análisis de EnergyCurve.",
     },
-    earlyAccess: { en: "Early access", es: "Acceso anticipado" },
-    traits: {
-      intelligent: { en: "Intelligent", es: "Inteligente" },
-      creative: { en: "Creative", es: "Creativo" },
-      nightlife: { en: "Nightlife", es: "Nightlife" },
+    earlyAccess: { en: "Open access", es: "Acceso abierto" },
+    trustSignals: {
+      founder: {
+        en: "Built by a DJ-producer solving a real set-planning problem.",
+        es: "Creado por un DJ-productor resolviendo un problema real de planificación de sets.",
+      },
+      workflows: {
+        en: "Designed for real set prep, not just library management.",
+        es: "Diseñado para preparar sets de verdad, no sólo para gestionar librerías.",
+      },
+      access: {
+        en: "Account creation is open now for early users.",
+        es: "La creación de cuentas ya está abierta para early users.",
+      },
     },
   },
 }
@@ -367,6 +392,8 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       title: siteCopy.hero.title[locale],
       subtitle: siteCopy.hero.subtitle[locale],
       support: siteCopy.hero.support[locale],
+      audienceLine: siteCopy.hero.audienceLine[locale],
+      audienceTags: siteCopy.hero.audienceTags.map((entry) => entry[locale]),
       visual: {
         energyScore: siteCopy.hero.visual.energyScore[locale],
         peakIntensity: siteCopy.hero.visual.peakIntensity[locale],
@@ -460,21 +487,22 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       features: siteCopy.footer.features[locale],
       contact: siteCopy.footer.contact[locale],
       rights: siteCopy.footer.rights[locale],
+      description: siteCopy.footer.description[locale],
     },
     ui: {
       login: siteCopy.ui.login[locale],
-      brandPersonality: siteCopy.ui.brandPersonality[locale],
-      positioning: siteCopy.ui.positioning[locale],
-      audience: siteCopy.ui.audience[locale],
+      builtFor: siteCopy.ui.builtFor[locale],
+      firstOutput: siteCopy.ui.firstOutput[locale],
+      whyTrust: siteCopy.ui.whyTrust[locale],
       differentiation: siteCopy.ui.differentiation[locale],
       directContact: siteCopy.ui.directContact[locale],
       previewTitle: siteCopy.ui.previewTitle[locale],
       previewDescription: siteCopy.ui.previewDescription[locale],
       earlyAccess: siteCopy.ui.earlyAccess[locale],
-      traits: {
-        intelligent: siteCopy.ui.traits.intelligent[locale],
-        creative: siteCopy.ui.traits.creative[locale],
-        nightlife: siteCopy.ui.traits.nightlife[locale],
+      trustSignals: {
+        founder: siteCopy.ui.trustSignals.founder[locale],
+        workflows: siteCopy.ui.trustSignals.workflows[locale],
+        access: siteCopy.ui.trustSignals.access[locale],
       },
     },
   }
