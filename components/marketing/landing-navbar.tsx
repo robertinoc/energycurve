@@ -37,13 +37,13 @@ export function LandingNavbar({
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="fixed inset-x-0 top-0 z-50 px-4 pt-4 lg:px-6">
+    <div className="fixed inset-x-0 top-0 z-50 px-4 pt-3 lg:px-6 lg:pt-4">
       <header
         className={cn(
-          "mx-auto w-full max-w-6xl rounded-[24px] border px-5 py-4 transition-all duration-300",
+          "mx-auto w-full max-w-6xl rounded-[24px] border px-5 py-3.5 transition-all duration-300",
           scrolled
-            ? "border-fuchsia-400/16 bg-[#0F1017]/86 shadow-[0_20px_50px_rgba(0,0,0,0.34),0_0_28px_rgba(123,63,228,0.12)] backdrop-blur-xl"
-            : "border-white/10 bg-white/[0.04] backdrop-blur-md"
+            ? "border-fuchsia-400/18 bg-[#0F1017]/88 shadow-[0_20px_50px_rgba(0,0,0,0.34),0_0_28px_rgba(123,63,228,0.12)] backdrop-blur-xl"
+            : "border-white/10 bg-white/[0.045] shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-md"
         )}
       >
         <div className="flex items-center justify-between gap-4">
@@ -59,11 +59,12 @@ export function LandingNavbar({
                 <a
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? "location" : undefined}
                   className={cn(
-                    "rounded-full px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF2D75]/45",
+                    "rounded-full px-3 py-2 text-sm transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF2D75]/45",
                     active
-                      ? "bg-white/[0.06] text-white shadow-[0_0_18px_rgba(123,63,228,0.14)]"
-                      : "text-white/62 hover:bg-white/[0.04] hover:text-white hover:shadow-[0_0_16px_rgba(255,45,117,0.08)]"
+                      ? "bg-linear-to-r from-white/[0.08] to-white/[0.04] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_0_1px_rgba(255,255,255,0.05),0_0_20px_rgba(123,63,228,0.14)]"
+                      : "text-white/62 hover:bg-white/[0.05] hover:text-white hover:shadow-[0_0_18px_rgba(255,45,117,0.08)]"
                   )}
                 >
                   {item.label}
@@ -87,7 +88,7 @@ export function LandingNavbar({
 
           <button
             type="button"
-            className="inline-flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white lg:hidden"
+            className="inline-flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white transition hover:bg-white/[0.07] lg:hidden"
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
@@ -107,16 +108,26 @@ export function LandingNavbar({
           <div className="min-h-0 overflow-hidden">
             <div className="space-y-4 border-t border-white/8 pt-4">
               <div className="flex flex-col gap-2">
-                {items.map((item) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className="rounded-2xl px-3 py-2 text-sm text-white/72 transition hover:bg-white/[0.04] hover:text-white"
-                  >
-                    {item.label}
-                  </a>
-                ))}
+                {items.map((item) => {
+                  const active = activeSection === item.href.slice(1)
+
+                  return (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      aria-current={active ? "location" : undefined}
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "rounded-2xl px-3 py-2 text-sm transition duration-200",
+                        active
+                          ? "bg-white/[0.06] text-white shadow-[0_0_18px_rgba(123,63,228,0.12)]"
+                          : "text-white/72 hover:bg-white/[0.04] hover:text-white"
+                      )}
+                    >
+                      {item.label}
+                    </a>
+                  )
+                })}
               </div>
               <LanguageToggle locale={locale} onChange={onLocaleChange} compact />
               <div className="flex flex-col gap-3">

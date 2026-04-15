@@ -183,7 +183,7 @@ export function HowItWorksSection({
 }) {
   return (
     <SectionReveal delay={150}>
-      <div id="how-it-works" className="scroll-mt-36 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+      <div id="how-it-works" className="scroll-mt-40 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
@@ -242,7 +242,7 @@ export function HowItWorksSection({
 export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={200}>
-      <div id="story" className="scroll-mt-36 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <div id="story" className="scroll-mt-40 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
@@ -271,7 +271,7 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
 export function ContactSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={250}>
-      <div id="contact" className="scroll-mt-36 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <div id="contact" className="scroll-mt-40 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
