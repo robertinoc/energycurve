@@ -127,6 +127,7 @@
   html {
     @apply font-sans;
     background: var(--background);
+    scroll-behavior: smooth;
   }
 
   body {
@@ -144,6 +145,12 @@
   h5,
   h6 {
     @apply font-heading;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
 

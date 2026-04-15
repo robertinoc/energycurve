@@ -269,6 +269,61 @@ Keep email/password under product-owned UI, but add a dedicated `Continue with G
 - Google Social Login must be enabled in WorkOS for that button to work.
 - Email/password and Google now coexist cleanly without reverting the whole auth experience to the hosted handoff.
 
+## 17. Start landing copy with a locale-aware global navigation map
+
+**Decision**
+
+Introduce a small content dictionary for shared landing navigation labels before expanding the rest of the marketing copy.
+
+**Why**
+
+- The next copy pass will arrive in multiple parts and should not be hardcoded ad hoc inside the landing component.
+- A minimal locale-aware structure gives EnergyCurve a clean base for English and Spanish copy without forcing full-blown i18n infrastructure too early.
+- Shared navigation labels are the safest first slice because they touch multiple anchors and CTA surfaces.
+
+**Consequence**
+
+- Landing navigation labels now come from `lib/content/site-copy.ts`.
+- The current marketing screen still renders in English by default, but the structure is ready for future locale switching.
+- Future landing copy updates should extend the same content map rather than introducing scattered string constants.
+- Hero, features, how-it-works, story, contact, CTA, and footer copy now all hang off the same content source instead of living inline in the page component.
+
+## 18. Keep the public landing page client-light but interaction-capable
+
+**Decision**
+
+Use a small client-side landing shell for locale persistence, navbar scroll behavior, mobile navigation, and section reveal motion, while keeping the rest of the page component tree modular and content-driven.
+
+**Why**
+
+- The marketing page needs EN/ES switching, sticky navigation state, smooth section behavior, and lightweight motion from day one.
+- These concerns are inherently client-side, but they do not justify turning the whole app into a heavily interactive frontend bundle.
+- A dedicated landing shell keeps the interactivity contained and easy to evolve later.
+
+**Consequence**
+
+- The landing page now uses a focused client wrapper with modular section components.
+- Language selection is persisted locally and updates the document language attribute.
+- The rest of the app can stay server-first where that remains the better fit.
+
+## 19. Use a public route handler for contact submissions
+
+**Decision**
+
+Implement the public contact form with `app/api/contact` instead of coupling it to auth or dashboard services.
+
+**Why**
+
+- The marketing landing is public and should not require WorkOS authentication.
+- A route handler cleanly supports server-side validation, same-origin checks, honeypot handling, rate limiting, and structured logging in one place.
+- This keeps the contact flow production-minded without introducing an unnecessary third-party form dependency.
+
+**Consequence**
+
+- Contact submissions are validated and sanitized on the server with Zod.
+- The current implementation uses safe structured logging as the delivery fallback until a production notification channel is chosen.
+- A future email or CRM integration can plug into `services/contact-service.ts` without changing the public form contract.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

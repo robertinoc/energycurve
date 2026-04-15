@@ -29,6 +29,7 @@ flowchart TD
 
 - App Router pages and route handlers
 - Public routes: `/`, `/login`, `/signup`
+- Public API route: `/api/contact`
 - Auth routes: `/auth/login`, `/auth/signup`, `/auth/callback`
 - Protected route: `/dashboard`
 
@@ -37,6 +38,7 @@ flowchart TD
 - Shared UI and route-specific presentation components
 - `components/brand/*` contains reusable brand assets such as the EnergyCurve logo lockup
 - `components/dashboard/*` contains the interactive dashboard UI scaffolding used for the current product-direction preview
+- `components/marketing/*` contains the public landing page shell, navbar, section components, locale toggle, and contact form UI
 - `components/ui/*` contains the `shadcn/ui` base
 - `components/providers/auth-provider.tsx` mounts `AuthKitProvider` in the root layout to cover WorkOS auth edge cases in the App Router
 
@@ -45,6 +47,9 @@ flowchart TD
 - cross-cutting helpers and infrastructure utilities
 - `lib/env.ts` validates required server environment variables
 - `lib/auth/return-to.ts` sanitizes post-login return targets
+- `lib/content/site-copy.ts` provides the locale-aware marketing copy dictionary for the landing page
+- `lib/contact-form.ts` owns contact form sanitization and schema validation
+- `lib/rate-limit.ts` provides a small in-memory rate limiter for the public contact endpoint
 - `lib/energy-curve-preview.ts` contains illustrative curve data and chart helpers used during the design pass
 - `lib/supabase/server.ts` exposes the server-only Supabase client
 
@@ -53,6 +58,7 @@ flowchart TD
 - application data layer
 - `profile-service.ts` syncs WorkOS users into app profiles
 - `dashboard-service.ts` loads minimal dashboard data without adding product logic
+- `contact-service.ts` handles public contact form submissions with a safe structured logging fallback
 
 ### `types/`
 
@@ -118,3 +124,4 @@ flowchart TD
 - Protected data access is performed on the server.
 - Callback failures redirect back to `/login` without exposing raw errors to the UI.
 - RLS is enabled on all tables to block accidental browser access until policies are intentionally defined.
+- The public contact form validates and sanitizes input on the server, includes a honeypot field, enforces basic same-origin checks, and rate-limits by client IP.

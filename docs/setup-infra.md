@@ -103,17 +103,20 @@ Expected outcome:
 
 1. Open `http://localhost:3010`.
 2. Confirm the landing page renders.
-3. Visit `http://localhost:3010/dashboard` while signed out.
-4. Confirm you are redirected to `/login`.
-5. Click the login CTA and complete the WorkOS sign-in flow.
-6. Confirm WorkOS returns you to `/dashboard`.
-7. Confirm a row exists in `public.profiles` for the authenticated WorkOS user.
-8. Visit `/signup` while signed out and confirm the sign-up CTA redirects through WorkOS.
-9. If Google Social Login is enabled in WorkOS, click `Continue with Google` and confirm it still returns to `/dashboard`.
-10. While signed in, visit `/login` or `/signup` and confirm you are redirected to `/dashboard`.
-11. Click `Log out` from `/dashboard`.
-12. Confirm the WorkOS logout completes and you land back on `/`.
-13. After logout, revisit `/dashboard` and confirm the route is protected again.
+3. Toggle between `EN` and `ES` and confirm the language selection persists after refresh.
+4. Submit the public contact form with valid data and confirm you get a success state.
+5. Submit the contact form with invalid data and confirm field-level validation errors appear.
+6. Visit `http://localhost:3010/dashboard` while signed out.
+7. Confirm you are redirected to `/login`.
+8. Click the login CTA and complete the WorkOS sign-in flow.
+9. Confirm WorkOS returns you to `/dashboard`.
+10. Confirm a row exists in `public.profiles` for the authenticated WorkOS user.
+11. Visit `/signup` while signed out and confirm the sign-up CTA redirects through WorkOS.
+12. If Google Social Login is enabled in WorkOS, click `Continue with Google` and confirm it still returns to `/dashboard`.
+13. While signed in, visit `/login` or `/signup` and confirm you are redirected to `/dashboard`.
+14. Click `Log out` from `/dashboard`.
+15. Confirm the WorkOS logout completes and you land back on `/`.
+16. After logout, revisit `/dashboard` and confirm the route is protected again.
 
 ## Deployment Notes
 
