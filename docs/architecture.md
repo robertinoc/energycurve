@@ -5,7 +5,7 @@
 - Keep auth and application data separate
 - Prefer server-side validation for protected routes and database access
 - Keep the initial foundation small and easy to extend
-- Avoid business logic until product requirements are ready
+- Freeze product rules explicitly before implementing analysis logic
 
 ## High-Level Flow
 
@@ -13,9 +13,9 @@
 flowchart TD
   A["User requests /dashboard"] --> B["proxy.ts"]
   B -->|No session| C["/login page"]
-  C --> D["/auth/login route"]
-  D --> E["WorkOS AuthKit"]
-  E --> F["/auth/callback route"]
+  C --> D["login/signup form action"]
+  D --> E["WorkOS user-management APIs"]
+  E --> F["saveSession()"]
   F --> G["syncProfileFromWorkOSUser()"]
   G --> H["/dashboard"]
   H --> I["withAuth() server validation"]
@@ -30,7 +30,7 @@ flowchart TD
 - App Router pages and route handlers
 - Public routes: `/`, `/login`, `/signup`
 - Public API route: `/api/contact`
-- Auth routes: `/auth/login`, `/auth/signup`, `/auth/callback`
+- Auth routes: `/auth/login`, `/auth/signup`, `/auth/callback`, `/auth/start`, `/auth/social/google`
 - Protected route: `/dashboard`
 
 ### `components/`
@@ -49,6 +49,8 @@ flowchart TD
 - `lib/auth/return-to.ts` sanitizes post-login return targets
 - `lib/content/site-copy.ts` provides the locale-aware marketing copy dictionary for the landing page
 - `lib/contact-form.ts` owns contact form sanitization and schema validation
+- `lib/observability/logger.ts` provides structured server-side logging helpers
+- `lib/product/strategy.ts` centralizes the frozen v1 product constants and rules
 - `lib/rate-limit.ts` provides a small in-memory rate limiter for the public contact endpoint
 - `lib/energy-curve-preview.ts` contains illustrative curve data and chart helpers used during the design pass
 - `lib/supabase/server.ts` exposes the server-only Supabase client
@@ -116,7 +118,7 @@ flowchart TD
 
 - `tracks`
   - belongs to `playlists`
-  - stores basic sequencing metadata only
+  - stores sequencing metadata plus a `1–10` energy score range aligned to strategy v1
 
 ## Security Notes
 
@@ -125,3 +127,4 @@ flowchart TD
 - Callback failures redirect back to `/login` without exposing raw errors to the UI.
 - RLS is enabled on all tables to block accidental browser access until policies are intentionally defined.
 - The public contact form validates and sanitizes input on the server, includes a honeypot field, enforces basic same-origin checks, and rate-limits by client IP.
+- Structured logging is centralized so auth, contact, and dashboard fallback paths emit consistent server-side events.

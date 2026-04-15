@@ -1,6 +1,6 @@
 # EnergyCurve
 
-EnergyCurve is a Next.js App Router project for DJs. This repository is currently limited to setup and infrastructure. Product logic such as playlist analysis, BPM workflows, and energy scoring is intentionally deferred.
+EnergyCurve is a Next.js App Router project for DJs. The product strategy and technical foundation are now documented and frozen for v1, while the actual analysis engine and playlist workflows remain future implementation work.
 
 ## What Was Set Up
 
@@ -21,6 +21,9 @@ EnergyCurve is a Next.js App Router project for DJs. This repository is currentl
 - Product landing copy now structured across hero, features, how-it-works, differentiation, story, contact, CTA, and footer sections
 - EN / ES language switching with persisted preference on the landing page
 - Secure public contact form with route-handler validation, honeypot, basic rate limiting, and structured logging fallback
+- Product strategy v1 documented in-repo, including ICP, MVP scope, KPIs, supported contexts, genre rules, and scoring assumptions
+- Domain constants for EnergyCurve v1 now live in code for future product implementation
+- Basic structured logging centralized for auth, dashboard fallback, and contact handling
 - Documentation for setup, architecture, technical decisions, deployment, and validation
 
 ## Stack
@@ -33,6 +36,14 @@ EnergyCurve is a Next.js App Router project for DJs. This repository is currentl
 - WorkOS AuthKit
 - Supabase Postgres
 - Vercel-ready deployment configuration
+
+## Roadmap Status
+
+- Section 1 `Product & Strategy`: complete for v1 definition
+- Section 2 `Setup & Infra`: complete for foundation
+- Section 3 `Auth & Users`: intentionally left for the next phase of hardening and product work
+
+See [docs/roadmap-status.md](/Users/robertinoc/Documents/code/energycurve/docs/roadmap-status.md) for the detailed breakdown.
 
 ## Project Structure
 
@@ -85,7 +96,7 @@ npm install
 
 2. Populate `.env.local` from `.env.example`.
 
-3. Apply the initial database migration from [supabase/migrations/0001_initial_schema.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0001_initial_schema.sql) in Supabase SQL Editor or via the Supabase CLI.
+3. Apply the database migrations from [supabase/migrations/0001_initial_schema.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0001_initial_schema.sql) and [supabase/migrations/0002_align_v1_strategy.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0002_align_v1_strategy.sql) in Supabase SQL Editor or via the Supabase CLI.
 
 4. Configure WorkOS:
    - Add `http://localhost:3010/auth/callback` as the redirect URI.
@@ -121,6 +132,7 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 - branded landing and dashboard presentation
 - EN / ES toggle and persisted language preference on the landing
 - public contact form submission, validation, and error/success states
+- strategy/domain alignment for EnergyCurve v1
 
 ## Deployment Notes
 
@@ -134,7 +146,7 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 
 ## Known Limitations
 
-- No business logic has been added yet for playlist ingestion or analysis.
+- The product strategy is now documented and frozen for v1, but the actual playlist analysis engine is still future implementation work.
 - Database access currently uses a server-only service role client; if future client-side data access is introduced, add RLS policies and a browser-safe client strategy.
 - Automated tests were not added in this phase; validation is currently lint, typecheck, build, and manual auth/infrastructure checks.
 - End-to-end auth verification still depends on real WorkOS and Supabase credentials being configured in the target environment.
@@ -143,6 +155,8 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 ## Related Docs
 
 - [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md)
+- [docs/product-strategy.md](/Users/robertinoc/Documents/code/energycurve/docs/product-strategy.md)
+- [docs/roadmap-status.md](/Users/robertinoc/Documents/code/energycurve/docs/roadmap-status.md)
 - [docs/branding.md](/Users/robertinoc/Documents/code/energycurve/docs/branding.md)
 - [docs/brand-design.md](/Users/robertinoc/Documents/code/energycurve/docs/brand-design.md)
 - [docs/design-system.md](/Users/robertinoc/Documents/code/energycurve/docs/design-system.md)

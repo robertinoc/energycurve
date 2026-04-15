@@ -82,21 +82,23 @@ Sync the application profile after successful WorkOS authentication and again wh
 - There is a small amount of intentional duplication for reliability.
 - Sync logic remains centralized in `services/profile-service.ts`.
 
-## 6. Keep business logic out of the foundation phase
+## 6. Freeze product strategy before implementing the analysis engine
 
 **Decision**
 
-Do not implement playlist analysis, BPM processing, or energy scoring yet.
+Document and freeze the EnergyCurve v1 product strategy in the repository before implementing the analysis engine itself.
 
 **Why**
 
-- The explicit goal of this phase is setup and infrastructure.
-- Avoiding early product logic keeps the architecture cleaner and the scope controlled.
+- The product scope is now clear enough to codify without prematurely building the full engine.
+- Engineering needs a stable source of truth for score ranges, contexts, genres, and MVP boundaries.
+- This keeps product intent from drifting between docs, schema, and future implementation work.
 
 **Consequence**
 
-- The dashboard is intentionally infrastructural, not feature-complete.
-- Future product work should build on the existing service and schema boundaries.
+- The repository now contains a canonical `docs/product-strategy.md` and `lib/product/strategy.ts`.
+- The actual analysis engine remains future implementation work.
+- Schema and domain types should align with the frozen strategy instead of placeholder assumptions.
 
 ## 7. Fail gracefully when WorkOS is not ready
 

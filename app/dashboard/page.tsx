@@ -23,6 +23,7 @@ import {
   logWorkOSRuntimeError,
 } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
+import { logWarn } from "@/lib/observability/logger"
 import { getDashboardSnapshot } from "@/services/dashboard-service"
 
 export const metadata: Metadata = {
@@ -91,7 +92,12 @@ export default async function DashboardPage() {
         lastName: user.lastName ?? null,
       })
     } catch (error) {
-      console.warn("Dashboard bootstrap fallback:", error)
+      logWarn("dashboard.bootstrap_fallback", {
+        workosUserId: user.id,
+        email: user.email,
+        reason:
+          error instanceof Error ? error.message : "Unknown dashboard bootstrap error",
+      })
       infrastructureMessage =
         "Your WorkOS session is valid, but the application database could not be initialized. Confirm the Supabase environment variables and apply the initial schema migration."
     }

@@ -1,6 +1,7 @@
 import "server-only"
 
 import { ContactFormInput } from "@/lib/contact-form"
+import { logInfo } from "@/lib/observability/logger"
 
 interface ContactSubmissionContext {
   ipAddress: string
@@ -14,19 +15,20 @@ export async function submitContactMessage(
 ) {
   const referenceId = `ec_${crypto.randomUUID()}`
 
-  console.info(
-    "[EnergyCurve contact]",
-    JSON.stringify({
-      referenceId,
-      submittedAt: new Date().toISOString(),
-      input: {
-        name: input.name,
-        email: input.email,
-        message: input.message,
-      },
-      context,
-    })
-  )
+  logInfo("contact.submission_received", {
+    referenceId,
+    submittedAt: new Date().toISOString(),
+    input: {
+      name: input.name,
+      email: input.email,
+      message: input.message,
+    },
+    context: {
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+      origin: context.origin,
+    },
+  })
 
   return {
     referenceId,

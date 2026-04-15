@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { isWorkOSConfigured } from "@/lib/config/infrastructure-status"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
+import { logError } from "@/lib/observability/logger"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 
 const authHandler = handleAuth({
@@ -16,11 +17,16 @@ const authHandler = handleAuth({
         lastName: user.lastName ?? null,
       })
     } catch (error) {
-      console.error("Profile sync failed after WorkOS callback", error)
+      logError("auth.callback_profile_sync_failed", error, {
+        workosUserId: user.id,
+        email: user.email,
+      })
     }
   },
   onError: async ({ request, error }) => {
-    console.error("WorkOS callback failed", error)
+    logError("auth.callback_failed", error, {
+      pathname: new URL(request.url).pathname,
+    })
 
     const url = new URL("/login", request.url)
     url.searchParams.set("error", "auth")
