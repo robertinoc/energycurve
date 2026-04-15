@@ -3,28 +3,51 @@ import type { Metadata } from "next"
 import { LandingPage } from "@/components/marketing/landing-page"
 
 export const metadata: Metadata = {
-  title: "Performance intelligence for DJs",
+  title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
   description:
-    "EnergyCurve analyzes mixes, tracks, and transitions to reveal the hidden energy flow behind every great set.",
+    "EnergyCurve helps DJs analyze set energy, track transitions, and performance flow to design better mixes and more intentional dancefloor momentum.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "EnergyCurve | Performance intelligence for DJs",
+    title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
     description:
-      "Design better performances with better energy. Analyze your sets, understand transitions, and shape the dancefloor with confidence.",
+      "Analyze set energy, transitions, and performance flow to design better mixes and shape momentum with more intention.",
     url: "https://energycurve.vercel.app/",
     siteName: "EnergyCurve",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "EnergyCurve | Performance intelligence for DJs",
+    title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
     description:
-      "Analyze your mixes, tracks, and transitions to reveal the hidden energy flow behind every great set.",
+      "Analyze set energy, track transitions, and performance flow to build better DJ performances.",
   },
 }
 
 export default function HomePage() {
-  return <LandingPage />
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "EnergyCurve",
+    applicationCategory: "MusicApplication",
+    operatingSystem: "Web",
+    description:
+      "EnergyCurve helps DJs analyze set energy, track transitions, and performance flow to design better mixes and more intentional dancefloor momentum.",
+    url: "https://energycurve.vercel.app/",
+    audience: {
+      "@type": "Audience",
+      audienceType: "DJs, producers, and performers",
+    },
+  }
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <LandingPage />
+    </>
+  )
 }
