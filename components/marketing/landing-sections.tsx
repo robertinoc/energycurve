@@ -24,17 +24,13 @@ export function HeroSection({
       <section className="rounded-[30px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.38)] backdrop-blur">
         <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,19,28,0.96),rgba(11,11,15,0.98))] px-5 py-7 shadow-[0_0_60px_rgba(123,63,228,0.08)]">
           <div className="flex flex-col items-center gap-5 text-center">
-            <EnergyCurveLogo tone="light" size="xl" />
+            <EnergyCurveLogo tone="light" size="xl" kind="horizontal" priority />
             <div className="grid w-full gap-4 rounded-[22px] border border-white/8 bg-black/18 px-5 py-5 lg:grid-cols-[0.9fr_1.1fr_0.7fr]">
               <div className="space-y-3 text-left">
                 <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {copy.ui.brandPersonality}
+                  {copy.ui.builtFor}
                 </p>
-                {[
-                  copy.ui.traits.intelligent,
-                  copy.ui.traits.creative,
-                  copy.ui.traits.nightlife,
-                ].map((label, index) => (
+                {copy.hero.audienceTags.map((label, index) => (
                   <div key={label} className="flex items-center gap-3 text-white/70">
                     <div className="rounded-xl border border-white/8 bg-white/[0.04] p-2">
                       {index === 0 ? (
@@ -52,20 +48,21 @@ export function HeroSection({
 
               <div className="space-y-3 border-y border-white/8 py-4 text-left lg:border-x lg:border-y-0 lg:px-5 lg:py-0">
                 <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {copy.ui.positioning}
+                  {copy.ui.firstOutput}
                 </p>
                 <p className="text-2xl font-heading font-semibold leading-tight text-white">
-                  {copy.diff.title}
+                  {copy.hero.support}
                 </p>
               </div>
 
               <div className="space-y-3 text-left">
                 <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {copy.ui.audience}
+                  {copy.ui.whyTrust}
                 </p>
-                <p className="text-sm leading-6 text-white/68">
-                  {copy.hero.support}
-                </p>
+                <div className="space-y-2 text-sm leading-6 text-white/68">
+                  <p>{copy.ui.trustSignals.founder}</p>
+                  <p>{copy.ui.trustSignals.workflows}</p>
+                </div>
               </div>
             </div>
 
@@ -77,7 +74,7 @@ export function HeroSection({
                 {copy.hero.subtitle}
               </p>
               <p className="mx-auto max-w-3xl text-sm leading-6 text-white/46">
-                {copy.hero.support}
+                {copy.hero.audienceLine}
               </p>
             </div>
 
@@ -97,6 +94,10 @@ export function HeroSection({
                 {copy.hero.cta.secondary}
               </a>
             </div>
+
+            <p className="text-sm text-white/50">
+              {copy.ui.trustSignals.founder} {copy.ui.trustSignals.access}
+            </p>
           </div>
 
           <div className="mt-6 rounded-[24px] border border-white/8 bg-black/18 p-3">
@@ -119,6 +120,9 @@ export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
           <h2 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
             {copy.features.title}
           </h2>
+          <p className="max-w-3xl text-base leading-7 text-white/62">
+            {copy.features.intro}
+          </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -180,7 +184,7 @@ export function HowItWorksSection({
 }) {
   return (
     <SectionReveal delay={150}>
-      <div id="how-it-works" className="scroll-mt-28 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+      <div id="how-it-works" className="scroll-mt-40 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
@@ -239,7 +243,7 @@ export function HowItWorksSection({
 export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={200}>
-      <div id="story" className="scroll-mt-28 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <div id="story" className="scroll-mt-40 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
@@ -268,7 +272,7 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
 export function ContactSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={250}>
-      <div id="contact" className="scroll-mt-28 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <div id="contact" className="scroll-mt-40 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
@@ -358,15 +362,21 @@ export function FinalCTASection({
 
 export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
-    <footer className="flex flex-col gap-4 border-t border-white/8 pt-6 text-sm text-white/46 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-6">
-        <span>{copy.footer.product}</span>
-        <a href="#features" className="transition hover:text-white">
-          {copy.footer.features}
-        </a>
-        <a href="#contact" className="transition hover:text-white">
-          {copy.footer.contact}
-        </a>
+    <footer className="flex flex-col gap-5 border-t border-white/8 pt-6 text-sm text-white/46 md:flex-row md:items-end md:justify-between">
+      <div className="space-y-4">
+        <EnergyCurveLogo kind="horizontal" size="md" tone="light" />
+        <p className="max-w-md text-sm leading-6 text-white/52">
+          {copy.footer.description}
+        </p>
+        <div className="flex items-center gap-6">
+          <span>{copy.footer.product}</span>
+          <a href="#features" className="transition hover:text-white">
+            {copy.footer.features}
+          </a>
+          <a href="#contact" className="transition hover:text-white">
+            {copy.footer.contact}
+          </a>
+        </div>
       </div>
       <p>{copy.footer.rights}</p>
     </footer>

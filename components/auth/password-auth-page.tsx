@@ -120,6 +120,7 @@ export function PasswordAuthPage({
           <EnergyCurveLogo
             tone="light"
             size="lg"
+            kind="horizontal"
             caption={isSignup ? "WorkOS-backed sign up" : "WorkOS-backed login"}
           />
 

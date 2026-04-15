@@ -1,0 +1,46 @@
+<svg width="1240" height="240" viewBox="0 0 1240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1240" height="240" fill="none" />
+  <g filter="url(#wave_glow)">
+    <path
+      d="M52 119H115C132.673 119 147 133.327 147 151V151C147 168.673 161.327 183 179 183V183C196.673 183 211 168.673 211 151V84C211 48.6538 239.654 20 275 20V20C310.346 20 339 48.6538 339 84V151C339 168.673 353.327 183 371 183V183C388.673 183 403 168.673 403 151V151C403 133.327 417.327 119 435 119H459"
+      stroke="url(#wave_gradient)"
+      stroke-width="20"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+  <g filter="url(#word_glow)">
+    <path d="M547.241 162V66H614.345V83.184H568.553V104.88H610.505V122.064H568.553V162H547.241Z" fill="url(#word_gradient)"/>
+    <path d="M627.756 162V66H698.22V83.184H649.068V104.16H694.124V121.344H649.068V144.816H699.884V162H627.756Z" fill="url(#word_gradient)"/>
+    <path d="M741.615 163.536C712.687 163.536 694.479 145.2 694.479 114C694.479 82.8 712.687 64.464 741.615 64.464C764.527 64.464 781.455 75.344 786.575 95.952H764.751C761.423 86.096 753.615 81.136 741.615 81.136C726.895 81.136 716.303 92.016 716.303 114C716.303 135.984 726.895 146.864 741.615 146.864C753.615 146.864 761.423 141.904 764.751 132.048H786.575C781.455 152.656 764.527 163.536 741.615 163.536Z" fill="url(#word_gradient)"/>
+    <path d="M797.69 162V66H819.002V145.072H867.418V162H797.69Z" fill="url(#word_gradient)"/>
+    <path d="M887.195 163.536C860.571 163.536 842.875 144.944 842.875 114C842.875 83.056 860.571 64.464 887.195 64.464C913.819 64.464 931.515 83.056 931.515 114C931.515 144.944 913.819 163.536 887.195 163.536ZM887.195 146.608C901.435 146.608 909.691 134.928 909.691 114C909.691 93.072 901.435 81.392 887.195 81.392C872.955 81.392 864.699 93.072 864.699 114C864.699 134.928 872.955 146.608 887.195 146.608Z" fill="url(#word_gradient)"/>
+    <path d="M983.206 163.536C956.582 163.536 938.886 144.944 938.886 114C938.886 83.056 956.582 64.464 983.206 64.464C1006.12 64.464 1022.41 75.088 1026.89 95.056H1005.19C1001.99 85.968 994.694 81.264 983.206 81.264C968.966 81.264 960.71 92.944 960.71 114C960.71 135.184 969.094 146.736 983.59 146.736C994.598 146.736 1002.41 141.232 1005.32 130.992H982.182V115.088H1026.63V162H1008.94L1007.28 149.328C1001.65 158.544 993.006 163.536 983.206 163.536Z" fill="url(#word_gradient)"/>
+    <path d="M1044.88 162V66H1115.34V83.184H1066.19V104.16H1111.24V121.344H1066.19V144.816H1117V162H1044.88Z" fill="url(#word_gradient)"/>
+    <path d="M1161.41 163.536C1139.91 163.536 1122.34 151.792 1121.95 131.312H1142.75C1143.39 142.192 1150.69 147.12 1161.79 147.12C1173.05 147.12 1179.19 142.512 1179.19 135.728C1179.19 129.68 1174.71 126.8 1164.61 124.752L1150.79 122.064C1132.71 118.48 1123.62 108.944 1123.62 94.736C1123.62 76.72 1139.65 64.464 1161.28 64.464C1183.04 64.464 1198.79 76.976 1199.3 96.432H1178.5C1177.73 86.448 1170.95 80.88 1160.9 80.88C1151.3 80.88 1145.06 85.168 1145.06 91.824C1145.06 97.488 1149.42 100.624 1159.14 102.544L1173.09 105.232C1192.17 108.944 1200.63 117.392 1200.63 132.176C1200.63 151.92 1184.99 163.536 1161.41 163.536Z" fill="url(#word_gradient)"/>
+  </g>
+  <defs>
+    <linearGradient id="wave_gradient" x1="52" y1="101.5" x2="459" y2="101.5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9E2FFF" />
+      <stop offset="0.36" stop-color="#7A55FF" />
+      <stop offset="0.66" stop-color="#58C8FF" />
+      <stop offset="1" stop-color="#2EF0FF" />
+    </linearGradient>
+    <linearGradient id="word_gradient" x1="547" y1="114" x2="1200" y2="114" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#AA34FF" />
+      <stop offset="0.3" stop-color="#7F5BFF" />
+      <stop offset="0.68" stop-color="#59C8FF" />
+      <stop offset="1" stop-color="#2EF0FF" />
+    </linearGradient>
+    <filter id="wave_glow" x="16" y="0" width="479" height="203" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+      <feGaussianBlur stdDeviation="8" result="effect1_foregroundBlur" />
+    </filter>
+    <filter id="word_glow" x="535" y="56" width="678" height="116" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+      <feGaussianBlur stdDeviation="3" result="effect1_foregroundBlur" />
+    </filter>
+  </defs>
+</svg>

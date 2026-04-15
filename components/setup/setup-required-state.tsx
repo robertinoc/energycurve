@@ -37,6 +37,7 @@ export function SetupRequiredState({
           <EnergyCurveLogo
             tone="light"
             size="lg"
+            kind="horizontal"
             caption="Local setup required"
           />
 

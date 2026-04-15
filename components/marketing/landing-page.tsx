@@ -47,6 +47,11 @@ export function LandingPage() {
   useEffect(() => {
     const observers = new IntersectionObserver(
       (entries) => {
+        if (window.scrollY < 180) {
+          setActiveSection(null)
+          return
+        }
+
         const visible = entries
           .filter((entry) => entry.isIntersecting)
           .sort((left, right) => right.intersectionRatio - left.intersectionRatio)
@@ -56,7 +61,7 @@ export function LandingPage() {
         }
       },
       {
-        rootMargin: "-25% 0px -55% 0px",
+        rootMargin: "-32% 0px -48% 0px",
         threshold: [0.2, 0.4, 0.6],
       }
     )
@@ -90,7 +95,7 @@ export function LandingPage() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-4 lg:px-10">
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-4 pt-28 lg:px-10 lg:pt-34">
         <LandingNavbar
           items={navItems}
           activeSection={activeSection}

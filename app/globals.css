@@ -128,6 +128,7 @@
     @apply font-sans;
     background: var(--background);
     scroll-behavior: smooth;
+    scroll-padding-top: 9rem;
   }
 
   body {
@@ -151,6 +152,7 @@
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+    scroll-padding-top: 9rem;
   }
 }
 

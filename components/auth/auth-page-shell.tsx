@@ -48,7 +48,7 @@ export function AuthPageShell({
 
       <div className="relative mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <section className="space-y-6">
-          <EnergyCurveLogo tone="light" size="lg" caption={eyebrow} />
+          <EnergyCurveLogo tone="light" size="lg" kind="horizontal" caption={eyebrow} />
 
           <div className="space-y-3">
             <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">

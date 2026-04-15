@@ -110,6 +110,7 @@ export default async function DashboardPage() {
                 <EnergyCurveLogo
                   tone="light"
                   size="md"
+                  kind="horizontal"
                   caption="Authenticated workspace"
                 />
                 <div className="space-y-3">

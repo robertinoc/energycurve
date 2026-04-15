@@ -2,78 +2,83 @@ import Image from "next/image"
 
 import { cn } from "@/lib/utils"
 
-type LogoVariant = "gradient" | "mono"
+type LogoKind = "horizontal" | "square" | "monochrome"
 type LogoTone = "light" | "dark"
 type LogoSize = "sm" | "md" | "lg" | "xl"
 
-const logoSources: Record<LogoVariant, string> = {
-  gradient: "/brand/energycurve-iso-gradient.svg",
-  mono: "/brand/energycurve-iso-mono.svg",
-}
-
-const sizeMap: Record<LogoSize, number> = {
-  sm: 28,
-  md: 40,
-  lg: 56,
-  xl: 88,
+const logoAssets: Record<LogoKind, { src: string; sizes: Record<LogoSize, { width: number; height: number }> }> = {
+  horizontal: {
+    src: "/branding/logos/energycurve-logo-horizontal.svg",
+    sizes: {
+      sm: { width: 132, height: 26 },
+      md: { width: 172, height: 34 },
+      lg: { width: 214, height: 42 },
+      xl: { width: 282, height: 54 },
+    },
+  },
+  square: {
+    src: "/branding/logos/energycurve-logo-square.svg",
+    sizes: {
+      sm: { width: 28, height: 28 },
+      md: { width: 40, height: 40 },
+      lg: { width: 56, height: 56 },
+      xl: { width: 88, height: 88 },
+    },
+  },
+  monochrome: {
+    src: "/branding/logos/energycurve-logo-monochrome.svg",
+    sizes: {
+      sm: { width: 138, height: 31 },
+      md: { width: 182, height: 40 },
+      lg: { width: 224, height: 50 },
+      xl: { width: 292, height: 65 },
+    },
+  },
 }
 
 interface EnergyCurveLogoProps {
-  variant?: LogoVariant
+  kind?: LogoKind
   tone?: LogoTone
   size?: LogoSize
-  withWordmark?: boolean
   caption?: string
   className?: string
+  priority?: boolean
 }
 
 export function EnergyCurveLogo({
-  variant = "gradient",
+  kind = "horizontal",
   tone = "dark",
   size = "md",
-  withWordmark = true,
   caption,
   className,
+  priority = false,
 }: EnergyCurveLogoProps) {
-  const iconSize = sizeMap[size]
+  const asset = logoAssets[kind]
+  const dimensions = asset.sizes[size]
 
-  const titleClassName =
-    tone === "light" ? "text-white" : "text-[#0B0B0F]"
   const captionClassName =
     tone === "light" ? "text-white/65" : "text-slate-500"
 
   return (
-    <div className={cn("flex items-center gap-3", className)}>
+    <div className={cn("flex flex-col gap-2", className)}>
       <Image
-        src={logoSources[variant]}
-        alt="EnergyCurve logo"
-        width={iconSize}
-        height={iconSize}
-        priority={size === "xl"}
-        className="shrink-0"
+        src={asset.src}
+        alt={kind === "square" ? "EnergyCurve icon" : "EnergyCurve logo"}
+        width={dimensions.width}
+        height={dimensions.height}
+        priority={priority || size === "xl"}
+        className="h-auto max-w-full shrink-0"
       />
 
-      {withWordmark ? (
-        <div className="space-y-0.5">
-          <p
-            className={cn(
-              "font-heading text-lg font-semibold tracking-[0.02em]",
-              titleClassName
-            )}
-          >
-            EnergyCurve
-          </p>
-          {caption ? (
-            <p
-              className={cn(
-                "text-xs uppercase tracking-[0.24em]",
-                captionClassName
-              )}
-            >
-              {caption}
-            </p>
-          ) : null}
-        </div>
+      {caption ? (
+        <p
+          className={cn(
+            "text-xs uppercase tracking-[0.24em]",
+            captionClassName
+          )}
+        >
+          {caption}
+        </p>
       ) : null}
     </div>
   )
