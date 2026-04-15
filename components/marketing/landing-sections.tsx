@@ -24,7 +24,7 @@ export function HeroSection({
       <section className="rounded-[30px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.38)] backdrop-blur">
         <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,19,28,0.96),rgba(11,11,15,0.98))] px-5 py-7 shadow-[0_0_60px_rgba(123,63,228,0.08)]">
           <div className="flex flex-col items-center gap-5 text-center">
-            <EnergyCurveLogo tone="light" size="xl" />
+            <EnergyCurveLogo tone="light" size="xl" kind="horizontal" priority />
             <div className="grid w-full gap-4 rounded-[22px] border border-white/8 bg-black/18 px-5 py-5 lg:grid-cols-[0.9fr_1.1fr_0.7fr]">
               <div className="space-y-3 text-left">
                 <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
@@ -180,7 +180,7 @@ export function HowItWorksSection({
 }) {
   return (
     <SectionReveal delay={150}>
-      <div id="how-it-works" className="scroll-mt-28 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+      <div id="how-it-works" className="scroll-mt-36 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
@@ -239,7 +239,7 @@ export function HowItWorksSection({
 export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={200}>
-      <div id="story" className="scroll-mt-28 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <div id="story" className="scroll-mt-36 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
@@ -268,7 +268,7 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
 export function ContactSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={250}>
-      <div id="contact" className="scroll-mt-28 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <div id="contact" className="scroll-mt-36 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white ring-0">
           <CardHeader className="space-y-3">
             <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
@@ -358,15 +358,18 @@ export function FinalCTASection({
 
 export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
-    <footer className="flex flex-col gap-4 border-t border-white/8 pt-6 text-sm text-white/46 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-6">
-        <span>{copy.footer.product}</span>
-        <a href="#features" className="transition hover:text-white">
-          {copy.footer.features}
-        </a>
-        <a href="#contact" className="transition hover:text-white">
-          {copy.footer.contact}
-        </a>
+    <footer className="flex flex-col gap-5 border-t border-white/8 pt-6 text-sm text-white/46 md:flex-row md:items-end md:justify-between">
+      <div className="space-y-4">
+        <EnergyCurveLogo kind="horizontal" size="md" tone="light" />
+        <div className="flex items-center gap-6">
+          <span>{copy.footer.product}</span>
+          <a href="#features" className="transition hover:text-white">
+            {copy.footer.features}
+          </a>
+          <a href="#contact" className="transition hover:text-white">
+            {copy.footer.contact}
+          </a>
+        </div>
       </div>
       <p>{copy.footer.rights}</p>
     </footer>

@@ -25,7 +25,17 @@ export const metadata: Metadata = {
     template: "%s | EnergyCurve",
   },
   description:
-    "Setup and infrastructure foundation for EnergyCurve, a DJ web app powered by WorkOS AuthKit and Supabase Postgres.",
+    "EnergyCurve is a performance intelligence layer for DJs, producers, and performers shaping better sets through energy-aware insights.",
+  icons: {
+    icon: [
+      {
+        url: "/branding/icons/energycurve-icon.svg",
+        type: "image/svg+xml",
+      },
+    ],
+    shortcut: ["/branding/icons/energycurve-icon.svg"],
+    apple: ["/branding/icons/energycurve-icon.svg"],
+  },
 }
 
 export const viewport: Viewport = {
