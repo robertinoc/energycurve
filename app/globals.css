@@ -119,6 +119,36 @@
   }
 }
 
+@keyframes ambient-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -18px, 0) scale(1.04);
+  }
+}
+
+@keyframes ambient-drift-reverse {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, 14px, 0) scale(0.98);
+  }
+}
+
+@keyframes wave-glide {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-1.2%, -1.5%, 0);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -164,6 +194,22 @@
 
   .energy-orb-pulse {
     animation: energy-pulse 2.8s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  .ambient-drift-slow {
+    animation: ambient-drift 18s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .ambient-drift-reverse {
+    animation: ambient-drift-reverse 20s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .energy-wave-glide {
+    animation: wave-glide 18s ease-in-out infinite;
+    will-change: transform;
     transform-origin: center;
   }
 }
