@@ -95,11 +95,9 @@ export function HeroSection({
               </a>
             </div>
 
-            <div className="flex flex-col gap-3 rounded-[20px] border border-white/8 bg-white/[0.03] px-5 py-4 text-left text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between">
-              <p>{copy.ui.trustSignals.founder}</p>
-              <p>{copy.ui.trustSignals.workflows}</p>
-              <p>{copy.ui.trustSignals.access}</p>
-            </div>
+            <p className="text-sm text-white/50">
+              {copy.ui.trustSignals.founder} {copy.ui.trustSignals.access}
+            </p>
           </div>
 
           <div className="mt-6 rounded-[24px] border border-white/8 bg-black/18 p-3">
@@ -122,6 +120,9 @@ export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
           <h2 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
             {copy.features.title}
           </h2>
+          <p className="max-w-3xl text-base leading-7 text-white/62">
+            {copy.features.intro}
+          </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

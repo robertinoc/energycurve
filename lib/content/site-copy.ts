@@ -32,6 +32,7 @@ interface SiteCopySchema {
   }
   features: {
     title: LocalizedLabel
+    intro: LocalizedLabel
     energy: {
       title: LocalizedLabel
       desc: LocalizedLabel
@@ -136,16 +137,16 @@ const siteCopy: SiteCopySchema = {
       es: "Diseñá mejores performances con mejor energía",
     },
     subtitle: {
-      en: "EnergyCurve analyzes your mixes, tracks, and transitions to reveal the hidden energy flow behind every great set.",
-      es: "EnergyCurve analiza tus mixes, tracks y transiciones para revelar el flujo de energía detrás de cada gran set.",
+      en: "EnergyCurve analyzes your DJ mixes, track transitions, and performance flow so you can see how energy rises, drops, and moves across a set.",
+      es: "EnergyCurve analiza tus mixes de DJ, las transiciones entre tracks y el flujo de la performance para que puedas ver cómo la energía sube, cae y se mueve a lo largo del set.",
     },
     support: {
-      en: "Upload a mix or playlist and get a visual map of peaks, drops, transitions, and overall set energy.",
-      es: "Subí un mix o playlist y obtené un mapa visual de picos, caídas, transiciones y energía general del set.",
+      en: "Upload a mix or playlist and get an instant visual read of peaks, drops, transition quality, and overall set momentum.",
+      es: "Subí un mix o playlist y obtené una lectura visual inmediata de picos, caídas, calidad de transición y momentum general del set.",
     },
     audienceLine: {
-      en: "Built for DJs, producers, and performers who want to shape momentum instead of just managing tracks.",
-      es: "Pensado para DJs, productores y performers que quieren diseñar el momentum, no sólo organizar tracks.",
+      en: "Built for DJs, producers, and performers who want to design better performances, not just manage tracks.",
+      es: "Pensado para DJs, productores y performers que quieren diseñar mejores performances, no sólo gestionar tracks.",
     },
     audienceTags: [
       { en: "DJs", es: "DJs" },
@@ -177,8 +178,12 @@ const siteCopy: SiteCopySchema = {
   },
   features: {
     title: {
-      en: "Turn your sets into something you can actually read",
-      es: "Convertí tus sets en algo que realmente puedas leer",
+      en: "Understand what your set is actually doing",
+      es: "Entendé qué está haciendo realmente tu set",
+    },
+    intro: {
+      en: "Go beyond playlist prep with DJ set analysis that reveals energy flow, transition quality, and the structure behind your strongest mixes.",
+      es: "Andá más allá de preparar playlists con un análisis de sets de DJ que revela flujo de energía, calidad de transición y la estructura detrás de tus mixes más fuertes.",
     },
     energy: {
       title: {
@@ -186,8 +191,8 @@ const siteCopy: SiteCopySchema = {
         es: "Visualizá el arco completo de energía",
       },
       desc: {
-        en: "Visualize the rise and fall of energy across your entire set. Instantly identify peaks, drops, and flat moments.",
-        es: "Visualizá la energía de tu set y detectá picos, caídas y momentos planos.",
+        en: "Visualize how energy rises, plateaus, and drops across your full set so peak moments and flat stretches are obvious.",
+        es: "Visualizá cómo la energía sube, se sostiene y cae a lo largo de todo el set para detectar enseguida picos y momentos planos.",
       },
     },
     transition: {
@@ -196,8 +201,8 @@ const siteCopy: SiteCopySchema = {
         es: "Entendé tus transiciones",
       },
       desc: {
-        en: "Analyze how your tracks connect — smooth, abrupt, or mismatched — and improve your flow.",
-        es: "Analizá cómo conectan tus tracks y mejorá el flujo.",
+        en: "See where transitions feel smooth, abrupt, or disconnected and improve the flow between tracks.",
+        es: "Detectá dónde las transiciones se sienten fluidas, abruptas o desconectadas y mejorá el flujo entre tracks.",
       },
     },
     track: {
@@ -206,8 +211,8 @@ const siteCopy: SiteCopySchema = {
         es: "Analizá track por track",
       },
       desc: {
-        en: "Understand how each track contributes to the overall energy and structure of your set.",
-        es: "Entendé cómo cada track impacta en la energía del set.",
+        en: "Understand how each track shapes the structure, pacing, and emotional direction of the whole performance.",
+        es: "Entendé cómo cada track moldea la estructura, el pacing y la dirección emocional de toda la performance.",
       },
     },
     compare: {
@@ -216,8 +221,8 @@ const siteCopy: SiteCopySchema = {
         es: "Compará tus mejores sets",
       },
       desc: {
-        en: "Identify patterns across your performances and replicate what actually works.",
-        es: "Detectá patrones y replicá lo que funciona.",
+        en: "Compare your strongest performances, find recurring patterns, and repeat what actually works on the dancefloor.",
+        es: "Compará tus performances más fuertes, encontrá patrones repetibles y repetí lo que realmente funciona en la pista.",
       },
     },
     design: {
@@ -226,8 +231,8 @@ const siteCopy: SiteCopySchema = {
         es: "Diseñá tus sets con intención",
       },
       desc: {
-        en: "Move from improvisation to control. Shape your sets based on energy progression and emotional impact.",
-        es: "Pasá de improvisar a diseñar con control.",
+        en: "Move from improvisation to control by shaping energy progression before you play.",
+        es: "Pasá de improvisar a tener control diseñando la progresión de energía antes de tocar.",
       },
     },
   },
@@ -287,7 +292,11 @@ const siteCopy: SiteCopySchema = {
       },
       {
         en: "And now, I’m sharing it with DJs everywhere — regardless of genre — so we can all create better performances.",
-        es: "Y ahora lo comparto con DJs de todos los géneros.",
+        es: "Y ahora lo comparto con DJs de todos los géneros para que todos podamos crear mejores performances.",
+      },
+      {
+        en: "EnergyCurve is the tool I wanted when I was trying to understand not just what I played, but how the room actually felt because of it.",
+        es: "EnergyCurve es la herramienta que me hubiera gustado tener cuando intentaba entender no sólo qué estaba tocando, sino cómo se sentía realmente la pista por eso.",
       },
     ],
   },
@@ -297,8 +306,8 @@ const siteCopy: SiteCopySchema = {
       es: "No es software de DJ. Es inteligencia de performance.",
     },
     body: {
-      en: "EnergyCurve does not replace your DJ software. It helps you understand what your set is doing emotionally and structurally, so you can improve transitions, shape momentum, and repeat what actually works.",
-      es: "EnergyCurve no reemplaza tu software de DJ. Te ayuda a entender qué está haciendo tu set a nivel emocional y estructural para mejorar transiciones, diseñar el momentum y repetir lo que realmente funciona.",
+      en: "Your DJ software helps you manage and perform tracks. EnergyCurve helps you understand what your set is doing — where momentum builds, where transitions lose impact, and why some performances land harder than others.",
+      es: "Tu software de DJ te ayuda a gestionar y ejecutar tracks. EnergyCurve te ayuda a entender qué está haciendo tu set: dónde crece el momentum, dónde las transiciones pierden impacto y por qué algunas performances pegan más que otras.",
     },
   },
   contact: {
@@ -323,12 +332,12 @@ const siteCopy: SiteCopySchema = {
   },
   cta: {
     title: {
-      en: "Start designing better performances today",
-      es: "Empezá a diseñar mejores performances hoy",
+      en: "Start shaping better sets today",
+      es: "Empezá a moldear mejores sets hoy",
     },
     subtitle: {
-      en: "Gain more control over your sets and the energy on the dancefloor",
-      es: "Tomá control de la energía en la pista",
+      en: "Create an account, explore your set energy, and build performances with more control.",
+      es: "Creá tu cuenta, explorá la energía de tus sets y construí performances con más control.",
     },
     primary: { en: "Create your account", es: "Creá tu cuenta" },
     secondary: { en: "Contact the founder", es: "Contactar al fundador" },
@@ -372,8 +381,8 @@ const siteCopy: SiteCopySchema = {
         es: "Diseñado para preparar sets de verdad, no sólo para gestionar librerías.",
       },
       access: {
-        en: "Account creation is open now for early users.",
-        es: "La creación de cuentas ya está abierta para early users.",
+        en: "Now onboarding early users directly into the product.",
+        es: "Ya estamos incorporando early users directamente al producto.",
       },
     },
   },
@@ -407,6 +416,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
     },
     features: {
       title: siteCopy.features.title[locale],
+      intro: siteCopy.features.intro[locale],
       cards: [
         {
           title: siteCopy.features.energy.title[locale],
