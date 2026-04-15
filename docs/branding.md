@@ -12,7 +12,7 @@ landing and authenticated app.
   [energycurve-logo-horizontal.png](/Users/robertinoc/Documents/code/energycurve/public/branding/source/energycurve-logo-horizontal.png)
 - Canonical square logo source:
   [energycurve-logo-square.png](/Users/robertinoc/Documents/code/energycurve/public/branding/source/energycurve-logo-square.png)
-- Canonical monochrome logo source:
+- Canonical stacked transparent brand source:
   [energycurve-logo-monochrome.png](/Users/robertinoc/Documents/code/energycurve/public/branding/source/energycurve-logo-monochrome.png)
 - Legacy reconstructed SVG exports kept only for reference:
   [energycurve-logo-horizontal.svg](/Users/robertinoc/Documents/code/energycurve/public/branding/logos/energycurve-logo-horizontal.svg),
@@ -34,6 +34,8 @@ landing and authenticated app.
 - Monochrome logo:
   keep available for fallback contexts where a neutral high-contrast treatment
   is needed, but do not use it as the default brand expression.
+- The transparent icon asset is the source of truth for compact brand
+  placements and app/site icon usage.
 
 ## Current Integration
 
@@ -43,8 +45,8 @@ landing and authenticated app.
 - App metadata icons now point to the official square PNG asset.
 - `app/icon.png` mirrors the official square brand mark so App Router icon
   generation and metadata stay aligned.
-- Horizontal and monochrome raster logos use a screen-blend treatment in dark UI
-  contexts so the black matte from the source files does not show as a hard box.
+- The current production raster logos now ship with transparent backgrounds, so
+  the UI no longer relies on blend-mode workarounds to hide a black matte.
 
 ## Fidelity Note
 

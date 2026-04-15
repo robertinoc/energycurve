@@ -58,10 +58,7 @@ export function EnergyCurveLogo({
 
   const captionClassName =
     tone === "light" ? "text-white/65" : "text-slate-500"
-  const imageClassName =
-    kind === "square"
-      ? "h-auto max-w-full shrink-0"
-      : "h-auto max-w-full shrink-0 mix-blend-screen brightness-[1.06] contrast-[1.03] saturate-[1.05]"
+  const imageClassName = "h-auto max-w-full shrink-0"
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
