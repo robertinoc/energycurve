@@ -32,18 +32,28 @@ export function AmbientGlow({
   )
 }
 
-export function EnergyWaveBackdrop({ className }: { className?: string }) {
+export function EnergyWaveBackdrop({
+  className,
+  emphasis = "subtle",
+}: {
+  className?: string
+  emphasis?: "subtle" | "hero"
+}) {
   return (
     <div
       aria-hidden
       className={cn(
-        "pointer-events-none absolute overflow-hidden opacity-70 motion-reduce:opacity-40",
+        "pointer-events-none absolute overflow-hidden motion-reduce:opacity-40",
+        emphasis === "hero" ? "opacity-85" : "opacity-70",
         className
       )}
     >
       <svg
         viewBox="0 0 1200 280"
-        className="h-full w-full energy-wave-glide motion-reduce:animate-none"
+        className={cn(
+          "h-full w-full energy-wave-glide motion-reduce:animate-none",
+          emphasis === "hero" ? "scale-[1.02]" : ""
+        )}
         preserveAspectRatio="none"
       >
         <defs>
@@ -70,15 +80,17 @@ export function EnergyWaveBackdrop({ className }: { className?: string }) {
         <path
           d="M0 172C88 172 104 122 164 122C246 122 226 228 320 228C418 228 408 66 520 66C632 66 618 220 716 220C804 220 814 132 900 132C984 132 998 178 1200 178V280H0V172Z"
           fill="url(#ambient-wave-fill)"
-          opacity="0.44"
+          opacity={emphasis === "hero" ? "0.54" : "0.44"}
+          className="energy-wave-fill-breathe"
         />
         <path
           d="M0 170C88 170 104 120 164 120C246 120 226 226 320 226C418 226 408 64 520 64C632 64 618 218 716 218C804 218 814 130 900 130C984 130 998 176 1200 176"
           stroke="url(#ambient-wave-stroke)"
-          strokeWidth="4"
+          strokeWidth={emphasis === "hero" ? "4.8" : "4"}
           strokeLinecap="round"
           fill="none"
           filter="url(#ambient-wave-glow)"
+          className="energy-wave-line-primary"
         />
         <path
           d="M-20 196C64 196 98 152 158 152C236 152 254 242 324 242C404 242 432 116 520 116C612 116 628 238 710 238C794 238 828 154 904 154C978 154 1022 194 1220 194"
@@ -86,7 +98,8 @@ export function EnergyWaveBackdrop({ className }: { className?: string }) {
           strokeWidth="1.6"
           strokeLinecap="round"
           fill="none"
-          opacity="0.62"
+          opacity={emphasis === "hero" ? "0.8" : "0.62"}
+          className="energy-wave-line-secondary"
         />
       </svg>
     </div>

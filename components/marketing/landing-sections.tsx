@@ -28,7 +28,10 @@ export function HeroSection({
       <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.38)] backdrop-blur">
         <AmbientGlow tone="violet" className="ambient-drift-slow left-[-6rem] top-[-5rem] h-[18rem] w-[18rem] opacity-55" />
         <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-4rem] top-[4rem] h-[18rem] w-[18rem] opacity-35" />
-        <EnergyWaveBackdrop className="left-[8%] top-[18rem] h-[10rem] w-[84%] opacity-20" />
+        <EnergyWaveBackdrop
+          emphasis="hero"
+          className="left-[8%] top-[18rem] h-[10rem] w-[84%] opacity-28"
+        />
         <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,19,28,0.96),rgba(11,11,15,0.98))] px-5 py-7 shadow-[0_0_60px_rgba(123,63,228,0.08)]">
           <div className="flex flex-col items-center gap-5 text-center">
             <EnergyCurveLogo tone="light" size="xl" kind="horizontal" priority />
