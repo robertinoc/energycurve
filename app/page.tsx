@@ -5,14 +5,14 @@ import { LandingPage } from "@/components/marketing/landing-page"
 export const metadata: Metadata = {
   title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
   description:
-    "EnergyCurve helps DJs analyze set energy, track transitions, and performance flow to design better mixes and more intentional dancefloor momentum.",
+    "EnergyCurve helps DJs analyze set energy, transition quality, and performance flow to design better mixes and more intentional dancefloor momentum.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
     description:
-      "Analyze set energy, transitions, and performance flow to design better mixes and shape momentum with more intention.",
+      "Analyze DJ set energy, transition quality, and performance flow to design better mixes and shape momentum with more intention.",
     url: "https://energycurve.vercel.app/",
     siteName: "EnergyCurve",
     type: "website",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
     description:
-      "Analyze set energy, track transitions, and performance flow to build better DJ performances.",
+      "Analyze DJ set energy, track transitions, and performance flow to build better performances.",
   },
 }
 
@@ -33,7 +33,7 @@ export default function HomePage() {
     applicationCategory: "MusicApplication",
     operatingSystem: "Web",
     description:
-      "EnergyCurve helps DJs analyze set energy, track transitions, and performance flow to design better mixes and more intentional dancefloor momentum.",
+      "EnergyCurve helps DJs analyze set energy, transition quality, and performance flow to design better mixes and more intentional dancefloor momentum.",
     url: "https://energycurve.vercel.app/",
     audience: {
       "@type": "Audience",
