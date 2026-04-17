@@ -41,7 +41,7 @@ EnergyCurve is a Next.js App Router project for DJs. The product strategy and te
 
 - Section 1 `Product & Strategy`: complete for v1 definition
 - Section 2 `Setup & Infra`: complete for foundation
-- Section 3 `Auth & Users`: intentionally left for the next phase of hardening and product work
+- Section 3 `Auth & Users`: complete for MVP
 
 See [docs/roadmap-status.md](/Users/robertinoc/Documents/code/energycurve/docs/roadmap-status.md) for the detailed breakdown.
 
@@ -117,6 +117,7 @@ Open [http://localhost:3010](http://localhost:3010).
 npm run lint
 npm run typecheck
 npm run build
+npm run test
 ```
 
 ## Manual Verification
@@ -148,7 +149,7 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 
 - The product strategy is now documented and frozen for v1, but the actual playlist analysis engine is still future implementation work.
 - Database access currently uses a server-only service role client; if future client-side data access is introduced, add RLS policies and a browser-safe client strategy.
-- Automated tests were not added in this phase; validation is currently lint, typecheck, build, and manual auth/infrastructure checks.
+- The auth test suite currently covers critical workflow logic, but browser-level end-to-end coverage is still future work.
 - End-to-end auth verification still depends on real WorkOS and Supabase credentials being configured in the target environment.
 - Until WorkOS `Production` is unlocked and wired, the Vercel deployment should be treated as pre-production rather than final production infrastructure.
 
@@ -157,6 +158,9 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 - [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md)
 - [docs/product-strategy.md](/Users/robertinoc/Documents/code/energycurve/docs/product-strategy.md)
 - [docs/roadmap-status.md](/Users/robertinoc/Documents/code/energycurve/docs/roadmap-status.md)
+- [docs/auth-users.md](/Users/robertinoc/Documents/code/energycurve/docs/auth-users.md)
+- [docs/auth-hardening-backlog.md](/Users/robertinoc/Documents/code/energycurve/docs/auth-hardening-backlog.md)
+- [docs/product-feature-01-manual-playlists.md](/Users/robertinoc/Documents/code/energycurve/docs/product-feature-01-manual-playlists.md)
 - [docs/branding.md](/Users/robertinoc/Documents/code/energycurve/docs/branding.md)
 - [docs/brand-design.md](/Users/robertinoc/Documents/code/energycurve/docs/brand-design.md)
 - [docs/design-system.md](/Users/robertinoc/Documents/code/energycurve/docs/design-system.md)

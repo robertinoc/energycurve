@@ -1,22 +1,26 @@
 import { authkit, handleAuthkitHeaders } from "@workos-inc/authkit-nextjs"
 import { NextResponse, type NextRequest } from "next/server"
 
-import { buildReturnToHref } from "@/lib/auth/return-to"
+import { resolveAuthRoute } from "@/lib/auth/auth-routing"
 import { isWorkOSConfigured } from "@/lib/config/infrastructure-status"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 
 export default async function proxy(request: NextRequest) {
-  if (!isWorkOSConfigured()) {
-    const { pathname } = request.nextUrl
+  const { pathname, search } = request.nextUrl
+  const workosConfigured = isWorkOSConfigured()
 
-    if (pathname.startsWith("/dashboard")) {
-      const setupUrl = request.nextUrl.clone()
-      setupUrl.pathname = "/login"
-      setupUrl.searchParams.set("error", "setup")
+  const setupRouteResolution = resolveAuthRoute({
+    pathname,
+    search,
+    workosConfigured,
+    hasUser: false,
+  })
 
-      return NextResponse.redirect(setupUrl)
-    }
+  if (setupRouteResolution.type === "redirect") {
+    return NextResponse.redirect(new URL(setupRouteResolution.target, request.url))
+  }
 
+  if (!workosConfigured) {
     return NextResponse.next()
   }
 
@@ -29,29 +33,33 @@ export default async function proxy(request: NextRequest) {
     headers = authResult.headers
   } catch (error) {
     logWorkOSRuntimeError("Proxy auth check failed", error)
+    const failureRouteResolution = resolveAuthRoute({
+      pathname,
+      search,
+      workosConfigured: true,
+      hasUser: false,
+      authCheckFailed: true,
+    })
 
-    if (request.nextUrl.pathname.startsWith("/dashboard")) {
-      const configUrl = request.nextUrl.clone()
-      configUrl.pathname = "/login"
-      configUrl.searchParams.set("error", "config")
-
-      return NextResponse.redirect(configUrl)
+    if (failureRouteResolution.type === "redirect") {
+      return NextResponse.redirect(
+        new URL(failureRouteResolution.target, request.url)
+      )
     }
 
     return NextResponse.next()
   }
 
-  const { pathname, search } = request.nextUrl
+  const routeResolution = resolveAuthRoute({
+    pathname,
+    search,
+    workosConfigured: true,
+    hasUser: Boolean(session.user),
+  })
 
-  if (pathname.startsWith("/dashboard") && !session.user) {
+  if (routeResolution.type === "redirect") {
     return handleAuthkitHeaders(request, headers, {
-      redirect: buildReturnToHref("/login", `${pathname}${search}`),
-    })
-  }
-
-  if ((pathname === "/login" || pathname === "/signup") && session.user) {
-    return handleAuthkitHeaders(request, headers, {
-      redirect: "/dashboard",
+      redirect: routeResolution.target,
     })
   }
 

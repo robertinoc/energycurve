@@ -5,6 +5,11 @@ import type { AuthenticationResponse } from "@workos-inc/node"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import {
+  buildCallbackUrlFromHeaders,
+  mapLoginError,
+  mapSignupError,
+} from "@/lib/auth/password-auth-helpers"
 import { buildReturnToHref, getSafeReturnTo } from "@/lib/auth/return-to"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 
@@ -16,15 +21,10 @@ function getFormValue(formData: FormData, key: string) {
 
 async function getRequestContextUrl() {
   const headersStore = await headers()
-  const host =
-    headersStore.get("x-forwarded-host") ?? headersStore.get("host") ?? null
-  const protocol = headersStore.get("x-forwarded-proto") ?? "https"
-
-  if (host) {
-    return `${protocol}://${host}/auth/callback`
-  }
-
-  return process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI
+  return buildCallbackUrlFromHeaders(
+    headersStore,
+    process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI
+  )
 }
 
 async function persistWorkOSSession(
@@ -47,30 +47,6 @@ async function persistWorkOSSession(
     firstName: authResponse.user.firstName ?? null,
     lastName: authResponse.user.lastName ?? null,
   })
-}
-
-function mapLoginError(error: unknown) {
-  const message = String(error).toLowerCase()
-
-  if (message.includes("invalid_grant") || message.includes("invalid")) {
-    return "invalid_credentials"
-  }
-
-  return "auth"
-}
-
-function mapSignupError(error: unknown) {
-  const message = String(error).toLowerCase()
-
-  if (message.includes("already exists") || message.includes("duplicate")) {
-    return "email_taken"
-  }
-
-  if (message.includes("password")) {
-    return "weak_password"
-  }
-
-  return "signup_failed"
 }
 
 export async function loginWithPasswordAction(formData: FormData) {
