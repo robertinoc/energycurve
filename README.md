@@ -1,6 +1,6 @@
 # EnergyCurve
 
-EnergyCurve is a Next.js App Router project for DJs. The product strategy and technical foundation are now documented and frozen for v1, while the actual analysis engine and playlist workflows remain future implementation work.
+EnergyCurve is a Next.js App Router project for DJs. The product strategy, technical foundation, and MVP auth layer are now documented and frozen enough to start building real product workflows, while the actual analysis engine and playlist workflows remain future implementation work.
 
 ## What Was Set Up
 
@@ -24,6 +24,7 @@ EnergyCurve is a Next.js App Router project for DJs. The product strategy and te
 - Product strategy v1 documented in-repo, including ICP, MVP scope, KPIs, supported contexts, genre rules, and scoring assumptions
 - Domain constants for EnergyCurve v1 now live in code for future product implementation
 - Basic structured logging centralized for auth, dashboard fallback, and contact handling
+- MVP auth documentation, auth hardening backlog, and initial auth workflow tests
 - Documentation for setup, architecture, technical decisions, deployment, and validation
 
 ## Stack
@@ -36,6 +37,7 @@ EnergyCurve is a Next.js App Router project for DJs. The product strategy and te
 - WorkOS AuthKit
 - Supabase Postgres
 - Vercel-ready deployment configuration
+- Vitest for lightweight auth workflow tests
 
 ## Roadmap Status
 
@@ -54,6 +56,7 @@ docs/
 lib/
 services/
 supabase/migrations/
+tests/
 types/
 ```
 
@@ -114,10 +117,10 @@ Open [http://localhost:3010](http://localhost:3010).
 ## Validation Commands
 
 ```bash
+npm run test
 npm run lint
 npm run typecheck
 npm run build
-npm run test
 ```
 
 ## Manual Verification

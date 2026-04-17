@@ -326,6 +326,23 @@ Implement the public contact form with `app/api/contact` instead of coupling it 
 - The current implementation uses safe structured logging as the delivery fallback until a production notification channel is chosen.
 - A future email or CRM integration can plug into `services/contact-service.ts` without changing the public form contract.
 
+## 20. Close auth and users as an MVP-ready WorkOS layer
+
+**Decision**
+
+Treat section 3 of the roadmap as complete for MVP with WorkOS-backed auth, a minimal `profiles` record in Supabase, and explicit follow-ups for production hardening.
+
+**Why**
+
+- Signup, login, logout, session persistence, route protection, and profile synchronization are already implemented and working together.
+- The project architecture intentionally separates WorkOS authentication from Supabase data storage.
+- Waiting for every production-hardening concern would keep the roadmap artificially open even though the MVP auth layer is already usable.
+
+**Consequence**
+
+- Section 3 is now considered complete for MVP.
+- Email verification hardening, password recovery, and automated auth integration tests remain explicit post-MVP follow-ups instead of hidden debt.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

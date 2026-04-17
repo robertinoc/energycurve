@@ -2,59 +2,99 @@
 
 ## Status
 
-Section 3 is considered **complete for MVP**.
+Section 3 of the roadmap is considered **complete for MVP**.
 
-EnergyCurve uses:
+EnergyCurve does **not** use Supabase Auth. The actual architecture is:
 
-- **WorkOS** for auth, sessions, callbacks, and logout
-- **Supabase Postgres** for app data only
+- **WorkOS** for authentication, sessions, callbacks, and logout
+- **Supabase Postgres** for application data only
 
-This means the original roadmap item “Implement authentication using Supabase” is fulfilled in spirit through the actual chosen architecture:
-
-- authentication lives in WorkOS
-- the application user record lives in Supabase
+This document closes the auth/users foundation without pretending the auth layer is already production-hardened in every dimension.
 
 ## What Is Included
 
-- email/password signup
-- email/password login
-- logout
-- route protection with `proxy.ts`
-- secure session persistence
-- minimal user record in `profiles`
-- post-login dashboard redirect to `/dashboard`
-- optional Google sign-in
-- failure handling for common auth errors and setup problems
+### 1. Signup (email/password)
 
-## User Model
+- implemented with product-owned `/signup`
+- backed by WorkOS user-management APIs
+- successful signup creates a WorkOS user, persists a session, syncs the user into `profiles`, and redirects to `/dashboard`
 
-The MVP user model is intentionally minimal:
+### 2. Login
+
+- implemented with product-owned `/login`
+- backed by WorkOS password authentication
+- successful login persists the app session and redirects to `/dashboard`
+
+### 3. Logout
+
+- available from `/dashboard`
+- clears the WorkOS-backed session
+- returns the user to `/`
+
+### 4. Route protection
+
+- implemented in `proxy.ts`
+- protects `/dashboard`
+- redirects signed-out users to `/login`
+- redirects authenticated users away from `/login` and `/signup`
+
+### 5. User model in the database
+
+The MVP user record is intentionally minimal:
 
 - `profiles.id`
 - `profiles.workos_user_id`
 - `profiles.email`
 - timestamps
 
-This is enough to bridge authentication identity with application-owned records.
+This is enough for authentication identity bridging and future domain ownership.
 
-## Session Model
+### 6. Initial post-login dashboard
 
-EnergyCurve relies on WorkOS AuthKit for:
+- authenticated users land on `/dashboard`
+- the dashboard revalidates the session server-side
+- the dashboard syncs/loads the corresponding `profiles` record
+
+## Session Handling
+
+EnergyCurve relies on WorkOS AuthKit for secure session handling:
 
 - encrypted session cookies
-- server-side `withAuth()` checks
-- `saveSession()` after custom login/signup
-- callback/session handling
+- `saveSession()` on successful custom login/signup
+- `withAuth()` for server validation
+- proxy-level protection with `authkit()`
 
-## MVP Tradeoff
+## Error Handling
 
-Signup still uses an explicit MVP shortcut:
+The auth layer currently handles:
+
+- missing field errors
+- invalid credentials
+- password mismatch
+- duplicate email
+- weak password
+- config/setup failures
+- Google social-login startup failures
+- protected-route fallback when auth initialization fails
+
+Structured server-side logs are emitted for:
+
+- login/signup failures
+- session persistence failures
+- callback failures
+- dashboard fallback paths
+
+## Deliberate MVP Tradeoff
+
+During sign up, new accounts are currently created with:
 
 ```ts
 emailVerified: true
 ```
 
-That is acceptable for the current MVP closeout, but it belongs in the auth hardening backlog before stricter production release criteria.
+This is an explicit MVP shortcut so EnergyCurve can keep a predictable product-owned signup flow without blocking on email verification UX yet.
+
+That is acceptable for the current roadmap closeout, but it should be revisited before stricter production hardening.
 
 ## Test Coverage
 
@@ -66,6 +106,26 @@ The auth test suite currently covers critical workflow logic for:
 - login/signup error mapping
 
 These tests are intentionally lightweight and do not yet replace full browser-level end-to-end auth coverage.
+
+## Manual Verification Checklist
+
+1. Visit `/signup` while signed out.
+2. Create a new account with email/password.
+3. Confirm the user lands on `/dashboard`.
+4. Confirm a corresponding row exists in `public.profiles`.
+5. Log out and confirm the app returns to `/`.
+6. Visit `/login` and sign in with the same account.
+7. Confirm the user lands on `/dashboard`.
+8. Visit `/dashboard` while signed out and confirm it redirects to `/login`.
+9. If Google Social Login is enabled, use `Continue with Google` and confirm it still returns to `/dashboard`.
+
+## What Is Still Outside This Closeout
+
+- real email verification
+- password reset / recovery flow
+- browser-level auth integration / end-to-end tests
+- account settings or editable profile management
+- production-hardening details tied to WorkOS Production unlock
 
 ## Follow-ups
 
@@ -81,3 +141,5 @@ See:
 - [proxy.ts](/Users/robertinoc/Documents/code/energycurve/proxy.ts)
 - [lib/auth/password-auth.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/password-auth.ts)
 - [services/profile-service.ts](/Users/robertinoc/Documents/code/energycurve/services/profile-service.ts)
+- [tests/auth-routing.test.ts](/Users/robertinoc/Documents/code/energycurve/tests/auth-routing.test.ts)
+- [tests/password-auth-helpers.test.ts](/Users/robertinoc/Documents/code/energycurve/tests/password-auth-helpers.test.ts)

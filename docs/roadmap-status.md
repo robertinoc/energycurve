@@ -66,8 +66,8 @@ What is now closed:
 - secure WorkOS-backed session persistence
 - minimal user model in `profiles`
 - initial post-login dashboard
-- common auth failure handling and setup fallback
-- optional Google sign-in
+- auth failure handling and setup-state fallback
+- optional Google sign-in as a secondary path
 - initial auth workflow test coverage
 
 Repository anchors:
@@ -78,6 +78,8 @@ Repository anchors:
 - [app/signup/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/signup/page.tsx)
 - [app/dashboard/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/dashboard/page.tsx)
 - [proxy.ts](/Users/robertinoc/Documents/code/energycurve/proxy.ts)
+- [lib/auth/password-auth.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/password-auth.ts)
+- [services/profile-service.ts](/Users/robertinoc/Documents/code/energycurve/services/profile-service.ts)
 - [tests/auth-routing.test.ts](/Users/robertinoc/Documents/code/energycurve/tests/auth-routing.test.ts)
 - [tests/password-auth-helpers.test.ts](/Users/robertinoc/Documents/code/energycurve/tests/password-auth-helpers.test.ts)
 

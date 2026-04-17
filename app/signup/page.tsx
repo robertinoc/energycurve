@@ -36,7 +36,7 @@ export default async function SignupPage({
       <SetupRequiredState
         configurationIssues={infrastructureStatus.missingWorkOSEnvNames}
         title="EnergyCurve cannot start the sign-up flow yet"
-        description="The app is running, but the hosted WorkOS setup is not complete enough to launch a registration session."
+        description="The app is running, but the WorkOS environment is not complete enough to create a secure account yet."
       />
     )
   }
@@ -56,7 +56,7 @@ export default async function SignupPage({
       <SetupRequiredState
         configurationIssues={[getGenericWorkOSConfigurationIssue()]}
         title="EnergyCurve cannot start the sign-up flow yet"
-        description="The WorkOS variables exist, but AuthKit could not initialize the hosted registration flow cleanly."
+        description="The WorkOS variables exist, but AuthKit could not initialize the current sign-up session safely."
       />
     )
   }
