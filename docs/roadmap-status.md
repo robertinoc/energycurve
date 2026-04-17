@@ -68,20 +68,24 @@ What is now closed:
 - initial post-login dashboard
 - auth failure handling and setup-state fallback
 - optional Google sign-in as a secondary path
+- initial auth workflow test coverage
 
 Repository anchors:
 
 - [docs/auth-users.md](/Users/robertinoc/Documents/code/energycurve/docs/auth-users.md)
+- [docs/auth-hardening-backlog.md](/Users/robertinoc/Documents/code/energycurve/docs/auth-hardening-backlog.md)
 - [app/login/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/login/page.tsx)
 - [app/signup/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/signup/page.tsx)
 - [app/dashboard/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/dashboard/page.tsx)
 - [proxy.ts](/Users/robertinoc/Documents/code/energycurve/proxy.ts)
 - [lib/auth/password-auth.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/password-auth.ts)
 - [services/profile-service.ts](/Users/robertinoc/Documents/code/energycurve/services/profile-service.ts)
+- [tests/auth-routing.test.ts](/Users/robertinoc/Documents/code/energycurve/tests/auth-routing.test.ts)
+- [tests/password-auth-helpers.test.ts](/Users/robertinoc/Documents/code/energycurve/tests/password-auth-helpers.test.ts)
 
 Known post-MVP follow-ups:
 
-- explicit email verification hardening
-- password reset / recovery flow
-- automated auth integration tests
-- richer account settings and profile management
+- real email verification
+- password reset / recovery
+- broader auth integration / end-to-end coverage
+- account settings / profile management

@@ -96,6 +96,17 @@ This is an explicit MVP shortcut so EnergyCurve can keep a predictable product-o
 
 That is acceptable for the current roadmap closeout, but it should be revisited before stricter production hardening.
 
+## Test Coverage
+
+The auth test suite currently covers critical workflow logic for:
+
+- route protection decisions
+- redirect behavior
+- callback URL derivation
+- login/signup error mapping
+
+These tests are intentionally lightweight and do not yet replace full browser-level end-to-end auth coverage.
+
 ## Manual Verification Checklist
 
 1. Visit `/signup` while signed out.
@@ -110,11 +121,17 @@ That is acceptable for the current roadmap closeout, but it should be revisited 
 
 ## What Is Still Outside This Closeout
 
-- password reset / forgot-password flow
-- explicit email-verification hardening
+- real email verification
+- password reset / recovery flow
+- browser-level auth integration / end-to-end tests
 - account settings or editable profile management
-- automated auth integration tests
 - production-hardening details tied to WorkOS Production unlock
+
+## Follow-ups
+
+See:
+
+- [docs/auth-hardening-backlog.md](/Users/robertinoc/Documents/code/energycurve/docs/auth-hardening-backlog.md)
 
 ## Repository Anchors
 
@@ -124,3 +141,5 @@ That is acceptable for the current roadmap closeout, but it should be revisited 
 - [proxy.ts](/Users/robertinoc/Documents/code/energycurve/proxy.ts)
 - [lib/auth/password-auth.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/password-auth.ts)
 - [services/profile-service.ts](/Users/robertinoc/Documents/code/energycurve/services/profile-service.ts)
+- [tests/auth-routing.test.ts](/Users/robertinoc/Documents/code/energycurve/tests/auth-routing.test.ts)
+- [tests/password-auth-helpers.test.ts](/Users/robertinoc/Documents/code/energycurve/tests/password-auth-helpers.test.ts)
