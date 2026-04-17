@@ -279,10 +279,10 @@ export function PasswordAuthPage({
             {isSignup ? (
               <Alert className="border-white/10 bg-black/25 text-white">
                 <LockKeyhole className="size-4 text-white/70" />
-                <AlertTitle>Temporary signup note</AlertTitle>
+                <AlertTitle>MVP signup note</AlertTitle>
                 <AlertDescription className="text-white/62">
                   New accounts are marked as verified immediately so the custom
-                  sign-up flow can stay unblocked during this foundation phase.
+                  sign-up flow can stay predictable during the MVP auth phase.
                 </AlertDescription>
               </Alert>
             ) : null}

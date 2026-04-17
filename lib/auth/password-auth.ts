@@ -6,6 +6,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { buildReturnToHref, getSafeReturnTo } from "@/lib/auth/return-to"
+import { logError, logInfo, logWarn } from "@/lib/observability/logger"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 
 function getFormValue(formData: FormData, key: string) {
@@ -27,26 +28,46 @@ async function getRequestContextUrl() {
   return process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI
 }
 
+async function getAuthTelemetryContext(email: string) {
+  const headersStore = await headers()
+
+  return {
+    email,
+    userAgent: headersStore.get("user-agent") ?? null,
+    forwardedHost: headersStore.get("x-forwarded-host") ?? headersStore.get("host"),
+    forwardedProto: headersStore.get("x-forwarded-proto") ?? null,
+  }
+}
+
 async function persistWorkOSSession(
   authResponse: AuthenticationResponse,
   requestUrl: string
 ) {
-  await saveSession(
-    {
-      accessToken: authResponse.accessToken,
-      refreshToken: authResponse.refreshToken,
-      user: authResponse.user,
-      impersonator: authResponse.impersonator,
-    },
-    requestUrl
-  )
+  try {
+    await saveSession(
+      {
+        accessToken: authResponse.accessToken,
+        refreshToken: authResponse.refreshToken,
+        user: authResponse.user,
+        impersonator: authResponse.impersonator,
+      },
+      requestUrl
+    )
 
-  await syncProfileFromWorkOSUser({
-    id: authResponse.user.id,
-    email: authResponse.user.email,
-    firstName: authResponse.user.firstName ?? null,
-    lastName: authResponse.user.lastName ?? null,
-  })
+    await syncProfileFromWorkOSUser({
+      id: authResponse.user.id,
+      email: authResponse.user.email,
+      firstName: authResponse.user.firstName ?? null,
+      lastName: authResponse.user.lastName ?? null,
+    })
+  } catch (error) {
+    logError("auth.session_persist_failed", error, {
+      email: authResponse.user.email,
+      workosUserId: authResponse.user.id,
+    })
+
+    throw error
+  }
 }
 
 function mapLoginError(error: unknown) {
@@ -79,12 +100,17 @@ export async function loginWithPasswordAction(formData: FormData) {
   const password = getFormValue(formData, "password")
 
   if (!email || !password) {
+    logWarn("auth.login_missing_fields", { email: email || null, returnTo })
     redirect(`${buildReturnToHref("/login", returnTo)}&error=missing_fields`)
   }
 
   const requestUrl = await getRequestContextUrl()
 
   if (!requestUrl) {
+    logError("auth.login_missing_callback_url", new Error("Missing callback URL"), {
+      email,
+      returnTo,
+    })
     redirect(`${buildReturnToHref("/login", returnTo)}&error=config`)
   }
 
@@ -100,9 +126,21 @@ export async function loginWithPasswordAction(formData: FormData) {
     )
 
     await persistWorkOSSession(authResponse, requestUrl)
+    logInfo("auth.login_succeeded", {
+      email,
+      workosUserId: authResponse.user.id,
+      returnTo,
+    })
   } catch (error) {
+    const authError = mapLoginError(error)
+    logWarn("auth.login_failed", {
+      ...(await getAuthTelemetryContext(email)),
+      returnTo,
+      authError,
+    })
+
     redirect(
-      `${buildReturnToHref("/login", returnTo)}&error=${mapLoginError(error)}`
+      `${buildReturnToHref("/login", returnTo)}&error=${authError}`
     )
   }
 
@@ -116,10 +154,12 @@ export async function signupWithPasswordAction(formData: FormData) {
   const confirmPassword = getFormValue(formData, "confirmPassword")
 
   if (!email || !password || !confirmPassword) {
+    logWarn("auth.signup_missing_fields", { email: email || null, returnTo })
     redirect(`${buildReturnToHref("/signup", returnTo)}&error=missing_fields`)
   }
 
   if (password !== confirmPassword) {
+    logWarn("auth.signup_password_mismatch", { email, returnTo })
     redirect(
       `${buildReturnToHref("/signup", returnTo)}&error=password_mismatch`
     )
@@ -128,6 +168,10 @@ export async function signupWithPasswordAction(formData: FormData) {
   const requestUrl = await getRequestContextUrl()
 
   if (!requestUrl) {
+    logError("auth.signup_missing_callback_url", new Error("Missing callback URL"), {
+      email,
+      returnTo,
+    })
     redirect(`${buildReturnToHref("/signup", returnTo)}&error=config`)
   }
 
@@ -150,9 +194,22 @@ export async function signupWithPasswordAction(formData: FormData) {
     )
 
     await persistWorkOSSession(authResponse, requestUrl)
+    logInfo("auth.signup_succeeded", {
+      email,
+      workosUserId: authResponse.user.id,
+      returnTo,
+      emailVerifiedBypass: true,
+    })
   } catch (error) {
+    const signupError = mapSignupError(error)
+    logWarn("auth.signup_failed", {
+      ...(await getAuthTelemetryContext(email)),
+      returnTo,
+      signupError,
+    })
+
     redirect(
-      `${buildReturnToHref("/signup", returnTo)}&error=${mapSignupError(error)}`
+      `${buildReturnToHref("/signup", returnTo)}&error=${signupError}`
     )
   }
 

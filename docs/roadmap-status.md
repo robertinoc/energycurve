@@ -55,7 +55,33 @@ Known non-blockers:
 
 ## Section 3 — Auth & Users
 
-**Status:** Deferred from this closeout
+**Status:** Complete for MVP
 
-Auth and user work remains tracked separately so section 1 and section 2 can be considered closed without conflating them with future auth hardening or user-product flows.
+What is now closed:
 
+- email/password signup
+- email/password login
+- logout
+- route protection through `proxy.ts`
+- secure WorkOS-backed session persistence
+- minimal user model in `profiles`
+- initial post-login dashboard
+- auth failure handling and setup-state fallback
+- optional Google sign-in as a secondary path
+
+Repository anchors:
+
+- [docs/auth-users.md](/Users/robertinoc/Documents/code/energycurve/docs/auth-users.md)
+- [app/login/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/login/page.tsx)
+- [app/signup/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/signup/page.tsx)
+- [app/dashboard/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/dashboard/page.tsx)
+- [proxy.ts](/Users/robertinoc/Documents/code/energycurve/proxy.ts)
+- [lib/auth/password-auth.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/password-auth.ts)
+- [services/profile-service.ts](/Users/robertinoc/Documents/code/energycurve/services/profile-service.ts)
+
+Known post-MVP follow-ups:
+
+- explicit email verification hardening
+- password reset / recovery flow
+- automated auth integration tests
+- richer account settings and profile management

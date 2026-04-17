@@ -41,7 +41,7 @@ EnergyCurve is a Next.js App Router project for DJs. The product strategy and te
 
 - Section 1 `Product & Strategy`: complete for v1 definition
 - Section 2 `Setup & Infra`: complete for foundation
-- Section 3 `Auth & Users`: intentionally left for the next phase of hardening and product work
+- Section 3 `Auth & Users`: complete for MVP
 
 See [docs/roadmap-status.md](/Users/robertinoc/Documents/code/energycurve/docs/roadmap-status.md) for the detailed breakdown.
 
@@ -157,6 +157,7 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 - [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md)
 - [docs/product-strategy.md](/Users/robertinoc/Documents/code/energycurve/docs/product-strategy.md)
 - [docs/roadmap-status.md](/Users/robertinoc/Documents/code/energycurve/docs/roadmap-status.md)
+- [docs/auth-users.md](/Users/robertinoc/Documents/code/energycurve/docs/auth-users.md)
 - [docs/branding.md](/Users/robertinoc/Documents/code/energycurve/docs/branding.md)
 - [docs/brand-design.md](/Users/robertinoc/Documents/code/energycurve/docs/brand-design.md)
 - [docs/design-system.md](/Users/robertinoc/Documents/code/energycurve/docs/design-system.md)
