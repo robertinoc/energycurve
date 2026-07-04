@@ -1,6 +1,7 @@
 import {
   ANALYSIS_RULES_V1,
   CONTEXT_ENGINE_V1,
+  STANDARD_TRACK_DURATION_MINUTES,
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
@@ -11,7 +12,10 @@ import {
   REORDER_RATIONALE,
 } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
-import { analyzePlaylist } from "@/lib/engine/analysis"
+import {
+  analyzePlaylist,
+  SET_DURATION_GUIDELINE_MINUTES,
+} from "@/lib/engine/analysis"
 import type {
   DetectedIssue,
   PlaylistAnalysis,
@@ -53,6 +57,10 @@ function buildTemplateParams(
       rules.expectedEnergyMin
     ),
     context: CONTEXT_DISPLAY_NAMES[analysis.context][locale],
+    trackCount: analysis.curve.length,
+    duration: analysis.curve.length * STANDARD_TRACK_DURATION_MINUTES,
+    minDuration: SET_DURATION_GUIDELINE_MINUTES.min,
+    maxDuration: SET_DURATION_GUIDELINE_MINUTES.max,
   }
 }
 

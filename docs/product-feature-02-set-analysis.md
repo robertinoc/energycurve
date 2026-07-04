@@ -61,6 +61,12 @@ decision:
     energy. The suggestion is re-analyzed and only shown when its score
     strictly beats the original, with both scores side by side.
 
+12. **Set duration hint (A12, added post-MVP)** — informational only:
+    sets shorter than 45 minutes emit `set_too_short`, longer than 150
+    minutes emit `set_too_long` (`SET_DURATION_GUIDELINE_MINUTES` in
+    `lib/engine/analysis.ts`). No score impact — `SET_SCORE_RULES_V1` has
+    no duration penalty.
+
 ## Key Files
 
 - `lib/engine/energy-score.ts` — BPM → energy, fallbacks, precedence

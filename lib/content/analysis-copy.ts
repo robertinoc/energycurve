@@ -149,6 +149,34 @@ export const ISSUE_COPY: Record<IssueType, IssueCopy> = {
       es: "Dejá un solo respiro intencional y suavizá los demás para que la pista nunca se enfríe del todo.",
     },
   },
+  set_too_short: {
+    title: {
+      en: "Short set",
+      es: "Set corto",
+    },
+    body: {
+      en: "At {trackCount} tracks (~{duration} min) the set runs shorter than a typical {minDuration}-minute club slot.",
+      es: "Con {trackCount} tracks (~{duration} min) el set queda más corto que un slot típico de {minDuration} minutos.",
+    },
+    recommendation: {
+      en: "Add tracks until you comfortably cover your slot — with room to read the floor and adjust live.",
+      es: "Sumá tracks hasta cubrir tu slot con comodidad — con margen para leer la pista y ajustar en vivo.",
+    },
+  },
+  set_too_long: {
+    title: {
+      en: "Long set",
+      es: "Set largo",
+    },
+    body: {
+      en: "At {trackCount} tracks (~{duration} min) the set runs past the ~{maxDuration}-minute mark most slots allow.",
+      es: "Con {trackCount} tracks (~{duration} min) el set supera los ~{maxDuration} minutos que permiten la mayoría de los slots.",
+    },
+    recommendation: {
+      en: "Trim the mid-section first — keep the opening ramp and the closing stretch intact.",
+      es: "Recortá primero el tramo medio — mantené intactos la rampa de apertura y el cierre.",
+    },
+  },
 }
 
 export const REORDER_RATIONALE: LocalizedLabel = {

@@ -6,7 +6,8 @@ import { redirect } from "next/navigation"
 import type { ZodError } from "zod"
 
 import { buildReturnToHref } from "@/lib/auth/return-to"
-import { logError } from "@/lib/observability/logger"
+import { logError, logWarn } from "@/lib/observability/logger"
+import { checkRateLimit } from "@/lib/rate-limit"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
 import {
   createPlaylistSchema,
@@ -38,6 +39,34 @@ export const initialPlaylistActionState: PlaylistActionState = {
 
 const GENERIC_ERROR_MESSAGE =
   "Something went wrong while saving. Please try again."
+
+const RATE_LIMIT_MESSAGE =
+  "Too many changes in a short time. Wait a moment and try again."
+
+// Per-profile sliding windows: generous for humans, tight for scripts.
+const RATE_LIMITS = {
+  mutation: { limit: 30, windowMs: 60_000 },
+  import: { limit: 10, windowMs: 60_000 },
+} as const
+
+function rateLimitFailure(
+  profileId: string,
+  kind: keyof typeof RATE_LIMITS
+): PlaylistActionState | null {
+  const config = RATE_LIMITS[kind]
+  const { allowed } = checkRateLimit({
+    key: `playlist-${kind}:${profileId}`,
+    limit: config.limit,
+    windowMs: config.windowMs,
+  })
+
+  if (allowed) {
+    return null
+  }
+
+  logWarn("playlist.action_rate_limited", { profileId, kind })
+  return failure(RATE_LIMIT_MESSAGE)
+}
 
 async function requireProfile() {
   const { user } = await withAuth()
@@ -94,6 +123,12 @@ export async function createPlaylistAction(
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
 
+  const rateLimited = rateLimitFailure(profile.id, "mutation")
+
+  if (rateLimited) {
+    return rateLimited
+  }
+
   const parsed = createPlaylistSchema("en").safeParse({
     name: String(formData.get("name") ?? ""),
     genre: String(formData.get("genre") ?? ""),
@@ -127,6 +162,12 @@ export async function deletePlaylistAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation")
+
+  if (rateLimited) {
+    return rateLimited
+  }
   const playlistId = String(formData.get("playlistId") ?? "")
 
   if (!playlistId) {
@@ -153,6 +194,12 @@ export async function addTrackAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation")
+
+  if (rateLimited) {
+    return rateLimited
+  }
   const playlistId = String(formData.get("playlistId") ?? "")
 
   if (!playlistId) {
@@ -189,6 +236,12 @@ export async function updateTrackAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation")
+
+  if (rateLimited) {
+    return rateLimited
+  }
   const playlistId = String(formData.get("playlistId") ?? "")
   const trackId = String(formData.get("trackId") ?? "")
 
@@ -227,6 +280,12 @@ export async function removeTrackAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation")
+
+  if (rateLimited) {
+    return rateLimited
+  }
   const playlistId = String(formData.get("playlistId") ?? "")
   const trackId = String(formData.get("trackId") ?? "")
 
@@ -254,6 +313,12 @@ export async function moveTrackAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation")
+
+  if (rateLimited) {
+    return rateLimited
+  }
   const playlistId = String(formData.get("playlistId") ?? "")
   const trackId = String(formData.get("trackId") ?? "")
   const direction = String(formData.get("direction") ?? "")
@@ -282,6 +347,12 @@ export async function importTracklistAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+
+  const rateLimited = rateLimitFailure(profile.id, "import")
+
+  if (rateLimited) {
+    return rateLimited
+  }
   const playlistId = String(formData.get("playlistId") ?? "")
 
   if (!playlistId) {

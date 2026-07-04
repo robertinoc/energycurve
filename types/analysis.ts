@@ -19,6 +19,8 @@ export type IssueType =
   | "context_high_peak"
   | "no_progression"
   | "too_many_rests"
+  | "set_too_short"
+  | "set_too_long"
 
 export type IssueSeverity = "penalty" | "info"
 
