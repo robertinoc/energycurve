@@ -356,8 +356,8 @@ export function EnergyCurveDashboard({
             </div>
           </div>
           <p className="mt-4 text-xs leading-5 text-white/46">
-            The curve and tracklist are illustrative UI scaffolding. Real
-            playlist analysis still belongs to the next product phase.
+            This curve is an illustrative example. Open one of your playlists
+            and hit Analyze to see the real thing.
           </p>
         </div>
       </aside>

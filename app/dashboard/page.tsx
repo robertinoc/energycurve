@@ -129,9 +129,9 @@ export default async function DashboardPage() {
                     Welcome back, {displayName}
                   </h1>
                   <p className="max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
-                    The infrastructure is live, so the dashboard can now show the
-                    product direction too: how an EnergyCurve-style set map could
-                    feel once playlist workflows land.
+                    Create a playlist, load your tracklist, and analyze the
+                    flow: energy curve, set score, and concrete
+                    recommendations per track.
                   </p>
                 </div>
               </div>
@@ -188,6 +188,66 @@ export default async function DashboardPage() {
               {infrastructureMessage}
             </AlertDescription>
           </Alert>
+        ) : null}
+
+        {snapshot && snapshot.latestPlaylists.length > 0 ? (
+          <section className="rounded-[28px] border border-white/10 bg-[#17171F] p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-white/42">
+                  Latest playlists
+                </p>
+                <h2 className="mt-2 font-heading text-xl font-semibold text-white">
+                  Pick up where you left off
+                </h2>
+              </div>
+              <Link
+                href="/dashboard/playlists"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
+                )}
+              >
+                View all
+              </Link>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {snapshot.latestPlaylists.map((playlist) => (
+                <div
+                  key={playlist.id}
+                  className="flex flex-col justify-between gap-3 rounded-[22px] border border-white/10 bg-black/18 p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white">
+                      {playlist.name}
+                    </p>
+                    <p className="mt-1 text-xs text-white/48">
+                      {playlist.trackCount} track(s)
+                      {playlist.genre ? ` · ${playlist.genre}` : ""}
+                      {playlist.context ? ` · ${playlist.context}` : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/dashboard/playlists/${playlist.id}`}
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "xs" }),
+                        "border-white/10 bg-white/[0.04] text-white hover:border-white/16"
+                      )}
+                    >
+                      Edit
+                    </Link>
+                    <Link
+                      href={`/dashboard/playlists/${playlist.id}/analysis`}
+                      className={cn(buttonVariants({ size: "xs" }))}
+                    >
+                      Analyze
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         ) : null}
 
         <EnergyCurveDashboard
@@ -279,17 +339,17 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-3 text-sm leading-6 text-white/58">
               <p>
-                The curve, tracklist, and energy metrics currently use
-                illustrative data to explore the product direction.
+                The demo curve below is an illustrative example of the set map.
+                Your real curves live under each playlist&apos;s Analyze view.
               </p>
               <p>
                 Authentication, route protection, session persistence, and
-                profile sync remain fully real and validated underneath.
+                profile sync are fully real underneath.
               </p>
             </CardContent>
             <CardFooter className="border-white/8 bg-white/[0.03] text-white/48">
-              Product logic like playlist analysis still belongs to the next
-              implementation phase.
+              Playlist ingestion, energy scoring, and set analysis are live —
+              start from “My playlists”.
             </CardFooter>
           </Card>
         </section>

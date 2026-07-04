@@ -1,7 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, Clock3 } from "lucide-react"
+import { ArrowLeft, AudioWaveform, Clock3 } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { TrackEditor } from "@/components/playlists/track-editor"
@@ -66,16 +66,26 @@ export default async function PlaylistDetailPage({
     <main className="min-h-screen bg-[#0B0B0F] text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
         <header className="space-y-4">
-          <Link
-            href="/dashboard/playlists"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "w-fit text-white/58 hover:text-white"
-            )}
-          >
-            <ArrowLeft className="size-3.5" />
-            Playlists
-          </Link>
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              href="/dashboard/playlists"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "w-fit text-white/58 hover:text-white"
+              )}
+            >
+              <ArrowLeft className="size-3.5" />
+              Playlists
+            </Link>
+
+            <Link
+              href={`/dashboard/playlists/${playlist.id}/analysis`}
+              className={cn(buttonVariants({ size: "default" }))}
+            >
+              <AudioWaveform className="size-4" />
+              Analyze set
+            </Link>
+          </div>
 
           <div className="space-y-3">
             <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
