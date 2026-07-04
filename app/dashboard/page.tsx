@@ -1,13 +1,14 @@
 import { signOut, withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
-import { Database, ShieldCheck, UserRound, Waves } from "lucide-react"
+import Link from "next/link"
+import { Database, ListMusic, ShieldCheck, UserRound, Waves } from "lucide-react"
 import { redirect } from "next/navigation"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { EnergyCurveDashboard } from "@/components/dashboard/energy-curve-dashboard"
 import { SetupRequiredState } from "@/components/setup/setup-required-state"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -24,6 +25,7 @@ import {
 } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
+import { cn } from "@/lib/utils"
 import { getDashboardSnapshot } from "@/services/dashboard-service"
 
 export const metadata: Metadata = {
@@ -134,16 +136,25 @@ export default async function DashboardPage() {
                 </div>
               </div>
 
-              <form action={logoutAction}>
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="lg"
-                  className="border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/dashboard/playlists"
+                  className={cn(buttonVariants({ size: "lg" }))}
                 >
-                  Log out
-                </Button>
-              </form>
+                  <ListMusic className="size-4" />
+                  My playlists
+                </Link>
+                <form action={logoutAction}>
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    size="lg"
+                    className="border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
+                  >
+                    Log out
+                  </Button>
+                </form>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">

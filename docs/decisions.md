@@ -343,6 +343,58 @@ Treat section 3 of the roadmap as complete for MVP with WorkOS-backed auth, a mi
 - Section 3 is now considered complete for MVP.
 - Email verification hardening, password recovery, and automated auth integration tests remain explicit post-MVP follow-ups instead of hidden debt.
 
+## 21. Use server actions for playlist and track mutations
+
+**Decision**
+
+Implement playlist ingestion mutations (playlist CRUD, track CRUD, tracklist import) as server actions in `app/dashboard/playlists/actions.ts` instead of API route handlers.
+
+**Why**
+
+- Route handlers exist in this repo only where they are required: auth redirect flows and the public, rate-limited contact endpoint.
+- The dashboard already uses an inline server action (`logoutAction`), so this extends an existing pattern.
+- Server actions avoid re-implementing the same-origin/CSRF boilerplate the public contact route needed, while keeping validation, ownership checks, and `revalidatePath` in one place.
+
+**Consequence**
+
+- All playlist mutations flow through `withAuth()` → profile sync → Zod validation → `services/playlist-service.ts`.
+- Reads stay in server components that call services directly.
+- If an external API consumer ever appears, dedicated route handlers can be added without changing the service layer.
+
+## 22. Enforce data ownership in the service layer, keep RLS as default-deny
+
+**Decision**
+
+Treat `services/playlist-service.ts` as the security boundary: every function takes a `profileId` and scopes queries with `user_id` (or verifies playlist ownership before touching tracks). Do not add RLS policies at this stage.
+
+**Why**
+
+- All database access goes through the server-side service-role client, which bypasses RLS by design.
+- RLS is enabled with zero policies, which is default-deny for the `anon` and `authenticated` roles — the anon key cannot read or write anything even if it leaks.
+- Owner policies based on `auth.uid()` would be meaningless here because identities live in WorkOS, not Supabase Auth; no Supabase JWT ever reaches Postgres.
+
+**Consequence**
+
+- Ownership checks must never be skipped in new service functions — the database will not catch a missing check.
+- If browser-side Supabase access is ever introduced, a real RLS strategy tied to WorkOS identities must land first (already tracked as technical debt).
+
+## 23. Require genre and context at playlist creation
+
+**Decision**
+
+Make `genre` and `context` required fields in the playlist creation form and schema, even though the database columns are nullable.
+
+**Why**
+
+- The entire analysis engine (context engine, genre engine, scoring) needs both values to produce meaningful output.
+- Asking at creation time costs the user two clicks; asking later requires an extra "not analyzable" state and nagging UI.
+- The nullable columns are legacy from the initial schema and remain tolerated on read.
+
+**Consequence**
+
+- New playlists always carry a genre and a context.
+- Read paths still tolerate `NULL` for rows created before this rule.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

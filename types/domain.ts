@@ -22,6 +22,21 @@ export interface DashboardSnapshot {
   trackCount: number
 }
 
+export interface PlaylistWithTrackCount extends Playlist {
+  trackCount: number
+}
+
+export interface PlaylistWithTracks extends Playlist {
+  tracks: Track[]
+}
+
+export interface TrackWriteInput {
+  artist: string
+  name: string
+  bpm: number | null
+  energyScore: number | null
+}
+
 export interface ProductStrategySnapshot {
   supportedGenres: readonly SupportedGenre[]
   supportedContexts: readonly PlaylistContext[]
