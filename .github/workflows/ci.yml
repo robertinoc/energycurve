@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      # Placeholders only: routes are force-dynamic, so nothing connects to
+      # these services at build time. They exist so config readers that
+      # check for presence behave like a configured environment.
+      WORKOS_CLIENT_ID: client_ci_placeholder
+      WORKOS_API_KEY: sk_test_ci_placeholder
+      WORKOS_COOKIE_PASSWORD: ci_placeholder_cookie_password_32chars!
+      NEXT_PUBLIC_WORKOS_REDIRECT_URI: http://localhost:3010/auth/callback
+      SUPABASE_URL: https://ci-placeholder.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ci_placeholder_service_role_key
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
