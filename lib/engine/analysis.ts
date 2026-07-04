@@ -4,6 +4,7 @@ import {
   GENRE_ENGINE_V1,
   SET_CONTEXTS,
   SET_SCORE_RULES_V1,
+  STANDARD_TRACK_DURATION_MINUTES,
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
@@ -31,6 +32,16 @@ const REST_DELTA_THRESHOLD = 2
 
 /** Number of separate rests that triggers the too_many_rests hint. */
 const TOO_MANY_RESTS_COUNT = 2
+
+/**
+ * Informational guideline for total set duration (minutes). Typical club
+ * slots run 45–150 minutes; outside that range a hint is emitted. No score
+ * impact — SET_SCORE_RULES_V1 has no duration penalty.
+ */
+export const SET_DURATION_GUIDELINE_MINUTES = {
+  min: 45,
+  max: 150,
+} as const
 
 function detectDropAndSpikeIssues(
   curve: number[],
@@ -255,6 +266,32 @@ function detectTooManyRests(curve: number[]): DetectedIssue | null {
   }
 }
 
+function detectDurationHint(curve: number[]): DetectedIssue | null {
+  const durationMinutes = curve.length * STANDARD_TRACK_DURATION_MINUTES
+
+  if (durationMinutes < SET_DURATION_GUIDELINE_MINUTES.min) {
+    return {
+      type: "set_too_short",
+      severity: "info",
+      trackPositions: [],
+      penaltyApplied: 0,
+      penaltyCategory: null,
+    }
+  }
+
+  if (durationMinutes > SET_DURATION_GUIDELINE_MINUTES.max) {
+    return {
+      type: "set_too_long",
+      severity: "info",
+      trackPositions: [],
+      penaltyApplied: 0,
+      penaltyCategory: null,
+    }
+  }
+
+  return null
+}
+
 function detectIssuesForContext(
   curve: number[],
   genre: SupportedGenre,
@@ -290,6 +327,12 @@ function detectIssuesForContext(
 
   if (tooManyRests) {
     issues.push(tooManyRests)
+  }
+
+  const durationHint = detectDurationHint(curve)
+
+  if (durationHint) {
+    issues.push(durationHint)
   }
 
   return issues

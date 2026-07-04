@@ -219,6 +219,47 @@ describe("analyzePlaylist", () => {
   })
 })
 
+describe("duration hints", () => {
+  it("flags sets shorter than the guideline as informational", () => {
+    // 10 tracks x 3 min = 30 min < 45 min guideline.
+    const analysis = analyzePlaylist({
+      curve: Array.from({ length: 10 }, (_, i) => 6 + (i % 4)),
+      genre: "techno",
+      context: "main",
+    })
+
+    const hint = analysis.issues.find((i) => i.type === "set_too_short")
+    expect(hint?.severity).toBe("info")
+    expect(hint?.penaltyApplied).toBe(0)
+    expect(analysis.issues.some((i) => i.type === "set_too_long")).toBe(false)
+  })
+
+  it("flags sets longer than the guideline as informational", () => {
+    // 55 tracks x 3 min = 165 min > 150 min guideline.
+    const analysis = analyzePlaylist({
+      curve: Array.from({ length: 55 }, (_, i) => 6 + (i % 4)),
+      genre: "techno",
+      context: "main",
+    })
+
+    expect(
+      analysis.issues.find((i) => i.type === "set_too_long")?.severity
+    ).toBe("info")
+  })
+
+  it("stays silent inside the guideline", () => {
+    // 20 tracks x 3 min = 60 min.
+    const analysis = analyzePlaylist({
+      curve: Array.from({ length: 20 }, (_, i) => 6 + (i % 4)),
+      genre: "techno",
+      context: "main",
+    })
+
+    expect(analysis.issues.some((i) => i.type === "set_too_short")).toBe(false)
+    expect(analysis.issues.some((i) => i.type === "set_too_long")).toBe(false)
+  })
+})
+
 describe("computeSetScore", () => {
   it("returns a full-score breakdown with no issues", () => {
     const breakdown = computeSetScore([])

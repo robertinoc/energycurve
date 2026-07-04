@@ -1,15 +1,21 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
+import { cookies } from "next/headers"
 import Link from "next/link"
 import { ArrowLeft, TriangleAlert } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { EnergyCurveChart, type ChartTrackPoint } from "@/components/analysis/energy-curve-chart"
 import { IssueList } from "@/components/analysis/issue-list"
+import { LocaleToggle } from "@/components/analysis/locale-toggle"
 import { OrderComparison } from "@/components/analysis/order-comparison"
 import { SetScoreCard } from "@/components/analysis/set-score-card"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
+import {
+  ANALYSIS_LOCALE_COOKIE,
+  toSiteLocale,
+} from "@/lib/analysis-locale"
 import { buildReturnToHref } from "@/lib/auth/return-to"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -57,7 +63,10 @@ export default async function PlaylistAnalysisPage({
     lastName: user.lastName ?? null,
   })
 
-  const result = await getPlaylistAnalysis(profile.id, id, "en")
+  const cookieStore = await cookies()
+  const locale = toSiteLocale(cookieStore.get(ANALYSIS_LOCALE_COOKIE)?.value)
+
+  const result = await getPlaylistAnalysis(profile.id, id, locale)
 
   if (!result) {
     notFound()
@@ -139,6 +148,9 @@ export default async function PlaylistAnalysisPage({
                 {CONTEXT_LABELS[playlist.context] ?? playlist.context}
               </Badge>
             ) : null}
+            <div className="ml-auto">
+              <LocaleToggle current={locale} />
+            </div>
           </div>
           <p className="max-w-2xl text-sm leading-7 text-white/60">
             Every number below is traceable: the energy of each track, the

@@ -53,13 +53,6 @@ async function persistWorkOSSession(
       },
       requestUrl
     )
-
-    await syncProfileFromWorkOSUser({
-      id: authResponse.user.id,
-      email: authResponse.user.email,
-      firstName: authResponse.user.firstName ?? null,
-      lastName: authResponse.user.lastName ?? null,
-    })
   } catch (error) {
     logError("auth.session_persist_failed", error, {
       email: authResponse.user.email,
@@ -67,6 +60,26 @@ async function persistWorkOSSession(
     })
 
     throw error
+  }
+
+  // Profile sync must not fail the whole auth flow: the session cookie is
+  // already saved, so failing here strands the user half-authenticated in a
+  // redirect loop. The dashboard bootstrap re-syncs the profile and renders
+  // a guided database warning when Supabase is unreachable (decision 5).
+  try {
+    await syncProfileFromWorkOSUser({
+      id: authResponse.user.id,
+      email: authResponse.user.email,
+      firstName: authResponse.user.firstName ?? null,
+      lastName: authResponse.user.lastName ?? null,
+    })
+  } catch (error) {
+    logWarn("auth.profile_sync_deferred", {
+      email: authResponse.user.email,
+      workosUserId: authResponse.user.id,
+      reason:
+        error instanceof Error ? error.message : "Unknown profile sync error",
+    })
   }
 }
 

@@ -9,18 +9,23 @@ export default async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const workosConfigured = isWorkOSConfigured()
 
-  const setupRouteResolution = resolveAuthRoute({
-    pathname,
-    search,
-    workosConfigured,
-    hasUser: false,
-  })
-
-  if (setupRouteResolution.type === "redirect") {
-    return NextResponse.redirect(new URL(setupRouteResolution.target, request.url))
-  }
-
+  // The pre-auth resolution only exists for the not-configured setup state.
+  // Running it with a real session pending (hasUser unknown) would redirect
+  // authenticated /dashboard requests to /login and loop them back forever.
   if (!workosConfigured) {
+    const setupRouteResolution = resolveAuthRoute({
+      pathname,
+      search,
+      workosConfigured: false,
+      hasUser: false,
+    })
+
+    if (setupRouteResolution.type === "redirect") {
+      return NextResponse.redirect(
+        new URL(setupRouteResolution.target, request.url)
+      )
+    }
+
     return NextResponse.next()
   }
 
