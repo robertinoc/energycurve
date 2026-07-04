@@ -192,6 +192,60 @@ export default async function DashboardPage() {
           </Alert>
         ) : null}
 
+        {snapshot && snapshot.playlistCount === 0 ? (
+          <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(123,63,228,0.10),rgba(20,20,27,0.94))] p-5">
+            <p className="text-xs uppercase tracking-[0.22em] text-white/42">
+              Getting started
+            </p>
+            <h2 className="mt-2 font-heading text-xl font-semibold text-white">
+              Analyze your first set in three steps
+            </h2>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {[
+                {
+                  step: "1",
+                  title: "Create a playlist",
+                  body: "Name your set and pick its genre and context — the engine adapts to both.",
+                },
+                {
+                  step: "2",
+                  title: "Load your tracklist",
+                  body: "Paste it straight from Rekordbox or Serato — BPMs in the text are picked up automatically.",
+                },
+                {
+                  step: "3",
+                  title: "Hit Analyze",
+                  body: "Get your energy curve, set score, and concrete fixes per track.",
+                },
+              ].map((item) => (
+                <div
+                  key={item.step}
+                  className="rounded-[22px] border border-white/10 bg-black/18 p-4"
+                >
+                  <span className="flex size-7 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] font-mono text-xs text-white/72">
+                    {item.step}
+                  </span>
+                  <p className="mt-3 text-sm font-medium text-white">
+                    {item.title}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-6 text-white/52">
+                    {item.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <Link
+                href="/dashboard/playlists"
+                className={cn(buttonVariants({ size: "default" }))}
+              >
+                <ListMusic className="size-4" />
+                Create your first playlist
+              </Link>
+            </div>
+          </section>
+        ) : null}
+
         {snapshot && snapshot.latestPlaylists.length > 0 ? (
           <section className="rounded-[28px] border border-white/10 bg-[#17171F] p-5">
             <div className="mb-4 flex items-center justify-between">

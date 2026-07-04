@@ -178,3 +178,31 @@ Repository anchors:
 - [lib/analytics/posthog-server.ts](/Users/robertinoc/Documents/code/energycurve/lib/analytics/posthog-server.ts)
 - [components/analytics/analytics-tracker.tsx](/Users/robertinoc/Documents/code/energycurve/components/analytics/analytics-tracker.tsx)
 - [services/analysis-service.ts](/Users/robertinoc/Documents/code/energycurve/services/analysis-service.ts)
+
+## Section 8 — Launch Readiness
+
+**Status:** Code complete; deployment hardening tasks remain operational
+
+What is now closed:
+
+- password reset flow (`/forgot-password`, `/reset-password`) with Resend delivery and anti-enumeration
+- email verification flow behind `AUTH_REQUIRE_EMAIL_VERIFICATION` (`/verify-email`, WorkOS-sent codes, resend)
+- getting-started onboarding block on the empty dashboard
+- `/api/health` uptime probe (overall status + database reachability, no sensitive detail)
+
+What remains operational (not code):
+
+- WorkOS `Production` unlock + Vercel production env vars
+- dedicated Supabase production project + applied migrations
+- PostHog project + `NEXT_PUBLIC_POSTHOG_KEY`
+- Resend account + domain + `RESEND_API_KEY` / `RESEND_FROM_EMAIL`
+- flipping `AUTH_REQUIRE_EMAIL_VERIFICATION=true` after one manual email test
+- external uptime monitor pointed at `/api/health`
+- collecting user feedback post-launch
+
+Repository anchors:
+
+- [lib/auth/password-reset.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/password-reset.ts)
+- [lib/auth/email-verification.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/email-verification.ts)
+- [lib/email/send-email.ts](/Users/robertinoc/Documents/code/energycurve/lib/email/send-email.ts)
+- [app/api/health/route.ts](/Users/robertinoc/Documents/code/energycurve/app/api/health/route.ts)

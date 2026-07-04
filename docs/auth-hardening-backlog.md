@@ -81,3 +81,22 @@ Do not pull these items forward unless:
 - production release readiness requires them
 - a future product feature directly depends on richer account capabilities
 
+
+## Status update — cycle C (2026-07-04)
+
+- **Password reset / recovery: IMPLEMENTED.** `/forgot-password` +
+  `/reset-password` backed by WorkOS `createPasswordReset` /
+  `resetPassword`. Email delivery goes through Resend
+  (`RESEND_API_KEY` + `RESEND_FROM_EMAIL`); without those vars the
+  forgot-password page shows an honest "not available" state instead of
+  pretending to send. Anti-enumeration: unknown emails get the same
+  neutral response as known ones. Rate limited 5/15min per email.
+- **Real email verification: IMPLEMENTED behind a flag.**
+  `AUTH_REQUIRE_EMAIL_VERIFICATION=true` stops marking signups as
+  verified; WorkOS emails a 6-digit code and the user completes signup
+  on `/verify-email` (resend supported, rate limited 3/10min). Login of
+  an unverified user routes through the same page. Default stays `false`
+  until the WorkOS-sent emails are confirmed arriving in the target
+  environment — flip it per environment after one manual test.
+- Remaining: broader browser-level E2E auth coverage, account settings /
+  profile management.

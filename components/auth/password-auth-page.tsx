@@ -20,14 +20,23 @@ interface PasswordAuthPageProps {
   returnTo: string
   errorCode?: string
   loggedOut?: boolean
+  resetSuccess?: boolean
   action: (formData: FormData) => Promise<void>
 }
 
 function getAlertCopy(
   mode: "login" | "signup",
   errorCode?: string,
-  loggedOut?: boolean
+  loggedOut?: boolean,
+  resetSuccess?: boolean
 ) {
+  if (resetSuccess) {
+    return {
+      title: "Password updated",
+      description: "Your new password is active. Sign in with it below.",
+    }
+  }
+
   if (loggedOut) {
     return {
       title: "Signed out successfully",
@@ -95,10 +104,11 @@ export function PasswordAuthPage({
   returnTo,
   errorCode,
   loggedOut = false,
+  resetSuccess = false,
   action,
 }: PasswordAuthPageProps) {
   const isSignup = mode === "signup"
-  const alertCopy = getAlertCopy(mode, errorCode, loggedOut)
+  const alertCopy = getAlertCopy(mode, errorCode, loggedOut, resetSuccess)
   const title = isSignup
     ? "Create your EnergyCurve account"
     : "Sign in to EnergyCurve"
@@ -179,9 +189,19 @@ export function PasswordAuthPage({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor={`${mode}-password`} className="text-white/82">
-                Password
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`${mode}-password`} className="text-white/82">
+                  Password
+                </Label>
+                {!isSignup ? (
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-white/48 underline-offset-4 transition hover:text-white hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                ) : null}
+              </div>
               <Input
                 id={`${mode}-password`}
                 name="password"

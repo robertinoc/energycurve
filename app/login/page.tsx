@@ -16,6 +16,7 @@ type AuthPageParams = Promise<{
   error?: string | string[]
   loggedOut?: string | string[]
   returnTo?: string | string[]
+  reset?: string | string[]
 }>
 
 export const metadata: Metadata = {
@@ -69,12 +70,15 @@ export default async function LoginPage({
     redirect("/dashboard")
   }
 
+  const reset = Array.isArray(params.reset) ? params.reset[0] : params.reset
+
   return (
     <PasswordAuthPage
       mode="login"
       returnTo={returnTo}
       errorCode={error}
       loggedOut={loggedOut === "1"}
+      resetSuccess={reset === "1"}
       action={loginWithPasswordAction}
     />
   )

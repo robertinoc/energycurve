@@ -7,6 +7,7 @@ import { redirect } from "next/navigation"
 
 import {
   buildCallbackUrlFromHeaders,
+  extractEmailVerificationChallenge,
   mapLoginError,
   mapSignupError,
 } from "@/lib/auth/password-auth-helpers"
@@ -40,7 +41,7 @@ async function getAuthTelemetryContext(email: string) {
   }
 }
 
-async function persistWorkOSSession(
+export async function persistWorkOSSession(
   authResponse: AuthenticationResponse,
   requestUrl: string
 ): Promise<{ profileId: string | null }> {
@@ -126,6 +127,17 @@ export async function loginWithPasswordAction(formData: FormData) {
       returnTo,
     })
   } catch (error) {
+    const challenge = extractEmailVerificationChallenge(error)
+
+    if (challenge) {
+      logInfo("auth.login_verification_pending", { email, returnTo })
+      redirect(
+        `/verify-email?pending=${encodeURIComponent(
+          challenge.pendingAuthenticationToken
+        )}&email=${encodeURIComponent(email)}&returnTo=${encodeURIComponent(returnTo)}`
+      )
+    }
+
     const authError = mapLoginError(error)
     logWarn("auth.login_failed", {
       ...(await getAuthTelemetryContext(email)),
@@ -169,13 +181,20 @@ export async function signupWithPasswordAction(formData: FormData) {
     redirect(`${buildReturnToHref("/signup", returnTo)}&error=config`)
   }
 
+  // Production hardening flag: when on, WorkOS keeps the account unverified
+  // and emails a one-time code; the user lands on /verify-email before a
+  // session exists. Defaults to the documented MVP bypass so existing
+  // environments keep working until the flow is verified end to end.
+  const requireEmailVerification =
+    process.env.AUTH_REQUIRE_EMAIL_VERIFICATION === "true"
+
   try {
     const headersStore = await headers()
 
     await getWorkOS().userManagement.createUser({
       email,
       password,
-      emailVerified: true,
+      ...(requireEmailVerification ? {} : { emailVerified: true }),
     })
 
     const authResponse = await getWorkOS().userManagement.authenticateWithPassword(
@@ -192,13 +211,24 @@ export async function signupWithPasswordAction(formData: FormData) {
       email,
       workosUserId: authResponse.user.id,
       returnTo,
-      emailVerifiedBypass: true,
+      emailVerifiedBypass: !requireEmailVerification,
     })
 
     if (profileId) {
       captureServerEvent(profileId, "signup", { method: "password" })
     }
   } catch (error) {
+    const challenge = extractEmailVerificationChallenge(error)
+
+    if (challenge) {
+      logInfo("auth.signup_verification_pending", { email, returnTo })
+      redirect(
+        `/verify-email?pending=${encodeURIComponent(
+          challenge.pendingAuthenticationToken
+        )}&email=${encodeURIComponent(email)}&returnTo=${encodeURIComponent(returnTo)}`
+      )
+    }
+
     const signupError = mapSignupError(error)
     logWarn("auth.signup_failed", {
       ...(await getAuthTelemetryContext(email)),
