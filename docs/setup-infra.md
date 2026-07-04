@@ -172,6 +172,17 @@ Do not consider EnergyCurve fully production-ready until all of the following ar
 4. A dedicated Supabase production project is in place, migrated, and connected.
 5. Login, callback, dashboard access, profile sync, and logout are re-verified on the deployed production URL.
 
+## Row Level Security posture
+
+RLS is **enabled with zero policies** on `profiles`, `playlists`, and `tracks`. That is intentional:
+
+- Zero policies means default-deny for the `anon` and `authenticated` Postgres roles — a leaked anon key cannot read or write anything.
+- The application accesses the database exclusively through the server-side service-role client (`lib/supabase/server.ts`), which bypasses RLS by design.
+- Ownership is enforced in the service layer (`services/playlist-service.ts`): every query is scoped by `user_id` / verified playlist ownership. See decision 22 in `docs/decisions.md`.
+- `auth.uid()`-based policies would not work here because identities live in WorkOS, not Supabase Auth.
+
+Never expose the Supabase anon key in client code, and never skip the ownership check in a new service function. If browser-side Supabase access is ever needed, design an RLS strategy tied to WorkOS identities first.
+
 ## Follow-ups / Technical Debt
 
 - Missing WorkOS configuration now renders setup guidance instead of a runtime exception, but the auth flow still requires valid credentials before it can be tested end to end.
