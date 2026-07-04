@@ -20,6 +20,7 @@ export interface DashboardSnapshot {
   profile: Profile
   playlistCount: number
   trackCount: number
+  latestPlaylists: PlaylistWithTrackCount[]
 }
 
 export interface PlaylistWithTrackCount extends Playlist {

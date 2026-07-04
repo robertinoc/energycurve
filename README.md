@@ -1,6 +1,6 @@
 # EnergyCurve
 
-EnergyCurve is a Next.js App Router project for DJs. The product strategy, technical foundation, and MVP auth layer are now documented and frozen enough to start building real product workflows, while the actual analysis engine and playlist workflows remain future implementation work.
+EnergyCurve is a Next.js App Router project for DJs. Create a playlist (manually or by pasting a tracklist), and the analysis engine resolves each track's energy, detects flow issues (drops, flat zones, early peaks, context violations), scores the set 1–10 with traceable penalty arithmetic, and suggests a stronger track order — all against the frozen v1 product rules.
 
 ## What Was Set Up
 
@@ -44,6 +44,9 @@ EnergyCurve is a Next.js App Router project for DJs. The product strategy, techn
 - Section 1 `Product & Strategy`: complete for v1 definition
 - Section 2 `Setup & Infra`: complete for foundation
 - Section 3 `Auth & Users`: complete for MVP
+- Section 4 `Playlist Input`: complete for MVP (manual entry + paste-import)
+- Section 5 `Track & Analysis Engines`: complete for MVP (v1 rules)
+- Section 6 `Recommendations & Results UI`: complete for MVP (template-based)
 
 See [docs/roadmap-status.md](/Users/robertinoc/Documents/code/energycurve/docs/roadmap-status.md) for the detailed breakdown.
 
@@ -150,7 +153,8 @@ Use the checklist in [docs/setup-infra.md](/Users/robertinoc/Documents/code/ener
 
 ## Known Limitations
 
-- The product strategy is now documented and frozen for v1, but the actual playlist analysis engine is still future implementation work.
+- Analysis results are computed on request and not persisted yet; the "playlists analyzed" KPI and history views need a persistence layer.
+- Recommendations are template-based (EN/ES); AI-generated narrative is a deliberate follow-up, not a v1 feature.
 - Database access currently uses a server-only service role client; if future client-side data access is introduced, add RLS policies and a browser-safe client strategy.
 - The auth test suite currently covers critical workflow logic, but browser-level end-to-end coverage is still future work.
 - End-to-end auth verification still depends on real WorkOS and Supabase credentials being configured in the target environment.

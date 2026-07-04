@@ -89,3 +89,68 @@ Known post-MVP follow-ups:
 - password reset / recovery
 - broader auth integration / end-to-end coverage
 - account settings / profile management
+
+## Section 4 — Playlist Input
+
+**Status:** Complete for MVP
+
+What is now closed:
+
+- playlist creation with required genre and context
+- playlist listing and detail screens in the dashboard
+- manual track entry with add/edit/remove and stable ordering
+- paste-import with "Artist - Track" / "Track - Artist" parsers, live preview, numbering-prefix stripping, and BPM suffix extraction
+- input validation and normalization (Zod, EN/ES messages)
+- ownership-scoped persistence in Supabase
+- error handling across parser, actions, and services
+
+Repository anchors:
+
+- [lib/playlists/parse-tracklist.ts](/Users/robertinoc/Documents/code/energycurve/lib/playlists/parse-tracklist.ts)
+- [lib/playlists/schemas.ts](/Users/robertinoc/Documents/code/energycurve/lib/playlists/schemas.ts)
+- [services/playlist-service.ts](/Users/robertinoc/Documents/code/energycurve/services/playlist-service.ts)
+- [app/dashboard/playlists/actions.ts](/Users/robertinoc/Documents/code/energycurve/app/dashboard/playlists/actions.ts)
+
+## Section 5 — Track Engine & Analysis Engine
+
+**Status:** Complete for MVP (v1 rules)
+
+What is now closed:
+
+- energy score from BPM via band interpolation, with position fallback and manual override precedence
+- energy curve generation from resolved scores
+- detection: abrupt drops, abrupt spikes, flat zones, early peaks, weak endings, context violations
+- set score per `SET_SCORE_RULES_V1` with penalty-by-category breakdown
+- per-context scoring and best-fit context
+- estimated set duration
+
+Repository anchors:
+
+- [lib/engine/energy-score.ts](/Users/robertinoc/Documents/code/energycurve/lib/engine/energy-score.ts)
+- [lib/engine/analysis.ts](/Users/robertinoc/Documents/code/energycurve/lib/engine/analysis.ts)
+- [docs/product-feature-02-set-analysis.md](/Users/robertinoc/Documents/code/energycurve/docs/product-feature-02-set-analysis.md)
+
+## Section 6 — Recommendations & Results UI
+
+**Status:** Complete for MVP (template-based)
+
+What is now closed:
+
+- localized (EN/ES) actionable recommendations per detected issue
+- informational hints: no progression, too many rests
+- reorder suggestion (ascending energy) shown only when it strictly improves the score
+- results screen: set score + penalty arithmetic, interactive energy curve with issue markers, issue list, recommendations, original vs suggested order
+- dashboard shows real playlists with Edit / Analyze shortcuts
+
+What is intentionally still future work:
+
+- persisting analysis results (KPI: playlists analyzed)
+- AI-generated narrative recommendations
+- PostHog product analytics
+- production hardening follow-ups from `docs/auth-hardening-backlog.md`
+
+Repository anchors:
+
+- [lib/engine/recommendations.ts](/Users/robertinoc/Documents/code/energycurve/lib/engine/recommendations.ts)
+- [lib/content/analysis-copy.ts](/Users/robertinoc/Documents/code/energycurve/lib/content/analysis-copy.ts)
+- [app/dashboard/playlists/[id]/analysis/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/dashboard/playlists/[id]/analysis/page.tsx)
