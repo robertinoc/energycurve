@@ -80,6 +80,11 @@ Required variables:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
+Optional:
+
+- `NEXT_PUBLIC_POSTHOG_KEY` — enables product analytics (PostHog); everything no-ops without it
+- `NEXT_PUBLIC_POSTHOG_HOST` — defaults to `https://us.i.posthog.com`
+
 Detailed explanations live in [docs/setup-infra.md](/Users/robertinoc/Documents/code/energycurve/docs/setup-infra.md).
 
 No additional environment variables are required for the public contact form in the current implementation.
@@ -102,7 +107,7 @@ npm install
 
 2. Populate `.env.local` from `.env.example`.
 
-3. Apply the database migrations from [supabase/migrations/0001_initial_schema.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0001_initial_schema.sql) and [supabase/migrations/0002_align_v1_strategy.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0002_align_v1_strategy.sql) in Supabase SQL Editor or via the Supabase CLI.
+3. Apply the database migrations (including [supabase/migrations/0003_analyses.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0003_analyses.sql)) from [supabase/migrations/0001_initial_schema.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0001_initial_schema.sql) and [supabase/migrations/0002_align_v1_strategy.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0002_align_v1_strategy.sql) in Supabase SQL Editor or via the Supabase CLI.
 
 4. Configure WorkOS:
    - Add `http://localhost:3010/auth/callback` as the redirect URI.
