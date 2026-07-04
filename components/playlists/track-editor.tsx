@@ -5,12 +5,14 @@ import { ArrowDown, ArrowUp, Music2, Pencil, Trash2, X } from "lucide-react"
 
 import {
   addTrackAction,
-  initialPlaylistActionState,
   moveTrackAction,
   removeTrackAction,
   updateTrackAction,
-  type PlaylistActionState,
 } from "@/app/dashboard/playlists/actions"
+import {
+  initialPlaylistActionState,
+  type PlaylistActionState,
+} from "@/lib/playlists/action-state"
 import { Button } from "@/components/ui/button"
 import {
   Card,

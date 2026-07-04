@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Database, ListMusic, ShieldCheck, UserRound, Waves } from "lucide-react"
 import { redirect } from "next/navigation"
 
+import { AnalyticsIdentify } from "@/components/analytics/analytics-tracker"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { EnergyCurveDashboard } from "@/components/dashboard/energy-curve-dashboard"
 import { SetupRequiredState } from "@/components/setup/setup-required-state"
@@ -110,6 +111,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-[#0B0B0F] text-white">
+      {profile ? <AnalyticsIdentify profileId={profile.id} /> : null}
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
         <header className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(123,63,228,0.14),rgba(20,20,27,0.92))] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
           <div className="flex flex-col gap-6">

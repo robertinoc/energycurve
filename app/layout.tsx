@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Geist_Mono, Inter, Space_Grotesk } from "next/font/google"
 
+import { AnalyticsTracker } from "@/components/analytics/analytics-tracker"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import "./globals.css"
 
@@ -54,6 +55,7 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-background text-foreground selection:bg-[#7B3FE4]/30 selection:text-white">
         <AuthProvider>{children}</AuthProvider>
+        <AnalyticsTracker />
       </body>
     </html>
   )

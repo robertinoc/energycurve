@@ -5,8 +5,10 @@ import { Trash2 } from "lucide-react"
 
 import {
   deletePlaylistAction,
-  initialPlaylistActionState,
 } from "@/app/dashboard/playlists/actions"
+import {
+  initialPlaylistActionState,
+} from "@/lib/playlists/action-state"
 import { Button } from "@/components/ui/button"
 
 interface DeletePlaylistButtonProps {

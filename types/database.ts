@@ -110,6 +110,67 @@ export interface Database {
           },
         ]
       }
+      analyses: {
+        Row: {
+          id: string
+          playlist_id: string
+          user_id: string
+          genre: Database["public"]["Enums"]["playlist_genre"]
+          context: Database["public"]["Enums"]["playlist_context"]
+          set_score: number
+          curve: Json
+          issues: Json
+          breakdown: Json
+          suggested_order: Json | null
+          suggested_score: number | null
+          input_hash: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          playlist_id: string
+          user_id: string
+          genre: Database["public"]["Enums"]["playlist_genre"]
+          context: Database["public"]["Enums"]["playlist_context"]
+          set_score: number
+          curve: Json
+          issues: Json
+          breakdown: Json
+          suggested_order?: Json | null
+          suggested_score?: number | null
+          input_hash: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          playlist_id?: string
+          user_id?: string
+          genre?: Database["public"]["Enums"]["playlist_genre"]
+          context?: Database["public"]["Enums"]["playlist_context"]
+          set_score?: number
+          curve?: Json
+          issues?: Json
+          breakdown?: Json
+          suggested_order?: Json | null
+          suggested_score?: number | null
+          input_hash?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analyses_playlist_id_fkey"
+            columns: ["playlist_id"]
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analyses_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

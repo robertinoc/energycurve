@@ -5,7 +5,9 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import type { ZodError } from "zod"
 
+import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { buildReturnToHref } from "@/lib/auth/return-to"
+import type { PlaylistActionState } from "@/lib/playlists/action-state"
 import { logError, logWarn } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
@@ -24,18 +26,6 @@ import {
   replaceTracks,
   updateTrack,
 } from "@/services/playlist-service"
-
-export interface PlaylistActionState {
-  ok: boolean
-  message: string | null
-  fieldErrors: Record<string, string> | null
-}
-
-export const initialPlaylistActionState: PlaylistActionState = {
-  ok: false,
-  message: null,
-  fieldErrors: null,
-}
 
 const GENERIC_ERROR_MESSAGE =
   "Something went wrong while saving. Please try again."
@@ -151,6 +141,12 @@ export async function createPlaylistAction(
     logError("playlist.create_action_failed", error, { profileId: profile.id })
     return failure(GENERIC_ERROR_MESSAGE)
   }
+
+  captureServerEvent(profile.id, "playlist_created", {
+    playlistId,
+    genre: parsed.data.genre,
+    context: parsed.data.context,
+  })
 
   revalidatePath("/dashboard/playlists")
   revalidatePath("/dashboard")

@@ -154,3 +154,27 @@ Repository anchors:
 - [lib/engine/recommendations.ts](/Users/robertinoc/Documents/code/energycurve/lib/engine/recommendations.ts)
 - [lib/content/analysis-copy.ts](/Users/robertinoc/Documents/code/energycurve/lib/content/analysis-copy.ts)
 - [app/dashboard/playlists/[id]/analysis/page.tsx](/Users/robertinoc/Documents/code/energycurve/app/dashboard/playlists/[id]/analysis/page.tsx)
+
+## Section 7 — Analytics & Analysis History
+
+**Status:** Complete for MVP (dashboards configured in PostHog, not in code)
+
+What is now closed:
+
+- `analyses` history table with content-hash dedupe (adoption KPI: playlists analyzed)
+- PostHog server-side events: signup, playlist_created, analysis_started, analysis_completed
+- Browser pageview/pageleave tracking (engagement KPI: time on results screen)
+- Profile-id identity shared between server and browser events
+- Graceful no-op everywhere when `NEXT_PUBLIC_POSTHOG_KEY` is unset
+
+What is intentionally still future work:
+
+- Building the actual PostHog dashboards (actives, analyses run, retention) — a PostHog-UI task, not code
+- Alerting / weekly digests
+
+Repository anchors:
+
+- [supabase/migrations/0003_analyses.sql](/Users/robertinoc/Documents/code/energycurve/supabase/migrations/0003_analyses.sql)
+- [lib/analytics/posthog-server.ts](/Users/robertinoc/Documents/code/energycurve/lib/analytics/posthog-server.ts)
+- [components/analytics/analytics-tracker.tsx](/Users/robertinoc/Documents/code/energycurve/components/analytics/analytics-tracker.tsx)
+- [services/analysis-service.ts](/Users/robertinoc/Documents/code/energycurve/services/analysis-service.ts)

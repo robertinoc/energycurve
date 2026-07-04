@@ -395,6 +395,25 @@ Make `genre` and `context` required fields in the playlist creation form and sch
 - New playlists always carry a genre and a context.
 - Read paths still tolerate `NULL` for rows created before this rule.
 
+## 24. Analysis history with content-hash dedupe, PostHog for product analytics
+
+**Decision**
+
+Persist each analysis as an append-only row in `analyses` (deduped by an input hash over curve + genre + context), and instrument the four roadmap events (`signup`, `playlist_created`, `analysis_started`, `analysis_completed`) with PostHog — server-side via `posthog-node` keyed by profile id, plus a light browser tracker for pageviews/pageleave.
+
+**Why**
+
+- The adoption KPI is "playlists analyzed", so analysis events need to survive beyond the request; recomputation on page reload must not inflate the number.
+- Server-side capture is reliable for funnel events (no ad-blockers, no client bundle cost); the browser SDK adds the engagement KPIs (time on results screen, retention) that only the client can measure.
+- A single public `NEXT_PUBLIC_POSTHOG_KEY` feeds both SDKs, and everything no-ops gracefully when it is absent — analytics never breaks a product flow (same contract as logging).
+
+**Consequence**
+
+- Migration `0003_analyses.sql` adds the history table (default-deny RLS, service-role access only).
+- `recordAnalysisSnapshot` runs fire-and-forget in `services/analysis-service.ts`; storage failures are logged, never surfaced.
+- Server and browser share the profile id as the PostHog distinct id (`AnalyticsIdentify` on the dashboard ties the anonymous session to it).
+- Dashboards for actives/analyses/retention are configured in PostHog itself, not in code.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

@@ -10,6 +10,7 @@ import {
   mapLoginError,
   mapSignupError,
 } from "@/lib/auth/password-auth-helpers"
+import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { buildReturnToHref, getSafeReturnTo } from "@/lib/auth/return-to"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -42,7 +43,7 @@ async function getAuthTelemetryContext(email: string) {
 async function persistWorkOSSession(
   authResponse: AuthenticationResponse,
   requestUrl: string
-) {
+): Promise<{ profileId: string | null }> {
   try {
     await saveSession(
       {
@@ -67,12 +68,14 @@ async function persistWorkOSSession(
   // redirect loop. The dashboard bootstrap re-syncs the profile and renders
   // a guided database warning when Supabase is unreachable (decision 5).
   try {
-    await syncProfileFromWorkOSUser({
+    const profile = await syncProfileFromWorkOSUser({
       id: authResponse.user.id,
       email: authResponse.user.email,
       firstName: authResponse.user.firstName ?? null,
       lastName: authResponse.user.lastName ?? null,
     })
+
+    return { profileId: profile.id }
   } catch (error) {
     logWarn("auth.profile_sync_deferred", {
       email: authResponse.user.email,
@@ -80,6 +83,8 @@ async function persistWorkOSSession(
       reason:
         error instanceof Error ? error.message : "Unknown profile sync error",
     })
+
+    return { profileId: null }
   }
 }
 
@@ -182,13 +187,17 @@ export async function signupWithPasswordAction(formData: FormData) {
       }
     )
 
-    await persistWorkOSSession(authResponse, requestUrl)
+    const { profileId } = await persistWorkOSSession(authResponse, requestUrl)
     logInfo("auth.signup_succeeded", {
       email,
       workosUserId: authResponse.user.id,
       returnTo,
       emailVerifiedBypass: true,
     })
+
+    if (profileId) {
+      captureServerEvent(profileId, "signup", { method: "password" })
+    }
   } catch (error) {
     const signupError = mapSignupError(error)
     logWarn("auth.signup_failed", {
