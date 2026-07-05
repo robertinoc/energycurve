@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
     description:
       "Analyze DJ set energy, transition quality, and performance flow to design better mixes and shape momentum with more intention.",
-    url: "https://energycurve.vercel.app/",
+    url: "https://energycurve.app/",
     siteName: "EnergyCurve",
     type: "website",
   },
@@ -34,7 +34,7 @@ export default function HomePage() {
     operatingSystem: "Web",
     description:
       "EnergyCurve helps DJs analyze set energy, transition quality, and performance flow to design better mixes and more intentional dancefloor momentum.",
-    url: "https://energycurve.vercel.app/",
+    url: "https://energycurve.app/",
     audience: {
       "@type": "Audience",
       audienceType: "DJs, producers, and performers",

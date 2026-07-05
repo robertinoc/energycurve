@@ -92,7 +92,7 @@ No additional environment variables are required for the public contact form in 
 ## Recommended Environment Split
 
 - Local development: WorkOS `Staging` + `http://localhost:3010`
-- Vercel production: WorkOS `Production` + `https://energycurve.vercel.app`
+- Vercel production: WorkOS `Production` + `https://energycurve.app`
 - Prefer a dedicated Supabase project for local/dev and another for production
 
 Using separate WorkOS and Supabase environments keeps local tests from colliding with production identities or production data.
