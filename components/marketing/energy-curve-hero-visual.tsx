@@ -42,9 +42,9 @@ export function EnergyCurveHeroVisual({
   },
 }: EnergyCurveHeroVisualProps) {
   return (
-    <div className="rounded-[24px] border border-white/10 bg-[#111118] p-4">
+    <div className="rounded-2xl border border-ec-border bg-ec-surface p-4">
       <div className="grid gap-4 lg:grid-cols-[1fr_132px]">
-        <div className="overflow-hidden rounded-[18px] border border-white/8 bg-[radial-gradient(circle_at_center,rgba(123,63,228,0.22),transparent_35%),radial-gradient(circle_at_70%_20%,rgba(255,45,117,0.18),transparent_28%),#0C0C12] p-3">
+        <div className="overflow-hidden rounded-xl border border-ec-border bg-[radial-gradient(circle_at_center,rgba(162,77,224,0.2),transparent_38%),radial-gradient(circle_at_70%_20%,rgba(34,211,238,0.12),transparent_30%),#0C0917] p-3">
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             className="h-[230px] w-full overflow-visible"
@@ -60,10 +60,9 @@ export function EnergyCurveHeroVisual({
                 y2="0"
                 gradientUnits="userSpaceOnUse"
               >
-                <stop stopColor="#7B3FE4" />
-                <stop offset="0.45" stopColor="#FF2D75" />
-                <stop offset="0.74" stopColor="#00D1FF" />
-                <stop offset="1" stopColor="#7B3FE4" />
+                <stop stopColor="#4C6EF5" />
+                <stop offset="0.5" stopColor="#A24DE0" />
+                <stop offset="1" stopColor="#22D3EE" />
               </linearGradient>
               <linearGradient
                 id="hero-curve-fill"
@@ -73,9 +72,8 @@ export function EnergyCurveHeroVisual({
                 y2={HEIGHT}
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0%" stopColor="#FF2D75" stopOpacity="0.28" />
-                <stop offset="55%" stopColor="#7B3FE4" stopOpacity="0.18" />
-                <stop offset="100%" stopColor="#0B0B0F" stopOpacity="0.02" />
+                <stop offset="0%" stopColor="#A24DE0" stopOpacity="0.34" />
+                <stop offset="100%" stopColor="#A24DE0" stopOpacity="0" />
               </linearGradient>
               <filter
                 id="hero-curve-glow"
@@ -145,8 +143,8 @@ export function EnergyCurveHeroVisual({
                   r={index === 3 || index === 5 ? "10" : "7"}
                   fill={
                     index === 3 || index === 5
-                      ? "rgba(255,45,117,0.22)"
-                      : "rgba(0,209,255,0.16)"
+                      ? "rgba(240,52,138,0.22)"
+                      : "rgba(34,211,238,0.16)"
                   }
                   className="energy-orb-pulse"
                   style={{ animationDelay: `${index * 120}ms` }}
@@ -155,7 +153,7 @@ export function EnergyCurveHeroVisual({
                   cx={point.x}
                   cy={point.y}
                   r={index === 3 || index === 5 ? "4.5" : "3.5"}
-                  fill={index === 3 || index === 5 ? "#FF2D75" : "#F7F7FB"}
+                  fill={index === 3 || index === 5 ? "#F0348A" : "#F5F2FC"}
                 />
               </g>
             ))}
@@ -175,10 +173,10 @@ export function EnergyCurveHeroVisual({
                   rx="5"
                   fill={
                     index % 3 === 0
-                      ? "#7B3FE4"
+                      ? "#A24DE0"
                       : index % 3 === 1
-                        ? "#FF2D75"
-                        : "#00D1FF"
+                        ? "#4C6EF5"
+                        : "#22D3EE"
                   }
                   opacity="0.55"
                 />
@@ -209,11 +207,11 @@ export function EnergyCurveHeroVisual({
 
 function Metric({ title, value }: { title: string; value: string }) {
   return (
-    <div className="rounded-[16px] border border-white/10 bg-black/28 px-3 py-4">
-      <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/40">
+    <div className="rounded-xl border border-ec-border bg-ec-sunken px-3 py-4">
+      <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ec-text-muted">
         {title}
       </p>
-      <p className="mt-2 font-heading text-3xl font-semibold text-white">
+      <p className="ec-gradient-text mt-2 font-mono text-3xl font-bold">
         {value}
       </p>
     </div>

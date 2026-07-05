@@ -63,7 +63,7 @@ export default async function PlaylistDetailPage({
     playlist.tracks.length * STANDARD_TRACK_DURATION_MINUTES
 
   return (
-    <main className="min-h-screen bg-[#0B0B0F] text-white">
+    <main className="min-h-screen bg-[#08050F] text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
         <header className="space-y-4">
           <div className="flex items-center justify-between gap-4">

@@ -42,7 +42,7 @@ export function LandingNavbar({
         className={cn(
           "mx-auto w-full max-w-6xl rounded-[24px] border px-5 py-3.5 transition-all duration-300",
           scrolled
-            ? "border-fuchsia-400/18 bg-[#0F1017]/88 shadow-[0_20px_50px_rgba(0,0,0,0.34),0_0_28px_rgba(123,63,228,0.12)] backdrop-blur-xl"
+            ? "border-[#A24DE0]/20 bg-[#0C0917]/88 shadow-[0_20px_50px_rgba(0,0,0,0.34),0_0_28px_rgba(162,77,224,0.12)] backdrop-blur-xl"
             : "border-white/10 bg-white/[0.045] shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-md"
         )}
       >
@@ -61,10 +61,10 @@ export function LandingNavbar({
                   href={item.href}
                   aria-current={active ? "location" : undefined}
                   className={cn(
-                    "rounded-full px-3 py-2 text-sm transition-all duration-250 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF2D75]/45",
+                    "rounded-full px-3 py-2 text-sm transition-all duration-250 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/45",
                     active
-                      ? "bg-linear-to-r from-[#8A39F8]/18 via-[#54ABFF]/10 to-[#00D1FF]/16 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(255,255,255,0.05),0_0_24px_rgba(123,63,228,0.16)]"
-                      : "text-white/62 hover:-translate-y-0.5 hover:bg-linear-to-r hover:from-[#8A39F8]/16 hover:via-[#53AFFF]/10 hover:to-[#FF6B8E]/18 hover:text-white hover:shadow-[0_12px_28px_rgba(82,77,255,0.14),0_0_22px_rgba(0,209,255,0.1)]"
+                      ? "bg-linear-to-r from-[#A24DE0]/18 via-[#6A5CF0]/10 to-[#22D3EE]/16 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(255,255,255,0.05),0_0_24px_rgba(162,77,224,0.16)]"
+                      : "text-white/62 hover:-translate-y-0.5 hover:bg-linear-to-r hover:from-[#A24DE0]/16 hover:via-[#6A5CF0]/10 hover:to-[#22D3EE]/18 hover:text-white hover:shadow-[0_12px_28px_rgba(82,77,255,0.14),0_0_22px_rgba(34,211,238,0.1)]"
                   )}
                 >
                   {item.label}
@@ -81,7 +81,7 @@ export function LandingNavbar({
             >
               {loginLabel}
             </Link>
-            <CTAButton href="/signup?returnTo=%2Fdashboard" className="h-10 px-4 text-sm shadow-[0_0_24px_rgba(123,63,228,0.16)]">
+            <CTAButton href="/signup?returnTo=%2Fdashboard" className="h-10 px-4 text-sm shadow-[0_0_24px_rgba(162,77,224,0.16)]">
               {ctaLabel}
             </CTAButton>
           </div>
@@ -120,8 +120,8 @@ export function LandingNavbar({
                       className={cn(
                         "rounded-2xl px-3 py-2 text-sm transition-all duration-250",
                         active
-                          ? "bg-linear-to-r from-[#8A39F8]/18 via-[#53AFFF]/10 to-[#00D1FF]/16 text-white shadow-[0_0_18px_rgba(123,63,228,0.14)]"
-                          : "text-white/72 hover:bg-linear-to-r hover:from-[#8A39F8]/14 hover:via-[#53AFFF]/8 hover:to-[#FF6B8E]/16 hover:text-white hover:shadow-[0_10px_22px_rgba(82,77,255,0.14)]"
+                          ? "bg-linear-to-r from-[#A24DE0]/18 via-[#6A5CF0]/10 to-[#22D3EE]/16 text-white shadow-[0_0_18px_rgba(162,77,224,0.14)]"
+                          : "text-white/72 hover:bg-linear-to-r hover:from-[#A24DE0]/14 hover:via-[#6A5CF0]/8 hover:to-[#22D3EE]/16 hover:text-white hover:shadow-[0_10px_22px_rgba(82,77,255,0.14)]"
                       )}
                     >
                       {item.label}

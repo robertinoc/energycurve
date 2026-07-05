@@ -59,7 +59,7 @@ export function TracklistImport({
   )
 
   return (
-    <Card className="border-white/10 bg-[#17171F] text-white ring-0">
+    <Card className="border-white/10 bg-[#0C0917] text-white ring-0">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <ClipboardPaste className="size-4 text-white/58" />
@@ -90,7 +90,7 @@ export function TracklistImport({
                   value={option}
                   checked={format === option}
                   onChange={() => setFormat(option)}
-                  className="accent-[#7B3FE4]"
+                  className="accent-[#A24DE0]"
                 />
                 {FORMAT_LABELS[option]}
               </label>
@@ -157,7 +157,7 @@ export function TracklistImport({
                   {preview.errors.slice(0, 10).map((error) => (
                     <p
                       key={`${error.line}-${error.reason}`}
-                      className="flex items-center gap-2 text-xs text-amber-300/90"
+                      className="flex items-center gap-2 text-xs text-ec-amber/90"
                     >
                       <TriangleAlert className="size-3 shrink-0" />
                       Line {error.line}: no “Artist – Track” separator found —
@@ -170,7 +170,7 @@ export function TracklistImport({
           ) : null}
 
           {existingTrackCount > 0 ? (
-            <p className="flex items-center gap-2 text-xs text-amber-300/90">
+            <p className="flex items-center gap-2 text-xs text-ec-amber/90">
               <TriangleAlert className="size-3 shrink-0" />
               Importing replaces the {existingTrackCount} track(s) currently in
               this playlist.
@@ -188,7 +188,7 @@ export function TracklistImport({
             </Button>
             {state.message ? (
               <p
-                className={`text-sm ${state.ok ? "text-emerald-400" : "text-red-400"}`}
+                className={`text-sm ${state.ok ? "text-ec-cyan" : "text-ec-error"}`}
               >
                 {state.message}
               </p>

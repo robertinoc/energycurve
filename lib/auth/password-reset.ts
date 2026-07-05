@@ -33,18 +33,18 @@ function buildResetEmail(resetUrl: string) {
   ].join("\n")
 
   const html = `
-    <div style="font-family: Inter, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #1a1a22;">
+    <div style="font-family: Inter, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #14101F;">
       <h2 style="margin: 0 0 16px;">Reset your EnergyCurve password</h2>
       <p style="margin: 0 0 20px; line-height: 1.6;">
         Someone requested a password reset for your EnergyCurve account.
         Click the button below to choose a new password.
       </p>
       <p style="margin: 0 0 24px;">
-        <a href="${resetUrl}" style="display: inline-block; padding: 12px 20px; background: #7B3FE4; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 600;">
+        <a href="${resetUrl}" style="display: inline-block; padding: 12px 20px; background: #A24DE0; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 600;">
           Reset password
         </a>
       </p>
-      <p style="margin: 0; font-size: 13px; color: #6b6b76; line-height: 1.6;">
+      <p style="margin: 0; font-size: 13px; color: #6E6788; line-height: 1.6;">
         The link expires shortly. If you didn't request this, you can safely
         ignore this email — your password stays unchanged.
       </p>

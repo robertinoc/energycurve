@@ -1,5 +1,7 @@
 # Brand & Design
 
+> **Superseded by Brand Kit v1 (2026-07).** The authoritative brand system now lives in [`docs/brand-kit/`](brand-kit/README.md) — see `CLAUDE_IMPLEMENTATION_PROMPT.md` for tokens, typography (Space Grotesk / Manrope / Space Mono), the signature energy-curve spec, and voice & tone. Where this document disagrees with the brand kit, the brand kit wins.
+
 EnergyCurve keeps a dark, premium product language built around performance
 intelligence rather than generic DJ software tropes.
 

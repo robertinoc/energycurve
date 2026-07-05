@@ -24,7 +24,7 @@ function TrackColumn({
     <div
       className={`rounded-[22px] border p-4 ${
         highlight
-          ? "border-[#00D1FF]/30 bg-[#00D1FF]/[0.05]"
+          ? "border-[#22D3EE]/30 bg-[#22D3EE]/[0.05]"
           : "border-white/10 bg-black/18"
       }`}
     >
@@ -32,7 +32,7 @@ function TrackColumn({
         <p className="text-xs uppercase tracking-[0.18em] text-white/42">
           {title}
         </p>
-        <span className="font-heading text-lg font-semibold text-white">
+        <span className="font-mono text-lg font-bold text-white">
           {score}/10
         </span>
       </div>

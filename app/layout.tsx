@@ -1,23 +1,26 @@
 import type { Metadata, Viewport } from "next"
-import { Geist_Mono, Inter, Space_Grotesk } from "next/font/google"
+import { Manrope, Space_Grotesk, Space_Mono } from "next/font/google"
 
 import { AnalyticsTracker } from "@/components/analytics/analytics-tracker"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import "./globals.css"
 
-const inter = Inter({
-  variable: "--font-inter",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 })
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 })
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
   subsets: ["latin"],
+  weight: ["400", "700"],
 })
 
 export const metadata: Metadata = {
@@ -30,17 +33,17 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/branding/icons/energycurve-icon.png",
+        url: "/brand-kit/app-icon.png",
         type: "image/png",
       },
     ],
-    shortcut: ["/branding/icons/energycurve-icon.png"],
-    apple: ["/branding/icons/energycurve-icon.png"],
+    shortcut: ["/brand-kit/app-icon.png"],
+    apple: ["/brand-kit/app-icon.png"],
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0B0B0F",
+  themeColor: "#08050F",
 }
 
 export default function RootLayout({
@@ -51,9 +54,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${manrope.variable} ${spaceGrotesk.variable} ${spaceMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background text-foreground selection:bg-[#7B3FE4]/30 selection:text-white">
+      <body className="min-h-full bg-background text-foreground selection:bg-[#A24DE0]/30 selection:text-white">
         <AuthProvider>{children}</AuthProvider>
         <AnalyticsTracker />
       </body>

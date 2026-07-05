@@ -33,7 +33,7 @@ export function DeletePlaylistButton({
         variant="ghost"
         size="icon-sm"
         aria-label={`Delete ${playlistName}`}
-        className="text-white/48 hover:text-red-400"
+        className="text-white/48 hover:text-ec-error"
         onClick={() => setConfirming(true)}
       >
         <Trash2 />
@@ -57,7 +57,7 @@ export function DeletePlaylistButton({
         Cancel
       </Button>
       {!state.ok && state.message ? (
-        <span className="text-xs text-red-400">{state.message}</span>
+        <span className="text-xs text-ec-error">{state.message}</span>
       ) : null}
     </form>
   )

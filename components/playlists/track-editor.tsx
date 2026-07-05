@@ -23,6 +23,10 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  energyBarGradient,
+  energyColor,
+} from "@/lib/charts/energy-colors"
 import type { Track } from "@/types/domain"
 
 interface TrackEditorProps {
@@ -53,7 +57,7 @@ function TrackFields({ idPrefix, defaults, fieldErrors }: TrackFieldsProps) {
           className="border-white/12 text-white placeholder:text-white/32"
         />
         {fieldErrors?.artist ? (
-          <p className="text-xs text-red-400">{fieldErrors.artist}</p>
+          <p className="text-xs text-ec-error">{fieldErrors.artist}</p>
         ) : null}
       </div>
       <div className="space-y-1.5">
@@ -70,7 +74,7 @@ function TrackFields({ idPrefix, defaults, fieldErrors }: TrackFieldsProps) {
           className="border-white/12 text-white placeholder:text-white/32"
         />
         {fieldErrors?.name ? (
-          <p className="text-xs text-red-400">{fieldErrors.name}</p>
+          <p className="text-xs text-ec-error">{fieldErrors.name}</p>
         ) : null}
       </div>
       <div className="space-y-1.5">
@@ -89,7 +93,7 @@ function TrackFields({ idPrefix, defaults, fieldErrors }: TrackFieldsProps) {
           className="border-white/12 text-white placeholder:text-white/32"
         />
         {fieldErrors?.bpm ? (
-          <p className="text-xs text-red-400">{fieldErrors.bpm}</p>
+          <p className="text-xs text-ec-error">{fieldErrors.bpm}</p>
         ) : null}
       </div>
       <div className="space-y-1.5">
@@ -108,7 +112,7 @@ function TrackFields({ idPrefix, defaults, fieldErrors }: TrackFieldsProps) {
           className="border-white/12 text-white placeholder:text-white/32"
         />
         {fieldErrors?.energyScore ? (
-          <p className="text-xs text-red-400">{fieldErrors.energyScore}</p>
+          <p className="text-xs text-ec-error">{fieldErrors.energyScore}</p>
         ) : null}
       </div>
     </div>
@@ -122,7 +126,7 @@ function ActionFeedback({ state }: { state: PlaylistActionState }) {
 
   return (
     <p
-      className={`text-sm ${state.ok ? "text-emerald-400" : "text-red-400"}`}
+      className={`text-sm ${state.ok ? "text-ec-cyan" : "text-ec-error"}`}
     >
       {state.message}
     </p>
@@ -213,28 +217,45 @@ function TrackRow({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/18 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 items-center gap-4">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] font-mono text-xs text-white/62">
+    <div className="flex flex-col gap-3 rounded-[11px] border border-ec-border bg-ec-sunken px-[15px] py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-center gap-3.5">
+        <span className="w-6 shrink-0 text-right font-mono text-xs text-ec-text-dim">
           {track.position}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-white">
+          <p className="truncate text-sm font-semibold text-ec-text">
             {track.name}
           </p>
-          <p className="truncate text-xs text-white/52">{track.artist}</p>
+          <p className="mt-0.5 truncate font-mono text-[11.5px] text-ec-text-dim">
+            {track.artist} · {track.bpm !== null ? `${track.bpm} BPM` : "— BPM"}
+          </p>
         </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-4">
-        <div className="flex items-center gap-3 font-mono text-xs text-white/52">
-          <span>{track.bpm !== null ? `${track.bpm} BPM` : "— BPM"}</span>
-          <span>
-            {track.energy_score !== null
-              ? `energy ${track.energy_score}`
-              : "energy auto"}
+        {track.energy_score !== null ? (
+          <div className="flex items-center gap-2.5">
+            <div className="h-[7px] w-24 overflow-hidden rounded-full bg-ec-raised">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.min(Math.max(track.energy_score, 0), 10) * 10}%`,
+                  background: energyBarGradient(track.energy_score),
+                }}
+              />
+            </div>
+            <span
+              className="font-mono text-sm font-bold"
+              style={{ color: energyColor(track.energy_score) }}
+            >
+              {track.energy_score}
+            </span>
+          </div>
+        ) : (
+          <span className="font-mono text-[11.5px] text-ec-text-dim">
+            energy auto
           </span>
-        </div>
+        )}
 
         <div className="flex items-center gap-1">
           <form action={moveAction}>
@@ -306,7 +327,7 @@ function TrackRow({
               variant="ghost"
               size="icon-xs"
               aria-label="Remove track"
-              className="text-white/48 hover:text-red-400"
+              className="text-white/48 hover:text-ec-error"
               onClick={() => setConfirmingRemove(true)}
             >
               <Trash2 />
@@ -316,10 +337,10 @@ function TrackRow({
       </div>
 
       {!moveState.ok && moveState.message ? (
-        <p className="text-xs text-red-400">{moveState.message}</p>
+        <p className="text-xs text-ec-error">{moveState.message}</p>
       ) : null}
       {!removeState.ok && removeState.message ? (
-        <p className="text-xs text-red-400">{removeState.message}</p>
+        <p className="text-xs text-ec-error">{removeState.message}</p>
       ) : null}
     </div>
   )
@@ -358,7 +379,7 @@ function AddTrackForm({ playlistId }: { playlistId: string }) {
 
 export function TrackEditor({ playlistId, tracks }: TrackEditorProps) {
   return (
-    <Card className="border-white/10 bg-[#17171F] text-white ring-0">
+    <Card className="border-white/10 bg-[#0C0917] text-white ring-0">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <Music2 className="size-4 text-white/58" />

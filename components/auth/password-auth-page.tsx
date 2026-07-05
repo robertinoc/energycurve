@@ -118,10 +118,10 @@ export function PasswordAuthPage({
     : "Sign in with email and password through WorkOS, while keeping the app experience simple and controlled."
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#0B0B0F] px-6 py-10 text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#08050F] px-6 py-10 text-white">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-6rem] top-[-4rem] h-72 w-72 rounded-full bg-[#7B3FE4]/24 blur-3xl" />
-        <div className="absolute right-[-4rem] top-16 h-80 w-80 rounded-full bg-[#00D1FF]/16 blur-3xl" />
+        <div className="absolute left-[-6rem] top-[-4rem] h-72 w-72 rounded-full bg-[#A24DE0]/24 blur-3xl" />
+        <div className="absolute right-[-4rem] top-16 h-80 w-80 rounded-full bg-[#22D3EE]/16 blur-3xl" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:68px_68px] opacity-20" />
       </div>
 
@@ -161,7 +161,7 @@ export function PasswordAuthPage({
 
             <a
               href={googleHref}
-              className="flex h-11 items-center justify-center gap-3 rounded-2xl border border-white/12 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] hover:shadow-[0_14px_34px_rgba(0,0,0,0.24),0_0_24px_rgba(0,209,255,0.08)]"
+              className="flex h-11 items-center justify-center gap-3 rounded-2xl border border-white/12 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] hover:shadow-[0_14px_34px_rgba(0,0,0,0.24),0_0_24px_rgba(34,211,238,0.08)]"
             >
               <GoogleMark />
               Continue with Google
@@ -183,7 +183,7 @@ export function PasswordAuthPage({
                 type="email"
                 required
                 autoComplete="email"
-                className="h-11 rounded-2xl border-white/12 bg-black/18 px-3 text-white placeholder:text-white/35"
+                className="h-11 px-3.5"
                 placeholder="you@example.com"
               />
             </div>
@@ -208,7 +208,7 @@ export function PasswordAuthPage({
                 type="password"
                 required
                 autoComplete={isSignup ? "new-password" : "current-password"}
-                className="h-11 rounded-2xl border-white/12 bg-black/18 px-3 text-white placeholder:text-white/35"
+                className="h-11 px-3.5"
                 placeholder={isSignup ? "Create a strong password" : "Enter your password"}
               />
             </div>
@@ -224,7 +224,7 @@ export function PasswordAuthPage({
                   type="password"
                   required
                   autoComplete="new-password"
-                  className="h-11 rounded-2xl border-white/12 bg-black/18 px-3 text-white placeholder:text-white/35"
+                  className="h-11 px-3.5"
                   placeholder="Repeat your password"
                 />
               </div>
@@ -233,7 +233,7 @@ export function PasswordAuthPage({
             <Button
               type="submit"
               size="lg"
-              className="w-full justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] text-[#071018]"
+              className="w-full justify-between ec-gradient-bg text-white shadow-[0_8px_24px_rgba(120,60,220,0.35)]"
             >
               {isSignup ? "Create your account" : "Login"}
               <ArrowRight className="size-4" />
@@ -249,7 +249,7 @@ export function PasswordAuthPage({
                     ? `/login?returnTo=${encodeURIComponent(returnTo)}`
                     : `/signup?returnTo=${encodeURIComponent(returnTo)}`
                 }
-                className="text-white underline decoration-white/24 underline-offset-4 transition hover:text-[#76E7FF]"
+                className="text-white underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
               >
                 {isSignup ? "Login" : "Create your account"}
               </Link>

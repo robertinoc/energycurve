@@ -43,7 +43,7 @@ export function PlaylistCreateForm() {
   )
 
   return (
-    <Card className="border-white/10 bg-[#17171F] text-white ring-0">
+    <Card className="border-white/10 bg-[#0C0917] text-white ring-0">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <ListMusic className="size-4 text-white/58" />
@@ -69,7 +69,7 @@ export function PlaylistCreateForm() {
               className="border-white/12 text-white placeholder:text-white/32"
             />
             {state.fieldErrors?.name ? (
-              <p className="text-xs text-red-400">{state.fieldErrors.name}</p>
+              <p className="text-xs text-ec-error">{state.fieldErrors.name}</p>
             ) : null}
           </div>
 
@@ -90,7 +90,7 @@ export function PlaylistCreateForm() {
               ))}
             </NativeSelect>
             {state.fieldErrors?.genre ? (
-              <p className="text-xs text-red-400">{state.fieldErrors.genre}</p>
+              <p className="text-xs text-ec-error">{state.fieldErrors.genre}</p>
             ) : null}
           </div>
 
@@ -111,7 +111,7 @@ export function PlaylistCreateForm() {
               ))}
             </NativeSelect>
             {state.fieldErrors?.context ? (
-              <p className="text-xs text-red-400">
+              <p className="text-xs text-ec-error">
                 {state.fieldErrors.context}
               </p>
             ) : null}
@@ -125,7 +125,7 @@ export function PlaylistCreateForm() {
         </form>
 
         {!state.ok && state.message ? (
-          <p className="mt-3 text-sm text-red-400">{state.message}</p>
+          <p className="mt-3 text-sm text-ec-error">{state.message}</p>
         ) : null}
       </CardContent>
     </Card>

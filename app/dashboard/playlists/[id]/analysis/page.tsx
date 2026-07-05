@@ -81,7 +81,7 @@ export default async function PlaylistAnalysisPage({
         : "This playlist has no genre or context set, so the engine has nothing to score against. Recreate it with both fields set."
 
     return (
-      <main className="min-h-screen bg-[#0B0B0F] text-white">
+      <main className="min-h-screen bg-[#08050F] text-white">
         <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-8 lg:px-10">
           <Link
             href={backHref}
@@ -95,7 +95,7 @@ export default async function PlaylistAnalysisPage({
           </Link>
 
           <div className="flex flex-col items-center gap-3 rounded-[26px] border border-dashed border-white/14 bg-white/[0.02] px-6 py-14 text-center">
-            <TriangleAlert className="size-8 text-amber-300/80" />
+            <TriangleAlert className="size-8 text-ec-amber/80" />
             <p className="max-w-md text-sm leading-6 text-white/58">{message}</p>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default async function PlaylistAnalysisPage({
   }))
 
   return (
-    <main className="min-h-screen bg-[#0B0B0F] text-white">
+    <main className="min-h-screen bg-[#08050F] text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
         <header className="space-y-4">
           <Link
@@ -159,7 +159,7 @@ export default async function PlaylistAnalysisPage({
         </header>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,25,0.98),rgba(14,14,20,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
+          <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.98),rgba(12,9,23,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
             <div className="mb-4">
               <p className="text-xs uppercase tracking-[0.22em] text-white/42">
                 Energy curve

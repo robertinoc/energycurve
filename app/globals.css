@@ -8,8 +8,23 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-mono);
   --font-heading: var(--font-heading);
+  --color-ec-bg: var(--ec-bg);
+  --color-ec-sunken: var(--ec-sunken);
+  --color-ec-surface: var(--ec-surface);
+  --color-ec-raised: var(--ec-raised);
+  --color-ec-violet: var(--ec-violet);
+  --color-ec-indigo: var(--ec-indigo);
+  --color-ec-cyan: var(--ec-cyan);
+  --color-ec-magenta: var(--ec-magenta);
+  --color-ec-amber: var(--ec-amber);
+  --color-ec-text: var(--ec-text);
+  --color-ec-text-muted: var(--ec-text-muted);
+  --color-ec-text-dim: var(--ec-text-dim);
+  --color-ec-border: var(--ec-border);
+  --color-ec-border-strong: var(--ec-border-strong);
+  --color-ec-error: var(--ec-error);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -50,51 +65,85 @@
 
 :root {
   color-scheme: dark;
-  --brand-night: #0b0b0f;
-  --brand-surface: #1a1a22;
-  --brand-surface-2: #14141b;
-  --brand-surface-3: #101017;
-  --brand-violet: #7b3fe4;
-  --brand-cyan: #00d1ff;
-  --brand-accent: #ff2d75;
-  --background: #0b0b0f;
-  --foreground: #f7f7fb;
-  --card: #1a1a22;
-  --card-foreground: #f7f7fb;
-  --popover: #15151d;
-  --popover-foreground: #f7f7fb;
-  --primary: #7b3fe4;
-  --primary-foreground: #f7f7fb;
-  --secondary: #00d1ff;
-  --secondary-foreground: #081018;
-  --muted: #101017;
-  --muted-foreground: #9297ad;
-  --accent: #ff2d75;
-  --accent-foreground: #fff5fa;
-  --destructive: #ff5f8d;
-  --border: #2a2a35;
-  --input: #2a2a35;
-  --ring: rgba(0, 209, 255, 0.55);
-  --chart-1: #7b3fe4;
-  --chart-2: #00d1ff;
-  --chart-3: #ff2d75;
-  --chart-4: #7f8cff;
-  --chart-5: #8affd7;
-  --radius: 0.75rem;
-  --sidebar: #14141b;
-  --sidebar-foreground: #f7f7fb;
-  --sidebar-primary: #7b3fe4;
-  --sidebar-primary-foreground: #f7f7fb;
-  --sidebar-accent: #111118;
-  --sidebar-accent-foreground: #f7f7fb;
-  --sidebar-border: #2a2a35;
-  --sidebar-ring: rgba(0, 209, 255, 0.55);
-  --font-sans: var(--font-inter);
+
+  /* EnergyCurve brand tokens — the only source of truth for hues */
+  /* Surfaces (purple-tinted near-black — never pure #000) */
+  --ec-bg: #08050f;
+  --ec-sunken: #0c0917;
+  --ec-surface: #14101f;
+  --ec-raised: #1c1730;
+
+  /* Brand */
+  --ec-violet: #a24de0;
+  --ec-indigo: #4c6ef5;
+  --ec-cyan: #22d3ee;
+  --ec-magenta: #f0348a; /* peaks / high energy ONLY */
+  --ec-amber: #f5a524; /* warnings: sharp drops, flat zones */
+
+  /* Signature gradient — hero moments, primary CTAs, the logo, key data */
+  --ec-gradient: linear-gradient(96deg, #a24de0 0%, #6a5cf0 46%, #22d3ee 100%);
+
+  /* Text */
+  --ec-text: #f5f2fc;
+  --ec-text-muted: #aca4c4;
+  --ec-text-dim: #6e6788;
+
+  /* Lines */
+  --ec-border: rgba(255, 255, 255, 0.08);
+  --ec-border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Semantic error */
+  --ec-error: #ff6b8a;
+
+  /* shadcn semantic mapping */
+  --background: var(--ec-bg);
+  --foreground: var(--ec-text);
+  --card: var(--ec-surface);
+  --card-foreground: var(--ec-text);
+  --popover: var(--ec-surface);
+  --popover-foreground: var(--ec-text);
+  --primary: var(--ec-violet);
+  --primary-foreground: #ffffff;
+  --secondary: var(--ec-indigo);
+  --secondary-foreground: var(--ec-text);
+  --muted: var(--ec-sunken);
+  --muted-foreground: var(--ec-text-muted);
+  --accent: var(--ec-cyan);
+  --accent-foreground: #06222a;
+  --destructive: var(--ec-error);
+  --border: var(--ec-border);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: var(--ec-cyan);
+  --chart-1: var(--ec-indigo);
+  --chart-2: var(--ec-violet);
+  --chart-3: var(--ec-cyan);
+  --chart-4: var(--ec-magenta);
+  --chart-5: var(--ec-amber);
+  --radius: 0.6875rem; /* 11px — buttons & inputs; cards use rounded-2xl (16.5px) */
+  --sidebar: var(--ec-surface);
+  --sidebar-foreground: var(--ec-text);
+  --sidebar-primary: var(--ec-violet);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--ec-sunken);
+  --sidebar-accent-foreground: var(--ec-text);
+  --sidebar-border: var(--ec-border);
+  --sidebar-ring: var(--ec-cyan);
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-space-mono);
   --font-heading: var(--font-space-grotesk);
 }
 
 .dark {
   color-scheme: dark;
+}
+
+@keyframes ec-curve-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes energy-float {
@@ -200,8 +249,8 @@
   body {
     @apply bg-background text-foreground;
     background:
-      radial-gradient(circle at top left, rgba(123, 63, 228, 0.12), transparent 28%),
-      radial-gradient(circle at top right, rgba(0, 209, 255, 0.08), transparent 22%),
+      radial-gradient(1100px 700px at 15% -8%, rgba(162, 77, 224, 0.16), transparent 60%),
+      radial-gradient(1000px 700px at 92% 4%, rgba(34, 211, 238, 0.12), transparent 58%),
       var(--background);
   }
 
@@ -223,6 +272,52 @@
 }
 
 @layer utilities {
+  /* Signature gradient as text fill — key numbers, wordmark "ENERGY" */
+  .ec-gradient-text {
+    background: var(--ec-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Primary CTA / hero gradient surface */
+  .ec-gradient-bg {
+    background: var(--ec-gradient);
+  }
+
+  /* Eyebrow label: Space Mono 700 uppercase cyan */
+  .ec-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ec-cyan);
+  }
+
+  /* Neon glow — reserved for the logo, the curve, chart markers, score gauge */
+  .ec-mark-glow {
+    filter: drop-shadow(0 0 7px rgba(120, 120, 255, 0.5));
+  }
+
+  .ec-curve-glow {
+    filter: drop-shadow(0 0 8px rgba(162, 77, 224, 0.55));
+  }
+
+  /* Draw-in animation for the energy curve (use with pathLength={1}) */
+  .ec-curve-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: ec-curve-draw 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ec-curve-draw {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
+
   .energy-curve-float {
     animation: energy-float 7s ease-in-out infinite;
     transform-origin: center;

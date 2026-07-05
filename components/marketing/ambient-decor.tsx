@@ -8,13 +8,13 @@ type AmbientTone = "violet" | "cyan" | "magenta" | "blend"
 
 const toneClasses: Record<AmbientTone, string> = {
   violet:
-    "bg-[radial-gradient(circle,rgba(138,57,248,0.42)_0%,rgba(138,57,248,0.14)_36%,transparent_74%)]",
+    "bg-[radial-gradient(circle,rgba(162,77,224,0.42)_0%,rgba(162,77,224,0.14)_36%,transparent_74%)]",
   cyan:
-    "bg-[radial-gradient(circle,rgba(0,209,255,0.32)_0%,rgba(0,209,255,0.12)_36%,transparent_74%)]",
+    "bg-[radial-gradient(circle,rgba(34,211,238,0.32)_0%,rgba(34,211,238,0.12)_36%,transparent_74%)]",
   magenta:
     "bg-[radial-gradient(circle,rgba(255,94,138,0.28)_0%,rgba(255,94,138,0.1)_36%,transparent_74%)]",
   blend:
-    "bg-[radial-gradient(circle,rgba(138,57,248,0.24)_0%,rgba(83,175,255,0.12)_36%,rgba(255,94,138,0.08)_54%,transparent_78%)]",
+    "bg-[radial-gradient(circle,rgba(162,77,224,0.24)_0%,rgba(83,175,255,0.12)_36%,rgba(255,94,138,0.08)_54%,transparent_78%)]",
 }
 
 const PRIMARY_WAVE_PATHS = [
@@ -101,15 +101,15 @@ export function EnergyWaveBackdrop({
       >
         <defs>
           <linearGradient id={strokeId} x1="0" y1="0" x2="1200" y2="0" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#8A39F8" />
-            <stop offset="0.42" stopColor="#FF5E8A" />
-            <stop offset="0.76" stopColor="#53AFFF" />
-            <stop offset="1" stopColor="#00D1FF" />
+            <stop stopColor="#A24DE0" />
+            <stop offset="0.42" stopColor="#4C6EF5" />
+            <stop offset="0.76" stopColor="#22D3EE" />
+            <stop offset="1" stopColor="#22D3EE" />
           </linearGradient>
           <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="280" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="rgba(138,57,248,0.18)" />
-            <stop offset="70%" stopColor="rgba(0,209,255,0.05)" />
-            <stop offset="100%" stopColor="rgba(11,11,15,0)" />
+            <stop offset="0%" stopColor="rgba(162,77,224,0.18)" />
+            <stop offset="70%" stopColor="rgba(34,211,238,0.05)" />
+            <stop offset="100%" stopColor="rgba(8,5,15,0)" />
           </linearGradient>
           <filter id={glowId} x="-10%" y="-35%" width="120%" height="180%">
             <feGaussianBlur stdDeviation="10" result="blur" />
