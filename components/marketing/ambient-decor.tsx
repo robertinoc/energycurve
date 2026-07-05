@@ -10,7 +10,7 @@ const toneClasses: Record<AmbientTone, string> = {
   violet:
     "bg-[radial-gradient(circle,rgba(138,57,248,0.42)_0%,rgba(138,57,248,0.14)_36%,transparent_74%)]",
   cyan:
-    "bg-[radial-gradient(circle,rgba(0,209,255,0.32)_0%,rgba(0,209,255,0.12)_36%,transparent_74%)]",
+    "bg-[radial-gradient(circle,rgba(34,211,238,0.32)_0%,rgba(34,211,238,0.12)_36%,transparent_74%)]",
   magenta:
     "bg-[radial-gradient(circle,rgba(255,94,138,0.28)_0%,rgba(255,94,138,0.1)_36%,transparent_74%)]",
   blend:
@@ -104,11 +104,11 @@ export function EnergyWaveBackdrop({
             <stop stopColor="#8A39F8" />
             <stop offset="0.42" stopColor="#FF5E8A" />
             <stop offset="0.76" stopColor="#53AFFF" />
-            <stop offset="1" stopColor="#00D1FF" />
+            <stop offset="1" stopColor="#22D3EE" />
           </linearGradient>
           <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="280" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="rgba(138,57,248,0.18)" />
-            <stop offset="70%" stopColor="rgba(0,209,255,0.05)" />
+            <stop offset="70%" stopColor="rgba(34,211,238,0.05)" />
             <stop offset="100%" stopColor="rgba(11,11,15,0)" />
           </linearGradient>
           <filter id={glowId} x="-10%" y="-35%" width="120%" height="180%">

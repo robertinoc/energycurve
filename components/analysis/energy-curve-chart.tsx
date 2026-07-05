@@ -7,6 +7,7 @@ import {
   buildSmoothCurvePath,
   mapValuesToCurvePoints,
 } from "@/lib/charts/curve-geometry"
+import { ENERGY_COLORS } from "@/lib/charts/energy-colors"
 import { ENERGY_SCORE_RANGE } from "@/lib/product/strategy"
 import type { EnergySource } from "@/types/analysis"
 
@@ -34,8 +35,35 @@ const SOURCE_LABELS: Record<EnergySource, string> = {
   estimated: "estimated",
 }
 
+const PHASE_LABELS = ["Opening", "Build-up", "Peak time", "Closing"]
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
+}
+
+type MarkerKind = "peak" | "issue" | "opening" | "close" | "default"
+
+function markerKind(
+  index: number,
+  tracks: ChartTrackPoint[],
+  peakIndex: number
+): MarkerKind {
+  if (tracks[index].hasIssue) return "issue"
+  if (index === peakIndex) return "peak"
+  if (index === 0) return "opening"
+  if (index === tracks.length - 1) return "close"
+  return "default"
+}
+
+const MARKER_STYLES: Record<
+  MarkerKind,
+  { fill: string; r: number; glow: string | null }
+> = {
+  peak: { fill: ENERGY_COLORS.magenta, r: 7, glow: "rgba(240,52,138,0.65)" },
+  issue: { fill: ENERGY_COLORS.amber, r: 6, glow: "rgba(245,165,36,0.6)" },
+  opening: { fill: ENERGY_COLORS.indigo, r: 5.5, glow: "rgba(76,110,245,0.55)" },
+  close: { fill: ENERGY_COLORS.cyan, r: 5.5, glow: "rgba(34,211,238,0.55)" },
+  default: { fill: "rgba(245,242,252,0.55)", r: 3.5, glow: null },
 }
 
 export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
@@ -54,9 +82,19 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
     [tracks]
   )
 
+  const peakIndex = useMemo(() => {
+    let index = 0
+    tracks.forEach((track, i) => {
+      if (track.score > tracks[index].score) index = i
+    })
+    return index
+  }, [tracks])
+
   const activeIndex = hoveredIndex ?? selectedIndex
   const activeTrack = tracks[activeIndex]
   const activePoint = points[activeIndex]
+  const peakPoint = points[peakIndex]
+  const peakTrack = tracks[peakIndex]
 
   const linePath = useMemo(() => buildSmoothCurvePath(points), [points])
   const areaPath = useMemo(
@@ -71,10 +109,15 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
       }
     : undefined
 
-  return (
-    <div className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[#0D0D12] p-4">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(123,63,228,0.22),transparent_28%),radial-gradient(circle_at_82%_24%,rgba(255,45,117,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(0,209,255,0.14),transparent_38%)]" />
+  const peakPillStyle = peakPoint
+    ? {
+        left: `${clamp((peakPoint.x / WIDTH) * 100 - 6, 2, 84)}%`,
+        top: `${clamp((peakPoint.y / HEIGHT) * 100 - 13, 1, 80)}%`,
+      }
+    : undefined
 
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-ec-border bg-ec-sunken p-4">
       <div className="relative">
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -91,9 +134,9 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
               y2="0"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stopColor="#7B3FE4" />
-              <stop offset="0.55" stopColor="#00D1FF" />
-              <stop offset="1" stopColor="#FF2D75" />
+              <stop stopColor="#4C6EF5" />
+              <stop offset="0.5" stopColor="#A24DE0" />
+              <stop offset="1" stopColor="#22D3EE" />
             </linearGradient>
             <linearGradient
               id="analysis-curve-fill"
@@ -103,22 +146,9 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
               y2={HEIGHT}
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" stopColor="#00D1FF" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#0B0B0F" stopOpacity="0.01" />
+              <stop offset="0%" stopColor="#A24DE0" stopOpacity="0.34" />
+              <stop offset="100%" stopColor="#A24DE0" stopOpacity="0" />
             </linearGradient>
-            <filter
-              id="analysis-curve-glow"
-              x="-40%"
-              y="-70%"
-              width="180%"
-              height="220%"
-            >
-              <feGaussianBlur stdDeviation="7" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
           </defs>
 
           {Array.from({ length: 5 }).map((_, index) => {
@@ -131,8 +161,7 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
                 y1={y}
                 x2={WIDTH - PADDING}
                 y2={y}
-                stroke="rgba(255,255,255,0.06)"
-                strokeDasharray="4 10"
+                stroke="rgba(255,255,255,0.05)"
               />
             )
           })}
@@ -144,61 +173,46 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
           <path
             d={linePath}
             fill="none"
-            stroke="rgba(255,255,255,0.16)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          <path
-            d={linePath}
-            fill="none"
             stroke="url(#analysis-curve-stroke)"
-            strokeWidth="4"
+            strokeWidth="3.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            filter="url(#analysis-curve-glow)"
+            pathLength={1}
+            className="ec-curve-glow ec-curve-draw"
           />
 
           {points.map((point, index) => {
             const track = tracks[index]
+            const kind = markerKind(index, tracks, peakIndex)
+            const style = MARKER_STYLES[kind]
             const isActive = index === activeIndex
 
             return (
               <g key={track.position}>
-                {track.hasIssue ? (
+                {isActive ? (
                   <circle
                     cx={point.x}
                     cy={point.y}
-                    r="17"
+                    r={style.r + 7}
                     fill="none"
-                    stroke="rgba(255,45,117,0.55)"
+                    stroke={
+                      kind === "default"
+                        ? "rgba(245,242,252,0.35)"
+                        : style.fill
+                    }
+                    strokeOpacity="0.45"
                     strokeWidth="2"
-                    strokeDasharray="3 4"
                   />
                 ) : null}
                 <circle
                   cx={point.x}
                   cy={point.y}
-                  r={isActive ? "14" : "10"}
-                  fill={
-                    isActive
-                      ? "rgba(255,45,117,0.18)"
-                      : track.hasIssue
-                        ? "rgba(255,45,117,0.12)"
-                        : "rgba(0,209,255,0.12)"
-                  }
-                />
-                <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r={isActive ? "6" : "4.5"}
-                  fill={
-                    isActive
-                      ? "#FF2D75"
-                      : track.hasIssue
-                        ? "#FF7AA8"
-                        : "#F8F7FF"
+                  r={isActive ? style.r + 1.5 : style.r}
+                  fill={style.fill}
+                  style={
+                    style.glow
+                      ? { filter: `drop-shadow(0 0 6px ${style.glow})` }
+                      : undefined
                   }
                   className="cursor-pointer"
                   onMouseEnter={() => setHoveredIndex(index)}
@@ -210,29 +224,48 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
           })}
         </svg>
 
+        {peakPoint && peakTrack && !peakTrack.hasIssue ? (
+          <div
+            className="pointer-events-none absolute rounded-full border border-[#F0348A]/40 bg-[#F0348A]/[0.13] px-2.5 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#FF87BE]"
+            style={peakPillStyle}
+          >
+            ▲ Peak {peakTrack.score}
+          </div>
+        ) : null}
+
         {activeTrack && activePoint ? (
           <div
-            className="pointer-events-none absolute w-44 rounded-2xl border border-white/12 bg-[#13131A]/96 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur"
+            className="pointer-events-none absolute w-44 rounded-xl border border-ec-border-strong bg-ec-surface/96 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur"
             style={tooltipStyle}
           >
-            <p className="text-xs uppercase tracking-[0.18em] text-white/42">
+            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ec-cyan">
               Track {activeTrack.position}
             </p>
-            <p className="mt-2 font-heading text-sm font-semibold text-white">
+            <p className="mt-2 font-heading text-sm font-semibold text-ec-text">
               {activeTrack.name}
             </p>
-            <p className="mt-1 text-xs text-white/52">{activeTrack.artist}</p>
-            <div className="mt-3 flex items-center justify-between text-xs uppercase tracking-[0.16em] text-white/40">
+            <p className="mt-1 text-xs text-ec-text-muted">
+              {activeTrack.artist}
+            </p>
+            <div className="mt-3 flex items-center justify-between font-mono text-[11.5px] text-ec-text-dim">
               <span>
                 {activeTrack.bpm !== null ? `${activeTrack.bpm} BPM` : "no BPM"}
               </span>
-              <span>{activeTrack.score}</span>
+              <span style={{ color: MARKER_STYLES[markerKind(activeIndex, tracks, peakIndex)].fill }}>
+                {activeTrack.score}
+              </span>
             </div>
-            <p className="mt-2 text-xs text-white/46">
+            <p className="mt-2 text-xs text-ec-text-dim">
               Energy {SOURCE_LABELS[activeTrack.source]}
             </p>
           </div>
         ) : null}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between px-6 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ec-text-dim">
+        {PHASE_LABELS.map((phase) => (
+          <span key={phase}>{phase}</span>
+        ))}
       </div>
     </div>
   )

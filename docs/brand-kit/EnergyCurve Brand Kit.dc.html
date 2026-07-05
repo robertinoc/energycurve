@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:#08050F;background-image:radial-gradient(1100px 700px at 15% -8%,rgba(162,77,224,0.16),transparent 60%),radial-gradient(1000px 700px at 92% 4%,rgba(34,211,238,0.12),transparent 58%),radial-gradient(900px 900px at 60% 120%,rgba(76,110,245,0.12),transparent 60%);color:#F5F2FC;font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  ::selection{background:rgba(162,77,224,0.4);color:#fff}
+  a{color:inherit}
+  @keyframes ecFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  @keyframes ecPulse{0%,100%{opacity:.55}50%{opacity:1}}
+</style>
+</helmet>
+
+<div style="min-height:100vh">
+
+  <!-- ============ TOP NAV ============ -->
+  <nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:28px;padding:14px 40px;background:rgba(8,5,15,0.72);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.07)">
+    <a href="#top" style="display:flex;align-items:center;gap:11px;text-decoration:none;flex:none">
+      <svg viewBox="0 0 228 168" width="34" height="26" style="filter:drop-shadow(0 0 7px rgba(120,120,255,0.5))" data-ec-glow="10,rgba(120,120,255,0.5)">
+        <defs><linearGradient id="navG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A24DE0"/><stop offset=".5" stop-color="#5468E8"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs>
+        <circle cx="114" cy="82" r="80" fill="none" stroke="url(#navG)" stroke-width="8" opacity="0.9"/>
+        <path d="M 24 82 C 28.7 82, 43.7 79, 52 82 C 60.3 85, 66 108.3, 74 100 C 82 91.7, 91.3 30, 100 32 C 108.7 34, 117 107.7, 126 112 C 135 116.3, 145.3 63, 154 58 C 162.7 53, 169.7 78, 178 82 C 186.3 86, 199.7 82, 204 82" fill="none" stroke="url(#navG)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span style="font:700 16px/1 'Space Grotesk',sans-serif;letter-spacing:-0.01em">EnergyCurve</span>
+      <span style="font:400 11px/1 'Space Mono',monospace;color:#6E6788;padding-left:2px">brand&nbsp;kit</span>
+    </a>
+    <div style="flex:1"></div>
+    <div style="display:flex;gap:22px;font:600 12.5px/1 'Manrope',sans-serif;color:#ACA4C4">
+      <a href="#essence" style="text-decoration:none">Essence</a>
+      <a href="#logo" style="text-decoration:none">Logo</a>
+      <a href="#color" style="text-decoration:none">Color</a>
+      <a href="#type" style="text-decoration:none">Type</a>
+      <a href="#voice" style="text-decoration:none">Voice</a>
+      <a href="#curve" style="text-decoration:none">The Curve</a>
+      <a href="#ui" style="text-decoration:none">UI</a>
+    </div>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <header id="top" style="max-width:1200px;margin:0 auto;padding:110px 48px 90px;text-align:center;position:relative">
+    <img src="assets/app-icon.png" alt="EnergyCurve app icon" width="164" height="164" style="width:164px;height:164px;margin:0 auto 40px;display:block;animation:ecFloat 6s ease-in-out infinite;filter:drop-shadow(0 20px 50px rgba(120,60,220,0.45))">
+    <p style="font:700 12px/1 'Space Mono',monospace;letter-spacing:0.34em;text-transform:uppercase;color:#22D3EE;margin:0 0 22px">Brand Kit · v1</p>
+    <h1 style="font:700 76px/0.98 'Space Grotesk',sans-serif;letter-spacing:-0.03em;margin:0 0 4px">
+      <span style="background:linear-gradient(96deg,#A24DE0,#5468E8 55%,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent">ENERGY</span><span style="font-weight:300;color:#DCD7EC">CURVE</span>
+    </h1>
+    <p style="font:500 25px/1.35 'Space Grotesk',sans-serif;color:#F5F2FC;margin:26px 0 0;letter-spacing:-0.01em">Shape the curve. Own the dancefloor.</p>
+    <p style="max-width:620px;margin:20px auto 0;font:400 16px/1.6 'Manrope',sans-serif;color:#ACA4C4">The visual and verbal system for the copilot that helps DJs design better sets by analyzing the energy curve of their music.</p>
+  </header>
+
+  <!-- ============ ESSENCE ============ -->
+  <section id="essence" style="max-width:1200px;margin:0 auto;padding:88px 48px;border-top:1px solid rgba(255,255,255,0.07);scroll-margin-top:74px">
+    <p style="font:700 12px/1 'Space Mono',monospace;letter-spacing:0.24em;text-transform:uppercase;color:#22D3EE;margin:0 0 18px">01 — Brand Essence</p>
+    <h2 style="font:600 42px/1.04 'Space Grotesk',sans-serif;letter-spacing:-0.025em;margin:0 0 14px;max-width:760px">A creative copilot for the energy of a set — not a replacement for the artist.</h2>
+    <p style="max-width:680px;font:400 17px/1.65 'Manrope',sans-serif;color:#ACA4C4;margin:0 0 52px">EnergyCurve turns set-building from something purely intuitive into something assisted, conscious and optimized — clear, actionable feedback adapted to context and genre.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:22px">
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:30px">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(162,77,224,0.15);border:1px solid rgba(162,77,224,0.35);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C08AF0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <h3 style="font:600 19px/1.2 'Space Grotesk',sans-serif;margin:0 0 8px">Intelligent</h3>
+        <p style="font:400 14.5px/1.55 'Manrope',sans-serif;color:#ACA4C4;margin:0">Data-driven, explainable analysis. We show the why behind every score — never magic, always reasoning.</p>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:30px">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(76,110,245,0.15);border:1px solid rgba(76,110,245,0.35);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8AA0F5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9c0-2-3-2-3-4s3-2 3-5"/><circle cx="8.5" cy="10.5" r="1.2" fill="#8AA0F5"/><circle cx="14" cy="8" r="1.2" fill="#8AA0F5"/><circle cx="15" cy="13.5" r="1.2" fill="#8AA0F5"/></svg>
+        </div>
+        <h3 style="font:600 19px/1.2 'Space Grotesk',sans-serif;margin:0 0 8px">Creative</h3>
+        <p style="font:400 14.5px/1.55 'Manrope',sans-serif;color:#ACA4C4;margin:0">We assist the craft, we don't impose on it. The artist keeps the final say; we sharpen the instinct.</p>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:30px">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(34,211,238,0.13);border:1px solid rgba(34,211,238,0.35);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5FE3EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>
+        </div>
+        <h3 style="font:600 19px/1.2 'Space Grotesk',sans-serif;margin:0 0 8px">Nightlife</h3>
+        <p style="font:400 14.5px/1.55 'Manrope',sans-serif;color:#ACA4C4;margin:0">Built for the club. Dark, electric, high-energy — the interface feels like the room it's designing for.</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="background:linear-gradient(135deg,rgba(162,77,224,0.1),rgba(34,211,238,0.06));border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:32px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#C08AF0;margin:0 0 16px">Product Principles</p>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px;font:600 16px/1.3 'Space Grotesk',sans-serif"><span style="color:#22D3EE">Simple</span><span style="color:#6E6788;font-weight:400">&gt;</span><span style="color:#6E6788">complex</span></div>
+          <div style="display:flex;align-items:center;gap:12px;font:600 16px/1.3 'Space Grotesk',sans-serif"><span style="color:#22D3EE">Explainable</span><span style="color:#6E6788;font-weight:400">&gt;</span><span style="color:#6E6788">magical</span></div>
+          <div style="display:flex;align-items:center;gap:12px;font:600 16px/1.3 'Space Grotesk',sans-serif"><span style="color:#22D3EE">Assist</span><span style="color:#6E6788;font-weight:400">&gt;</span><span style="color:#6E6788">impose</span></div>
+          <div style="display:flex;align-items:center;gap:12px;font:600 16px/1.3 'Space Grotesk',sans-serif"><span style="color:#22D3EE">Flow</span><span style="color:#6E6788;font-weight:400">&gt;</span><span style="color:#6E6788">individual tracks</span></div>
+        </div>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:32px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 16px">Who it's for</p>
+        <p style="font:400 15px/1.6 'Manrope',sans-serif;color:#CFC9E0;margin:0 0 14px">Beginner & intermediate DJs (18–35) on Rekordbox, Serato or Traktor — building sets at home or small events, and looking to level up.</p>
+        <p style="font:400 15px/1.6 'Manrope',sans-serif;color:#ACA4C4;margin:0">Secondary: semi-pro DJs optimizing sets, validating decisions and saving time.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LOGO ============ -->
+  <section id="logo" style="max-width:1200px;margin:0 auto;padding:88px 48px;border-top:1px solid rgba(255,255,255,0.07);scroll-margin-top:74px">
+    <p style="font:700 12px/1 'Space Mono',monospace;letter-spacing:0.24em;text-transform:uppercase;color:#22D3EE;margin:0 0 18px">02 — Logo</p>
+    <h2 style="font:600 42px/1.04 'Space Grotesk',sans-serif;letter-spacing:-0.025em;margin:0 0 14px">The waveform mark</h2>
+    <p style="max-width:680px;font:400 17px/1.65 'Manrope',sans-serif;color:#ACA4C4;margin:0 0 44px">A single continuous line traces a set's energy — a calm intro, a towering peak, a controlled drop, a strong close — held inside a circle. It <em>is</em> the product.</p>
+
+    <!-- primary lockups -->
+    <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:20px;margin-bottom:20px">
+      <div style="background:radial-gradient(120% 120% at 30% 20%,#171226,#0C0917);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px;display:flex;flex-direction:column">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:26px 20px 34px"><img src="assets/logo-horizontal-trans.png" alt="Primary horizontal lockup" style="width:100%;max-width:440px;height:auto"></div>
+        <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px;display:flex;justify-content:space-between;align-items:center"><span style="font:600 13px/1 'Manrope',sans-serif;color:#F5F2FC">Primary lockup — horizontal</span><span style="font:400 11px/1 'Space Mono',monospace;color:#6E6788">use most</span></div>
+      </div>
+      <div style="background:radial-gradient(120% 120% at 30% 20%,#171226,#0C0917);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px;display:flex;flex-direction:column">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:22px"><img src="assets/logo-icon-lockup-trans.png" alt="Stacked lockup" style="width:100%;max-width:240px;height:auto"></div>
+        <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px"><span style="font:600 13px/1 'Manrope',sans-serif;color:#F5F2FC">Stacked lockup</span></div>
+      </div>
+    </div>
+
+    <!-- icon / vector / greyscale -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:44px">
+      <div style="background:#0C0917;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:22px;text-align:center">
+        <img src="assets/app-icon.png" alt="App icon" style="width:110px;height:110px;margin:8px auto 18px;display:block">
+        <span style="font:600 12.5px/1.3 'Manrope',sans-serif;color:#F5F2FC;display:block">App icon</span>
+        <span style="font:400 11px/1.4 'Space Mono',monospace;color:#6E6788">iOS · Android</span>
+      </div>
+      <div style="background:#0C0917;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:22px;text-align:center">
+        <div style="display:flex;align-items:center;justify-content:center;height:126px">
+          <svg viewBox="0 0 228 172" width="118" style="filter:drop-shadow(0 0 10px rgba(120,120,255,0.55))" data-ec-glow="10,rgba(120,120,255,0.55)">
+            <defs><linearGradient id="markG1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A24DE0"/><stop offset=".5" stop-color="#5468E8"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs>
+            <circle cx="114" cy="86" r="82" fill="none" stroke="url(#markG1)" stroke-width="7" opacity="0.9"/>
+            <path d="M 24 86 C 28.7 86, 43.7 83, 52 86 C 60.3 89, 66 112.3, 74 104 C 82 95.7, 91.3 34, 100 36 C 108.7 38, 117 111.7, 126 116 C 135 120.3, 145.3 67, 154 62 C 162.7 57, 169.7 82, 178 86 C 186.3 90, 199.7 86, 204 86" fill="none" stroke="url(#markG1)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span style="font:600 12.5px/1.3 'Manrope',sans-serif;color:#F5F2FC;display:block;margin-top:14px">Vector mark</span>
+        <span style="font:400 11px/1.4 'Space Mono',monospace;color:#6E6788">SVG · scalable</span>
+      </div>
+      <div style="background:#0C0917;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:22px;text-align:center">
+        <div style="display:flex;align-items:center;justify-content:center;height:126px">
+          <svg viewBox="0 0 228 172" width="118">
+            <circle cx="114" cy="86" r="82" fill="none" stroke="#F5F2FC" stroke-width="7"/>
+            <path d="M 24 86 C 28.7 86, 43.7 83, 52 86 C 60.3 89, 66 112.3, 74 104 C 82 95.7, 91.3 34, 100 36 C 108.7 38, 117 111.7, 126 116 C 135 120.3, 145.3 67, 154 62 C 162.7 57, 169.7 82, 178 86 C 186.3 90, 199.7 86, 204 86" fill="none" stroke="#F5F2FC" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span style="font:600 12.5px/1.3 'Manrope',sans-serif;color:#F5F2FC;display:block;margin-top:14px">Monochrome</span>
+        <span style="font:400 11px/1.4 'Space Mono',monospace;color:#6E6788">1-color · dark bg</span>
+      </div>
+      <div style="background:#F5F2FC;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:22px;text-align:center">
+        <div style="display:flex;align-items:center;justify-content:center;height:126px">
+          <svg viewBox="0 0 228 172" width="118">
+            <circle cx="114" cy="86" r="82" fill="none" stroke="#0C0917" stroke-width="7"/>
+            <path d="M 24 86 C 28.7 86, 43.7 83, 52 86 C 60.3 89, 66 112.3, 74 104 C 82 95.7, 91.3 34, 100 36 C 108.7 38, 117 111.7, 126 116 C 135 120.3, 145.3 67, 154 62 C 162.7 57, 169.7 82, 178 86 C 186.3 90, 199.7 86, 204 86" fill="none" stroke="#0C0917" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span style="font:600 12.5px/1.3 'Manrope',sans-serif;color:#0C0917;display:block;margin-top:14px">Inverse</span>
+        <span style="font:400 11px/1.4 'Space Mono',monospace;color:#8A82A0">1-color · light bg</span>
+      </div>
+    </div>
+
+    <!-- clearspace + misuse -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:30px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 8px">Clearspace &amp; minimum size</p>
+        <p style="font:400 14px/1.55 'Manrope',sans-serif;color:#ACA4C4;margin:0 0 20px">Keep clear space of at least the height of the circle mark (1×) on every side. Never place the logo below 24px tall (icon) or 20px tall (horizontal mark).</p>
+        <div style="background:#0C0917;border-radius:12px;padding:26px;display:flex;align-items:center;justify-content:center;position:relative">
+          <div style="position:absolute;inset:16px;border:1px dashed rgba(95,227,236,0.35);border-radius:8px"></div>
+          <svg viewBox="0 0 228 172" width="90">
+            <defs><linearGradient id="markCS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A24DE0"/><stop offset=".5" stop-color="#5468E8"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs>
+            <circle cx="114" cy="86" r="82" fill="none" stroke="url(#markCS)" stroke-width="7" opacity="0.9"/>
+            <path d="M 24 86 C 28.7 86, 43.7 83, 52 86 C 60.3 89, 66 112.3, 74 104 C 82 95.7, 91.3 34, 100 36 C 108.7 38, 117 111.7, 126 116 C 135 120.3, 145.3 67, 154 62 C 162.7 57, 169.7 82, 178 86 C 186.3 90, 199.7 86, 204 86" fill="none" stroke="url(#markCS)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:30px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#FF6B8A;margin:0 0 16px">Don't</p>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <div style="display:flex;align-items:center;gap:12px;font:500 14px/1.4 'Manrope',sans-serif;color:#CFC9E0"><span style="color:#FF6B8A;font-weight:700;flex:none">✕</span>Recolor the gradient or use off-brand hues</div>
+          <div style="display:flex;align-items:center;gap:12px;font:500 14px/1.4 'Manrope',sans-serif;color:#CFC9E0"><span style="color:#FF6B8A;font-weight:700;flex:none">✕</span>Stretch, rotate or distort the mark</div>
+          <div style="display:flex;align-items:center;gap:12px;font:500 14px/1.4 'Manrope',sans-serif;color:#CFC9E0"><span style="color:#FF6B8A;font-weight:700;flex:none">✕</span>Place the neon logo on light or busy backgrounds</div>
+          <div style="display:flex;align-items:center;gap:12px;font:500 14px/1.4 'Manrope',sans-serif;color:#CFC9E0"><span style="color:#FF6B8A;font-weight:700;flex:none">✕</span>Add drop shadows or outlines beyond the built-in glow</div>
+          <div style="display:flex;align-items:center;gap:12px;font:500 14px/1.4 'Manrope',sans-serif;color:#CFC9E0"><span style="color:#FF6B8A;font-weight:700;flex:none">✕</span>Break the wordmark weight contrast (bold ENERGY / light CURVE)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COLOR ============ -->
+  <section id="color" style="max-width:1200px;margin:0 auto;padding:88px 48px;border-top:1px solid rgba(255,255,255,0.07);scroll-margin-top:74px">
+    <p style="font:700 12px/1 'Space Mono',monospace;letter-spacing:0.24em;text-transform:uppercase;color:#22D3EE;margin:0 0 18px">03 — Color</p>
+    <h2 style="font:600 42px/1.04 'Space Grotesk',sans-serif;letter-spacing:-0.025em;margin:0 0 14px">Neon on near-black</h2>
+    <p style="max-width:680px;font:400 17px/1.65 'Manrope',sans-serif;color:#ACA4C4;margin:0 0 44px">The core gradient runs violet → indigo → cyan, echoing energy rising from low to high. Hot magenta flags peaks. Everything sits on a purple-tinted black.</p>
+
+    <!-- signature gradient -->
+    <div style="border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);margin-bottom:20px">
+      <div style="height:120px;background:linear-gradient(96deg,#A24DE0 0%,#6A5CF0 46%,#22D3EE 100%)"></div>
+      <div style="background:#14101F;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div><span style="font:600 14px/1.3 'Space Grotesk',sans-serif;display:block">Signature Gradient</span><span style="font:400 12px/1.3 'Manrope',sans-serif;color:#ACA4C4">Hero moments, the mark, key data, CTAs</span></div>
+        <code style="font:400 12.5px/1 'Space Mono',monospace;color:#5FE3EC;background:#0C0917;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.07)">linear-gradient(96deg, #A24DE0, #6A5CF0, #22D3EE)</code>
+      </div>
+    </div>
+
+    <!-- core swatches -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:20px">
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden">
+        <div style="height:104px;background:#A24DE0"></div>
+        <div style="padding:16px 18px"><span style="font:600 14px/1.2 'Space Grotesk',sans-serif;display:block">Violet</span><span style="font:400 11.5px/1.5 'Space Mono',monospace;color:#ACA4C4;display:block;margin-top:6px">#A24DE0</span><span style="font:400 11px/1.4 'Manrope',sans-serif;color:#6E6788">Primary · brand</span></div>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden">
+        <div style="height:104px;background:#4C6EF5"></div>
+        <div style="padding:16px 18px"><span style="font:600 14px/1.2 'Space Grotesk',sans-serif;display:block">Indigo</span><span style="font:400 11.5px/1.5 'Space Mono',monospace;color:#ACA4C4;display:block;margin-top:6px">#4C6EF5</span><span style="font:400 11px/1.4 'Manrope',sans-serif;color:#6E6788">Secondary</span></div>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden">
+        <div style="height:104px;background:#22D3EE"></div>
+        <div style="padding:16px 18px"><span style="font:600 14px/1.2 'Space Grotesk',sans-serif;display:block">Cyan</span><span style="font:400 11.5px/1.5 'Space Mono',monospace;color:#ACA4C4;display:block;margin-top:6px">#22D3EE</span><span style="font:400 11px/1.4 'Manrope',sans-serif;color:#6E6788">Accent · focus</span></div>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden">
+        <div style="height:104px;background:#F0348A"></div>
+        <div style="padding:16px 18px"><span style="font:600 14px/1.2 'Space Grotesk',sans-serif;display:block">Magenta</span><span style="font:400 11.5px/1.5 'Space Mono',monospace;color:#ACA4C4;display:block;margin-top:6px">#F0348A</span><span style="font:400 11px/1.4 'Manrope',sans-serif;color:#6E6788">Peak · high energy</span></div>
+      </div>
+    </div>
+
+    <!-- surfaces + text -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:26px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 18px">Surfaces</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:52px;height:36px;border-radius:8px;background:#08050F;border:1px solid rgba(255,255,255,0.12);flex:none"></span><span style="font:600 13px 'Manrope',sans-serif;flex:1">Base / canvas</span><code style="font:400 12px 'Space Mono',monospace;color:#ACA4C4">#08050F</code></div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:52px;height:36px;border-radius:8px;background:#0C0917;border:1px solid rgba(255,255,255,0.1);flex:none"></span><span style="font:600 13px 'Manrope',sans-serif;flex:1">Sunken</span><code style="font:400 12px 'Space Mono',monospace;color:#ACA4C4">#0C0917</code></div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:52px;height:36px;border-radius:8px;background:#14101F;border:1px solid rgba(255,255,255,0.1);flex:none"></span><span style="font:600 13px 'Manrope',sans-serif;flex:1">Surface / card</span><code style="font:400 12px 'Space Mono',monospace;color:#ACA4C4">#14101F</code></div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:52px;height:36px;border-radius:8px;background:#1C1730;border:1px solid rgba(255,255,255,0.1);flex:none"></span><span style="font:600 13px 'Manrope',sans-serif;flex:1">Raised</span><code style="font:400 12px 'Space Mono',monospace;color:#ACA4C4">#1C1730</code></div>
+        </div>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:26px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 18px">Text &amp; lines</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:14px"><span style="font:700 20px 'Space Grotesk';color:#F5F2FC;width:52px;text-align:center;flex:none">Aa</span><span style="font:600 13px 'Manrope',sans-serif;flex:1">Primary text</span><code style="font:400 12px 'Space Mono',monospace;color:#ACA4C4">#F5F2FC</code></div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="font:700 20px 'Space Grotesk';color:#ACA4C4;width:52px;text-align:center;flex:none">Aa</span><span style="font:600 13px 'Manrope',sans-serif;flex:1">Muted text</span><code style="font:400 12px 'Space Mono',monospace;color:#ACA4C4">#ACA4C4</code></div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="font:700 20px 'Space Grotesk';color:#6E6788;width:52px;text-align:center;flex:none">Aa</span><span style="font:600 13px 'Manrope',sans-serif;flex:1">Dim / captions</span><code style="font:400 12px 'Space Mono',monospace;color:#ACA4C4">#6E6788</code></div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:52px;height:36px;border-radius:8px;background:#0C0917;border:1px solid rgba(255,255,255,0.1);flex:none"></span><span style="font:600 13px 'Manrope',sans-serif;flex:1">Border</span><code style="font:400 12px 'Space Mono',monospace;color:#ACA4C4">#FFFFFF @ 8%</code></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TYPOGRAPHY ============ -->
+  <section id="type" style="max-width:1200px;margin:0 auto;padding:88px 48px;border-top:1px solid rgba(255,255,255,0.07);scroll-margin-top:74px">
+    <p style="font:700 12px/1 'Space Mono',monospace;letter-spacing:0.24em;text-transform:uppercase;color:#22D3EE;margin:0 0 18px">04 — Typography</p>
+    <h2 style="font:600 42px/1.04 'Space Grotesk',sans-serif;letter-spacing:-0.025em;margin:0 0 44px">Geometric &amp; technical</h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:32px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px"><span style="font:600 12px 'Space Mono',monospace;letter-spacing:0.16em;text-transform:uppercase;color:#C08AF0">Display</span><span style="font:400 12px 'Space Mono',monospace;color:#6E6788">Space Grotesk</span></div>
+        <p style="font:700 62px/1 'Space Grotesk',sans-serif;letter-spacing:-0.02em;margin:0 0 6px">Aa</p>
+        <p style="font:400 18px/1.4 'Space Grotesk',sans-serif;color:#CFC9E0;margin:0 0 18px">The quick brown fox</p>
+        <p style="font:400 12.5px/1.6 'Manrope',sans-serif;color:#ACA4C4;margin:0">Headings, the wordmark, big numbers. Weights 300 / 400 / 500 / 600 / 700. Tight tracking on large sizes.</p>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:32px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px"><span style="font:600 12px 'Space Mono',monospace;letter-spacing:0.16em;text-transform:uppercase;color:#5FE3EC">Text / UI</span><span style="font:400 12px 'Space Mono',monospace;color:#6E6788">Manrope</span></div>
+        <p style="font:800 62px/1 'Manrope',sans-serif;letter-spacing:-0.02em;margin:0 0 6px">Aa</p>
+        <p style="font:400 18px/1.4 'Manrope',sans-serif;color:#CFC9E0;margin:0 0 18px">The quick brown fox</p>
+        <p style="font:400 12.5px/1.6 'Manrope',sans-serif;color:#ACA4C4;margin:0">Body copy, labels, buttons, everything in the interface. Weights 400–800. Highly legible at small sizes.</p>
+      </div>
+    </div>
+
+    <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:32px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:22px"><span style="font:600 12px 'Space Mono',monospace;letter-spacing:0.16em;text-transform:uppercase;color:#8AA0F5">Mono / data</span><span style="font:400 12px 'Space Mono',monospace;color:#6E6788">Space Mono</span></div>
+      <p style="font:700 34px/1 'Space Mono',monospace;margin:0 0 6px">8.5 · 128 BPM · 01:15:32</p>
+      <p style="font:400 12.5px/1.6 'Manrope',sans-serif;color:#ACA4C4;margin:0;max-width:640px">Scores, BPM, timecodes, tokens and eyebrow labels. Its mechanical rhythm reads as “measured data,” reinforcing the intelligent side of the brand.</p>
+    </div>
+
+    <!-- type scale -->
+    <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:36px 32px">
+      <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 26px">Scale</p>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:18px"><code style="font:400 11px 'Space Mono',monospace;color:#6E6788;width:120px;flex:none">Display / 76</code><span style="font:700 52px/1 'Space Grotesk';letter-spacing:-0.03em">Shape the curve</span></div>
+        <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:18px"><code style="font:400 11px 'Space Mono',monospace;color:#6E6788;width:120px;flex:none">H2 / 42</code><span style="font:600 34px/1 'Space Grotesk';letter-spacing:-0.02em">Section heading</span></div>
+        <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:18px"><code style="font:400 11px 'Space Mono',monospace;color:#6E6788;width:120px;flex:none">H3 / 19</code><span style="font:600 19px/1 'Space Grotesk'">Card title</span></div>
+        <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:18px"><code style="font:400 11px 'Space Mono',monospace;color:#6E6788;width:120px;flex:none">Body / 16</code><span style="font:400 16px/1 'Manrope';color:#CFC9E0">Readable interface body text</span></div>
+        <div style="display:flex;align-items:baseline;gap:20px"><code style="font:400 11px 'Space Mono',monospace;color:#6E6788;width:120px;flex:none">Label / 12</code><span style="font:700 12px/1 'Space Mono';letter-spacing:0.2em;text-transform:uppercase;color:#22D3EE">EYEBROW LABEL</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VOICE ============ -->
+  <section id="voice" style="max-width:1200px;margin:0 auto;padding:88px 48px;border-top:1px solid rgba(255,255,255,0.07);scroll-margin-top:74px">
+    <p style="font:700 12px/1 'Space Mono',monospace;letter-spacing:0.24em;text-transform:uppercase;color:#22D3EE;margin:0 0 18px">05 — Voice &amp; Tone</p>
+    <h2 style="font:600 42px/1.04 'Space Grotesk',sans-serif;letter-spacing:-0.025em;margin:0 0 14px">Confident coach, never a critic</h2>
+    <p style="max-width:680px;font:400 17px/1.65 'Manrope',sans-serif;color:#ACA4C4;margin:0 0 44px">We speak like a trusted studio friend who knows the dancefloor: clear, encouraging, specific. We explain, we suggest — we never lecture.</p>
+
+    <!-- tagline lockup -->
+    <div style="background:radial-gradient(120% 160% at 20% 0%,rgba(162,77,224,0.22),transparent 55%),radial-gradient(120% 160% at 100% 100%,rgba(34,211,238,0.18),transparent 55%),#0C0917;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:56px 40px;text-align:center;margin-bottom:20px">
+      <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.28em;text-transform:uppercase;color:#5FE3EC;margin:0 0 20px">Tagline</p>
+      <p style="font:600 44px/1.1 'Space Grotesk',sans-serif;letter-spacing:-0.02em;margin:0">Shape the curve.<br><span style="background:linear-gradient(96deg,#A24DE0,#6A5CF0 55%,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent">Own the dancefloor.</span></p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <div style="background:#14101F;border:1px solid rgba(76,110,245,0.25);border-radius:18px;padding:30px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 18px">We say</p>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <p style="font:500 15.5px/1.5 'Manrope',sans-serif;color:#E7E3F2;margin:0;padding-left:18px;border-left:2px solid #22D3EE">“Your energy peaks early — try moving track 6 later to build tension.”</p>
+          <p style="font:500 15.5px/1.5 'Manrope',sans-serif;color:#E7E3F2;margin:0;padding-left:18px;border-left:2px solid #22D3EE">“Strong close. This set lands where it should.”</p>
+          <p style="font:500 15.5px/1.5 'Manrope',sans-serif;color:#E7E3F2;margin:0;padding-left:18px;border-left:2px solid #22D3EE">“Three tracks sit at the same energy — the floor may feel flat here.”</p>
+        </div>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(240,52,138,0.22);border-radius:18px;padding:30px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#FF6B8A;margin:0 0 18px">We avoid</p>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <p style="font:500 15.5px/1.5 'Manrope',sans-serif;color:#9A93AE;margin:0;padding-left:18px;border-left:2px solid rgba(240,52,138,0.5);text-decoration:line-through;text-decoration-color:rgba(240,52,138,0.4)">“Your set is bad. Score: 3/10.”</p>
+          <p style="font:500 15.5px/1.5 'Manrope',sans-serif;color:#9A93AE;margin:0;padding-left:18px;border-left:2px solid rgba(240,52,138,0.5);text-decoration:line-through;text-decoration-color:rgba(240,52,138,0.4)">“Our proprietary AI has detected suboptimal spectral entropy.”</p>
+          <p style="font:500 15.5px/1.5 'Manrope',sans-serif;color:#9A93AE;margin:0;padding-left:18px;border-left:2px solid rgba(240,52,138,0.5);text-decoration:line-through;text-decoration-color:rgba(240,52,138,0.4)">“You must reorder these tracks now.”</p>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px"><span style="font:600 15px 'Space Grotesk';display:block;margin-bottom:6px">Clear</span><span style="font:400 13px/1.5 'Manrope';color:#ACA4C4">Plain language over jargon.</span></div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px"><span style="font:600 15px 'Space Grotesk';display:block;margin-bottom:6px">Specific</span><span style="font:400 13px/1.5 'Manrope';color:#ACA4C4">Name the track, the fix, the why.</span></div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px"><span style="font:600 15px 'Space Grotesk';display:block;margin-bottom:6px">Encouraging</span><span style="font:400 13px/1.5 'Manrope';color:#ACA4C4">Credit what works first.</span></div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px"><span style="font:600 15px 'Space Grotesk';display:block;margin-bottom:6px">Human</span><span style="font:400 13px/1.5 'Manrope';color:#ACA4C4">A friend at the decks, not a machine.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ THE CURVE (signature) ============ -->
+  <section id="curve" style="max-width:1200px;margin:0 auto;padding:88px 48px;border-top:1px solid rgba(255,255,255,0.07);scroll-margin-top:74px">
+    <p style="font:700 12px/1 'Space Mono',monospace;letter-spacing:0.24em;text-transform:uppercase;color:#22D3EE;margin:0 0 18px">06 — Signature Element</p>
+    <h2 style="font:600 42px/1.04 'Space Grotesk',sans-serif;letter-spacing:-0.025em;margin:0 0 14px">The energy curve</h2>
+    <p style="max-width:680px;font:400 17px/1.65 'Manrope',sans-serif;color:#ACA4C4;margin:0 0 40px">Every set becomes a glowing line from 1 to 10. It's the hero of every screen — annotated with peaks, drops and flat zones, always readable, always explained.</p>
+
+    <!-- big chart -->
+    <div style="background:radial-gradient(130% 120% at 70% -10%,rgba(76,110,245,0.16),transparent 55%),#0C0917;border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:30px 32px 26px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:16px">
+        <div>
+          <span style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC">Set Analysis</span>
+          <p style="font:600 22px/1.2 'Space Grotesk';margin:8px 0 0">Midnight Warehouse — Melodic Techno</p>
+        </div>
+        <div style="display:flex;gap:26px;align-items:center">
+          <div style="text-align:right"><span style="font:400 11px 'Manrope';color:#ACA4C4;display:block">Energy Score</span><span style="font:700 30px/1 'Space Mono';background:linear-gradient(96deg,#A24DE0,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent">8.5</span></div>
+          <div style="text-align:right"><span style="font:400 11px 'Manrope';color:#ACA4C4;display:block">Peak</span><span style="font:700 30px/1 'Space Mono';color:#F0348A">9.7</span></div>
+          <div style="text-align:right"><span style="font:400 11px 'Manrope';color:#ACA4C4;display:block">Duration</span><span style="font:700 30px/1 'Space Mono';color:#F5F2FC">1:15</span></div>
+        </div>
+      </div>
+      <div style="position:relative">
+        <svg viewBox="0 0 760 260" width="100%" style="display:block;overflow:visible">
+          <defs>
+            <linearGradient id="curveStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4C6EF5"/><stop offset=".5" stop-color="#A24DE0"/><stop offset="1" stop-color="#22D3EE"/></linearGradient>
+            <linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A24DE0" stop-opacity="0.34"/><stop offset="1" stop-color="#A24DE0" stop-opacity="0"/></linearGradient>
+          </defs>
+          <!-- gridlines -->
+          <g stroke="rgba(255,255,255,0.05)" stroke-width="1">
+            <line x1="10" y1="46.9" x2="750" y2="46.9"/><line x1="10" y1="115.6" x2="750" y2="115.6"/><line x1="10" y1="184.2" x2="750" y2="184.2"/>
+          </g>
+          <!-- flat zone shade (illustrative) -->
+          <rect data-ec-annot x="232" y="20" width="148" height="220" fill="rgba(245,165,36,0.07)" rx="6"/>
+          <!-- area + line -->
+          <path d="M 10 184.2 C 22.3 180.4, 59.3 168.9, 84 161.3 C 108.7 153.7, 133.3 146, 158 138.4 C 182.7 130.8, 207.3 123.2, 232 115.6 C 256.7 108, 281.3 92.7, 306 92.7 C 330.7 92.7, 355.3 119.4, 380 115.6 C 404.7 111.8, 429.3 81.3, 454 69.8 C 478.7 58.4, 503.3 43.1, 528 46.9 C 552.7 50.7, 577.3 88.9, 602 92.7 C 626.7 96.5, 651.3 77.4, 676 69.8 C 700.7 62.2, 737.7 50.7, 750 46.9 L 750 230 L 10 230 Z" fill="url(#curveFill)"/>
+          <path data-ec-curve d="M 10 184.2 C 22.3 180.4, 59.3 168.9, 84 161.3 C 108.7 153.7, 133.3 146, 158 138.4 C 182.7 130.8, 207.3 123.2, 232 115.6 C 256.7 108, 281.3 92.7, 306 92.7 C 330.7 92.7, 355.3 119.4, 380 115.6 C 404.7 111.8, 429.3 81.3, 454 69.8 C 478.7 58.4, 503.3 43.1, 528 46.9 C 552.7 50.7, 577.3 88.9, 602 92.7 C 626.7 96.5, 651.3 77.4, 676 69.8 C 700.7 62.2, 737.7 50.7, 750 46.9" fill="none" stroke="url(#curveStroke)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 8px rgba(162,77,224,0.55))" data-ec-glow="8,rgba(162,77,224,0.55)"/>
+          <!-- markers -->
+          <circle cx="10" cy="184.2" r="4.5" fill="#4C6EF5"/>
+          <circle data-ec-annot cx="528" cy="46.9" r="7" fill="#F0348A" style="filter:drop-shadow(0 0 9px rgba(240,52,138,0.9))" data-ec-glow="9,rgba(240,52,138,0.9)"/>
+          <circle data-ec-annot cx="602" cy="92.7" r="6" fill="#F5A524" style="filter:drop-shadow(0 0 7px rgba(245,165,36,0.8))" data-ec-glow="7,rgba(245,165,36,0.8)"/>
+          <circle cx="750" cy="46.9" r="6" fill="#22D3EE" style="filter:drop-shadow(0 0 8px rgba(34,211,238,0.8))" data-ec-glow="8,rgba(34,211,238,0.8)"/>
+        </svg>
+        <!-- floating labels -->
+        <div data-ec-annot style="position:absolute;left:57%;top:2%;background:rgba(240,52,138,0.14);border:1px solid rgba(240,52,138,0.5);color:#FF7FAC;font:700 10.5px/1 'Space Mono',monospace;padding:5px 9px;border-radius:7px;white-space:nowrap">▲ PEAK 9.7</div>
+        <div data-ec-annot style="position:absolute;left:74%;top:24%;background:rgba(245,165,36,0.13);border:1px solid rgba(245,165,36,0.5);color:#F7C05A;font:700 10.5px/1 'Space Mono',monospace;padding:5px 9px;border-radius:7px;white-space:nowrap">▼ DROP −3</div>
+        <div data-ec-annot style="position:absolute;left:30%;top:2%;background:rgba(245,165,36,0.1);border:1px solid rgba(245,165,36,0.35);color:#F7C05A;font:700 10.5px/1 'Space Mono',monospace;padding:5px 9px;border-radius:7px;white-space:nowrap">FLAT ZONE</div>
+        <div style="position:absolute;left:0;bottom:-4px;background:rgba(76,110,245,0.14);border:1px solid rgba(76,110,245,0.5);color:#9FB2FF;font:700 10.5px/1 'Space Mono',monospace;padding:5px 9px;border-radius:7px;white-space:nowrap">OPENING</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)">
+        <span style="font:600 11px 'Space Mono';letter-spacing:0.14em;color:#6E6788">OPENING</span>
+        <span style="font:600 11px 'Space Mono';letter-spacing:0.14em;color:#6E6788">BUILD-UP</span>
+        <span style="font:600 11px 'Space Mono';letter-spacing:0.14em;color:#6E6788">PEAK TIME</span>
+        <span style="font:600 11px 'Space Mono';letter-spacing:0.14em;color:#6E6788">CLOSING</span>
+      </div>
+    </div>
+
+    <!-- the 4 states -->
+    <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 16px">Curve states the engine detects</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px">
+        <svg viewBox="0 0 120 44" width="100%" style="display:block;margin-bottom:14px"><path d="M 4 26.7 C 7.1 26.2, 16.5 24.7, 22.7 23.6 C 28.9 22.6, 35.1 22, 41.3 20.4 C 47.5 18.8, 53.8 16.3, 60 14.2 C 66.2 12.1, 72.5 7.5, 78.7 8 C 84.9 8.5, 91.1 15.2, 97.3 17.3 C 103.5 19.4, 112.9 19.9, 116 20.4" fill="none" stroke="#F0348A" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 5px rgba(240,52,138,0.7))" data-ec-glow="5,rgba(240,52,138,0.7)"/></svg>
+        <span style="font:600 15px 'Space Grotesk';display:block;margin-bottom:5px;color:#FF7FAC">Peak</span>
+        <span style="font:400 12.5px/1.5 'Manrope';color:#ACA4C4">A clear high point. The moment the floor lifts.</span>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px">
+        <svg viewBox="0 0 120 44" width="100%" style="display:block;margin-bottom:14px"><path d="M 4 20.4 C 7.1 19.9, 16.5 18.3, 22.7 17.3 C 28.9 16.3, 35.1 15.2, 41.3 14.2 C 47.5 13.2, 53.8 9, 60 11.1 C 66.2 13.2, 72.5 23.6, 78.7 26.7 C 84.9 29.8, 91.1 29.8, 97.3 29.8 C 103.5 29.8, 112.9 27.2, 116 26.7" fill="none" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 5px rgba(245,165,36,0.6))" data-ec-glow="5,rgba(245,165,36,0.6)"/></svg>
+        <span style="font:600 15px 'Space Grotesk';display:block;margin-bottom:5px;color:#F7C05A">Sharp drop</span>
+        <span style="font:400 12.5px/1.5 'Manrope';color:#ACA4C4">Energy falls ≥3 at once. Risks losing the room.</span>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px">
+        <svg viewBox="0 0 120 44" width="100%" style="display:block;margin-bottom:14px"><path d="M 4 20.4 C 7.1 20.4, 16.5 20.4, 22.7 20.4 C 28.9 20.4, 35.1 20.4, 41.3 20.4 C 47.5 20.4, 53.8 20.4, 60 20.4 C 66.2 20.4, 72.5 20.9, 78.7 20.4 C 84.9 19.9, 91.1 17.3, 97.3 17.3 C 103.5 17.3, 112.9 19.9, 116 20.4" fill="none" stroke="#8AA0F5" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 5px rgba(138,160,245,0.55))" data-ec-glow="5,rgba(138,160,245,0.55)"/></svg>
+        <span style="font:600 15px 'Space Grotesk';display:block;margin-bottom:5px;color:#9FB2FF">Flat zone</span>
+        <span style="font:400 12.5px/1.5 'Manrope';color:#ACA4C4">3+ tracks at one level. The set stops moving.</span>
+      </div>
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px">
+        <svg viewBox="0 0 120 44" width="100%" style="display:block;margin-bottom:14px"><path d="M 4 17.3 C 7.1 16.8, 16.5 15.2, 22.7 14.2 C 28.9 13.2, 35.1 11.1, 41.3 11.1 C 47.5 11.1, 53.8 12.6, 60 14.2 C 66.2 15.8, 72.5 18.3, 78.7 20.4 C 84.9 22.5, 91.1 24.6, 97.3 26.7 C 103.5 28.8, 112.9 31.9, 116 32.9" fill="none" stroke="#6E6788" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <span style="font:600 15px 'Space Grotesk';display:block;margin-bottom:5px;color:#ACA4C4">Weak ending</span>
+        <span style="font:400 12.5px/1.5 'Manrope';color:#ACA4C4">Closes below threshold. The finish falls flat.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ UI COMPONENTS ============ -->
+  <section id="ui" style="max-width:1200px;margin:0 auto;padding:88px 48px;border-top:1px solid rgba(255,255,255,0.07);scroll-margin-top:74px">
+    <p style="font:700 12px/1 'Space Mono',monospace;letter-spacing:0.24em;text-transform:uppercase;color:#22D3EE;margin:0 0 18px">07 — UI Components</p>
+    <h2 style="font:600 42px/1.04 'Space Grotesk',sans-serif;letter-spacing:-0.025em;margin:0 0 44px">Interface building blocks</h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <!-- buttons -->
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:30px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 22px">Buttons</p>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+          <button style="border:none;cursor:pointer;font:700 14px 'Manrope';color:#fff;padding:13px 24px;border-radius:11px;background:linear-gradient(96deg,#A24DE0,#4C6EF5 60%,#22D3EE);box-shadow:0 8px 24px rgba(120,60,220,0.35)">Start Free</button>
+          <button style="cursor:pointer;font:700 14px 'Manrope';color:#F5F2FC;padding:13px 24px;border-radius:11px;background:transparent;border:1px solid rgba(255,255,255,0.2)">Upload Set</button>
+          <button style="cursor:pointer;font:700 14px 'Manrope';color:#22D3EE;padding:13px 20px;border-radius:11px;background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.35)">Analyze</button>
+          <button style="cursor:pointer;font:700 13px 'Manrope';color:#6E6788;padding:11px 18px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.08)">Cancel</button>
+        </div>
+      </div>
+      <!-- inputs -->
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:30px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 22px">Inputs</p>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <input placeholder="Paste a playlist or track name…" style="font:400 14px 'Manrope';color:#F5F2FC;background:#0C0917;border:1px solid rgba(255,255,255,0.1);border-radius:11px;padding:13px 15px;outline:none" style-focus="border-color:#22D3EE;box-shadow:0 0 0 3px rgba(34,211,238,0.15)">
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;display:flex;align-items:center;justify-content:space-between;font:500 14px 'Manrope';color:#F5F2FC;background:#0C0917;border:1px solid rgba(255,255,255,0.1);border-radius:11px;padding:13px 15px">Melodic Techno <span style="color:#6E6788">▾</span></div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:space-between;font:500 14px 'Manrope';color:#F5F2FC;background:#0C0917;border:1px solid rgba(255,255,255,0.1);border-radius:11px;padding:13px 15px">Main Time <span style="color:#6E6788">▾</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- chips + score + tablerow -->
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px">
+      <div style="background:#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:30px">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 22px">Badges &amp; chips</p>
+        <div style="display:flex;flex-wrap:wrap;gap:11px;margin-bottom:26px">
+          <span style="font:700 11.5px 'Space Mono';letter-spacing:0.06em;color:#FF7FAC;background:rgba(240,52,138,0.14);border:1px solid rgba(240,52,138,0.4);padding:6px 12px;border-radius:20px">PEAK</span>
+          <span style="font:700 11.5px 'Space Mono';letter-spacing:0.06em;color:#F7C05A;background:rgba(245,165,36,0.13);border:1px solid rgba(245,165,36,0.4);padding:6px 12px;border-radius:20px">SHARP DROP</span>
+          <span style="font:700 11.5px 'Space Mono';letter-spacing:0.06em;color:#9FB2FF;background:rgba(76,110,245,0.15);border:1px solid rgba(76,110,245,0.4);padding:6px 12px;border-radius:20px">FLAT ZONE</span>
+          <span style="font:700 11.5px 'Space Mono';letter-spacing:0.06em;color:#5FE3EC;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.4);padding:6px 12px;border-radius:20px">STRONG CLOSE</span>
+          <span style="font:700 11.5px 'Space Mono';letter-spacing:0.06em;color:#C08AF0;background:rgba(162,77,224,0.14);border:1px solid rgba(162,77,224,0.4);padding:6px 12px;border-radius:20px">MELODIC TECHNO</span>
+        </div>
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 16px">Track row</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:14px;background:#0C0917;border:1px solid rgba(255,255,255,0.07);border-radius:11px;padding:12px 15px">
+            <span style="font:700 13px 'Space Mono';color:#6E6788;width:16px;flex:none">03</span>
+            <div style="flex:1;min-width:0"><span style="font:600 14px 'Manrope';color:#F5F2FC;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Nightfall — Extended Mix</span><span style="font:400 11.5px 'Space Mono';color:#6E6788">128 BPM · 6:40</span></div>
+            <div style="width:96px;height:7px;border-radius:4px;background:#1C1730;overflow:hidden;flex:none"><div style="width:90%;height:100%;background:linear-gradient(90deg,#A24DE0,#F0348A)"></div></div>
+            <span style="font:700 15px 'Space Mono';color:#F0348A;width:30px;text-align:right;flex:none">9.0</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:#0C0917;border:1px solid rgba(255,255,255,0.07);border-radius:11px;padding:12px 15px">
+            <span style="font:700 13px 'Space Mono';color:#6E6788;width:16px;flex:none">04</span>
+            <div style="flex:1;min-width:0"><span style="font:600 14px 'Manrope';color:#F5F2FC;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Deep Reset</span><span style="font:400 11.5px 'Space Mono';color:#6E6788">122 BPM · 5:10</span></div>
+            <div style="width:96px;height:7px;border-radius:4px;background:#1C1730;overflow:hidden;flex:none"><div style="width:40%;height:100%;background:linear-gradient(90deg,#4C6EF5,#A24DE0)"></div></div>
+            <span style="font:700 15px 'Space Mono';color:#8AA0F5;width:30px;text-align:right;flex:none">4.0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- score gauge -->
+      <div style="background:radial-gradient(120% 120% at 50% 0%,rgba(162,77,224,0.18),transparent 60%),#14101F;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+        <p style="font:700 11px/1 'Space Mono',monospace;letter-spacing:0.2em;text-transform:uppercase;color:#5FE3EC;margin:0 0 20px;align-self:flex-start">Set score</p>
+        <div style="position:relative;width:180px;height:180px">
+          <svg viewBox="0 0 180 180" width="180" height="180" style="transform:rotate(-90deg)">
+            <circle cx="90" cy="90" r="78" fill="none" stroke="#1C1730" stroke-width="12"/>
+            <circle cx="90" cy="90" r="78" fill="none" stroke="url(#scoreGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="490" stroke-dashoffset="74" style="filter:drop-shadow(0 0 6px rgba(162,77,224,0.6))" data-ec-glow="6,rgba(162,77,224,0.6)"/>
+            <defs><linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4C6EF5"/><stop offset=".5" stop-color="#A24DE0"/><stop offset="1" stop-color="#F0348A"/></linearGradient></defs>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <span style="font:700 52px/1 'Space Mono';background:linear-gradient(96deg,#A24DE0,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent">8.5</span>
+            <span style="font:600 11px 'Space Mono';letter-spacing:0.14em;color:#6E6788;margin-top:4px">OUT OF 10</span>
+          </div>
+        </div>
+        <p style="font:500 14px/1.5 'Manrope';color:#CFC9E0;margin:22px 0 0;max-width:220px">Strong set. One flat zone and an early drop to smooth out.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer style="max-width:1200px;margin:0 auto;padding:60px 48px 90px;border-top:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px">
+    <div style="display:flex;align-items:center;gap:11px">
+      <svg viewBox="0 0 228 168" width="30" height="22" style="filter:drop-shadow(0 0 6px rgba(120,120,255,0.5))">
+        <defs><linearGradient id="footG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A24DE0"/><stop offset=".5" stop-color="#5468E8"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs>
+        <circle cx="114" cy="82" r="80" fill="none" stroke="url(#footG)" stroke-width="8" opacity="0.9"/>
+        <path d="M 24 82 C 28.7 82, 43.7 79, 52 82 C 60.3 85, 66 108.3, 74 100 C 82 91.7, 91.3 30, 100 32 C 108.7 34, 117 107.7, 126 112 C 135 116.3, 145.3 63, 154 58 C 162.7 53, 169.7 78, 178 82 C 186.3 86, 199.7 82, 204 82" fill="none" stroke="url(#footG)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span style="font:700 15px 'Space Grotesk'">EnergyCurve</span>
+    </div>
+    <span style="font:400 12.5px 'Space Mono';color:#6E6788">Brand Kit v1 · Shape the curve. Own the dancefloor.</span>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:900},&quot;animateCurve&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Signature curve&quot;},&quot;showAnnotations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Signature curve&quot;},&quot;glowIntensity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Neon&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){ this.applyTweaks(true); }
+  componentDidUpdate(prev){ this.applyTweaks(prev && prev.animateCurve !== this.props.animateCurve); }
+
+  applyTweaks(reanimate){
+    const root = this.el || document;
+    const glow = this.props.glowIntensity != null ? this.props.glowIntensity : 1;
+    const showAnnot = this.props.showAnnotations != null ? this.props.showAnnotations : true;
+
+    // glow intensity -> rewrite drop-shadow blur on tagged elements
+    root.querySelectorAll('[data-ec-glow]').forEach(el=>{
+      const [base, col] = el.getAttribute('data-ec-glow').split(',');
+      el.style.filter = 'drop-shadow(0 0 ' + (parseFloat(base) * glow).toFixed(1) + 'px ' + col + ')';
+    });
+
+    // annotations toggle on the signature chart
+    root.querySelectorAll('[data-ec-annot]').forEach(el=>{
+      el.style.display = showAnnot ? '' : 'none';
+    });
+
+    // curve draw-in animation
+    if (reanimate) {
+      root.querySelectorAll('[data-ec-curve]').forEach(p=>{
+        if (this.props.animateCurve === false) { p.style.strokeDasharray=''; p.style.strokeDashoffset=''; return; }
+        try {
+          const len = p.getTotalLength();
+          p.style.transition='none';
+          p.style.strokeDasharray = len;
+          p.style.strokeDashoffset = len;
+          p.getBoundingClientRect();
+          p.style.transition='stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1)';
+          p.style.strokeDashoffset = '0';
+        } catch(e){}
+      });
+    }
+  }
+
+  renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

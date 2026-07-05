@@ -25,10 +25,10 @@ export function SetupRequiredState({
   description,
 }: SetupRequiredStateProps) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#0B0B0F] px-6 py-10 text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#08050F] px-6 py-10 text-white">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-[#7B3FE4]/22 blur-3xl" />
-        <div className="absolute right-[-4rem] top-16 h-80 w-80 rounded-full bg-[#00D1FF]/14 blur-3xl" />
+        <div className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-[#A24DE0]/22 blur-3xl" />
+        <div className="absolute right-[-4rem] top-16 h-80 w-80 rounded-full bg-[#22D3EE]/14 blur-3xl" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:68px_68px] opacity-20" />
       </div>
 
@@ -65,7 +65,7 @@ export function SetupRequiredState({
               href="/"
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] px-4 text-[#071018]"
+                "justify-between ec-gradient-bg px-4 text-white shadow-[0_8px_24px_rgba(120,60,220,0.35)]"
               )}
             >
               Back to landing

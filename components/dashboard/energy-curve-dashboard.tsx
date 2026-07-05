@@ -99,7 +99,7 @@ export function EnergyCurveDashboard({
                 className={cn(
                   "w-full rounded-2xl border px-4 py-3 text-left transition-all duration-200",
                   isActive
-                    ? "border-[#00D1FF]/40 bg-white/[0.06] shadow-[0_0_28px_rgba(0,209,255,0.15)]"
+                    ? "border-[#22D3EE]/40 bg-white/[0.06] shadow-[0_0_28px_rgba(34,211,238,0.15)]"
                     : "border-white/8 bg-white/[0.02] hover:border-white/16 hover:bg-white/[0.04]"
                 )}
               >
@@ -139,17 +139,17 @@ export function EnergyCurveDashboard({
           </div>
 
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-white/42">
-            <span className="h-2 w-2 rounded-full bg-[#7B3FE4]" />
+            <span className="h-2 w-2 rounded-full bg-[#A24DE0]" />
             Build
-            <span className="h-2 w-2 rounded-full bg-[#00D1FF]" />
+            <span className="h-2 w-2 rounded-full bg-[#22D3EE]" />
             Lift
-            <span className="h-2 w-2 rounded-full bg-[#FF2D75]" />
+            <span className="h-2 w-2 rounded-full bg-[#F0348A]" />
             Peak
           </div>
         </div>
 
-        <div className="relative mt-5 overflow-hidden rounded-[26px] border border-white/10 bg-[#0D0D12] p-4">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(123,63,228,0.22),transparent_28%),radial-gradient(circle_at_82%_24%,rgba(255,45,117,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(0,209,255,0.14),transparent_38%)]" />
+        <div className="relative mt-5 overflow-hidden rounded-[26px] border border-white/10 bg-[#0C0917] p-4">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(162,77,224,0.2),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.12),transparent_38%)]" />
 
           <div className="relative">
             <svg
@@ -167,9 +167,9 @@ export function EnergyCurveDashboard({
                   y2="0"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop stopColor="#7B3FE4" />
-                  <stop offset="0.55" stopColor="#00D1FF" />
-                  <stop offset="1" stopColor="#FF2D75" />
+                  <stop stopColor="#4C6EF5" />
+                  <stop offset="0.5" stopColor="#A24DE0" />
+                  <stop offset="1" stopColor="#22D3EE" />
                 </linearGradient>
                 <linearGradient
                   id="dashboard-curve-fill"
@@ -179,8 +179,8 @@ export function EnergyCurveDashboard({
                   y2={HEIGHT}
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop offset="0%" stopColor="#00D1FF" stopOpacity="0.22" />
-                  <stop offset="100%" stopColor="#0B0B0F" stopOpacity="0.01" />
+                  <stop offset="0%" stopColor="#A24DE0" stopOpacity="0.34" />
+                  <stop offset="100%" stopColor="#A24DE0" stopOpacity="0" />
                 </linearGradient>
                 <filter
                   id="dashboard-curve-glow"
@@ -240,7 +240,7 @@ export function EnergyCurveDashboard({
                 <path
                   d={segmentPath}
                   fill="none"
-                  stroke="#FF2D75"
+                  stroke="#22D3EE"
                   strokeWidth="5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -258,13 +258,13 @@ export function EnergyCurveDashboard({
                       cx={point.x}
                       cy={point.y}
                       r={isActive ? "14" : "10"}
-                      fill={isActive ? "rgba(255,45,117,0.18)" : "rgba(0,209,255,0.12)"}
+                      fill={isActive ? "rgba(34,211,238,0.18)" : "rgba(162,77,224,0.12)"}
                     />
                     <circle
                       cx={point.x}
                       cy={point.y}
                       r={isActive ? "6" : "4.5"}
-                      fill={isActive ? "#FF2D75" : "#F8F7FF"}
+                      fill={isActive ? "#22D3EE" : "#F5F2FC"}
                       className="cursor-pointer"
                       onMouseEnter={() => setHoveredIndex(index)}
                       onMouseLeave={() => setHoveredIndex(null)}
@@ -277,7 +277,7 @@ export function EnergyCurveDashboard({
 
             {activeTrack && activePoint ? (
               <div
-                className="pointer-events-none absolute w-44 rounded-2xl border border-white/12 bg-[#13131A]/96 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur"
+                className="pointer-events-none absolute w-44 rounded-2xl border border-white/12 bg-[#14101F]/96 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur"
                 style={tooltipStyle}
               >
                 <p className="text-xs uppercase tracking-[0.18em] text-white/42">

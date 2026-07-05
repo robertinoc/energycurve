@@ -32,7 +32,7 @@ export function HeroSection({
           emphasis="hero"
           className="left-[8%] top-[18rem] h-[10rem] w-[84%] opacity-28"
         />
-        <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,19,28,0.96),rgba(11,11,15,0.98))] px-5 py-7 shadow-[0_0_60px_rgba(123,63,228,0.08)]">
+        <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,19,28,0.96),rgba(11,11,15,0.98))] px-5 py-7 shadow-[0_0_60px_rgba(162,77,224,0.08)]">
           <div className="flex flex-col items-center gap-5 text-center">
             <EnergyCurveLogo tone="light" size="xl" kind="horizontal" priority />
             <div className="grid w-full gap-4 rounded-[22px] border border-white/8 bg-black/18 px-5 py-5 lg:grid-cols-[0.9fr_1.1fr_0.7fr]">
@@ -98,7 +98,7 @@ export function HeroSection({
               <a
                 href="#how-it-works"
                 className={cn(
-                  "inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-4.5 text-sm text-white transition hover:-translate-y-0.5 hover:border-white/18 hover:bg-card hover:shadow-[0_14px_36px_rgba(0,0,0,0.26),0_0_22px_rgba(0,209,255,0.08)]"
+                  "inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-4.5 text-sm text-white transition hover:-translate-y-0.5 hover:border-white/18 hover:bg-card hover:shadow-[0_14px_36px_rgba(0,0,0,0.26),0_0_22px_rgba(34,211,238,0.08)]"
                 )}
               >
                 {copy.hero.cta.secondary}
@@ -124,7 +124,7 @@ export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
     <SectionReveal delay={50}>
       <SectionContainer
         id="features"
-        className="space-y-5 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(13,13,18,0.98)),radial-gradient(circle_at_12%_16%,rgba(138,57,248,0.14),transparent_28%),radial-gradient(circle_at_88%_28%,rgba(0,209,255,0.1),transparent_24%),radial-gradient(circle_at_52%_108%,rgba(255,94,138,0.08),transparent_28%)]"
+        className="space-y-5 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(13,13,18,0.98)),radial-gradient(circle_at_12%_16%,rgba(138,57,248,0.14),transparent_28%),radial-gradient(circle_at_88%_28%,rgba(34,211,238,0.1),transparent_24%),radial-gradient(circle_at_52%_108%,rgba(255,94,138,0.08),transparent_28%)]"
       >
         <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-6rem] top-[-4rem] h-[16rem] w-[16rem] opacity-28" />
         <AmbientGlow tone="magenta" className="ambient-drift-slow left-[18%] top-[55%] h-[14rem] w-[14rem] opacity-18" />
@@ -147,7 +147,7 @@ export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
             return (
               <Card
                 key={feature.key}
-                className="border-white/10 bg-white/[0.03] text-white ring-0 transition hover:-translate-y-1 hover:border-white/16 hover:shadow-[0_20px_48px_rgba(0,0,0,0.22),0_0_32px_rgba(123,63,228,0.08)]"
+                className="border-white/10 bg-white/[0.03] text-white ring-0 transition hover:-translate-y-1 hover:border-white/16 hover:shadow-[0_20px_48px_rgba(0,0,0,0.22),0_0_32px_rgba(162,77,224,0.08)]"
               >
                 <CardHeader className="gap-3">
                   <div className="flex items-center justify-between">
@@ -175,7 +175,7 @@ export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
 export function DifferentiationSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
       <SectionReveal delay={100}>
-      <SectionContainer className="bg-[linear-gradient(135deg,rgba(123,63,228,0.14),rgba(0,209,255,0.06),rgba(255,45,117,0.12))]">
+      <SectionContainer className="bg-[linear-gradient(135deg,rgba(162,77,224,0.14),rgba(34,211,238,0.06),rgba(76,110,245,0.10))]">
         <AmbientGlow tone="blend" className="ambient-drift-slow right-[-5rem] top-[-5rem] h-[18rem] w-[18rem] opacity-45" />
         <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
           {copy.ui.differentiation}
@@ -232,7 +232,7 @@ export function HowItWorksSection({
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_86%_14%,rgba(0,209,255,0.12),transparent_24%),radial-gradient(circle_at_18%_84%,rgba(138,57,248,0.12),transparent_26%)] text-white ring-0">
+        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_86%_14%,rgba(34,211,238,0.12),transparent_24%),radial-gradient(circle_at_18%_84%,rgba(138,57,248,0.12),transparent_26%)] text-white ring-0">
           <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-4rem] top-[-3rem] h-[15rem] w-[15rem] opacity-24" />
           <CardHeader>
             <CardTitle className="text-white">{copy.ui.previewTitle}</CardTitle>
@@ -241,7 +241,7 @@ export function HowItWorksSection({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_50%_18%,rgba(123,63,228,0.22),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(0,209,255,0.08),transparent_22%),#111118] p-4 shadow-[0_0_42px_rgba(123,63,228,0.08)]">
+            <div className="rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_50%_18%,rgba(162,77,224,0.22),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(34,211,238,0.08),transparent_22%),#111118] p-4 shadow-[0_0_42px_rgba(162,77,224,0.08)]">
               <div className="rounded-[16px] border border-white/8 bg-black/20 p-3">
                 <EnergyCurveHeroVisual labels={copy.hero.visual} />
               </div>
@@ -351,7 +351,7 @@ export function FinalCTASection({
     <SectionReveal delay={300}>
       <SectionContainer
         id="early-access"
-        className="bg-[linear-gradient(135deg,rgba(123,63,228,0.14),rgba(0,209,255,0.06),rgba(255,45,117,0.12))]"
+        className="bg-[linear-gradient(135deg,rgba(162,77,224,0.14),rgba(34,211,238,0.06),rgba(76,110,245,0.10))]"
       >
         <AmbientGlow tone="violet" className="ambient-drift-slow left-[-4rem] bottom-[-5rem] h-[18rem] w-[18rem] opacity-34" />
         <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-4rem] top-[-4rem] h-[16rem] w-[16rem] opacity-28" />

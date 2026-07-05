@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Brand kit documentation (interactive guide helpers, not app code):
+    "docs/brand-kit/**",
   ]),
 ]);
 

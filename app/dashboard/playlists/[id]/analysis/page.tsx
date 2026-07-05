@@ -81,7 +81,7 @@ export default async function PlaylistAnalysisPage({
         : "This playlist has no genre or context set, so the engine has nothing to score against. Recreate it with both fields set."
 
     return (
-      <main className="min-h-screen bg-[#0B0B0F] text-white">
+      <main className="min-h-screen bg-[#08050F] text-white">
         <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-8 lg:px-10">
           <Link
             href={backHref}
@@ -120,7 +120,7 @@ export default async function PlaylistAnalysisPage({
   }))
 
   return (
-    <main className="min-h-screen bg-[#0B0B0F] text-white">
+    <main className="min-h-screen bg-[#08050F] text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
         <header className="space-y-4">
           <Link

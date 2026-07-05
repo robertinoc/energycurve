@@ -68,13 +68,13 @@ export default async function VerifyEmailPage({
   const alertCopy = getAlertCopy(error)
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0B0B0F] px-6 py-10 text-white">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08050F] px-6 py-10 text-white">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-6rem] top-[-4rem] h-72 w-72 rounded-full bg-[#7B3FE4]/24 blur-3xl" />
-        <div className="absolute right-[-4rem] top-16 h-80 w-80 rounded-full bg-[#00D1FF]/16 blur-3xl" />
+        <div className="absolute left-[-6rem] top-[-4rem] h-72 w-72 rounded-full bg-[#A24DE0]/24 blur-3xl" />
+        <div className="absolute right-[-4rem] top-16 h-80 w-80 rounded-full bg-[#22D3EE]/16 blur-3xl" />
       </div>
 
-      <Card className="relative w-full max-w-md border-white/10 bg-[#14141B] text-white ring-0">
+      <Card className="relative w-full max-w-md border-white/10 bg-[#14101F] text-white ring-0">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <ShieldCheck className="size-4 text-white/58" />
@@ -97,7 +97,7 @@ export default async function VerifyEmailPage({
 
           {resent ? (
             <p className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/62">
-              <MailCheck className="size-4 shrink-0 text-emerald-400" />
+              <MailCheck className="size-4 shrink-0 text-ec-cyan" />
               A fresh code is on its way. Use the newest email you received.
             </p>
           ) : null}

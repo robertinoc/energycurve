@@ -110,10 +110,10 @@ export default async function DashboardPage() {
   const profile = snapshot?.profile ?? null
 
   return (
-    <main className="min-h-screen bg-[#0B0B0F] text-white">
+    <main className="min-h-screen bg-[#08050F] text-white">
       {profile ? <AnalyticsIdentify profileId={profile.id} /> : null}
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
-        <header className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(123,63,228,0.14),rgba(20,20,27,0.92))] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
+        <header className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(162,77,224,0.14),rgba(20,20,27,0.92))] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-4">
@@ -183,7 +183,7 @@ export default async function DashboardPage() {
         </header>
 
         {infrastructureMessage ? (
-          <Alert className="border-white/10 bg-[#17171F] text-white">
+          <Alert className="border-white/10 bg-[#0C0917] text-white">
             <Database className="size-4 text-white/72" />
             <AlertTitle>Database setup still needs attention</AlertTitle>
             <AlertDescription className="text-white/62">
@@ -193,7 +193,7 @@ export default async function DashboardPage() {
         ) : null}
 
         {snapshot && snapshot.playlistCount === 0 ? (
-          <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(123,63,228,0.10),rgba(20,20,27,0.94))] p-5">
+          <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(162,77,224,0.10),rgba(20,20,27,0.94))] p-5">
             <p className="text-xs uppercase tracking-[0.22em] text-white/42">
               Getting started
             </p>
@@ -247,7 +247,7 @@ export default async function DashboardPage() {
         ) : null}
 
         {snapshot && snapshot.latestPlaylists.length > 0 ? (
-          <section className="rounded-[28px] border border-white/10 bg-[#17171F] p-5">
+          <section className="rounded-[28px] border border-white/10 bg-[#0C0917] p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-white/42">
@@ -312,7 +312,7 @@ export default async function DashboardPage() {
         />
 
         <section className="grid gap-4 lg:grid-cols-3">
-          <Card className="border-white/10 bg-[#17171F] text-white ring-0">
+          <Card className="border-white/10 bg-[#0C0917] text-white ring-0">
             <CardHeader>
               <CardTitle className="text-white">Authenticated session</CardTitle>
               <CardDescription className="text-white/58">
@@ -344,7 +344,7 @@ export default async function DashboardPage() {
             </CardFooter>
           </Card>
 
-          <Card className="border-white/10 bg-[#17171F] text-white ring-0">
+          <Card className="border-white/10 bg-[#0C0917] text-white ring-0">
             <CardHeader>
               <CardTitle className="text-white">Profile sync</CardTitle>
               <CardDescription className="text-white/58">
@@ -380,7 +380,7 @@ export default async function DashboardPage() {
             </CardFooter>
           </Card>
 
-          <Card className="border-white/10 bg-[#17171F] text-white ring-0">
+          <Card className="border-white/10 bg-[#0C0917] text-white ring-0">
             <CardHeader>
               <CardTitle className="text-white">What this screen is</CardTitle>
               <CardDescription className="text-white/58">

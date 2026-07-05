@@ -39,10 +39,10 @@ export function AuthPageShell({
   alertDescription,
 }: AuthPageShellProps) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#0B0B0F] px-6 py-10 text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#08050F] px-6 py-10 text-white">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-6rem] top-[-4rem] h-72 w-72 rounded-full bg-[#7B3FE4]/24 blur-3xl" />
-        <div className="absolute right-[-4rem] top-16 h-80 w-80 rounded-full bg-[#00D1FF]/16 blur-3xl" />
+        <div className="absolute left-[-6rem] top-[-4rem] h-72 w-72 rounded-full bg-[#A24DE0]/24 blur-3xl" />
+        <div className="absolute right-[-4rem] top-16 h-80 w-80 rounded-full bg-[#22D3EE]/16 blur-3xl" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:68px_68px] opacity-20" />
       </div>
 
@@ -64,7 +64,7 @@ export function AuthPageShell({
               href={primaryHref}
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "w-full justify-between rounded-2xl border-0 bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] px-4 text-[#071018] hover:opacity-92"
+                "w-full justify-between rounded-2xl border-0 ec-gradient-bg px-4 text-white shadow-[0_8px_24px_rgba(120,60,220,0.35)] hover:brightness-110"
               )}
             >
               {primaryLabel}
@@ -84,7 +84,7 @@ export function AuthPageShell({
 
           <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.05] p-5 shadow-sm backdrop-blur">
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl border border-white/10 bg-[#0B0B0F] p-2">
+              <div className="rounded-2xl border border-white/10 bg-[#08050F] p-2">
                 <LockKeyhole className="size-4 text-white/70" />
               </div>
               <div className="space-y-1">

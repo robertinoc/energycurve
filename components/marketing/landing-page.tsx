@@ -92,10 +92,10 @@ export function LandingPage() {
   return (
     <main
       id="top"
-      className="relative min-h-screen overflow-hidden bg-[#0B0B0F] text-white"
+      className="relative min-h-screen overflow-hidden bg-[#08050F] text-white"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-[760px] bg-[radial-gradient(circle_at_50%_0%,rgba(123,63,228,0.28),transparent_36%),radial-gradient(circle_at_72%_18%,rgba(255,45,117,0.1),transparent_24%),radial-gradient(circle_at_28%_18%,rgba(0,209,255,0.08),transparent_24%)]" />
+        <div className="absolute inset-x-0 top-0 h-[760px] bg-[radial-gradient(circle_at_50%_0%,rgba(162,77,224,0.28),transparent_36%),radial-gradient(circle_at_72%_18%,rgba(76,110,245,0.1),transparent_24%),radial-gradient(circle_at_28%_18%,rgba(34,211,238,0.08),transparent_24%)]" />
         <AmbientGlow
           tone="violet"
           className="ambient-drift-slow left-[-8rem] top-[10rem] h-[26rem] w-[26rem] opacity-70"

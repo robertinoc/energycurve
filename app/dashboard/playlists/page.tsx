@@ -50,7 +50,7 @@ export default async function PlaylistsPage() {
   const playlists = await listPlaylists(profile.id)
 
   return (
-    <main className="min-h-screen bg-[#0B0B0F] text-white">
+    <main className="min-h-screen bg-[#08050F] text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
         <header className="space-y-4">
           <Link
@@ -89,7 +89,7 @@ export default async function PlaylistsPage() {
             {playlists.map((playlist) => (
               <div
                 key={playlist.id}
-                className="flex items-center justify-between gap-4 rounded-[22px] border border-white/10 bg-[#17171F] p-4 transition-colors hover:border-white/18"
+                className="flex items-center justify-between gap-4 rounded-[22px] border border-white/10 bg-[#0C0917] p-4 transition-colors hover:border-white/18"
               >
                 <Link
                   href={`/dashboard/playlists/${playlist.id}`}

@@ -132,7 +132,7 @@ export function LandingContactForm({
         disabled={status === "loading"}
         className={cn(
           buttonVariants({ size: "lg" }),
-          "w-full justify-between bg-linear-to-r from-[#7B3FE4] via-[#00D1FF] to-[#FF2D75] text-[#071018]"
+          "w-full justify-between ec-gradient-bg text-white shadow-[0_8px_24px_rgba(120,60,220,0.35)]"
         )}
       >
         {status === "loading" ? (
@@ -150,7 +150,7 @@ export function LandingContactForm({
 
       <div aria-live="polite" aria-atomic="true">
         {status === "success" ? (
-          <p className="text-sm text-emerald-300">{message}</p>
+          <p className="text-sm text-ec-cyan">{message}</p>
         ) : null}
         {status === "error" ? (
           <p className="text-sm text-rose-300">{message}</p>
@@ -190,7 +190,7 @@ function Field({
           aria-invalid={Boolean(error)}
           aria-describedby={describedBy}
           className={cn(
-            "w-full rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-white/18 focus-visible:ring-2 focus-visible:ring-[#00D1FF]/30",
+            "w-full rounded-lg border border-input bg-ec-sunken px-4 py-3 text-sm text-ec-text outline-none transition placeholder:text-ec-text-dim focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/15",
             error ? "border-rose-400/50" : ""
           )}
         />
@@ -202,7 +202,7 @@ function Field({
           aria-invalid={Boolean(error)}
           aria-describedby={describedBy}
           className={cn(
-            "h-12 rounded-[18px] border-white/10 bg-black/20 px-4 text-white placeholder:text-white/28",
+            "h-12 px-4",
             error ? "border-rose-400/50" : ""
           )}
         />
