@@ -42,7 +42,7 @@ Recommended setup:
 | Surface | WorkOS environment | Supabase project | Base URL |
 | --- | --- | --- | --- |
 | Local development | `Staging` | Dev project | `http://localhost:3010` |
-| Vercel production | `Production` | Production project | `https://energycurve.vercel.app` |
+| Vercel production | `Production` | Production project | `https://energycurve.app` |
 
 Why this split matters:
 
@@ -141,16 +141,16 @@ Expected outcome:
 
 - Keep local `.env.local` on WorkOS `Staging` and `http://localhost:3010`.
 - Keep the current Vercel deployment working, even if it temporarily still uses WorkOS `Staging`.
-- Treat `https://energycurve.vercel.app` as a hosted pre-production environment until WorkOS `Production` is unlocked.
+- Treat `https://energycurve.app` as a hosted pre-production environment until WorkOS `Production` is unlocked.
 - Continue product development on top of the current setup without blocking on WorkOS billing or production unlock.
 
 ### Real infrastructure work still pending
 
 - Unlock WorkOS `Production`.
 - Configure WorkOS `Production` redirects:
-  - `https://energycurve.vercel.app/auth/callback`
-  - `https://energycurve.vercel.app/auth/login`
-  - `https://energycurve.vercel.app/`
+  - `https://energycurve.app/auth/callback`
+  - `https://energycurve.app/auth/login`
+  - `https://energycurve.app/`
 - Generate and securely store the WorkOS `Production` API key and `Production` client ID.
 - Update Vercel `Production` environment variables to use WorkOS `Production` instead of WorkOS `Staging`.
 - Prefer a dedicated Supabase production project instead of sharing the same database with local/staging auth identities.
