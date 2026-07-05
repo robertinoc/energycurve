@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 
 import { AnalyticsIdentify } from "@/components/analytics/analytics-tracker"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
+import { ScoreSparkline } from "@/components/analysis/score-sparkline"
 import { EnergyCurveDashboard } from "@/components/dashboard/energy-curve-dashboard"
 import { SetupRequiredState } from "@/components/setup/setup-required-state"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -27,6 +28,7 @@ import {
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
 import { cn } from "@/lib/utils"
+import { pickGreeting } from "@/lib/content/greetings"
 import { getDashboardSnapshot } from "@/services/dashboard-service"
 
 export const metadata: Metadata = {
@@ -107,6 +109,7 @@ export default async function DashboardPage() {
   }
 
   const displayName = user.firstName?.trim() || user.email.split("@")[0]
+  const greeting = pickGreeting(displayName)
   const profile = snapshot?.profile ?? null
 
   return (
@@ -128,7 +131,7 @@ export default async function DashboardPage() {
                     Dashboard preview
                   </div>
                   <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                    Welcome back, {displayName}
+                    {greeting}
                   </h1>
                   <p className="max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
                     Create a playlist, load your tracklist, and analyze the
@@ -273,15 +276,30 @@ export default async function DashboardPage() {
                   key={playlist.id}
                   className="flex flex-col justify-between gap-3 rounded-[22px] border border-white/10 bg-black/18 p-4"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-white">
-                      {playlist.name}
-                    </p>
-                    <p className="mt-1 text-xs text-white/48">
-                      {playlist.trackCount} track(s)
-                      {playlist.genre ? ` · ${playlist.genre}` : ""}
-                      {playlist.context ? ` · ${playlist.context}` : ""}
-                    </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-white">
+                        {playlist.name}
+                      </p>
+                      <p className="mt-1 text-xs text-white/48">
+                        {playlist.trackCount} track(s)
+                        {playlist.genre ? ` · ${playlist.genre}` : ""}
+                        {playlist.context ? ` · ${playlist.context}` : ""}
+                      </p>
+                    </div>
+                    {playlist.scoreHistory.length > 0 ? (
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <ScoreSparkline scores={playlist.scoreHistory} />
+                        <span className="font-mono text-xs text-white/52">
+                          {
+                            playlist.scoreHistory[
+                              playlist.scoreHistory.length - 1
+                            ]
+                          }
+                          /10
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-2">
                     <Link

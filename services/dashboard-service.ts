@@ -6,6 +6,9 @@ import type { DashboardSnapshot, WorkOSUserIdentity } from "@/types/domain"
 
 const LATEST_PLAYLISTS_LIMIT = 5
 
+/** Sparkline window: last N recorded analyses per playlist. */
+const SCORE_HISTORY_LIMIT = 12
+
 export async function getDashboardSnapshot(
   user: WorkOSUserIdentity
 ): Promise<DashboardSnapshot> {
@@ -45,13 +48,42 @@ export async function getDashboardSnapshot(
     trackCount = trackRows?.length ?? 0
   }
 
+  const latestRows = rows.slice(0, LATEST_PLAYLISTS_LIMIT)
+  const scoreHistories = new Map<string, number[]>()
+
+  if (latestRows.length > 0) {
+    const { data: analysisRows, error: analysesError } = await supabase
+      .from("analyses")
+      .select("playlist_id, set_score, created_at")
+      .in(
+        "playlist_id",
+        latestRows.map((playlist) => playlist.id)
+      )
+      .order("created_at", { ascending: true })
+
+    if (analysesError) {
+      // Score history is decoration — never fail the dashboard over it
+      // (e.g. an environment that hasn't run migration 0003 yet).
+      console.warn("dashboard.score_history_unavailable", analysesError.message)
+    }
+
+    for (const row of analysisRows ?? []) {
+      const history = scoreHistories.get(row.playlist_id) ?? []
+      history.push(Number(row.set_score))
+      scoreHistories.set(row.playlist_id, history)
+    }
+  }
+
   return {
     profile,
     playlistCount: playlistCount ?? 0,
     trackCount,
-    latestPlaylists: rows.slice(0, LATEST_PLAYLISTS_LIMIT).map((playlist) => ({
+    latestPlaylists: latestRows.map((playlist) => ({
       ...playlist,
       trackCount: trackCounts.get(playlist.id) ?? 0,
+      scoreHistory: (scoreHistories.get(playlist.id) ?? []).slice(
+        -SCORE_HISTORY_LIMIT
+      ),
     })),
   }
 }
