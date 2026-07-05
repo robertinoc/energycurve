@@ -44,7 +44,7 @@ function buildResetEmail(resetUrl: string) {
           Reset password
         </a>
       </p>
-      <p style="margin: 0; font-size: 13px; color: #6b6b76; line-height: 1.6;">
+      <p style="margin: 0; font-size: 13px; color: #6E6788; line-height: 1.6;">
         The link expires shortly. If you didn't request this, you can safely
         ignore this email — your password stays unchanged.
       </p>

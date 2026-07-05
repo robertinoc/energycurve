@@ -32,7 +32,7 @@ export function HeroSection({
           emphasis="hero"
           className="left-[8%] top-[18rem] h-[10rem] w-[84%] opacity-28"
         />
-        <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,19,28,0.96),rgba(11,11,15,0.98))] px-5 py-7 shadow-[0_0_60px_rgba(162,77,224,0.08)]">
+        <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.96),rgba(8,5,15,0.98))] px-5 py-7 shadow-[0_0_60px_rgba(162,77,224,0.08)]">
           <div className="flex flex-col items-center gap-5 text-center">
             <EnergyCurveLogo tone="light" size="xl" kind="horizontal" priority />
             <div className="grid w-full gap-4 rounded-[22px] border border-white/8 bg-black/18 px-5 py-5 lg:grid-cols-[0.9fr_1.1fr_0.7fr]">
@@ -44,11 +44,11 @@ export function HeroSection({
                   <div key={label} className="flex items-center gap-3 text-white/70">
                     <div className="rounded-xl border border-white/8 bg-white/[0.04] p-2">
                       {index === 0 ? (
-                        <LineChart className="size-4 text-[#C06BFF]" />
+                        <LineChart className="size-4 text-[#CDA2F1]" />
                       ) : index === 1 ? (
-                        <Sparkles className="size-4 text-[#C06BFF]" />
+                        <Sparkles className="size-4 text-[#CDA2F1]" />
                       ) : (
-                        <Waves className="size-4 text-[#C06BFF]" />
+                        <Waves className="size-4 text-[#CDA2F1]" />
                       )}
                     </div>
                     <span className="text-sm">{label}</span>
@@ -124,7 +124,7 @@ export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
     <SectionReveal delay={50}>
       <SectionContainer
         id="features"
-        className="space-y-5 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(13,13,18,0.98)),radial-gradient(circle_at_12%_16%,rgba(138,57,248,0.14),transparent_28%),radial-gradient(circle_at_88%_28%,rgba(34,211,238,0.1),transparent_24%),radial-gradient(circle_at_52%_108%,rgba(255,94,138,0.08),transparent_28%)]"
+        className="space-y-5 bg-[linear-gradient(180deg,rgba(12,9,23,0.98),rgba(12,9,23,0.98)),radial-gradient(circle_at_12%_16%,rgba(162,77,224,0.14),transparent_28%),radial-gradient(circle_at_88%_28%,rgba(34,211,238,0.1),transparent_24%),radial-gradient(circle_at_52%_108%,rgba(255,94,138,0.08),transparent_28%)]"
       >
         <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-6rem] top-[-4rem] h-[16rem] w-[16rem] opacity-28" />
         <AmbientGlow tone="magenta" className="ambient-drift-slow left-[18%] top-[55%] h-[14rem] w-[14rem] opacity-18" />
@@ -201,7 +201,7 @@ export function HowItWorksSection({
   return (
     <SectionReveal delay={150}>
       <div id="how-it-works" className="scroll-mt-40 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(17,17,24,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_16%_12%,rgba(138,57,248,0.16),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(255,94,138,0.1),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(83,175,255,0.08),transparent_28%)] text-white ring-0">
+        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_16%_12%,rgba(162,77,224,0.16),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(255,94,138,0.1),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(83,175,255,0.08),transparent_28%)] text-white ring-0">
           <AmbientGlow tone="violet" className="ambient-drift-slow left-[-6rem] top-[4rem] h-[16rem] w-[16rem] opacity-22" />
           <EnergyWaveBackdrop className="left-[2%] top-[-1rem] h-[9rem] w-[96%] opacity-16" />
           <CardHeader className="space-y-3">
@@ -232,7 +232,7 @@ export function HowItWorksSection({
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_86%_14%,rgba(34,211,238,0.12),transparent_24%),radial-gradient(circle_at_18%_84%,rgba(138,57,248,0.12),transparent_26%)] text-white ring-0">
+        <Card className="relative overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(12,9,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_86%_14%,rgba(34,211,238,0.12),transparent_24%),radial-gradient(circle_at_18%_84%,rgba(162,77,224,0.12),transparent_26%)] text-white ring-0">
           <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-4rem] top-[-3rem] h-[15rem] w-[15rem] opacity-24" />
           <CardHeader>
             <CardTitle className="text-white">{copy.ui.previewTitle}</CardTitle>
@@ -241,7 +241,7 @@ export function HowItWorksSection({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_50%_18%,rgba(162,77,224,0.22),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(34,211,238,0.08),transparent_22%),#111118] p-4 shadow-[0_0_42px_rgba(162,77,224,0.08)]">
+            <div className="rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_50%_18%,rgba(162,77,224,0.22),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(34,211,238,0.08),transparent_22%),#14101F] p-4 shadow-[0_0_42px_rgba(162,77,224,0.08)]">
               <div className="rounded-[16px] border border-white/8 bg-black/20 p-3">
                 <EnergyCurveHeroVisual labels={copy.hero.visual} />
               </div>
@@ -264,7 +264,7 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
     <SectionReveal delay={200}>
       <Card
         id="story"
-        className="relative scroll-mt-40 overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(16,16,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_14%_16%,rgba(255,94,138,0.08),transparent_26%),radial-gradient(circle_at_86%_84%,rgba(138,57,248,0.12),transparent_26%)] text-white ring-0"
+        className="relative scroll-mt-40 overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(12,9,23,0.98),rgba(12,12,18,0.98)),radial-gradient(circle_at_14%_16%,rgba(255,94,138,0.08),transparent_26%),radial-gradient(circle_at_86%_84%,rgba(162,77,224,0.12),transparent_26%)] text-white ring-0"
       >
         <AmbientGlow tone="magenta" className="ambient-drift-slow left-[-5rem] top-[-4rem] h-[14rem] w-[14rem] opacity-20" />
         <AmbientGlow tone="violet" className="ambient-drift-reverse right-[-4rem] bottom-[-4rem] h-[14rem] w-[14rem] opacity-16" />
@@ -319,7 +319,7 @@ export function ContactSection({ copy }: { copy: ResolvedSiteCopy }) {
                   <p className="text-sm text-white/48">{copy.ui.directContact}</p>
                   <a
                     href="mailto:hello@energycurve.app"
-                    className="text-base font-medium text-white transition hover:text-[#76E7FF]"
+                    className="text-base font-medium text-white transition hover:text-[#7DE6F7]"
                   >
                     hello@energycurve.app
                   </a>

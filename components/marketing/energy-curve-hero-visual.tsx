@@ -153,7 +153,7 @@ export function EnergyCurveHeroVisual({
                   cx={point.x}
                   cy={point.y}
                   r={index === 3 || index === 5 ? "4.5" : "3.5"}
-                  fill={index === 3 || index === 5 ? "#F0348A" : "#F7F7FB"}
+                  fill={index === 3 || index === 5 ? "#F0348A" : "#F5F2FC"}
                 />
               </g>
             ))}

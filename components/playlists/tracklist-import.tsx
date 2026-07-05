@@ -157,7 +157,7 @@ export function TracklistImport({
                   {preview.errors.slice(0, 10).map((error) => (
                     <p
                       key={`${error.line}-${error.reason}`}
-                      className="flex items-center gap-2 text-xs text-amber-300/90"
+                      className="flex items-center gap-2 text-xs text-ec-amber/90"
                     >
                       <TriangleAlert className="size-3 shrink-0" />
                       Line {error.line}: no “Artist – Track” separator found —
@@ -170,7 +170,7 @@ export function TracklistImport({
           ) : null}
 
           {existingTrackCount > 0 ? (
-            <p className="flex items-center gap-2 text-xs text-amber-300/90">
+            <p className="flex items-center gap-2 text-xs text-ec-amber/90">
               <TriangleAlert className="size-3 shrink-0" />
               Importing replaces the {existingTrackCount} track(s) currently in
               this playlist.

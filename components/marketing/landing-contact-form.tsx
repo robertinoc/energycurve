@@ -153,7 +153,7 @@ export function LandingContactForm({
           <p className="text-sm text-ec-cyan">{message}</p>
         ) : null}
         {status === "error" ? (
-          <p className="text-sm text-rose-300">{message}</p>
+          <p className="text-sm text-ec-error">{message}</p>
         ) : null}
       </div>
     </form>
@@ -191,7 +191,7 @@ function Field({
           aria-describedby={describedBy}
           className={cn(
             "w-full rounded-lg border border-input bg-ec-sunken px-4 py-3 text-sm text-ec-text outline-none transition placeholder:text-ec-text-dim focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/15",
-            error ? "border-rose-400/50" : ""
+            error ? "border-ec-error/50" : ""
           )}
         />
       ) : (
@@ -203,12 +203,12 @@ function Field({
           aria-describedby={describedBy}
           className={cn(
             "h-12 px-4",
-            error ? "border-rose-400/50" : ""
+            error ? "border-ec-error/50" : ""
           )}
         />
       )}
       {error ? (
-        <p id={describedBy} className="text-sm text-rose-300">
+        <p id={describedBy} className="text-sm text-ec-error">
           {error}
         </p>
       ) : null}

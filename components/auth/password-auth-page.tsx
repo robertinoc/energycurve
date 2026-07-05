@@ -249,7 +249,7 @@ export function PasswordAuthPage({
                     ? `/login?returnTo=${encodeURIComponent(returnTo)}`
                     : `/signup?returnTo=${encodeURIComponent(returnTo)}`
                 }
-                className="text-white underline decoration-white/24 underline-offset-4 transition hover:text-[#76E7FF]"
+                className="text-white underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
               >
                 {isSignup ? "Login" : "Create your account"}
               </Link>

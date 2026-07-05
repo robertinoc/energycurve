@@ -113,7 +113,7 @@ export default async function DashboardPage() {
     <main className="min-h-screen bg-[#08050F] text-white">
       {profile ? <AnalyticsIdentify profileId={profile.id} /> : null}
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
-        <header className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(162,77,224,0.14),rgba(20,20,27,0.92))] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
+        <header className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(162,77,224,0.14),rgba(12,9,23,0.92))] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-4">
@@ -193,7 +193,7 @@ export default async function DashboardPage() {
         ) : null}
 
         {snapshot && snapshot.playlistCount === 0 ? (
-          <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(162,77,224,0.10),rgba(20,20,27,0.94))] p-5">
+          <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(162,77,224,0.10),rgba(12,9,23,0.94))] p-5">
             <p className="text-xs uppercase tracking-[0.22em] text-white/42">
               Getting started
             </p>

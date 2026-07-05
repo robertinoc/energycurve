@@ -70,7 +70,7 @@ export function EnergyCurveDashboard({
 
   return (
     <section className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)_260px]">
-      <aside className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(26,26,34,0.96),rgba(20,20,27,0.96))] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+      <aside className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.96),rgba(12,9,23,0.96))] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-white/42">
@@ -123,7 +123,7 @@ export function EnergyCurveDashboard({
         </div>
       </aside>
 
-      <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,25,0.98),rgba(14,14,20,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
+      <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.98),rgba(12,9,23,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
         <div className="flex flex-col gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-white/42">
@@ -302,7 +302,7 @@ export function EnergyCurveDashboard({
         </div>
       </div>
 
-      <aside className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(26,26,34,0.96),rgba(20,20,27,0.96))] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+      <aside className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.96),rgba(12,9,23,0.96))] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
         <div className="mb-5">
           <p className="text-xs uppercase tracking-[0.22em] text-white/42">
             Metrics
