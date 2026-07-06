@@ -55,6 +55,64 @@ export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapsho
   return { users, kpis: computeUserKpis(users) }
 }
 
+export interface BackstageRecentAnalysis {
+  id: string
+  email: string
+  setScore: number
+  createdAt: string
+}
+
+const RECENT_ANALYSES_LIMIT = 6
+
+/**
+ * Latest analysis runs with the owner's email, for the Users-tab activity
+ * feed. Two small queries instead of a PostgREST embed keeps the types
+ * simple.
+ */
+export async function getRecentAnalyses(): Promise<BackstageRecentAnalysis[]> {
+  const supabase = getSupabaseAdminClient()
+
+  const { data: analyses, error } = await supabase
+    .from("analyses")
+    .select("id, user_id, set_score, created_at")
+    .order("created_at", { ascending: false })
+    .limit(RECENT_ANALYSES_LIMIT)
+
+  if (error) {
+    logWarn("backstage.recent_analyses_unavailable", { reason: error.message })
+    return []
+  }
+
+  const rows = analyses ?? []
+
+  if (rows.length === 0) {
+    return []
+  }
+
+  const userIds = [...new Set(rows.map((row) => row.user_id))]
+  const { data: profiles, error: profilesError } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .in("id", userIds)
+
+  if (profilesError) {
+    logWarn("backstage.recent_analyses_profiles_unavailable", {
+      reason: profilesError.message,
+    })
+  }
+
+  const emailById = new Map(
+    (profiles ?? []).map((profile) => [profile.id, profile.email])
+  )
+
+  return rows.map((row) => ({
+    id: row.id,
+    email: emailById.get(row.user_id) ?? "unknown",
+    setScore: Number(row.set_score),
+    createdAt: row.created_at,
+  }))
+}
+
 async function getProfileById(profileId: string): Promise<Profile | null> {
   const supabase = getSupabaseAdminClient()
 

@@ -50,9 +50,15 @@ export interface MetricWithDelta {
   previous: number
   /** Percent change vs the previous window; null when previous is 0. */
   deltaPercent: number | null
+  /** Per-bucket values across the current window, for mini sparklines. */
+  spark: number[]
 }
 
-export function buildMetric(current: number, previous: number): MetricWithDelta {
+export function buildMetric(
+  current: number,
+  previous: number,
+  spark: number[] = []
+): MetricWithDelta {
   return {
     current,
     previous,
@@ -60,6 +66,7 @@ export function buildMetric(current: number, previous: number): MetricWithDelta 
       previous === 0
         ? null
         : Math.round(((current - previous) / previous) * 100),
+    spark,
   }
 }
 

@@ -123,10 +123,17 @@ export async function getBackstageAnalyticsSummary(
     WHERE ${scope}
   `
 
+  // One multi-column pass over the current window feeds both the main
+  // chart (analyses) and the per-metric sparklines on the KPI tiles.
   const seriesQuery = `
-    SELECT ${bucketSql}(timestamp) AS bucket, count() AS value
+    SELECT
+      ${bucketSql}(timestamp) AS bucket,
+      uniqIf(distinct_id, ${ACTIVE_CONDITION_SQL}) AS active,
+      countIf(event = 'signup') AS signups,
+      countIf(event = 'analysis_completed') AS analyses,
+      countIf(event = 'playlist_created') AS playlists
     FROM events
-    WHERE event = 'analysis_completed' AND timestamp >= now() - INTERVAL ${amount} ${unit}
+    WHERE timestamp >= now() - INTERVAL ${amount} ${unit}
     GROUP BY bucket
     ORDER BY bucket
   `
@@ -139,19 +146,42 @@ export async function getBackstageAnalyticsSummary(
 
     const row = summaryRows[0] ?? []
 
-    return {
-      period,
-      activeUsers: buildMetric(toNumber(row[0]), toNumber(row[1])),
-      signups: buildMetric(toNumber(row[2]), toNumber(row[3])),
-      analysesCompleted: buildMetric(toNumber(row[4]), toNumber(row[5])),
-      playlistsCreated: buildMetric(toNumber(row[6]), toNumber(row[7])),
-      series: zeroFillSeries(
+    const filledColumn = (columnIndex: number) =>
+      zeroFillSeries(
         seriesRows.map((seriesRow) => ({
           bucket: String(seriesRow[0] ?? ""),
-          value: toNumber(seriesRow[1]),
+          value: toNumber(seriesRow[columnIndex]),
         })),
         period
+      )
+
+    const analysesSeries = filledColumn(3)
+    const sparkOf = (points: ReturnType<typeof filledColumn>) =>
+      points.map((point) => point.value)
+
+    return {
+      period,
+      activeUsers: buildMetric(
+        toNumber(row[0]),
+        toNumber(row[1]),
+        sparkOf(filledColumn(1))
       ),
+      signups: buildMetric(
+        toNumber(row[2]),
+        toNumber(row[3]),
+        sparkOf(filledColumn(2))
+      ),
+      analysesCompleted: buildMetric(
+        toNumber(row[4]),
+        toNumber(row[5]),
+        sparkOf(analysesSeries)
+      ),
+      playlistsCreated: buildMetric(
+        toNumber(row[6]),
+        toNumber(row[7]),
+        sparkOf(filledColumn(4))
+      ),
+      series: analysesSeries,
     }
   } catch (error) {
     if (error instanceof PostHogUpstreamError) {

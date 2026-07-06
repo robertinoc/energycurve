@@ -1,17 +1,25 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { Activity, ListMusic, UserPlus, Waves } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   ANALYTICS_PERIODS,
   type AnalyticsPeriod,
   type BackstageAnalyticsSummary,
   type MetricWithDelta,
 } from "@/lib/backstage/analytics"
-import { cn } from "@/lib/utils"
+
+import {
+  Bento,
+  BentoLabel,
+  Sparkbars,
+  Sparkline,
+  TrendPill,
+} from "../BackstagePrimitives"
 
 type PanelState =
   | { status: "loading" }
@@ -19,77 +27,95 @@ type PanelState =
   | { status: "error"; message: string }
   | { status: "ready"; summary: BackstageAnalyticsSummary }
 
-function DeltaTag({ metric }: { metric: MetricWithDelta }) {
-  if (metric.deltaPercent === null) {
-    return <span className="text-xs text-ec-text-dim">— vs previous</span>
-  }
+const numberFormat = new Intl.NumberFormat("en-GB")
 
-  const positive = metric.deltaPercent >= 0
-
-  return (
-    <span
-      className={cn(
-        "font-mono text-xs font-bold",
-        positive ? "text-ec-cyan" : "text-[#FF87BE]"
-      )}
-    >
-      {positive ? "▲" : "▼"} {Math.abs(metric.deltaPercent)}% vs previous
-    </span>
-  )
-}
-
-function MetricTile({
+/** KPI tile pattern from StageLink's analytics redesign (KpiTile). */
+function StatTile({
   label,
   metric,
+  color,
+  icon,
 }: {
   label: string
   metric: MetricWithDelta
+  color: string
+  icon: React.ReactNode
 }) {
   return (
-    <Card>
-      <CardContent className="space-y-1.5 p-4">
-        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-ec-text-dim">
-          {label}
-        </p>
-        <p className="font-heading text-3xl font-bold text-ec-text">
-          {metric.current}
-        </p>
-        <DeltaTag metric={metric} />
-      </CardContent>
-    </Card>
+    <Bento tone="panel" className="flex flex-col justify-between gap-3 p-5">
+      <div className="flex items-center gap-2">
+        <span
+          className="flex h-[22px] w-[22px] items-center justify-center rounded-md bg-white/[0.05]"
+          style={{ color }}
+        >
+          {icon}
+        </span>
+        <span className="text-[11.5px] font-medium text-white/70">{label}</span>
+      </div>
+      <p className="font-heading text-[32px] font-bold leading-none text-white">
+        {numberFormat.format(metric.current)}
+      </p>
+      <div className="flex items-center gap-2">
+        <TrendPill value={metric.current} prev={metric.previous} />
+        <div className="min-w-0 flex-1">
+          <Sparkline data={metric.spark} color={color} height={28} />
+        </div>
+      </div>
+    </Bento>
   )
 }
 
-function SeriesBarChart({ summary }: { summary: BackstageAnalyticsSummary }) {
-  const max = Math.max(...summary.series.map((point) => point.value), 1)
-  const labelEvery = summary.period === "30d" ? 5 : summary.period === "24h" ? 4 : 1
+/** Hero pattern from StageLink's HeroCard: big stat left, chart right. */
+function AnalysesHero({ summary }: { summary: BackstageAnalyticsSummary }) {
+  const labelEvery =
+    summary.period === "30d" ? 5 : summary.period === "24h" ? 4 : 1
+  const periodLabel =
+    summary.period === "24h"
+      ? "last 24 hours"
+      : `last ${summary.period.replace("d", " days")}`
 
   return (
-    <div className="space-y-2">
-      <div className="flex h-36 items-end gap-1">
-        {summary.series.map((point, index) => (
-          <div
-            key={`${point.label}-${index}`}
-            className="group relative flex-1"
-            title={`${point.label}: ${point.value}`}
-          >
-            <div
-              className="w-full rounded-t-sm bg-gradient-to-t from-[#A24DE0]/60 to-[#22D3EE]/80 transition-all group-hover:brightness-125"
-              style={{
-                height: `${Math.max((point.value / max) * 100, point.value > 0 ? 6 : 2)}%`,
-              }}
+    <Bento tone="accent" glow className="p-6">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:items-end">
+        <div className="space-y-3">
+          <BentoLabel className="text-[#CDA2F1]">
+            Analyses completed · {periodLabel}
+          </BentoLabel>
+          <p className="bg-[linear-gradient(135deg,#fff_0%,#A24DE0_100%)] bg-clip-text font-heading text-[56px] font-bold leading-none text-transparent">
+            {numberFormat.format(summary.analysesCompleted.current)}
+          </p>
+          <div className="flex items-center gap-2">
+            <TrendPill
+              value={summary.analysesCompleted.current}
+              prev={summary.analysesCompleted.previous}
             />
+            <span className="text-xs text-white/50">vs previous window</span>
           </div>
-        ))}
+          <p className="max-w-sm text-[13px] leading-relaxed text-white/60">
+            The north-star metric: every bar is one{" "}
+            {summary.period === "24h" ? "hour" : "day"} of set analyses across
+            the whole platform.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Sparkbars
+            data={summary.series.map((point) => point.value)}
+            color="#22D3EE"
+            height={120}
+          />
+          <div className="flex gap-[2px] font-mono text-[10px] text-white/40">
+            {summary.series.map((point, index) => (
+              <span
+                key={`${point.label}-${index}`}
+                className="flex-1 text-center"
+              >
+                {index % labelEvery === 0 ? point.label : ""}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="flex gap-1 font-mono text-[10px] text-ec-text-dim">
-        {summary.series.map((point, index) => (
-          <span key={`${point.label}-${index}`} className="flex-1 text-center">
-            {index % labelEvery === 0 ? point.label : ""}
-          </span>
-        ))}
-      </div>
-    </div>
+    </Bento>
   )
 }
 
@@ -162,9 +188,9 @@ export function AnalyticsPanel({ embedUrls }: { embedUrls: string[] }) {
 
   return (
     <div className="space-y-8">
-      <Card>
-        <CardHeader className="flex flex-wrap items-center justify-between gap-3">
-          <CardTitle>Product summary</CardTitle>
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <BentoLabel>Product summary</BentoLabel>
           <div className="flex gap-1.5">
             {ANALYTICS_PERIODS.map((option) => (
               <Button
@@ -177,73 +203,81 @@ export function AnalyticsPanel({ embedUrls }: { embedUrls: string[] }) {
               </Button>
             ))}
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {state.status === "loading" ? (
+        </div>
+
+        {state.status === "loading" ? (
+          <div className="space-y-4">
+            <div className="h-56 animate-pulse rounded-[20px] bg-white/[0.04]" />
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               {[0, 1, 2, 3].map((index) => (
                 <div
                   key={index}
-                  className="h-28 animate-pulse rounded-xl bg-white/[0.04]"
+                  className="h-36 animate-pulse rounded-[20px] bg-white/[0.04]"
                 />
               ))}
             </div>
-          ) : null}
+          </div>
+        ) : null}
 
-          {state.status === "unconfigured" ? (
-            <Alert>
-              <AlertTitle>PostHog reporting is not configured</AlertTitle>
-              <AlertDescription>
-                Set POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID to light up
-                the live summary. The embedded dashboards below work
-                independently.
-              </AlertDescription>
-            </Alert>
-          ) : null}
+        {state.status === "unconfigured" ? (
+          <Alert>
+            <AlertTitle>PostHog reporting is not configured</AlertTitle>
+            <AlertDescription>
+              Set POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID to light up
+              the live summary. The embedded dashboards below work
+              independently.
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
-          {state.status === "error" ? (
-            <Alert variant="destructive">
-              <AlertTitle>Could not load the summary</AlertTitle>
-              <AlertDescription className="flex items-center gap-3">
-                {state.message}
-                <Button variant="outline" size="xs" onClick={retry}>
-                  Retry
-                </Button>
-              </AlertDescription>
-            </Alert>
-          ) : null}
+        {state.status === "error" ? (
+          <Alert variant="destructive">
+            <AlertTitle>Could not load the summary</AlertTitle>
+            <AlertDescription className="flex items-center gap-3">
+              {state.message}
+              <Button variant="outline" size="xs" onClick={retry}>
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
-          {state.status === "ready" ? (
-            <>
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <MetricTile
-                  label="Active users"
-                  metric={state.summary.activeUsers}
-                />
-                <MetricTile label="Signups" metric={state.summary.signups} />
-                <MetricTile
-                  label="Analyses run"
-                  metric={state.summary.analysesCompleted}
-                />
-                <MetricTile
-                  label="Playlists created"
-                  metric={state.summary.playlistsCreated}
-                />
-              </div>
-              <div className="space-y-2">
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-ec-text-dim">
-                  Analyses completed per{" "}
-                  {state.summary.period === "24h" ? "hour" : "day"}
-                </p>
-                <SeriesBarChart summary={state.summary} />
-              </div>
-            </>
-          ) : null}
-        </CardContent>
-      </Card>
+        {state.status === "ready" ? (
+          <>
+            <AnalysesHero summary={state.summary} />
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatTile
+                label="Active users"
+                metric={state.summary.activeUsers}
+                color="#A24DE0"
+                icon={<Activity className="size-3.5" />}
+              />
+              <StatTile
+                label="Signups"
+                metric={state.summary.signups}
+                color="#22D3EE"
+                icon={<UserPlus className="size-3.5" />}
+              />
+              <StatTile
+                label="Analyses run"
+                metric={state.summary.analysesCompleted}
+                color="#F0348A"
+                icon={<Waves className="size-3.5" />}
+              />
+              <StatTile
+                label="Playlists created"
+                metric={state.summary.playlistsCreated}
+                color="#F5A524"
+                icon={<ListMusic className="size-3.5" />}
+              />
+            </div>
+          </>
+        ) : null}
+      </div>
 
       {embedUrls.length > 0 ? (
         <div className="space-y-4">
+          <BentoLabel>PostHog dashboards</BentoLabel>
           {embedUrls.map((url) => (
             <Card key={url}>
               <CardContent className="p-2">

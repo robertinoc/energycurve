@@ -12,8 +12,13 @@ describe("buildMetric", () => {
       current: 15,
       previous: 10,
       deltaPercent: 50,
+      spark: [],
     })
     expect(buildMetric(5, 10).deltaPercent).toBe(-50)
+  })
+
+  it("carries the sparkline values through", () => {
+    expect(buildMetric(3, 1, [0, 1, 2]).spark).toEqual([0, 1, 2])
   })
 
   it("returns null delta when the previous window is empty", () => {
