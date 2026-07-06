@@ -14,7 +14,13 @@ import {
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { buildReturnToHref, getSafeReturnTo } from "@/lib/auth/return-to"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
-import { syncProfileFromWorkOSUser } from "@/services/profile-service"
+import {
+  getProfileByWorkOSUserId,
+  syncProfileFromWorkOSUser,
+} from "@/services/profile-service"
+
+// Not exported: "use server" modules may only export async functions.
+class SuspendedAccountLoginError extends Error {}
 
 function getFormValue(formData: FormData, key: string) {
   const value = formData.get(key)
@@ -120,6 +126,30 @@ export async function loginWithPasswordAction(formData: FormData) {
       }
     )
 
+    // Suspension gate (backstage admin panel). Checked before the session
+    // is persisted so a suspended account never gets a cookie. The lookup
+    // fails open: a Supabase hiccup must not lock every user out of login —
+    // the dashboard layout re-checks suspension on every page load anyway.
+    let suspended = false
+
+    try {
+      const profile = await getProfileByWorkOSUserId(authResponse.user.id)
+      suspended = Boolean(profile?.suspended_at)
+    } catch (lookupError) {
+      logWarn("auth.suspension_check_skipped", {
+        email,
+        workosUserId: authResponse.user.id,
+        reason:
+          lookupError instanceof Error
+            ? lookupError.message
+            : "Unknown lookup error",
+      })
+    }
+
+    if (suspended) {
+      throw new SuspendedAccountLoginError("Account suspended")
+    }
+
     await persistWorkOSSession(authResponse, requestUrl)
     logInfo("auth.login_succeeded", {
       email,
@@ -127,6 +157,13 @@ export async function loginWithPasswordAction(formData: FormData) {
       returnTo,
     })
   } catch (error) {
+    if (error instanceof SuspendedAccountLoginError) {
+      logWarn("auth.login_blocked_suspended", { email, returnTo })
+      redirect(
+        `${buildReturnToHref("/login", returnTo)}&error=account_suspended`
+      )
+    }
+
     const challenge = extractEmailVerificationChallenge(error)
 
     if (challenge) {

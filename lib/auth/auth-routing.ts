@@ -8,6 +8,12 @@ interface ResolveAuthRouteOptions {
   authCheckFailed?: boolean
 }
 
+const PROTECTED_PREFIXES = ["/dashboard", "/backstage"] as const
+
+function isProtectedPath(pathname: string) {
+  return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+}
+
 export function resolveAuthRoute({
   pathname,
   search = "",
@@ -16,7 +22,7 @@ export function resolveAuthRoute({
   authCheckFailed = false,
 }: ResolveAuthRouteOptions) {
   if (!workosConfigured) {
-    if (pathname.startsWith("/dashboard")) {
+    if (isProtectedPath(pathname)) {
       return {
         type: "redirect" as const,
         target: "/login?error=setup",
@@ -29,7 +35,7 @@ export function resolveAuthRoute({
   }
 
   if (authCheckFailed) {
-    if (pathname.startsWith("/dashboard")) {
+    if (isProtectedPath(pathname)) {
       return {
         type: "redirect" as const,
         target: "/login?error=config",
@@ -41,7 +47,7 @@ export function resolveAuthRoute({
     }
   }
 
-  if (pathname.startsWith("/dashboard") && !hasUser) {
+  if (isProtectedPath(pathname) && !hasUser) {
     return {
       type: "redirect" as const,
       target: buildReturnToHref("/login", `${pathname}${search}`),
