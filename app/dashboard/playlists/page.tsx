@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 
 import { DeletePlaylistButton } from "@/components/playlists/delete-playlist-button"
 import { PlaylistCreateForm } from "@/components/playlists/playlist-create-form"
+import { PlaylistImportUpload } from "@/components/playlists/playlist-import-upload"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -67,6 +68,8 @@ export default async function PlaylistsPage() {
             </p>
           </div>
         </header>
+
+        <PlaylistImportUpload />
 
         <PlaylistCreateForm />
 

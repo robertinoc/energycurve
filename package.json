@@ -16,6 +16,7 @@
     "@workos-inc/authkit-nextjs": "^3.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "fast-xml-parser": "^5.9.3",
     "lucide-react": "^1.8.0",
     "next": "16.2.3",
     "posthog-js": "^1.396.6",

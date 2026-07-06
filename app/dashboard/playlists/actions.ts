@@ -12,10 +12,21 @@ import { logError, logWarn } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
 import {
+  detectGenres,
+  parseImport,
+  UnsupportedImportError,
+} from "@/lib/playlists/parse-import"
+import {
   createPlaylistSchema,
   createTrackInputSchema,
   createTracklistImportSchema,
 } from "@/lib/playlists/schemas"
+import {
+  SET_CONTEXTS,
+  SUPPORTED_GENRES,
+  type PlaylistContext,
+  type SupportedGenre,
+} from "@/lib/product/strategy"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import {
   addTrack,
@@ -405,4 +416,121 @@ export async function importTracklistAction(
     errors.length > 0 ? ` ${errors.length} line(s) were skipped.` : ""
 
   return success(`Imported ${importedCount} track(s).${skippedSuffix}`)
+}
+
+const IMPORT_MAX_FILE_BYTES = 12 * 1024 * 1024 // 12 MB — full collections can be large
+const IMPORT_MAX_TRACKS = 500
+
+function isSupportedGenre(value: string): value is SupportedGenre {
+  return (SUPPORTED_GENRES as readonly string[]).includes(value)
+}
+
+function isPlaylistContext(value: string): value is PlaylistContext {
+  return (SET_CONTEXTS as readonly string[]).includes(value)
+}
+
+export async function importPlaylistAction(
+  _prevState: PlaylistActionState,
+  formData: FormData
+): Promise<PlaylistActionState> {
+  const profile = await requireProfile()
+
+  const rateLimited = rateLimitFailure(profile.id, "import")
+
+  if (rateLimited) {
+    return rateLimited
+  }
+
+  const file = formData.get("file")
+  const contextRaw = String(formData.get("context") ?? "")
+  const genreRaw = String(formData.get("genre") ?? "") // "" = auto-detect
+  const nameOverride = String(formData.get("name") ?? "").trim()
+
+  if (!(file instanceof File) || file.size === 0) {
+    return failure("Choose a Rekordbox XML or Traktor NML file to import.")
+  }
+
+  if (file.size > IMPORT_MAX_FILE_BYTES) {
+    return failure("That file is too large. Export a single playlist and retry.")
+  }
+
+  if (!isPlaylistContext(contextRaw)) {
+    return failure("Pick a set context (opening, main, or closing).")
+  }
+
+  let parsed
+  try {
+    parsed = parseImport(await file.text())
+  } catch (error) {
+    if (error instanceof UnsupportedImportError) {
+      return failure(error.message)
+    }
+    logError("playlist.import_parse_failed", error, { profileId: profile.id })
+    return failure(
+      "We couldn't read that file. Make sure it's a Rekordbox XML or Traktor NML export."
+    )
+  }
+
+  const { dominant } = detectGenres(parsed.tracks)
+  // Explicit choice wins; otherwise the detected dominant genre; otherwise a
+  // safe default so the playlist is analyzable (user can recreate to change).
+  const genre: SupportedGenre = isSupportedGenre(genreRaw)
+    ? genreRaw
+    : (dominant ?? "house")
+
+  const name =
+    nameOverride ||
+    parsed.playlistName ||
+    `Imported ${parsed.source === "rekordbox" ? "Rekordbox" : "Traktor"} set`
+
+  const tracks = parsed.tracks.slice(0, IMPORT_MAX_TRACKS)
+  const skipped = parsed.tracks.length - tracks.length
+
+  let playlistId: string
+
+  try {
+    const playlist = await createPlaylist(profile.id, {
+      name,
+      genre,
+      context: contextRaw,
+    })
+    playlistId = playlist.id
+
+    await replaceTracks(
+      profile.id,
+      playlistId,
+      tracks.map((track) => ({
+        artist: track.artist || "Unknown artist",
+        name: track.name || "Untitled",
+        bpm: track.bpm,
+        energyScore: track.energy,
+      }))
+    )
+  } catch (error) {
+    logError("playlist.import_failed", error, {
+      profileId: profile.id,
+      source: parsed.source,
+    })
+    return failure(GENERIC_ERROR_MESSAGE)
+  }
+
+  captureServerEvent(profile.id, "playlist_created", {
+    via: "import",
+    source: parsed.source,
+    trackCount: tracks.length,
+    genre,
+    context: contextRaw,
+  })
+
+  if (skipped > 0) {
+    logWarn("playlist.import_truncated", {
+      profileId: profile.id,
+      total: parsed.tracks.length,
+      kept: tracks.length,
+    })
+  }
+
+  revalidatePath("/dashboard/playlists")
+  revalidatePath("/dashboard")
+  redirect(`/dashboard/playlists/${playlistId}`)
 }
