@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
 import { buildReturnToHref } from "@/lib/auth/return-to"
+import { GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { listPlaylists } from "@/services/playlist-service"
@@ -19,14 +20,6 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = "force-dynamic"
-
-const GENRE_LABELS: Record<string, string> = {
-  house: "House",
-  techno: "Techno",
-  "hard-techno": "Hard Techno",
-  "melodic-techno": "Melodic Techno",
-  progressive: "Progressive",
-}
 
 const CONTEXT_LABELS: Record<string, string> = {
   opening: "Opening",

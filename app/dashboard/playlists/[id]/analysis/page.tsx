@@ -17,6 +17,7 @@ import {
   toSiteLocale,
 } from "@/lib/analysis-locale"
 import { buildReturnToHref } from "@/lib/auth/return-to"
+import { GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import {
@@ -29,14 +30,6 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = "force-dynamic"
-
-const GENRE_LABELS: Record<string, string> = {
-  house: "House",
-  techno: "Techno",
-  "hard-techno": "Hard Techno",
-  "melodic-techno": "Melodic Techno",
-  progressive: "Progressive",
-}
 
 const CONTEXT_LABELS: Record<string, string> = {
   opening: "Opening",

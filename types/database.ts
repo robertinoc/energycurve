@@ -181,10 +181,17 @@ export interface Database {
       playlist_context: "opening" | "main" | "closing"
       playlist_genre:
         | "house"
+        | "deep-house"
+        | "organic-house"
+        | "disco-house"
+        | "tech-house"
         | "techno"
         | "hard-techno"
         | "melodic-techno"
         | "progressive"
+        | "trance"
+        | "psy-trance"
+        | "bounce"
     }
     CompositeTypes: Record<string, never>
   }
