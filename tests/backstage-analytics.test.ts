@@ -61,3 +61,31 @@ describe("zeroFillSeries", () => {
     expect(points.every((point) => point.value === 0)).toBe(true)
   })
 })
+
+describe("zeroFillSeries bucket formats", () => {
+  const now = new Date("2026-07-06T15:30:00Z")
+
+  it("accepts ISO buckets with T and explicit timezone", () => {
+    const points = zeroFillSeries(
+      [
+        { bucket: "2026-07-05T00:00:00Z", value: 3 },
+        { bucket: "2026-07-04T00:00:00+00:00", value: 2 },
+      ],
+      "7d",
+      now
+    )
+
+    expect(points.find((point) => point.label === "05 Jul")?.value).toBe(3)
+    expect(points.find((point) => point.label === "04 Jul")?.value).toBe(2)
+  })
+
+  it("floors offset timestamps onto the bucket grid instead of dropping them", () => {
+    const points = zeroFillSeries(
+      [{ bucket: "2026-07-05T00:00:00-03:00", value: 5 }],
+      "7d",
+      now
+    )
+
+    expect(points.find((point) => point.label === "05 Jul")?.value).toBe(5)
+  })
+})

@@ -103,10 +103,26 @@ export function zeroFillSeries(
   const valuesByBucket = new Map<number, number>()
 
   for (const row of rows) {
-    const parsed = new Date(row.bucket.replace(" ", "T") + "Z")
+    // The Query API serializes datetimes either as "YYYY-MM-DD HH:mm:ss"
+    // or as ISO with T/offset — normalize both, defaulting to UTC.
+    let key = row.bucket.replace(" ", "T")
+
+    if (!/(z|[+-]\d{2}:?\d{2})$/i.test(key)) {
+      key += "Z"
+    }
+
+    const parsed = new Date(key)
 
     if (!Number.isNaN(parsed.getTime())) {
-      valuesByBucket.set(parsed.getTime(), row.value)
+      // Floor to the bucket grid so a non-UTC project timezone still lands
+      // on a bucket instead of silently dropping the value.
+      const bucketStart =
+        Math.floor(parsed.getTime() / config.bucketMs) * config.bucketMs
+
+      valuesByBucket.set(
+        bucketStart,
+        (valuesByBucket.get(bucketStart) ?? 0) + row.value
+      )
     }
   }
 
