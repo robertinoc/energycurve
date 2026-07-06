@@ -1,9 +1,13 @@
 import {
+  BPM_PROFILE_EDGE_RAMP,
   CONTEXT_ENGINE_V1,
+  DEFAULT_GENRE_BPM_PROFILE,
   ENERGY_SCORE_BPM_BANDS,
   ENERGY_SCORE_RANGE,
+  GENRE_BPM_PROFILES_V2,
   STANDARD_TRACK_DURATION_MINUTES,
   type PlaylistContext,
+  type SupportedGenre,
 } from "@/lib/product/strategy"
 import type { EnergySource, ResolvedTrackEnergy } from "@/types/analysis"
 
@@ -70,10 +74,11 @@ function findBand(bpm: number): NormalizedBand {
 }
 
 /**
- * Maps a BPM to an energy score by linear interpolation across the matching
- * band's BPM range onto its score range, rounded to one decimal (A1).
+ * V1 universal mapping, kept as the fallback when no genre is available:
+ * linear interpolation across the matching band's BPM range onto its score
+ * range, rounded to one decimal (A1).
  */
-export function energyScoreFromBpm(bpm: number): number {
+export function energyScoreFromBpmUniversal(bpm: number): number {
   const band = findBand(bpm)
   const bandMin =
     band.min === Number.NEGATIVE_INFINITY ? OPEN_BAND_ANCHORS.lowBpm : band.min
@@ -83,6 +88,43 @@ export function energyScoreFromBpm(bpm: number): number {
   const t = bandMax === bandMin ? 0 : clamp01((bpm - bandMin) / (bandMax - bandMin))
 
   return roundToOneDecimal(lerp(band.scoreMin, band.scoreMax, t))
+}
+
+/**
+ * Genre-relative BPM→energy mapping (B1): within the genre's [bpmLow, bpmHigh]
+ * band energy interpolates 3→9; outside it keeps sliding toward the 1/10
+ * extremes across a BPM_PROFILE_EDGE_RAMP window, then clamps. Without a
+ * genre this falls back to the V1 universal bands so legacy playlists keep
+ * their scores.
+ */
+export function energyScoreFromBpm(
+  bpm: number,
+  genre: SupportedGenre | null = null
+): number {
+  if (!genre) {
+    return energyScoreFromBpmUniversal(bpm)
+  }
+
+  const profile = GENRE_BPM_PROFILES_V2[genre] ?? DEFAULT_GENRE_BPM_PROFILE
+
+  if (bpm < profile.bpmLow) {
+    const t = clamp01((profile.bpmLow - bpm) / BPM_PROFILE_EDGE_RAMP)
+
+    return roundToOneDecimal(lerp(3, ENERGY_SCORE_RANGE.min, t))
+  }
+
+  if (bpm > profile.bpmHigh) {
+    const t = clamp01((bpm - profile.bpmHigh) / BPM_PROFILE_EDGE_RAMP)
+
+    return roundToOneDecimal(lerp(9, ENERGY_SCORE_RANGE.max, t))
+  }
+
+  const t =
+    profile.bpmHigh === profile.bpmLow
+      ? 0
+      : (bpm - profile.bpmLow) / (profile.bpmHigh - profile.bpmLow)
+
+  return roundToOneDecimal(lerp(3, 9, t))
 }
 
 /**
@@ -116,11 +158,13 @@ export interface TrackEnergyInput {
 /**
  * Resolves the energy score for every track with the precedence
  * manual > BPM-derived > position-estimated (A3), tagging the source so the
- * UI can label where each value came from.
+ * UI can label where each value came from. When the playlist has a genre the
+ * BPM mapping is genre-relative (B1).
  */
 export function resolveTrackEnergies(
   tracks: TrackEnergyInput[],
-  context: PlaylistContext | null
+  context: PlaylistContext | null,
+  genre: SupportedGenre | null = null
 ): ResolvedTrackEnergy[] {
   return tracks.map((track, index) => {
     let score: number
@@ -135,7 +179,7 @@ export function resolveTrackEnergies(
       )
       source = "manual"
     } else if (track.bpm !== null) {
-      score = energyScoreFromBpm(track.bpm)
+      score = energyScoreFromBpm(track.bpm, genre)
       source = "bpm"
     } else {
       score = estimatedScoreFromPosition(index, tracks.length, context)

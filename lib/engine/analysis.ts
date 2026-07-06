@@ -1,13 +1,16 @@
 import {
-  ANALYSIS_RULES_V1,
-  CONTEXT_ENGINE_V1,
-  GENRE_ENGINE_V1,
+  DEFAULT_GENRE_TRANSITION_TOLERANCE,
+  DYNAMICS_RULES_V2,
+  ENDING_RULES_V2,
+  GENRE_TRANSITION_TOLERANCE_V2,
   SET_CONTEXTS,
-  SET_SCORE_RULES_V1,
+  SET_SCORE_WEIGHTS_V2,
+  SHAPE_FIT_RULES_V2,
   STANDARD_TRACK_DURATION_MINUTES,
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
+import { buildTargetCurve, genreCurveCharacter } from "@/lib/engine/target-curve"
 import type {
   DetectedIssue,
   PlaylistAnalysis,
@@ -15,14 +18,11 @@ import type {
   SetScoreBreakdown,
 } from "@/types/analysis"
 
-/** A score at or above this value counts as a "high peak" (A8). */
-export const HIGH_PEAK_SCORE = 8
-
-/** Minimum tracks before early-peak detection makes sense (A6). */
+/** Minimum tracks before early-peak detection makes sense (A6/B3). */
 const EARLY_PEAK_MIN_TRACKS = 4
 
-/** Minimum energy a peak must reach to count as an early peak (A6). */
-const EARLY_PEAK_MIN_SCORE = 7
+/** How far above the target a first-third max must sit to be an early peak. */
+const EARLY_PEAK_TARGET_EXCESS = 1.5
 
 /** Minimum tracks before progression analysis makes sense (A7). */
 const PROGRESSION_MIN_TRACKS = 4
@@ -30,351 +30,608 @@ const PROGRESSION_MIN_TRACKS = 4
 /** Adjacent downward step that counts as a "rest" for too_many_rests. */
 const REST_DELTA_THRESHOLD = 2
 
-/** Number of separate rests that triggers the too_many_rests hint. */
+/** Number of separate non-breather rests that triggers the hint. */
 const TOO_MANY_RESTS_COUNT = 2
+
+/** Maximum shape deviations surfaced as individual issues (explanation layer). */
+const MAX_SHAPE_ISSUES = 3
+
+/** Ending sub-score below which a weak_ending issue is surfaced. */
+const WEAK_ENDING_ISSUE_THRESHOLD = 8.5
 
 /**
  * Informational guideline for total set duration (minutes). Typical club
  * slots run 45–150 minutes; outside that range a hint is emitted. No score
- * impact — SET_SCORE_RULES_V1 has no duration penalty.
+ * impact.
  */
 export const SET_DURATION_GUIDELINE_MINUTES = {
   min: 45,
   max: 150,
 } as const
 
-function detectDropAndSpikeIssues(
-  curve: number[],
-  genre: SupportedGenre
-): DetectedIssue[] {
-  const issues: DetectedIssue[] = []
-  const genreRules = GENRE_ENGINE_V1[genre]
-  const threshold = ANALYSIS_RULES_V1.abruptDropDifferenceThreshold
-
-  for (let i = 1; i < curve.length; i += 1) {
-    const delta = curve[i] - curve[i - 1]
-
-    if (delta <= -threshold) {
-      // Drops are always reported; they only cost points when the genre
-      // penalizes abrupt drops (A5).
-      const penalized = genreRules.penalizeAbruptDrop
-
-      issues.push({
-        type: "abrupt_drop",
-        severity: penalized ? "penalty" : "info",
-        trackPositions: [i, i + 1],
-        penaltyApplied: penalized ? SET_SCORE_RULES_V1.abruptDropPenalty : 0,
-        penaltyCategory: penalized ? "drop" : null,
-        delta,
-      })
-    } else if (delta >= threshold) {
-      // Upward spikes carry no standalone penalty; genres that favor
-      // gradual progression count each spike as a genre error (A5).
-      const penalized = genreRules.favorsGradualProgression
-
-      issues.push({
-        type: "abrupt_spike",
-        severity: penalized ? "penalty" : "info",
-        trackPositions: [i, i + 1],
-        penaltyApplied: penalized ? SET_SCORE_RULES_V1.genrePenalty : 0,
-        penaltyCategory: penalized ? "genre" : null,
-        delta,
-      })
-    }
-  }
-
-  return issues
+function roundToOneDecimal(value: number) {
+  return Math.round(value * 10) / 10
 }
 
-function detectFlatZones(curve: number[]): DetectedIssue[] {
-  const issues: DetectedIssue[] = []
-  const minRun = ANALYSIS_RULES_V1.flatZoneMinimumTrackCount
-  let runStart = 0
-
-  for (let i = 1; i <= curve.length; i += 1) {
-    if (i < curve.length && curve[i] === curve[runStart]) {
-      continue
-    }
-
-    const runLength = i - runStart
-
-    if (runLength >= minRun) {
-      issues.push({
-        type: "flat_zone",
-        severity: "penalty",
-        trackPositions: Array.from(
-          { length: runLength },
-          (_, offset) => runStart + offset + 1
-        ),
-        penaltyApplied: SET_SCORE_RULES_V1.flatZonePenalty,
-        penaltyCategory: "flat",
-      })
-    }
-
-    runStart = i
-  }
-
-  return issues
-}
-
-function detectEarlyPeak(
-  curve: number[],
-  genre: SupportedGenre
-): DetectedIssue | null {
-  if (curve.length < EARLY_PEAK_MIN_TRACKS) {
-    return null
-  }
-
-  const maxScore = Math.max(...curve)
-
-  if (maxScore < EARLY_PEAK_MIN_SCORE) {
-    return null
-  }
-
-  const firstMaxIndex = curve.indexOf(maxScore)
-
-  if (firstMaxIndex >= Math.ceil(curve.length / 3)) {
-    return null
-  }
-
-  const penalized = GENRE_ENGINE_V1[genre].penalizeEarlyPeak
-
-  return {
-    type: "early_peak",
-    severity: penalized ? "penalty" : "info",
-    trackPositions: [firstMaxIndex + 1],
-    penaltyApplied: penalized ? SET_SCORE_RULES_V1.genrePenalty : 0,
-    penaltyCategory: penalized ? "genre" : null,
-  }
-}
-
-function detectContextIssues(
-  curve: number[],
-  context: PlaylistContext
-): DetectedIssue[] {
-  const issues: DetectedIssue[] = []
-  const rules = CONTEXT_ENGINE_V1[context]
-
-  curve.forEach((score, index) => {
-    const outOfRange =
-      score < rules.expectedEnergyMin || score > rules.expectedEnergyMax
-
-    if (!outOfRange) {
-      return
-    }
-
-    // A track contributes at most one context error; the high-peak label is
-    // only a more specific description of the same violation (A8).
-    const isDisallowedHighPeak =
-      !rules.allowHighPeaks && score >= HIGH_PEAK_SCORE
-
-    issues.push({
-      type: isDisallowedHighPeak ? "context_high_peak" : "context_range",
-      severity: "penalty",
-      trackPositions: [index + 1],
-      penaltyApplied: SET_SCORE_RULES_V1.contextPenalty,
-      penaltyCategory: "context",
-    })
-  })
-
-  return issues
-}
-
-function detectWeakEnding(
-  curve: number[],
-  context: PlaylistContext,
-  contextIssues: DetectedIssue[]
-): DetectedIssue | null {
-  if (curve.length === 0) {
-    return null
-  }
-
-  const threshold = Math.max(
-    ANALYSIS_RULES_V1.weakEndingThresholdFloor,
-    CONTEXT_ENGINE_V1[context].expectedEnergyMin
-  )
-  const lastPosition = curve.length
-  const lastScore = curve[lastPosition - 1]
-
-  if (lastScore >= threshold) {
-    return null
-  }
-
-  // The final track can contribute at most one context error (A4): when it
-  // already has an out-of-range violation, the weak ending stays visible in
-  // the issue list but carries no additional penalty.
-  const lastTrackAlreadyPenalized = contextIssues.some((issue) =>
-    issue.trackPositions.includes(lastPosition)
-  )
-
-  return {
-    type: "weak_ending",
-    severity: lastTrackAlreadyPenalized ? "info" : "penalty",
-    trackPositions: [lastPosition],
-    penaltyApplied: lastTrackAlreadyPenalized
-      ? 0
-      : SET_SCORE_RULES_V1.contextPenalty,
-    penaltyCategory: lastTrackAlreadyPenalized ? null : "context",
-  }
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
 }
 
 function averageOf(values: number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 
-function detectNoProgression(curve: number[]): DetectedIssue | null {
-  if (curve.length < PROGRESSION_MIN_TRACKS) {
-    return null
-  }
-
-  const thirdSize = Math.ceil(curve.length / 3)
-  const firstThird = curve.slice(0, thirdSize)
-  const lastThird = curve.slice(curve.length - thirdSize)
-
-  if (averageOf(lastThird) > averageOf(firstThird)) {
-    return null
-  }
-
-  return {
-    type: "no_progression",
-    severity: "info",
-    trackPositions: [],
-    penaltyApplied: 0,
-    penaltyCategory: null,
-  }
+/** Displayed penalty attribution: one decimal, never rounding down to zero. */
+function attributedPenalty(finalPoints: number): number {
+  return Math.max(0.1, roundToOneDecimal(finalPoints))
 }
 
-function detectTooManyRests(curve: number[]): DetectedIssue | null {
-  const restPositions: number[] = []
+// ---------------------------------------------------------------------------
+// Shape fit (B3): tolerated RMSE against the target curve + missing climax.
+// ---------------------------------------------------------------------------
+
+interface ShapeAssessment {
+  score: number
+  /** Per-track deviation beyond the tolerance band (0 when within it). */
+  deviations: number[]
+  /** Energy points by which the set's max misses the target's max. */
+  climaxGap: number
+  /** Sub-score points lost to RMSE (before clamping). */
+  rmseLoss: number
+}
+
+function assessShape(curve: number[], target: number[]): ShapeAssessment {
+  const rules = SHAPE_FIT_RULES_V2
+  const deviations = curve.map((score, index) =>
+    Math.max(0, Math.abs(score - target[index]) - rules.toleranceBand)
+  )
+  const rmse = Math.sqrt(
+    averageOf(deviations.map((deviation) => deviation ** 2))
+  )
+  const climaxGap = Math.max(
+    0,
+    Math.max(...target) - Math.max(...curve) - rules.climaxTolerance
+  )
+  const rmseLoss = rules.rmseWeight * rmse
+  const score = roundToOneDecimal(
+    clamp(10 - rmseLoss - rules.climaxWeight * climaxGap, 0, 10)
+  )
+
+  return { score, deviations, climaxGap, rmseLoss }
+}
+
+// ---------------------------------------------------------------------------
+// Energy dynamics (B4–B7): transitions beyond genre tolerance + flat zones,
+// ranked so the worst problems dominate instead of stacking with set length.
+// ---------------------------------------------------------------------------
+
+interface TransitionAssessment {
+  /** 0-based index of the transition's first track. */
+  index: number
+  delta: number
+  penalty: number
+  isBreather: boolean
+}
+
+function assessTransitions(
+  curve: number[],
+  genre: SupportedGenre
+): TransitionAssessment[] {
+  const tolerance =
+    GENRE_TRANSITION_TOLERANCE_V2[genre] ?? DEFAULT_GENRE_TRANSITION_TOLERANCE
+  const rules = DYNAMICS_RULES_V2
+  const assessments: TransitionAssessment[] = []
 
   for (let i = 1; i < curve.length; i += 1) {
-    if (curve[i] - curve[i - 1] <= -REST_DELTA_THRESHOLD) {
-      restPositions.push(i + 1)
+    const delta = curve[i] - curve[i - 1]
+
+    // A controlled step down right after a sustained peak is craft (B7).
+    const breatherRules = rules.breather
+    const drop = -delta
+    const precedingSlice = curve.slice(
+      Math.max(0, i - breatherRules.precedingTracks),
+      i
+    )
+    const isBreather =
+      drop >= breatherRules.minDrop &&
+      drop <= breatherRules.maxDrop &&
+      curve[i] >= breatherRules.landingMin &&
+      precedingSlice.length >= breatherRules.precedingTracks &&
+      precedingSlice.every(
+        (score) => score >= breatherRules.precedingEnergyMin
+      )
+
+    const excess = isBreather
+      ? 0
+      : delta > 0
+        ? Math.max(0, delta - tolerance.rise)
+        : Math.max(0, drop - tolerance.drop)
+
+    const penalty = Math.min(
+      excess * rules.excessWeight,
+      rules.transitionPenaltyCap
+    )
+
+    if (penalty > 0 || isBreather) {
+      assessments.push({ index: i - 1, delta, penalty, isBreather })
     }
   }
 
-  if (restPositions.length < TOO_MANY_RESTS_COUNT) {
-    return null
+  return assessments
+}
+
+interface FlatZone {
+  /** 0-based inclusive bounds. */
+  start: number
+  end: number
+  penalty: number
+  exempt: boolean
+}
+
+/**
+ * Flat zone = a run of 3+ tracks whose energy range stays within a small
+ * tolerance (B5) — no more exact-equality blind spot. A zone is exempt when
+ * the ideal curve is equally flat there and the set is riding it (a sustained
+ * peak plateau is craft, a mid-energy stall is not).
+ */
+function findFlatZones(curve: number[], target: number[]): FlatZone[] {
+  const rules = DYNAMICS_RULES_V2
+  const zones: FlatZone[] = []
+  let start = 0
+
+  while (start <= curve.length - rules.flatWindowMinTracks) {
+    let min = curve[start]
+    let max = curve[start]
+    let end = start
+
+    for (let i = start + 1; i < curve.length; i += 1) {
+      const nextMin = Math.min(min, curve[i])
+      const nextMax = Math.max(max, curve[i])
+
+      if (nextMax - nextMin > rules.flatRangeTolerance) {
+        break
+      }
+
+      min = nextMin
+      max = nextMax
+      end = i
+    }
+
+    const length = end - start + 1
+
+    if (length >= rules.flatWindowMinTracks) {
+      const targetSlice = target.slice(start, end + 1)
+      const targetIsFlat =
+        Math.max(...targetSlice) - Math.min(...targetSlice) <=
+        rules.flatRangeTolerance
+      const ridesTarget = curve
+        .slice(start, end + 1)
+        .every(
+          (score, offset) =>
+            Math.abs(score - targetSlice[offset]) <=
+            SHAPE_FIT_RULES_V2.toleranceBand
+        )
+
+      zones.push({
+        start,
+        end,
+        penalty: Math.min(
+          rules.flatBasePenalty +
+            rules.flatPerExtraTrack * (length - rules.flatWindowMinTracks),
+          rules.flatPenaltyCap
+        ),
+        exempt: targetIsFlat && ridesTarget,
+      })
+
+      start = end + 1
+    } else {
+      start += 1
+    }
   }
+
+  return zones
+}
+
+interface RankedDynamicsProblem {
+  kind: "transition" | "flat"
+  transition?: TransitionAssessment
+  flatZone?: FlatZone
+  penalty: number
+  /** Penalty after the worst-first decay ranking (B6). */
+  weightedPenalty: number
+}
+
+interface DynamicsAssessment {
+  score: number
+  problems: RankedDynamicsProblem[]
+  breathers: TransitionAssessment[]
+}
+
+function assessDynamics(
+  curve: number[],
+  genre: SupportedGenre,
+  target: number[]
+): DynamicsAssessment {
+  const transitions = assessTransitions(curve, genre)
+  const flatZones = findFlatZones(curve, target)
+
+  const pool: RankedDynamicsProblem[] = [
+    ...transitions
+      .filter((transition) => transition.penalty > 0)
+      .map((transition) => ({
+        kind: "transition" as const,
+        transition,
+        penalty: transition.penalty,
+        weightedPenalty: 0,
+      })),
+    ...flatZones
+      .filter((zone) => !zone.exempt)
+      .map((zone) => ({
+        kind: "flat" as const,
+        flatZone: zone,
+        penalty: zone.penalty,
+        weightedPenalty: 0,
+      })),
+  ].sort((a, b) => b.penalty - a.penalty)
+
+  // Worst problems dominate: each successive problem is discounted, so a long
+  // set with one cliff is judged by the cliff, not by its track count (B6).
+  let totalPenalty = 0
+
+  pool.forEach((problem, rank) => {
+    problem.weightedPenalty =
+      problem.penalty * DYNAMICS_RULES_V2.decayFactor ** rank
+    totalPenalty += problem.weightedPenalty
+  })
 
   return {
-    type: "too_many_rests",
-    severity: "info",
-    trackPositions: restPositions,
-    penaltyApplied: 0,
-    penaltyCategory: null,
+    score: roundToOneDecimal(clamp(10 - totalPenalty, 0, 10)),
+    problems: pool,
+    breathers: transitions.filter((transition) => transition.isBreather),
   }
 }
 
-function detectDurationHint(curve: number[]): DetectedIssue | null {
-  const durationMinutes = curve.length * STANDARD_TRACK_DURATION_MINUTES
+// ---------------------------------------------------------------------------
+// Ending quality (B8): proportional distance from the ideal landing.
+// ---------------------------------------------------------------------------
 
-  if (durationMinutes < SET_DURATION_GUIDELINE_MINUTES.min) {
-    return {
-      type: "set_too_short",
-      severity: "info",
-      trackPositions: [],
-      penaltyApplied: 0,
-      penaltyCategory: null,
-    }
-  }
-
-  if (durationMinutes > SET_DURATION_GUIDELINE_MINUTES.max) {
-    return {
-      type: "set_too_long",
-      severity: "info",
-      trackPositions: [],
-      penaltyApplied: 0,
-      penaltyCategory: null,
-    }
-  }
-
-  return null
+interface EndingAssessment {
+  score: number
+  /** True when the last track lands below the target (vs overshooting). */
+  landsLow: boolean
 }
 
-function detectIssuesForContext(
+function assessEnding(curve: number[], target: number[]): EndingAssessment {
+  const rules = ENDING_RULES_V2
+  const lastIndex = curve.length - 1
+  const deviationAt = (index: number) =>
+    index >= 0
+      ? Math.max(0, Math.abs(curve[index] - target[index]) - rules.tolerance)
+      : 0
+
+  const weighted =
+    rules.lastTrackWeight * deviationAt(lastIndex) +
+    rules.secondToLastWeight * deviationAt(lastIndex - 1)
+
+  return {
+    score: roundToOneDecimal(clamp(10 - rules.scale * weighted, 0, 10)),
+    landsLow: curve[lastIndex] < target[lastIndex],
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Blend + issue derivation.
+// ---------------------------------------------------------------------------
+
+interface ScoredCurve {
+  breakdown: SetScoreBreakdown
+  shape: ShapeAssessment
+  dynamics: DynamicsAssessment
+  ending: EndingAssessment
+  target: number[]
+}
+
+function scoreCurve(
+  curve: number[],
+  genre: SupportedGenre,
+  context: PlaylistContext,
+  target = buildTargetCurve(curve.length, context, genre)
+): ScoredCurve {
+  const shape = assessShape(curve, target)
+  const dynamics = assessDynamics(curve, genre, target)
+  const ending = assessEnding(curve, target)
+  const weights = SET_SCORE_WEIGHTS_V2
+
+  const rawScore =
+    weights.shape * shape.score +
+    weights.dynamics * dynamics.score +
+    weights.ending * ending.score
+
+  const breakdown: SetScoreBreakdown = {
+    shapeFit: shape.score,
+    dynamicsQuality: dynamics.score,
+    endingQuality: ending.score,
+    weights: { ...weights },
+    rawScore: roundToOneDecimal(rawScore),
+    finalScore: roundToOneDecimal(clamp(rawScore, 1, 10)),
+  }
+
+  return { breakdown, shape, dynamics, ending, target }
+}
+
+/** Convenience export for callers that only need the number (reorder search). */
+export function computeSetScore(
   curve: number[],
   genre: SupportedGenre,
   context: PlaylistContext
-): DetectedIssue[] {
-  const issues: DetectedIssue[] = [
-    ...detectDropAndSpikeIssues(curve, genre),
-    ...detectFlatZones(curve),
-  ]
+): number {
+  return scoreCurve(curve, genre, context).breakdown.finalScore
+}
 
-  const earlyPeak = detectEarlyPeak(curve, genre)
+function deriveDynamicsIssues(scored: ScoredCurve): DetectedIssue[] {
+  const issues: DetectedIssue[] = []
+  const weights = SET_SCORE_WEIGHTS_V2
 
-  if (earlyPeak) {
-    issues.push(earlyPeak)
+  for (const problem of scored.dynamics.problems) {
+    const finalPoints = weights.dynamics * problem.weightedPenalty
+
+    if (problem.kind === "transition" && problem.transition) {
+      const { index, delta } = problem.transition
+
+      issues.push({
+        type: delta < 0 ? "abrupt_drop" : "abrupt_spike",
+        severity: "penalty",
+        trackPositions: [index + 1, index + 2],
+        penaltyApplied: attributedPenalty(finalPoints),
+        penaltyCategory: "dynamics",
+        delta,
+      })
+    } else if (problem.flatZone) {
+      const { start, end } = problem.flatZone
+
+      issues.push({
+        type: "flat_zone",
+        severity: "penalty",
+        trackPositions: Array.from(
+          { length: end - start + 1 },
+          (_, offset) => start + offset + 1
+        ),
+        penaltyApplied: attributedPenalty(finalPoints),
+        penaltyCategory: "dynamics",
+      })
+    }
   }
 
-  const contextIssues = detectContextIssues(curve, context)
-  issues.push(...contextIssues)
-
-  const weakEnding = detectWeakEnding(curve, context, contextIssues)
-
-  if (weakEnding) {
-    issues.push(weakEnding)
-  }
-
-  const noProgression = detectNoProgression(curve)
-
-  if (noProgression) {
-    issues.push(noProgression)
-  }
-
-  const tooManyRests = detectTooManyRests(curve)
-
-  if (tooManyRests) {
-    issues.push(tooManyRests)
-  }
-
-  const durationHint = detectDurationHint(curve)
-
-  if (durationHint) {
-    issues.push(durationHint)
+  for (const breather of scored.dynamics.breathers) {
+    issues.push({
+      type: "good_breather",
+      severity: "positive",
+      trackPositions: [breather.index + 1, breather.index + 2],
+      penaltyApplied: 0,
+      penaltyCategory: null,
+      delta: breather.delta,
+    })
   }
 
   return issues
 }
 
-export function computeSetScore(issues: DetectedIssue[]): SetScoreBreakdown {
-  const sumFor = (category: DetectedIssue["penaltyCategory"]) =>
-    issues
-      .filter((issue) => issue.penaltyCategory === category)
-      .reduce((sum, issue) => sum + issue.penaltyApplied, 0)
+function deriveShapeIssues(
+  scored: ScoredCurve,
+  curve: number[],
+  genre: SupportedGenre,
+  context: PlaylistContext
+): DetectedIssue[] {
+  const issues: DetectedIssue[] = []
+  const weights = SET_SCORE_WEIGHTS_V2
+  const { deviations, climaxGap, rmseLoss } = scored.shape
 
-  const dropPenalty = sumFor("drop")
-  const flatZonePenalty = sumFor("flat")
-  const contextPenalty = sumFor("context")
-  const genrePenalty = sumFor("genre")
-
-  const rawScore =
-    SET_SCORE_RULES_V1.startingScore -
-    dropPenalty -
-    flatZonePenalty -
-    contextPenalty -
-    genrePenalty
-
-  const finalScore = Math.min(
-    SET_SCORE_RULES_V1.clampMax,
-    Math.max(SET_SCORE_RULES_V1.clampMin, rawScore)
+  const totalSquared = deviations.reduce(
+    (sum, deviation) => sum + deviation ** 2,
+    0
   )
+  const shapeLossFinal = weights.shape * rmseLoss
+  const deviationShareInFinalPoints = (index: number) =>
+    totalSquared > 0
+      ? (deviations[index] ** 2 / totalSquared) * shapeLossFinal
+      : 0
+
+  // Early peak (B3): the set maxes out in the first third, clearly above the
+  // ideal curve. Slow-build genres treat it as a real flaw; for the rest it
+  // is a heads-up. Either way it already influenced the shape sub-score.
+  let earlyPeakIndex: number | null = null
+
+  if (curve.length >= EARLY_PEAK_MIN_TRACKS) {
+    const maxScore = Math.max(...curve)
+    const maxIndex = curve.indexOf(maxScore)
+    const firstThird = Math.ceil(curve.length / 3)
+
+    if (
+      maxIndex < firstThird &&
+      maxScore >= scored.target[maxIndex] + EARLY_PEAK_TARGET_EXCESS
+    ) {
+      earlyPeakIndex = maxIndex
+
+      const slowBuild = genreCurveCharacter(genre).build === "slow"
+
+      issues.push({
+        type: "early_peak",
+        severity: slowBuild ? "penalty" : "info",
+        trackPositions: [maxIndex + 1],
+        penaltyApplied: slowBuild
+          ? attributedPenalty(deviationShareInFinalPoints(maxIndex))
+          : 0,
+        penaltyCategory: slowBuild ? "shape" : null,
+      })
+    }
+  }
+
+  // Worst deviations from the ideal curve become individual, attributable
+  // issues (B3) — no longer one fixed penalty per out-of-range track.
+  if (totalSquared > 0) {
+    const ranked = deviations
+      .map((deviation, index) => ({ deviation, index }))
+      .filter(
+        (entry) => entry.deviation > 0 && entry.index !== earlyPeakIndex
+      )
+      .sort((a, b) => b.deviation - a.deviation)
+      .slice(0, MAX_SHAPE_ISSUES)
+
+    for (const entry of ranked) {
+      const overshootsIntoPeak =
+        curve[entry.index] > scored.target[entry.index] &&
+        curve[entry.index] >= 8 &&
+        context === "opening"
+
+      issues.push({
+        type: overshootsIntoPeak ? "context_high_peak" : "context_range",
+        severity: "penalty",
+        trackPositions: [entry.index + 1],
+        penaltyApplied: attributedPenalty(
+          deviationShareInFinalPoints(entry.index)
+        ),
+        penaltyCategory: "shape",
+      })
+    }
+  }
+
+  if (climaxGap > 0) {
+    issues.push({
+      type: "no_climax",
+      severity: "penalty",
+      trackPositions: [],
+      penaltyApplied: attributedPenalty(
+        weights.shape * SHAPE_FIT_RULES_V2.climaxWeight * climaxGap
+      ),
+      penaltyCategory: "shape",
+    })
+  }
+
+  return issues
+}
+
+function deriveEndingIssue(scored: ScoredCurve): DetectedIssue | null {
+  if (
+    scored.ending.score >= WEAK_ENDING_ISSUE_THRESHOLD ||
+    !scored.ending.landsLow
+  ) {
+    return null
+  }
 
   return {
-    startingScore: SET_SCORE_RULES_V1.startingScore,
-    dropPenalty,
-    flatZonePenalty,
-    contextPenalty,
-    genrePenalty,
-    rawScore,
-    finalScore,
+    type: "weak_ending",
+    severity: "penalty",
+    trackPositions: [scored.target.length],
+    penaltyApplied: attributedPenalty(
+      SET_SCORE_WEIGHTS_V2.ending * (10 - scored.ending.score)
+    ),
+    penaltyCategory: "ending",
   }
 }
 
+function deriveInformationalHints(
+  curve: number[],
+  breatherIndexes: Set<number>
+): DetectedIssue[] {
+  const issues: DetectedIssue[] = []
+
+  if (curve.length >= PROGRESSION_MIN_TRACKS) {
+    const thirdSize = Math.ceil(curve.length / 3)
+    const firstThird = curve.slice(0, thirdSize)
+    const lastThird = curve.slice(curve.length - thirdSize)
+
+    if (averageOf(lastThird) <= averageOf(firstThird)) {
+      issues.push({
+        type: "no_progression",
+        severity: "info",
+        trackPositions: [],
+        penaltyApplied: 0,
+        penaltyCategory: null,
+      })
+    }
+  }
+
+  const restPositions: number[] = []
+
+  for (let i = 1; i < curve.length; i += 1) {
+    const isRest = curve[i] - curve[i - 1] <= -REST_DELTA_THRESHOLD
+
+    if (isRest && !breatherIndexes.has(i - 1)) {
+      restPositions.push(i + 1)
+    }
+  }
+
+  if (restPositions.length >= TOO_MANY_RESTS_COUNT) {
+    issues.push({
+      type: "too_many_rests",
+      severity: "info",
+      trackPositions: restPositions,
+      penaltyApplied: 0,
+      penaltyCategory: null,
+    })
+  }
+
+  const durationMinutes = curve.length * STANDARD_TRACK_DURATION_MINUTES
+
+  if (durationMinutes < SET_DURATION_GUIDELINE_MINUTES.min) {
+    issues.push({
+      type: "set_too_short",
+      severity: "info",
+      trackPositions: [],
+      penaltyApplied: 0,
+      penaltyCategory: null,
+    })
+  } else if (durationMinutes > SET_DURATION_GUIDELINE_MINUTES.max) {
+    issues.push({
+      type: "set_too_long",
+      severity: "info",
+      trackPositions: [],
+      penaltyApplied: 0,
+      penaltyCategory: null,
+    })
+  }
+
+  return issues
+}
+
+const SEVERITY_ORDER: Record<DetectedIssue["severity"], number> = {
+  penalty: 0,
+  info: 1,
+  positive: 2,
+}
+
+function deriveIssues(
+  scored: ScoredCurve,
+  curve: number[],
+  genre: SupportedGenre,
+  context: PlaylistContext
+): DetectedIssue[] {
+  const breatherIndexes = new Set(
+    scored.dynamics.breathers.map((breather) => breather.index)
+  )
+
+  const issues = [
+    ...deriveDynamicsIssues(scored),
+    ...deriveShapeIssues(scored, curve, genre, context),
+    ...deriveInformationalHints(curve, breatherIndexes),
+  ]
+
+  const endingIssue = deriveEndingIssue(scored)
+
+  if (endingIssue) {
+    issues.push(endingIssue)
+  }
+
+  return issues.sort(
+    (a, b) =>
+      SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] ||
+      b.penaltyApplied - a.penaltyApplied
+  )
+}
+
 /**
- * Scores the same curve under every context (A9) so the UI can surface which
- * context the set fits best.
+ * Scores the same curve under every context (A9/B10) so the UI can surface
+ * which context the set fits best. Targets are regenerated per context.
  */
 export function scoreUnderAllContexts(
   curve: number[],
@@ -383,8 +640,7 @@ export function scoreUnderAllContexts(
   const scores = {} as Record<PlaylistContext, number>
 
   for (const context of SET_CONTEXTS) {
-    const issues = detectIssuesForContext(curve, genre, context)
-    scores[context] = computeSetScore(issues).finalScore
+    scores[context] = scoreCurve(curve, genre, context).breakdown.finalScore
   }
 
   return scores
@@ -395,8 +651,8 @@ export function analyzePlaylist({
   genre,
   context,
 }: PlaylistAnalysisInput): PlaylistAnalysis {
-  const issues = detectIssuesForContext(curve, genre, context)
-  const breakdown = computeSetScore(issues)
+  const scored = scoreCurve(curve, genre, context)
+  const issues = deriveIssues(scored, curve, genre, context)
   const contextScores = scoreUnderAllContexts(curve, genre)
 
   const bestFitContext = SET_CONTEXTS.reduce((best, candidate) =>
@@ -407,9 +663,10 @@ export function analyzePlaylist({
     genre,
     context,
     curve,
+    targetCurve: scored.target,
     issues,
-    breakdown,
-    setScore: breakdown.finalScore,
+    breakdown: scored.breakdown,
+    setScore: scored.breakdown.finalScore,
     contextScores,
     bestFitContext,
   }

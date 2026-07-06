@@ -1,277 +1,250 @@
 import { describe, expect, it } from "vitest"
 
 import { analyzePlaylist, computeSetScore } from "@/lib/engine/analysis"
+import { buildTargetCurve } from "@/lib/engine/target-curve"
 
-describe("analyzePlaylist", () => {
-  it("scores a clean progressive main-time build as a perfect 10", () => {
+describe("analyzePlaylist — V2 scoring", () => {
+  it("scores a set that rides its ideal curve at 10 with no penalties", () => {
+    const curve = buildTargetCurve(12, "opening", "house")
+    const analysis = analyzePlaylist({ curve, genre: "house", context: "opening" })
+
+    expect(analysis.setScore).toBe(10)
+    expect(analysis.breakdown.shapeFit).toBe(10)
+    expect(analysis.breakdown.dynamicsQuality).toBe(10)
+    expect(analysis.breakdown.endingQuality).toBe(10)
+    expect(
+      analysis.issues.filter((issue) => issue.severity === "penalty")
+    ).toEqual([])
+  })
+
+  it("exposes the target curve and a breakdown whose weights sum to 1", () => {
+    const curve = [6, 7, 8, 9, 9, 8.8]
+    const analysis = analyzePlaylist({ curve, genre: "techno", context: "main" })
+
+    expect(analysis.targetCurve).toHaveLength(curve.length)
+    const { weights } = analysis.breakdown
+    expect(weights.shape + weights.dynamics + weights.ending).toBeCloseTo(1)
+    expect(analysis.breakdown.finalScore).toBe(analysis.setScore)
+  })
+
+  it("penalizes a cliff drop proportionally and reports it", () => {
+    const clean = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9, 9, 9, 9, 9]
+    const withCliff = [...clean]
+    withCliff[5] = 4.5 // 8 → 4.5 is a −3.5 cliff, then a +4.5 spike back
+
+    const cleanScore = computeSetScore(clean, "house", "main")
+    const cliffScore = computeSetScore(withCliff, "house", "main")
+
+    expect(cliffScore).toBeLessThan(cleanScore - 1)
+
     const analysis = analyzePlaylist({
-      curve: [6, 7, 8, 9],
-      genre: "techno",
+      curve: withCliff,
+      genre: "house",
+      context: "main",
+    })
+    expect(analysis.issues.some((issue) => issue.type === "abrupt_drop")).toBe(
+      true
+    )
+  })
+
+  it("does not penalize jumps within the genre tolerance", () => {
+    // Δ+3 is comfortable for melodic-techno (rise tolerance 3)...
+    const melodic = analyzePlaylist({
+      curve: [6, 9, 9.2, 8.9, 9.2, 9],
+      genre: "melodic-techno",
+      context: "main",
+    })
+    expect(
+      melodic.issues.filter((issue) => issue.type === "abrupt_spike")
+    ).toEqual([])
+
+    // ...but exceeds progressive's rise tolerance of 1.5.
+    const progressive = analyzePlaylist({
+      curve: [6, 9, 9.2, 8.9, 9.2, 9],
+      genre: "progressive",
+      context: "main",
+    })
+    expect(
+      progressive.issues.some((issue) => issue.type === "abrupt_spike")
+    ).toBe(true)
+  })
+
+  it("treats a controlled post-peak step down as a breather, not a flaw", () => {
+    const withBreather = [6, 7, 8, 8.5, 9, 6.5, 7.5, 8.5, 9, 9.2, 8.9, 9.2]
+    const analysis = analyzePlaylist({
+      curve: withBreather,
+      genre: "house",
       context: "main",
     })
 
-    expect(analysis.issues.filter((i) => i.severity === "penalty")).toHaveLength(0)
+    const breather = analysis.issues.find(
+      (issue) => issue.type === "good_breather"
+    )
+    expect(breather).toBeDefined()
+    expect(breather?.severity).toBe("positive")
+    expect(breather?.penaltyApplied).toBe(0)
+    expect(
+      analysis.issues.some((issue) => issue.type === "abrupt_drop")
+    ).toBe(false)
+    // A single breather is not "too many rests".
+    expect(
+      analysis.issues.some((issue) => issue.type === "too_many_rests")
+    ).toBe(false)
+  })
+
+  it("does not extend the breather exception to real crashes", () => {
+    // −4.5 down to 4.5 after a peak is a cliff, not a breather.
+    const curve = [6, 7, 8, 8.5, 9, 4.5, 7.5, 8.5, 9, 9.2, 8.9, 9.2]
+    const analysis = analyzePlaylist({ curve, genre: "house", context: "main" })
+
+    expect(analysis.issues.some((issue) => issue.type === "abrupt_drop")).toBe(
+      true
+    )
+    expect(
+      analysis.issues.some((issue) => issue.type === "good_breather")
+    ).toBe(false)
+  })
+
+  it("flags near-flat zones without requiring exact equality", () => {
+    const curve = [6, 6.1, 6, 6.2, 6.1, 6, 6.1, 6, 6.2, 6.1, 6, 6.1]
+    const analysis = analyzePlaylist({ curve, genre: "house", context: "main" })
+
+    expect(analysis.issues.some((issue) => issue.type === "flat_zone")).toBe(
+      true
+    )
+  })
+
+  it("exempts a plateau that rides the target's own plateau", () => {
+    // Hard-techno main target ramps 7 → 9.5 then holds; a set sitting on
+    // that plateau is craft, not monotony.
+    const curve = buildTargetCurve(12, "main", "hard-techno")
+    const analysis = analyzePlaylist({
+      curve,
+      genre: "hard-techno",
+      context: "main",
+    })
+
+    expect(analysis.issues.some((issue) => issue.type === "flat_zone")).toBe(
+      false
+    )
     expect(analysis.setScore).toBe(10)
   })
 
-  it("analyzes the strategy-doc example curve under main context", () => {
-    const analysis = analyzePlaylist({
-      curve: [3, 4, 5, 6, 7, 6, 8, 9],
-      genre: "techno",
-      context: "main",
-    })
+  it("reports a missing climax when the set never approaches the target peak", () => {
+    const curve = [6, 6.1, 6, 6.2, 6.1, 6, 6.1, 6, 6.2, 6.1, 6, 6.1]
+    const analysis = analyzePlaylist({ curve, genre: "house", context: "main" })
 
-    // No adjacent delta reaches ±3, so no drops or spikes.
-    expect(analysis.issues.some((i) => i.type === "abrupt_drop")).toBe(false)
-    expect(analysis.issues.some((i) => i.type === "abrupt_spike")).toBe(false)
-    // Tracks 1-3 (3, 4, 5) fall below main's 6-9 band → 3 context errors.
-    const contextIssues = analysis.issues.filter(
-      (i) => i.penaltyCategory === "context"
+    const noClimax = analysis.issues.find(
+      (issue) => issue.type === "no_climax"
     )
-    expect(contextIssues).toHaveLength(3)
-    expect(analysis.breakdown.contextPenalty).toBe(6)
-    expect(analysis.setScore).toBe(4)
+    expect(noClimax).toBeDefined()
+    expect(noClimax?.severity).toBe("penalty")
+    expect(noClimax?.penaltyApplied).toBeGreaterThan(0)
   })
 
-  it("detects flat zones of 3+ equal scores but not 2", () => {
-    const flat = analyzePlaylist({
-      curve: [5, 5, 5, 6],
-      genre: "melodic-techno",
-      context: "opening",
-    })
-    const flatIssue = flat.issues.find((i) => i.type === "flat_zone")
+  it("derives a weak ending proportionally instead of a fixed −2", () => {
+    const curve = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9, 9, 8, 6, 5]
+    const analysis = analyzePlaylist({ curve, genre: "techno", context: "main" })
 
-    expect(flatIssue).toBeDefined()
-    expect(flatIssue?.trackPositions).toEqual([1, 2, 3])
-    expect(flat.breakdown.flatZonePenalty).toBe(1)
-
-    const notFlat = analyzePlaylist({
-      curve: [5, 5, 6, 6],
-      genre: "melodic-techno",
-      context: "opening",
-    })
-    expect(notFlat.issues.some((i) => i.type === "flat_zone")).toBe(false)
-  })
-
-  it("penalizes drops only for genres with penalizeAbruptDrop", () => {
-    const house = analyzePlaylist({
-      curve: [8, 5, 6, 7],
-      genre: "house",
-      context: "main",
-    })
-    const houseDrop = house.issues.find((i) => i.type === "abrupt_drop")
-    expect(houseDrop?.severity).toBe("penalty")
-    expect(houseDrop?.penaltyApplied).toBe(1)
-
-    const melodic = analyzePlaylist({
-      curve: [8, 5, 6, 7],
-      genre: "melodic-techno",
-      context: "main",
-    })
-    const melodicDrop = melodic.issues.find((i) => i.type === "abrupt_drop")
-    expect(melodicDrop?.severity).toBe("info")
-    expect(melodicDrop?.penaltyApplied).toBe(0)
-  })
-
-  it("counts spikes as genre errors only for gradual-progression genres", () => {
-    const house = analyzePlaylist({
-      curve: [6, 9, 8, 7],
-      genre: "house",
-      context: "main",
-    })
-    const houseSpike = house.issues.find((i) => i.type === "abrupt_spike")
-    expect(houseSpike?.penaltyCategory).toBe("genre")
-    expect(house.breakdown.genrePenalty).toBeGreaterThanOrEqual(1)
-
-    const techno = analyzePlaylist({
-      curve: [6, 9, 8, 7],
-      genre: "techno",
-      context: "main",
-    })
-    const technoSpike = techno.issues.find((i) => i.type === "abrupt_spike")
-    expect(technoSpike?.severity).toBe("info")
-    expect(technoSpike?.penaltyApplied).toBe(0)
-  })
-
-  it("flags early peaks and penalizes them only for progressive", () => {
-    const progressive = analyzePlaylist({
-      curve: [8, 6, 6.5, 7, 7.5],
-      genre: "progressive",
-      context: "main",
-    })
-    const progressivePeak = progressive.issues.find(
-      (i) => i.type === "early_peak"
+    const weakEnding = analysis.issues.find(
+      (issue) => issue.type === "weak_ending"
     )
-    expect(progressivePeak?.severity).toBe("penalty")
-    expect(progressivePeak?.penaltyCategory).toBe("genre")
-    expect(progressivePeak?.trackPositions).toEqual([1])
-
-    const techno = analyzePlaylist({
-      curve: [8, 6, 6.5, 7, 7.5],
-      genre: "techno",
-      context: "main",
-    })
-    const technoPeak = techno.issues.find((i) => i.type === "early_peak")
-    expect(technoPeak?.severity).toBe("info")
-  })
-
-  it("does not flag a peak outside the first third", () => {
-    const analysis = analyzePlaylist({
-      curve: [6, 6.5, 7, 9],
-      genre: "progressive",
-      context: "main",
-    })
-
-    expect(analysis.issues.some((i) => i.type === "early_peak")).toBe(false)
-  })
-
-  it("labels disallowed high peaks in opening context", () => {
-    const analysis = analyzePlaylist({
-      curve: [4, 8, 5, 6],
-      genre: "techno",
-      context: "opening",
-    })
-
-    const highPeak = analysis.issues.find(
-      (i) => i.type === "context_high_peak"
-    )
-    expect(highPeak?.trackPositions).toEqual([2])
-    expect(highPeak?.penaltyApplied).toBe(2)
-    // The same track contributes exactly one context error.
-    const trackTwoContextIssues = analysis.issues.filter(
-      (i) => i.penaltyCategory === "context" && i.trackPositions.includes(2)
-    )
-    expect(trackTwoContextIssues).toHaveLength(1)
-  })
-
-  it("dedupes weak ending with the final track's context violation", () => {
-    const analysis = analyzePlaylist({
-      curve: [7, 8, 6],
-      genre: "techno",
-      context: "closing",
-    })
-
-    // Track 3 (energy 6) is below closing's 7-9 band → one context error.
-    // The weak ending must stay visible but add no second penalty.
-    const weakEnding = analysis.issues.find((i) => i.type === "weak_ending")
     expect(weakEnding).toBeDefined()
-    expect(weakEnding?.severity).toBe("info")
-    expect(weakEnding?.penaltyApplied).toBe(0)
-    expect(analysis.breakdown.contextPenalty).toBe(2)
-    expect(analysis.setScore).toBe(8)
+    expect(weakEnding?.trackPositions).toEqual([curve.length])
+    expect(analysis.breakdown.endingQuality).toBeLessThan(8.5)
   })
 
-  it("penalizes a weak ending that is inside the context band", () => {
-    // Main context: threshold is max(5, 6) = 6... a last track of 6 is not
-    // weak. Opening: threshold max(5, 3) = 5, so a last track at 4 inside
-    // 3-6 is weak without being out of range.
-    const analysis = analyzePlaylist({
-      curve: [3, 5, 6, 4],
-      genre: "techno",
-      context: "opening",
-    })
+  it("marks an early peak as penalty for slow-build genres and info otherwise", () => {
+    // 9.5 at position 2 is the set's max, inside the first third.
+    const curve = [5.5, 9.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.2, 8.9, 9.2]
 
-    const weakEnding = analysis.issues.find((i) => i.type === "weak_ending")
-    expect(weakEnding?.severity).toBe("penalty")
-    expect(weakEnding?.penaltyApplied).toBe(2)
-  })
-
-  it("emits informational no-progression and too-many-rests hints", () => {
-    const analysis = analyzePlaylist({
-      curve: [8, 6, 8, 6, 8, 6],
-      genre: "melodic-techno",
+    const progressive = analyzePlaylist({
+      curve,
+      genre: "progressive",
       context: "main",
     })
-
-    const noProgression = analysis.issues.find(
-      (i) => i.type === "no_progression"
+    const progressiveEarlyPeak = progressive.issues.find(
+      (issue) => issue.type === "early_peak"
     )
-    expect(noProgression?.severity).toBe("info")
+    expect(progressiveEarlyPeak?.severity).toBe("penalty")
 
-    const rests = analysis.issues.find((i) => i.type === "too_many_rests")
-    expect(rests?.severity).toBe("info")
-    expect(rests?.trackPositions).toEqual([2, 4, 6])
+    const techno = analyzePlaylist({ curve, genre: "techno", context: "main" })
+    const technoEarlyPeak = techno.issues.find(
+      (issue) => issue.type === "early_peak"
+    )
+    expect(technoEarlyPeak?.severity).toBe("info")
+    expect(technoEarlyPeak?.penaltyApplied).toBe(0)
   })
 
-  it("clamps the final score at 1", () => {
-    const analysis = analyzePlaylist({
-      curve: [9, 9, 9, 9, 9, 9],
-      genre: "techno",
+  it("keeps duration hints informational", () => {
+    const shortSet = analyzePlaylist({
+      curve: [3, 4, 5, 6],
+      genre: "house",
       context: "opening",
     })
+    const shortHint = shortSet.issues.find(
+      (issue) => issue.type === "set_too_short"
+    )
+    expect(shortHint?.severity).toBe("info")
+    expect(shortHint?.penaltyApplied).toBe(0)
 
-    expect(analysis.breakdown.rawScore).toBeLessThan(1)
-    expect(analysis.setScore).toBe(1)
+    const longSet = analyzePlaylist({
+      curve: Array.from({ length: 51 }, (_, i) => 6 + (i % 3) * 0.5),
+      genre: "house",
+      context: "main",
+    })
+    expect(longSet.issues.some((issue) => issue.type === "set_too_long")).toBe(
+      true
+    )
+  })
+
+  it("never scores below 1 even for a disastrous set", () => {
+    const curve = [9, 2, 9, 2, 9, 2, 9, 2, 9, 2, 9, 2]
+    const score = computeSetScore(curve, "trance", "opening")
+
+    expect(score).toBeGreaterThanOrEqual(1)
+    expect(score).toBeLessThanOrEqual(10)
   })
 
   it("scores the same curve under all contexts and picks the best fit", () => {
+    const openingRamp = buildTargetCurve(12, "opening", "house")
     const analysis = analyzePlaylist({
-      curve: [6, 7, 8, 9],
-      genre: "techno",
-      context: "opening",
+      curve: openingRamp,
+      genre: "house",
+      context: "main",
     })
 
-    expect(analysis.contextScores.main).toBe(10)
-    expect(analysis.contextScores.main).toBeGreaterThan(
-      analysis.contextScores.opening
+    expect(Object.keys(analysis.contextScores).sort()).toEqual([
+      "closing",
+      "main",
+      "opening",
+    ])
+    expect(analysis.bestFitContext).toBe("opening")
+    expect(analysis.contextScores.opening).toBeGreaterThan(
+      analysis.contextScores.main
     )
-    expect(analysis.bestFitContext).toBe("main")
-  })
-})
-
-describe("duration hints", () => {
-  it("flags sets shorter than the guideline as informational", () => {
-    // 10 tracks x 3 min = 30 min < 45 min guideline.
-    const analysis = analyzePlaylist({
-      curve: Array.from({ length: 10 }, (_, i) => 6 + (i % 4)),
-      genre: "techno",
-      context: "main",
-    })
-
-    const hint = analysis.issues.find((i) => i.type === "set_too_short")
-    expect(hint?.severity).toBe("info")
-    expect(hint?.penaltyApplied).toBe(0)
-    expect(analysis.issues.some((i) => i.type === "set_too_long")).toBe(false)
   })
 
-  it("flags sets longer than the guideline as informational", () => {
-    // 55 tracks x 3 min = 165 min > 150 min guideline.
-    const analysis = analyzePlaylist({
-      curve: Array.from({ length: 55 }, (_, i) => 6 + (i % 4)),
-      genre: "techno",
-      context: "main",
-    })
+  it("orders issues penalty-first and attributes traceable point costs", () => {
+    const curve = [6, 6.5, 7, 7.5, 8, 4, 7.5, 8, 8.5, 9, 9.2, 8.9]
+    const analysis = analyzePlaylist({ curve, genre: "house", context: "main" })
 
-    expect(
-      analysis.issues.find((i) => i.type === "set_too_long")?.severity
-    ).toBe("info")
-  })
+    const severities = analysis.issues.map((issue) => issue.severity)
+    const firstInfo = severities.indexOf("info")
+    const lastPenalty = severities.lastIndexOf("penalty")
+    if (firstInfo !== -1 && lastPenalty !== -1) {
+      expect(lastPenalty).toBeLessThan(firstInfo)
+    }
 
-  it("stays silent inside the guideline", () => {
-    // 20 tracks x 3 min = 60 min.
-    const analysis = analyzePlaylist({
-      curve: Array.from({ length: 20 }, (_, i) => 6 + (i % 4)),
-      genre: "techno",
-      context: "main",
-    })
+    const attributed = analysis.issues.reduce(
+      (sum, issue) => sum + issue.penaltyApplied,
+      0
+    )
+    const lost = 10 - analysis.setScore
 
-    expect(analysis.issues.some((i) => i.type === "set_too_short")).toBe(false)
-    expect(analysis.issues.some((i) => i.type === "set_too_long")).toBe(false)
-  })
-})
-
-describe("computeSetScore", () => {
-  it("returns a full-score breakdown with no issues", () => {
-    const breakdown = computeSetScore([])
-
-    expect(breakdown).toMatchObject({
-      startingScore: 10,
-      dropPenalty: 0,
-      flatZonePenalty: 0,
-      contextPenalty: 0,
-      genrePenalty: 0,
-      rawScore: 10,
-      finalScore: 10,
-    })
+    // Attribution is an explanation layer: meaningful, and in the same
+    // ballpark as the actual points lost (rounding gives it slack).
+    expect(attributed).toBeGreaterThan(0)
+    expect(attributed).toBeLessThanOrEqual(lost + 1.5)
   })
 })

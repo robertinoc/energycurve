@@ -49,7 +49,8 @@ describe("formatTemplate", () => {
 describe("buildRecommendations", () => {
   it("maps every detected issue to localized copy with interpolated values", () => {
     const analysis = analyzePlaylist({
-      curve: [8, 5, 6, 7],
+      // 9 → 4.5 is a −4.5 cliff for house (drop tolerance 2).
+      curve: [6.5, 7.5, 9, 4.5, 6, 7, 8, 9, 9.2, 8.9, 9.1, 9],
       genre: "house",
       context: "main",
     })
@@ -61,11 +62,11 @@ describe("buildRecommendations", () => {
     expect(es).toHaveLength(analysis.issues.length)
 
     const drop = en.find((r) => r.issue.type === "abrupt_drop")
-    expect(drop?.body).toContain("3 points")
-    expect(drop?.body).toContain("tracks 1 and 2")
+    expect(drop?.body).toContain("4.5 points")
+    expect(drop?.body).toContain("tracks 3 and 4")
 
     const dropEs = es.find((r) => r.issue.type === "abrupt_drop")
-    expect(dropEs?.body).toContain("3 puntos")
+    expect(dropEs?.body).toContain("4.5 puntos")
 
     for (const recommendation of [...en, ...es]) {
       expect(recommendation.title).not.toMatch(/\{\w+\}/)
@@ -73,51 +74,76 @@ describe("buildRecommendations", () => {
       expect(recommendation.action).not.toMatch(/\{\w+\}/)
     }
   })
+
+  it("localizes the positive breather copy too", () => {
+    const analysis = analyzePlaylist({
+      curve: [6, 7, 8, 8.5, 9, 6.5, 7.5, 8.5, 9, 9.2, 8.9, 9.2],
+      genre: "house",
+      context: "main",
+    })
+
+    const es = buildRecommendations(analysis, "es")
+    const breather = es.find((r) => r.issue.type === "good_breather")
+
+    expect(breather?.title).toBe("Respiro bien ubicado")
+    expect(breather?.body).not.toMatch(/\{\w+\}/)
+  })
 })
 
 describe("suggestReorder", () => {
-  it("suggests an ascending order when it strictly improves the score", () => {
-    const input = energies([8, 3, 6])
+  it("suggests the optimized order when it meaningfully improves the score", () => {
+    const scores = [9, 3, 6, 4, 8, 5]
+    const input = energies(scores)
     const original = analyzePlaylist({
-      curve: [8, 3, 6],
+      curve: scores,
       genre: "house",
-      context: "main",
+      context: "opening",
     })
 
     const suggestion = suggestReorder(
       input,
       "house",
-      "main",
+      "opening",
       original.setScore,
       "en"
     )
 
     expect(suggestion).not.toBeNull()
-    expect(suggestion?.suggestedOrder).toEqual([2, 3, 1])
-    expect(suggestion?.suggestedAnalysis.setScore).toBeGreaterThan(
-      original.setScore
+    expect(suggestion?.suggestedAnalysis.setScore).toBeGreaterThanOrEqual(
+      original.setScore + 0.5
     )
-    expect(suggestion?.rationale).toBeTruthy()
+    // The suggested order is a permutation of the original positions.
+    expect([...(suggestion?.suggestedOrder ?? [])].sort((a, b) => a - b)).toEqual(
+      [1, 2, 3, 4, 5, 6]
+    )
+    expect(suggestion?.rationale).toContain("opening")
   })
 
-  it("returns null when the set is already optimal", () => {
-    const input = energies([6, 7, 8, 9])
+  it("returns null when the set already follows its ideal curve", () => {
+    const scores = [3, 3.5, 4.2, 4.8, 5.5, 6]
+    const input = energies(scores)
     const original = analyzePlaylist({
-      curve: [6, 7, 8, 9],
-      genre: "techno",
-      context: "main",
+      curve: scores,
+      genre: "house",
+      context: "opening",
     })
 
     expect(
-      suggestReorder(input, "techno", "main", original.setScore, "en")
+      suggestReorder(input, "house", "opening", original.setScore, "en")
     ).toBeNull()
   })
 
-  it("keeps equal scores in their original relative order (stable sort)", () => {
-    const input = energies([7, 7, 3])
-    const suggestion = suggestReorder(input, "house", "main", 1, "en")
+  it("localizes the rationale", () => {
+    const scores = [9, 3, 6, 4, 8, 5]
+    const suggestion = suggestReorder(
+      energies(scores),
+      "house",
+      "opening",
+      1,
+      "es"
+    )
 
-    expect(suggestion?.suggestedOrder).toEqual([3, 1, 2])
+    expect(suggestion?.rationale).toContain("curva ideal")
   })
 
   it("returns null for fewer than two tracks", () => {

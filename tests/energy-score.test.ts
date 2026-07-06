@@ -43,6 +43,34 @@ describe("energyScoreFromBpm", () => {
   })
 })
 
+describe("energyScoreFromBpm — genre-relative (B1)", () => {
+  it("maps the same BPM differently per genre", () => {
+    // 126 BPM: peak-time house, warm-up hard techno.
+    expect(energyScoreFromBpm(126, "house")).toBeGreaterThanOrEqual(7.5)
+    expect(energyScoreFromBpm(126, "hard-techno")).toBeLessThanOrEqual(3)
+  })
+
+  it("interpolates 3 → 9 across the genre band", () => {
+    // House band 118–128.
+    expect(energyScoreFromBpm(118, "house")).toBe(3)
+    expect(energyScoreFromBpm(123, "house")).toBe(6)
+    expect(energyScoreFromBpm(128, "house")).toBe(9)
+  })
+
+  it("keeps sliding toward the extremes outside the band, then clamps", () => {
+    expect(energyScoreFromBpm(133, "house")).toBe(9.5)
+    expect(energyScoreFromBpm(138, "house")).toBe(10)
+    expect(energyScoreFromBpm(200, "house")).toBe(10)
+    expect(energyScoreFromBpm(113, "house")).toBe(2)
+    expect(energyScoreFromBpm(90, "house")).toBe(1)
+  })
+
+  it("falls back to the universal V1 bands without a genre", () => {
+    expect(energyScoreFromBpm(128)).toBe(energyScoreFromBpm(128, null))
+    expect(energyScoreFromBpm(128)).toBe(7)
+  })
+})
+
 describe("estimatedScoreFromPosition", () => {
   it("ramps across the context expected range", () => {
     expect(estimatedScoreFromPosition(0, 5, "opening")).toBe(3)
@@ -63,6 +91,16 @@ describe("estimatedScoreFromPosition", () => {
 })
 
 describe("resolveTrackEnergies", () => {
+  it("uses the genre-relative mapping when a genre is provided", () => {
+    const resolved = resolveTrackEnergies(
+      [{ id: "a", position: 1, bpm: 128, energy_score: null }],
+      "main",
+      "house"
+    )
+
+    expect(resolved[0]).toMatchObject({ score: 9, source: "bpm" })
+  })
+
   it("applies precedence manual > bpm > estimated", () => {
     const resolved = resolveTrackEnergies(
       [
