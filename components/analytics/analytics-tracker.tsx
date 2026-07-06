@@ -23,6 +23,14 @@ function ensureInitialized() {
     capture_pageview: false,
     capture_pageleave: true,
     persistence: "localStorage+cookie",
+    // Privacy-first defaults: honor the browser's Do Not Track signal,
+    // don't store visitor IPs, and keep autocapture off so we only send
+    // the explicit product events we defined. Lighter payloads and a
+    // cleaner privacy posture for a launched product.
+    respect_dnt: true,
+    ip: false,
+    autocapture: false,
+    disable_session_recording: true,
   })
   initialized = true
 
