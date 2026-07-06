@@ -4,13 +4,6 @@ import { ArrowRight, LockKeyhole } from "lucide-react"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
@@ -137,8 +130,8 @@ export function PasswordAuthPage({
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:68px_68px] opacity-20" />
       </div>
 
-      <div className="relative mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="space-y-6">
+      <div className="relative mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-xl items-center">
+        <section className="w-full space-y-6">
           <EnergyCurveLogo
             tone="light"
             size="lg"
@@ -272,58 +265,6 @@ export function PasswordAuthPage({
             </div>
           </form>
         </section>
-
-        <Card className="border-white/10 bg-white/[0.05] text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] ring-0">
-          <CardHeader>
-            <CardTitle className="text-white">Why this auth flow exists</CardTitle>
-            <CardDescription className="text-white/62">
-              EnergyCurve keeps authentication inside WorkOS, but brings the UI under product control.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3 text-sm leading-6 text-white/62">
-              <p>Credentials are handled by WorkOS user management.</p>
-              <p>
-                Successful sign in still creates the same secure app session and
-                syncs the user profile into Supabase.
-              </p>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-sm font-medium text-white">
-                  Predictable SaaS entry
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/58">
-                  Login and sign up no longer depend on a hosted handoff that can
-                  auto-resolve an upstream session before the user sees a form.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-sm font-medium text-white">
-                  Same secure foundation
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/58">
-                  Protected routing, session cookies, callback handling, and
-                  profile synchronization stay intact underneath.
-                </p>
-              </div>
-            </div>
-
-            {isSignup ? (
-              <Alert className="border-white/10 bg-black/25 text-white">
-                <LockKeyhole className="size-4 text-white/70" />
-                <AlertTitle>MVP signup note</AlertTitle>
-                <AlertDescription className="text-white/62">
-                  New accounts are marked as verified immediately so the custom
-                  sign-up flow can stay predictable during the MVP auth phase.
-                </AlertDescription>
-              </Alert>
-            ) : null}
-          </CardContent>
-        </Card>
       </div>
     </main>
   )
