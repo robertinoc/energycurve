@@ -57,12 +57,39 @@ export type PlaylistContext = (typeof SET_CONTEXTS)[number]
 
 export const SUPPORTED_GENRES = [
   "house",
+  "deep-house",
+  "organic-house",
+  "disco-house",
+  "tech-house",
   "techno",
   "hard-techno",
   "melodic-techno",
   "progressive",
+  "trance",
+  "psy-trance",
+  "bounce",
 ] as const
 export type SupportedGenre = (typeof SUPPORTED_GENRES)[number]
+
+/**
+ * Single source of truth for genre display names. Importing this everywhere
+ * (create form, playlist pages, analysis) means adding a genre is one edit
+ * here, not four scattered label maps.
+ */
+export const GENRE_LABELS: Record<SupportedGenre, string> = {
+  house: "House",
+  "deep-house": "Deep House",
+  "organic-house": "Organic House",
+  "disco-house": "Disco House",
+  "tech-house": "Tech House",
+  techno: "Techno",
+  "hard-techno": "Hard Techno",
+  "melodic-techno": "Melodic Techno",
+  progressive: "Progressive",
+  trance: "Trance",
+  "psy-trance": "Psy Trance",
+  bounce: "Bounce",
+}
 
 export const PRODUCT_PRINCIPLES = [
   "Simple over complex",
@@ -115,11 +142,36 @@ export const CONTEXT_ENGINE_V1 = {
   }
 >
 
+// Per-genre behavioral flags. Defaults for the newly added genres are
+// sensible starting points from DJ practice — review/tune with real sets:
+//   penalizeEarlyPeak: genres that build slowly hate an early climax
+//   penalizeAbruptDrop: driving/hypnotic genres punish sudden energy loss
+//   favorsGradualProgression: genres whose sets should trend steadily up
 export const GENRE_ENGINE_V1 = {
   house: {
     penalizeEarlyPeak: false,
     penalizeAbruptDrop: true,
     favorsGradualProgression: true,
+  },
+  "deep-house": {
+    penalizeEarlyPeak: false,
+    penalizeAbruptDrop: true,
+    favorsGradualProgression: true,
+  },
+  "organic-house": {
+    penalizeEarlyPeak: true,
+    penalizeAbruptDrop: true,
+    favorsGradualProgression: true,
+  },
+  "disco-house": {
+    penalizeEarlyPeak: false,
+    penalizeAbruptDrop: false,
+    favorsGradualProgression: false,
+  },
+  "tech-house": {
+    penalizeEarlyPeak: false,
+    penalizeAbruptDrop: true,
+    favorsGradualProgression: false,
   },
   techno: {
     penalizeEarlyPeak: false,
@@ -140,6 +192,21 @@ export const GENRE_ENGINE_V1 = {
     penalizeEarlyPeak: true,
     penalizeAbruptDrop: false,
     favorsGradualProgression: true,
+  },
+  trance: {
+    penalizeEarlyPeak: true,
+    penalizeAbruptDrop: true,
+    favorsGradualProgression: true,
+  },
+  "psy-trance": {
+    penalizeEarlyPeak: false,
+    penalizeAbruptDrop: true,
+    favorsGradualProgression: false,
+  },
+  bounce: {
+    penalizeEarlyPeak: false,
+    penalizeAbruptDrop: false,
+    favorsGradualProgression: false,
   },
 } as const satisfies Record<
   SupportedGenre,

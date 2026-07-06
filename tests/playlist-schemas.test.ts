@@ -45,7 +45,7 @@ describe("createPlaylistSchema", () => {
 
   it("rejects unknown genres and contexts", () => {
     expect(
-      schema.safeParse({ name: "Set", genre: "trance", context: "main" })
+      schema.safeParse({ name: "Set", genre: "reggaeton", context: "main" })
         .success
     ).toBe(false)
     expect(

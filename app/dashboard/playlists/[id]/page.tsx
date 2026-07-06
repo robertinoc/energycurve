@@ -9,7 +9,7 @@ import { TracklistImport } from "@/components/playlists/tracklist-import"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { buildReturnToHref } from "@/lib/auth/return-to"
-import { STANDARD_TRACK_DURATION_MINUTES } from "@/lib/product/strategy"
+import { STANDARD_TRACK_DURATION_MINUTES, GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
@@ -19,14 +19,6 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = "force-dynamic"
-
-const GENRE_LABELS: Record<string, string> = {
-  house: "House",
-  techno: "Techno",
-  "hard-techno": "Hard Techno",
-  "melodic-techno": "Melodic Techno",
-  progressive: "Progressive",
-}
 
 const CONTEXT_LABELS: Record<string, string> = {
   opening: "Opening",

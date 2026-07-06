@@ -20,15 +20,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"
-import { SET_CONTEXTS, SUPPORTED_GENRES } from "@/lib/product/strategy"
-
-const GENRE_LABELS: Record<(typeof SUPPORTED_GENRES)[number], string> = {
-  house: "House",
-  techno: "Techno",
-  "hard-techno": "Hard Techno",
-  "melodic-techno": "Melodic Techno",
-  progressive: "Progressive",
-}
+import { SET_CONTEXTS, SUPPORTED_GENRES, GENRE_LABELS } from "@/lib/product/strategy"
 
 const CONTEXT_LABELS: Record<(typeof SET_CONTEXTS)[number], string> = {
   opening: "Opening",
