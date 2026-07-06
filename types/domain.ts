@@ -20,7 +20,12 @@ export interface DashboardSnapshot {
   profile: Profile
   playlistCount: number
   trackCount: number
-  latestPlaylists: PlaylistWithTrackCount[]
+  latestPlaylists: DashboardPlaylist[]
+}
+
+export interface DashboardPlaylist extends PlaylistWithTrackCount {
+  /** Chronological set scores from the analyses history (may be empty). */
+  scoreHistory: number[]
 }
 
 export interface PlaylistWithTrackCount extends Playlist {
