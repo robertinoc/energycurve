@@ -1,6 +1,5 @@
 import {
-  ANALYSIS_RULES_V1,
-  CONTEXT_ENGINE_V1,
+  REORDER_MIN_IMPROVEMENT_V2,
   STANDARD_TRACK_DURATION_MINUTES,
   type PlaylistContext,
   type SupportedGenre,
@@ -16,6 +15,7 @@ import {
   analyzePlaylist,
   SET_DURATION_GUIDELINE_MINUTES,
 } from "@/lib/engine/analysis"
+import { optimizeOrder } from "@/lib/engine/reorder"
 import type {
   DetectedIssue,
   PlaylistAnalysis,
@@ -29,12 +29,15 @@ export interface Recommendation {
   action: string
 }
 
+function roundToOneDecimal(value: number) {
+  return Math.round(value * 10) / 10
+}
+
 function buildTemplateParams(
   issue: DetectedIssue,
   analysis: PlaylistAnalysis,
   locale: SiteLocale
 ): Record<string, string | number> {
-  const rules = CONTEXT_ENGINE_V1[analysis.context]
   const positions = issue.trackPositions
   const firstPosition = positions[0] ?? 0
   const score =
@@ -42,20 +45,28 @@ function buildTemplateParams(
       ? analysis.curve[firstPosition - 1]
       : 0
 
+  // Context expectations now come from the ideal curve the set was scored
+  // against (B2), not from fixed per-context bands.
+  const target = analysis.targetCurve
+  const targetMin = roundToOneDecimal(Math.min(...target))
+  const targetMax = roundToOneDecimal(Math.max(...target))
+  const targetAtTrack =
+    firstPosition > 0 && firstPosition <= target.length
+      ? target[firstPosition - 1]
+      : targetMax
+
   return {
     from: positions[0] ?? 0,
     to: positions[1] ?? positions[0] ?? 0,
     position: firstPosition,
     positions: positions.join(", "),
     count: positions.length,
-    delta: Math.abs(issue.delta ?? 0),
+    delta: roundToOneDecimal(Math.abs(issue.delta ?? 0)),
     score,
-    min: rules.expectedEnergyMin,
-    max: rules.expectedEnergyMax,
-    threshold: Math.max(
-      ANALYSIS_RULES_V1.weakEndingThresholdFloor,
-      rules.expectedEnergyMin
-    ),
+    min: targetMin,
+    max: targetMax,
+    ideal: targetAtTrack,
+    threshold: roundToOneDecimal(target[target.length - 1] ?? targetMax),
     context: CONTEXT_DISPLAY_NAMES[analysis.context][locale],
     trackCount: analysis.curve.length,
     duration: analysis.curve.length * STANDARD_TRACK_DURATION_MINUTES,
@@ -93,10 +104,9 @@ export interface ReorderSuggestion {
 }
 
 /**
- * Suggested order = stable ascending sort by resolved energy (A11): it
- * removes every abrupt drop and ends strong, and it can be explained in one
- * sentence. The suggestion is only returned when its re-analyzed score
- * strictly beats the original.
+ * Suggested order = the optimizer's best arrangement toward the ideal curve
+ * (B11). Only returned when it beats the original score by a meaningful
+ * margin, so users aren't nudged to reshuffle for a rounding error.
  */
 export function suggestReorder(
   energies: ResolvedTrackEnergy[],
@@ -109,23 +119,24 @@ export function suggestReorder(
     return null
   }
 
-  const sorted = [...energies].sort((a, b) =>
-    a.score === b.score ? a.position - b.position : a.score - b.score
-  )
+  const optimized = optimizeOrder(energies, genre, context)
 
+  if (optimized.score - originalScore < REORDER_MIN_IMPROVEMENT_V2) {
+    return null
+  }
+
+  const orderedEnergies = optimized.order.map((index) => energies[index])
   const suggestedAnalysis = analyzePlaylist({
-    curve: sorted.map((entry) => entry.score),
+    curve: orderedEnergies.map((entry) => entry.score),
     genre,
     context,
   })
 
-  if (suggestedAnalysis.setScore <= originalScore) {
-    return null
-  }
-
   return {
-    suggestedOrder: sorted.map((entry) => entry.position),
+    suggestedOrder: orderedEnergies.map((entry) => entry.position),
     suggestedAnalysis,
-    rationale: REORDER_RATIONALE[locale],
+    rationale: formatTemplate(REORDER_RATIONALE[locale], {
+      context: CONTEXT_DISPLAY_NAMES[context][locale],
+    }),
   }
 }

@@ -17,34 +17,48 @@ export type IssueType =
   | "weak_ending"
   | "context_range"
   | "context_high_peak"
+  | "no_climax"
+  | "good_breather"
   | "no_progression"
   | "too_many_rests"
   | "set_too_short"
   | "set_too_long"
 
-export type IssueSeverity = "penalty" | "info"
+export type IssueSeverity = "penalty" | "info" | "positive"
 
-export type PenaltyCategory = "drop" | "flat" | "context" | "genre"
+export type PenaltyCategory = "shape" | "dynamics" | "ending"
 
 export interface DetectedIssue {
   type: IssueType
   severity: IssueSeverity
   /** 1-based playlist positions involved in the issue. */
   trackPositions: number[]
-  /** Absolute score points subtracted for this issue (0 when informational). */
+  /**
+   * Estimated final-score points this issue costs (V2 attribution): the
+   * sub-score loss it contributed, scaled by the sub-score's weight. 0 when
+   * informational or positive.
+   */
   penaltyApplied: number
   penaltyCategory: PenaltyCategory | null
-  /** Energy delta for drop/spike issues. */
+  /** Energy delta for drop/spike/breather issues. */
   delta?: number
 }
 
+/**
+ * V2 breakdown: the set score is a weighted blend of three explainable
+ * sub-scores (each 0–10) instead of V1's penalty subtraction.
+ */
 export interface SetScoreBreakdown {
-  startingScore: number
-  dropPenalty: number
-  flatZonePenalty: number
-  contextPenalty: number
-  genrePenalty: number
+  /** How closely the curve follows the ideal shape for context + genre. */
+  shapeFit: number
+  /** Transition smoothness + monotony: jumps beyond genre tolerance, flat zones. */
+  dynamicsQuality: number
+  /** How the set lands relative to the ideal ending. */
+  endingQuality: number
+  weights: { shape: number; dynamics: number; ending: number }
+  /** Weighted blend before clamping. */
   rawScore: number
+  /** Clamped to [1, 10], one decimal. */
   finalScore: number
 }
 
@@ -58,10 +72,12 @@ export interface PlaylistAnalysis {
   genre: SupportedGenre
   context: PlaylistContext
   curve: number[]
+  /** Ideal curve the set was scored against (same length as `curve`). */
+  targetCurve: number[]
   issues: DetectedIssue[]
   breakdown: SetScoreBreakdown
   setScore: number
-  /** Final score the same curve would get under each context (A9). */
+  /** Final score the same curve would get under each context (A9/B10). */
   contextScores: Record<PlaylistContext, number>
   bestFitContext: PlaylistContext
 }

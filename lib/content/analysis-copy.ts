@@ -177,16 +177,58 @@ export const ISSUE_COPY: Record<IssueType, IssueCopy> = {
       es: "Recortá primero el tramo medio — mantené intactos la rampa de apertura y el cierre.",
     },
   },
+  no_climax: {
+    title: {
+      en: "No climax",
+      es: "Sin clímax",
+    },
+    body: {
+      en: "The set never gets close to the peak energy (~{max}) expected for a {context} set — the highest point stays too low to release the tension it builds.",
+      es: "El set nunca se acerca a la energía pico (~{max}) esperada para un set de {context} — el punto más alto queda demasiado bajo para descargar la tensión que acumula.",
+    },
+    recommendation: {
+      en: "Add one or two higher-energy tracks around the last third so the set has a real peak to build toward.",
+      es: "Sumá uno o dos tracks de mayor energía cerca del último tercio para que el set tenga un pico real hacia el cual construir.",
+    },
+  },
+  good_breather: {
+    title: {
+      en: "Well-placed breather",
+      es: "Respiro bien ubicado",
+    },
+    body: {
+      en: "The step down after track {from} lands right after a sustained peak — a controlled release like this resets the floor without losing it.",
+      es: "La bajada después del track {from} llega justo después de un pico sostenido — una descarga controlada así renueva la pista sin perderla.",
+    },
+    recommendation: {
+      en: "Keep it: tension and release is what makes a peak feel earned.",
+      es: "Mantenelo: la tensión y descarga es lo que hace que un pico se sienta merecido.",
+    },
+  },
 }
 
 export const REORDER_RATIONALE: LocalizedLabel = {
-  en: "Suggested order sorts tracks from lowest to highest energy: it removes every abrupt drop and finishes strong.",
-  es: "El orden sugerido acomoda los tracks de menor a mayor energía: elimina todas las caídas bruscas y cierra fuerte.",
+  en: "Suggested order rearranges the same tracks to follow the ideal {context} curve: smoother transitions, a better-placed peak, and a stronger landing.",
+  es: "El orden sugerido reacomoda los mismos tracks para seguir la curva ideal de {context}: transiciones más suaves, un pico mejor ubicado y un cierre más fuerte.",
 }
 
-export const SEVERITY_LABELS: Record<"penalty" | "info", LocalizedLabel> = {
+export const SEVERITY_LABELS: Record<
+  "penalty" | "info" | "positive",
+  LocalizedLabel
+> = {
   penalty: { en: "Costs points", es: "Resta puntos" },
   info: { en: "Heads-up", es: "Atención" },
+  positive: { en: "Working for you", es: "Suma a tu favor" },
+}
+
+/** Labels for the three V2 sub-scores shown in the score card breakdown. */
+export const SUBSCORE_LABELS: Record<
+  "shape" | "dynamics" | "ending",
+  LocalizedLabel
+> = {
+  shape: { en: "Curve shape", es: "Forma de la curva" },
+  dynamics: { en: "Energy dynamics", es: "Dinámica de energía" },
+  ending: { en: "Ending", es: "Cierre" },
 }
 
 export const CONTEXT_DISPLAY_NAMES: Record<string, LocalizedLabel> = {

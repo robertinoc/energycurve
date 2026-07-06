@@ -127,6 +127,7 @@ export interface Database {
           suggested_order: Json | null
           suggested_score: number | null
           input_hash: string
+          algorithm_version: number
           created_at: string
         }
         Insert: {
@@ -142,6 +143,7 @@ export interface Database {
           suggested_order?: Json | null
           suggested_score?: number | null
           input_hash: string
+          algorithm_version?: number
           created_at?: string
         }
         Update: {
@@ -157,6 +159,7 @@ export interface Database {
           suggested_order?: Json | null
           suggested_score?: number | null
           input_hash?: string
+          algorithm_version?: number
           created_at?: string
         }
         Relationships: [

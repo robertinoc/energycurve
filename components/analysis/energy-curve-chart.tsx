@@ -27,6 +27,8 @@ export interface ChartTrackPoint {
 
 interface EnergyCurveChartProps {
   tracks: ChartTrackPoint[]
+  /** Ideal curve the set was scored against — rendered as a dashed ghost line. */
+  target?: number[]
 }
 
 const SOURCE_LABELS: Record<EnergySource, string> = {
@@ -66,7 +68,7 @@ const MARKER_STYLES: Record<
   default: { fill: "rgba(245,242,252,0.55)", r: 3.5, glow: null },
 }
 
-export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
+export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
@@ -101,6 +103,19 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
     () => buildCurveAreaPath(points, WIDTH, HEIGHT, PADDING),
     [points]
   )
+
+  const targetPath = useMemo(() => {
+    if (!target || target.length !== tracks.length) {
+      return null
+    }
+
+    return buildSmoothCurvePath(
+      mapValuesToCurvePoints(target, WIDTH, HEIGHT, PADDING, {
+        min: ENERGY_SCORE_RANGE.min,
+        max: ENERGY_SCORE_RANGE.max,
+      })
+    )
+  }, [target, tracks.length])
 
   const tooltipStyle = activePoint
     ? {
@@ -168,6 +183,17 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
 
           {areaPath ? (
             <path d={areaPath} fill="url(#analysis-curve-fill)" />
+          ) : null}
+
+          {targetPath ? (
+            <path
+              d={targetPath}
+              fill="none"
+              stroke="rgba(245,242,252,0.30)"
+              strokeWidth="2"
+              strokeDasharray="6 7"
+              strokeLinecap="round"
+            />
           ) : null}
 
           <path
@@ -261,6 +287,23 @@ export function EnergyCurveChart({ tracks }: EnergyCurveChartProps) {
           </div>
         ) : null}
       </div>
+
+      {targetPath ? (
+        <div className="pointer-events-none absolute right-6 top-5 flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ec-text-dim">
+          <svg width="18" height="6" aria-hidden>
+            <line
+              x1="0"
+              y1="3"
+              x2="18"
+              y2="3"
+              stroke="rgba(245,242,252,0.45)"
+              strokeWidth="2"
+              strokeDasharray="4 4"
+            />
+          </svg>
+          Ideal curve
+        </div>
+      ) : null}
 
       <div className="mt-3 flex items-center justify-between px-6 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ec-text-dim">
         {PHASE_LABELS.map((phase) => (

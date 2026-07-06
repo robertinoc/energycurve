@@ -35,6 +35,8 @@ export function IssueList({ recommendations }: IssueListProps) {
               <Badge variant="warning">
                 −{recommendation.issue.penaltyApplied} pts
               </Badge>
+            ) : recommendation.issue.severity === "positive" ? (
+              <Badge variant="accent">Working for you</Badge>
             ) : (
               <Badge>Heads-up</Badge>
             )}

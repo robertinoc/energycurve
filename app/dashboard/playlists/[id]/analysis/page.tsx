@@ -161,11 +161,15 @@ export default async function PlaylistAnalysisPage({
                 How the set actually flows
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/56">
-                Hover the curve to inspect each track. Dashed halos mark tracks
-                involved in at least one detected issue.
+                Hover the curve to inspect each track. The dashed line is the
+                ideal curve for this context and genre — the score measures how
+                closely your set follows it.
               </p>
             </div>
-            <EnergyCurveChart tracks={chartTracks} />
+            <EnergyCurveChart
+              tracks={chartTracks}
+              target={analysis.targetCurve}
+            />
           </div>
 
           <SetScoreCard

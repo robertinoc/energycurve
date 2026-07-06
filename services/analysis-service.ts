@@ -3,6 +3,7 @@ import "server-only"
 import { after } from "next/server"
 
 import { computeAnalysisInputHash } from "@/lib/analytics/analysis-hash"
+import { CURRENT_ANALYSIS_ALGORITHM_VERSION } from "@/lib/product/strategy"
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
@@ -74,7 +75,11 @@ export async function getPlaylistAnalysis(
     context: playlist.context,
   })
 
-  const energies = resolveTrackEnergies(playlist.tracks, playlist.context)
+  const energies = resolveTrackEnergies(
+    playlist.tracks,
+    playlist.context,
+    playlist.genre
+  )
   const analysis = analyzePlaylist({
     curve: energies.map((entry) => entry.score),
     genre: playlist.genre,
@@ -144,6 +149,7 @@ async function recordAnalysisSnapshot(
       curve: analysis.curve,
       genre: analysis.genre,
       context: analysis.context,
+      algorithmVersion: CURRENT_ANALYSIS_ALGORITHM_VERSION,
     })
 
     const { data: latest, error: latestError } = await supabase
@@ -174,6 +180,7 @@ async function recordAnalysisSnapshot(
       suggested_order: reorder?.suggestedOrder ?? null,
       suggested_score: reorder?.suggestedAnalysis.setScore ?? null,
       input_hash: inputHash,
+      algorithm_version: CURRENT_ANALYSIS_ALGORITHM_VERSION,
     })
 
     if (insertError) {

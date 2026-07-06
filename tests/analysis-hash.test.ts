@@ -30,6 +30,22 @@ describe("computeAnalysisInputHash", () => {
     )
   })
 
+  it("changes when the algorithm version changes", () => {
+    const base = { curve: [4, 5, 6], genre: "house", context: "main" }
+
+    expect(
+      computeAnalysisInputHash({ ...base, algorithmVersion: 1 })
+    ).not.toBe(computeAnalysisInputHash({ ...base, algorithmVersion: 2 }))
+  })
+
+  it("defaults to the current algorithm version", () => {
+    const base = { curve: [4, 5, 6], genre: "house", context: "main" }
+
+    expect(computeAnalysisInputHash(base)).toBe(
+      computeAnalysisInputHash({ ...base, algorithmVersion: 2 })
+    )
+  })
+
   it("is order-sensitive for the curve", () => {
     expect(
       computeAnalysisInputHash({ curve: [4, 6], genre: "house", context: "main" })

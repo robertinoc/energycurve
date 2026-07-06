@@ -1,5 +1,6 @@
 import { Clock3, Compass } from "lucide-react"
 
+import { SUBSCORE_LABELS } from "@/lib/content/analysis-copy"
 import type { PlaylistAnalysis } from "@/types/analysis"
 
 const CONTEXT_LABELS: Record<string, string> = {
@@ -13,9 +14,17 @@ interface SetScoreCardProps {
   durationMinutes: number
 }
 
-interface PenaltyRow {
+interface SubScoreRow {
   label: string
   value: number
+  weight: number
+}
+
+/** Sub-score bar tinted by how healthy that component is. */
+function subScoreColor(value: number) {
+  if (value >= 8) return "#22D3EE"
+  if (value >= 5.5) return "#A24DE0"
+  return "#F5A524"
 }
 
 const GAUGE_SIZE = 168
@@ -78,12 +87,23 @@ function ScoreGauge({ score }: { score: number }) {
 export function SetScoreCard({ analysis, durationMinutes }: SetScoreCardProps) {
   const { breakdown } = analysis
 
-  const penaltyRows: PenaltyRow[] = [
-    { label: "Abrupt drops", value: breakdown.dropPenalty },
-    { label: "Flat zones", value: breakdown.flatZonePenalty },
-    { label: "Context errors", value: breakdown.contextPenalty },
-    { label: "Genre errors", value: breakdown.genrePenalty },
-  ].filter((row) => row.value > 0)
+  const subScoreRows: SubScoreRow[] = [
+    {
+      label: SUBSCORE_LABELS.shape.en,
+      value: breakdown.shapeFit,
+      weight: breakdown.weights.shape,
+    },
+    {
+      label: SUBSCORE_LABELS.dynamics.en,
+      value: breakdown.dynamicsQuality,
+      weight: breakdown.weights.dynamics,
+    },
+    {
+      label: SUBSCORE_LABELS.ending.en,
+      value: breakdown.endingQuality,
+      weight: breakdown.weights.ending,
+    },
+  ]
 
   const bestFitIsCurrent = analysis.bestFitContext === analysis.context
 
@@ -95,27 +115,29 @@ export function SetScoreCard({ analysis, durationMinutes }: SetScoreCardProps) {
         <ScoreGauge score={analysis.setScore} />
       </div>
 
-      <div className="mt-6 space-y-2 rounded-xl border border-ec-border bg-ec-sunken p-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-ec-text-muted">Starting score</span>
-          <span className="font-mono text-ec-text">
-            {breakdown.startingScore}
-          </span>
-        </div>
-        {penaltyRows.map((row) => (
-          <div
-            key={row.label}
-            className="flex items-center justify-between text-sm"
-          >
-            <span className="text-ec-text-muted">{row.label}</span>
-            <span className="font-mono text-ec-amber">−{row.value}</span>
+      <div className="mt-6 space-y-3 rounded-xl border border-ec-border bg-ec-sunken p-4">
+        {subScoreRows.map((row) => (
+          <div key={row.label}>
+            <div className="flex items-baseline justify-between text-sm">
+              <span className="text-ec-text-muted">
+                {row.label}{" "}
+                <span className="font-mono text-[10px] text-ec-text-dim">
+                  ×{Math.round(row.weight * 100)}%
+                </span>
+              </span>
+              <span className="font-mono text-ec-text">{row.value}</span>
+            </div>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="h-full rounded-full transition-[width]"
+                style={{
+                  width: `${Math.min(Math.max(row.value * 10, 0), 100)}%`,
+                  backgroundColor: subScoreColor(row.value),
+                }}
+              />
+            </div>
           </div>
         ))}
-        {penaltyRows.length === 0 ? (
-          <p className="text-sm text-ec-cyan">
-            No penalties — this flow holds up.
-          </p>
-        ) : null}
         {breakdown.rawScore < breakdown.finalScore ? (
           <div className="flex items-center justify-between border-t border-ec-border pt-2 text-sm">
             <span className="text-ec-text-muted">Clamped to minimum</span>
