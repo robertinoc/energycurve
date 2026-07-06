@@ -19,6 +19,8 @@ export async function sendTransactionalEmail(options: {
   subject: string
   text: string
   html: string
+  /** Optional reply-to (e.g. a contact form sender so replies go to them). */
+  replyTo?: string
 }): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.RESEND_FROM_EMAIL
@@ -41,6 +43,7 @@ export async function sendTransactionalEmail(options: {
         subject: options.subject,
         text: options.text,
         html: options.html,
+        ...(options.replyTo ? { reply_to: options.replyTo } : {}),
       }),
     })
 

@@ -182,8 +182,8 @@ const siteCopy: SiteCopySchema = {
       es: "Entendé qué está haciendo realmente tu set",
     },
     intro: {
-      en: "Go beyond playlist prep with DJ set analysis that reveals energy flow, transition quality, and the structure behind your strongest mixes.",
-      es: "Andá más allá de preparar playlists con un análisis de sets de DJ que revela flujo de energía, calidad de transición y la estructura detrás de tus mixes más fuertes.",
+      en: "Analyze your DJ sets and uncover the energy flow, transition quality, and structure behind your strongest mixes.",
+      es: "Analizá tus sets de DJ y descubrí el flujo de energía, la calidad de las transiciones y la estructura detrás de tus mejores mixes.",
     },
     energy: {
       title: {
@@ -266,8 +266,8 @@ const siteCopy: SiteCopySchema = {
   },
   story: {
     title: {
-      en: "Built by a DJ who faced the same problem",
-      es: "Creado por un DJ que tuvo el mismo problema",
+      en: "Built by a DJ (who also faced the same problem)",
+      es: "Creado por un DJ (que también tuvo el mismo problema)",
     },
     body: [
       {
@@ -332,8 +332,8 @@ const siteCopy: SiteCopySchema = {
   },
   cta: {
     title: {
-      en: "Start shaping better sets today",
-      es: "Empezá a moldear mejores sets hoy",
+      en: "Start improving your sets and your performance today",
+      es: "Empezá hoy a mejorar tus sets y tu performance",
     },
     subtitle: {
       en: "Create an account, explore your set energy, and build performances with more control.",
