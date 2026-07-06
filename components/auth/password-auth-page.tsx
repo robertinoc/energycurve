@@ -119,6 +119,12 @@ export function PasswordAuthPage({
     ? "Create your EnergyCurve account"
     : "Sign in to EnergyCurve"
   const googleHref = `/auth/social/google?mode=${mode}&returnTo=${encodeURIComponent(returnTo)}`
+  // Google sign-in is gated behind a flag: the WorkOS Google connection must
+  // be configured in the target environment first, otherwise the authorize
+  // redirect 404s. Flip NEXT_PUBLIC_GOOGLE_AUTH_ENABLED to "true" once the
+  // Production Google OAuth connection is set up in WorkOS.
+  const googleAuthEnabled =
+    process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true"
   const description = isSignup
     ? "Create an account with email and password, backed by WorkOS and stored as a secure app session."
     : "Sign in with email and password through WorkOS, while keeping the app experience simple and controlled."
@@ -165,19 +171,23 @@ export function PasswordAuthPage({
               </Alert>
             ) : null}
 
-            <a
-              href={googleHref}
-              className="flex h-11 items-center justify-center gap-3 rounded-2xl border border-white/12 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] hover:shadow-[0_14px_34px_rgba(0,0,0,0.24),0_0_24px_rgba(34,211,238,0.08)]"
-            >
-              <GoogleMark />
-              Continue with Google
-            </a>
+            {googleAuthEnabled ? (
+              <>
+                <a
+                  href={googleHref}
+                  className="flex h-11 items-center justify-center gap-3 rounded-2xl border border-white/12 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] hover:shadow-[0_14px_34px_rgba(0,0,0,0.24),0_0_24px_rgba(34,211,238,0.08)]"
+                >
+                  <GoogleMark />
+                  Continue with Google
+                </a>
 
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-white/32">
-              <Separator className="flex-1 bg-white/10" />
-              <span>Email and password</span>
-              <Separator className="flex-1 bg-white/10" />
-            </div>
+                <div className="flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-white/32">
+                  <Separator className="flex-1 bg-white/10" />
+                  <span>Email and password</span>
+                  <Separator className="flex-1 bg-white/10" />
+                </div>
+              </>
+            ) : null}
 
             <div className="space-y-2">
               <Label htmlFor={`${mode}-email`} className="text-white/82">
