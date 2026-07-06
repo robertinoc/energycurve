@@ -109,8 +109,8 @@ export function PasswordAuthPage({
   const isSignup = mode === "signup"
   const alertCopy = getAlertCopy(mode, errorCode, loggedOut, resetSuccess)
   const title = isSignup
-    ? "Create your EnergyCurve account"
-    : "Sign in to EnergyCurve"
+    ? "Welcome to EnergyCurve"
+    : "Welcome back to EnergyCurve"
   const googleHref = `/auth/social/google?mode=${mode}&returnTo=${encodeURIComponent(returnTo)}`
   // Google sign-in is gated behind a flag: the WorkOS Google connection must
   // be configured in the target environment first, otherwise the authorize
@@ -118,9 +118,9 @@ export function PasswordAuthPage({
   // Production Google OAuth connection is set up in WorkOS.
   const googleAuthEnabled =
     process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true"
-  const description = isSignup
-    ? "Create an account with email and password, backed by WorkOS and stored as a secure app session."
-    : "Sign in with email and password through WorkOS, while keeping the app experience simple and controlled."
+  const crossLinkHref = isSignup
+    ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+    : `/signup?returnTo=${encodeURIComponent(returnTo)}`
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#08050F] px-6 py-10 text-white">
@@ -136,7 +136,7 @@ export function PasswordAuthPage({
             tone="light"
             size="lg"
             kind="horizontal"
-            caption={isSignup ? "WorkOS-backed sign up" : "WorkOS-backed login"}
+            caption="Build sets that move the floor."
           />
 
           <div className="space-y-3">
@@ -144,7 +144,20 @@ export function PasswordAuthPage({
               {title}
             </h1>
             <p className="max-w-xl text-base leading-7 text-white/68 sm:text-lg">
-              {description}
+              {isSignup ? (
+                <>
+                  New here? Create your account below. Already in the mix?{" "}
+                </>
+              ) : (
+                <>Log in to pick up your sets. New here? </>
+              )}
+              <Link
+                href={crossLinkHref}
+                className="text-white underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
+              >
+                {isSignup ? "Log in" : "Create an account"}
+              </Link>
+              .
             </p>
           </div>
 
