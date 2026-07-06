@@ -8,6 +8,7 @@ import { AnalyticsIdentify } from "@/components/analytics/analytics-tracker"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { ScoreSparkline } from "@/components/analysis/score-sparkline"
 import { EnergyCurveDashboard } from "@/components/dashboard/energy-curve-dashboard"
+import { QuickActions } from "@/components/dashboard/quick-actions"
 import { SetupRequiredState } from "@/components/setup/setup-required-state"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -248,6 +249,8 @@ export default async function DashboardPage() {
             </div>
           </section>
         ) : null}
+
+        {snapshot && snapshot.playlistCount > 0 ? <QuickActions /> : null}
 
         {snapshot && snapshot.latestPlaylists.length > 0 ? (
           <section className="rounded-[28px] border border-white/10 bg-[#0C0917] p-5">
