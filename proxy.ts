@@ -2,19 +2,51 @@ import { authkit, handleAuthkitHeaders } from "@workos-inc/authkit-nextjs"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { resolveAuthRoute } from "@/lib/auth/auth-routing"
+import {
+  backstageEffectivePathname,
+  isBackstageHostname,
+  resolveMainOrigin,
+} from "@/lib/backstage/hosts"
 import { isWorkOSConfigured } from "@/lib/config/infrastructure-status"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
+
+/**
+ * Redirect targets are app-relative paths. While on the backstage
+ * subdomain they must resolve against the main origin (see hosts.ts).
+ */
+function buildRedirectUrl(
+  target: string,
+  request: NextRequest,
+  onBackstageHost: boolean
+) {
+  if (onBackstageHost) {
+    const mainOrigin = resolveMainOrigin()
+
+    if (mainOrigin) {
+      return new URL(target, mainOrigin)
+    }
+  }
+
+  return new URL(target, request.url)
+}
 
 export default async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const workosConfigured = isWorkOSConfigured()
+  const onBackstageHost = isBackstageHostname(request.nextUrl.hostname)
+  // The proxy runs before the beforeFiles rewrites, so backstage-host
+  // requests still carry the un-rewritten pathname ("/" instead of
+  // "/backstage"). Route decisions must use the effective one.
+  const routePathname = onBackstageHost
+    ? backstageEffectivePathname(pathname)
+    : pathname
 
   // The pre-auth resolution only exists for the not-configured setup state.
   // Running it with a real session pending (hasUser unknown) would redirect
   // authenticated /dashboard requests to /login and loop them back forever.
   if (!workosConfigured) {
     const setupRouteResolution = resolveAuthRoute({
-      pathname,
+      pathname: routePathname,
       search,
       workosConfigured: false,
       hasUser: false,
@@ -22,7 +54,7 @@ export default async function proxy(request: NextRequest) {
 
     if (setupRouteResolution.type === "redirect") {
       return NextResponse.redirect(
-        new URL(setupRouteResolution.target, request.url)
+        buildRedirectUrl(setupRouteResolution.target, request, onBackstageHost)
       )
     }
 
@@ -39,7 +71,7 @@ export default async function proxy(request: NextRequest) {
   } catch (error) {
     logWorkOSRuntimeError("Proxy auth check failed", error)
     const failureRouteResolution = resolveAuthRoute({
-      pathname,
+      pathname: routePathname,
       search,
       workosConfigured: true,
       hasUser: false,
@@ -48,7 +80,11 @@ export default async function proxy(request: NextRequest) {
 
     if (failureRouteResolution.type === "redirect") {
       return NextResponse.redirect(
-        new URL(failureRouteResolution.target, request.url)
+        buildRedirectUrl(
+          failureRouteResolution.target,
+          request,
+          onBackstageHost
+        )
       )
     }
 
@@ -56,7 +92,7 @@ export default async function proxy(request: NextRequest) {
   }
 
   const routeResolution = resolveAuthRoute({
-    pathname,
+    pathname: routePathname,
     search,
     workosConfigured: true,
     hasUser: Boolean(session.user),
@@ -64,7 +100,11 @@ export default async function proxy(request: NextRequest) {
 
   if (routeResolution.type === "redirect") {
     return handleAuthkitHeaders(request, headers, {
-      redirect: routeResolution.target,
+      redirect: buildRedirectUrl(
+        routeResolution.target,
+        request,
+        onBackstageHost
+      ).toString(),
     })
   }
 
@@ -72,5 +112,17 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/signup"],
+  matcher: [
+    "/dashboard/:path*",
+    "/backstage/:path*",
+    "/api/backstage/:path*",
+    "/login",
+    "/signup",
+    // Backstage subdomain: every request must run through authkit because
+    // the /backstage pages and API routes read the session via withAuth().
+    {
+      source: "/:path*",
+      has: [{ type: "host", value: "backstage.energycurve.app" }],
+    },
+  ],
 }

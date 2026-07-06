@@ -14,6 +14,7 @@ export interface Database {
           id: string
           workos_user_id: string
           email: string
+          suspended_at: string | null
           created_at: string
           updated_at: string
         }
@@ -21,6 +22,7 @@ export interface Database {
           id?: string
           workos_user_id: string
           email: string
+          suspended_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -28,6 +30,7 @@ export interface Database {
           id?: string
           workos_user_id?: string
           email?: string
+          suspended_at?: string | null
           created_at?: string
           updated_at?: string
         }

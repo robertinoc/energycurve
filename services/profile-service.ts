@@ -28,3 +28,21 @@ export async function syncProfileFromWorkOSUser(
 
   return data
 }
+
+export async function getProfileByWorkOSUserId(
+  workosUserId: string
+): Promise<Profile | null> {
+  const supabase = getSupabaseAdminClient()
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("workos_user_id", workosUserId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error("Unable to load the profile for this account.")
+  }
+
+  return data
+}

@@ -70,6 +70,12 @@ function getAlertCopy(
         title: "Password needs another try",
         description: "Choose a stronger password that meets your WorkOS password policy.",
       }
+    case "account_suspended":
+      return {
+        title: "Account suspended",
+        description:
+          "This account has been suspended. Contact support if you believe this is a mistake.",
+      }
     case "auth":
       return {
         title: "Authentication failed",
