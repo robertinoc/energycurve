@@ -1,5 +1,7 @@
 import "server-only"
 
+import { after } from "next/server"
+
 import { computeAnalysisInputHash } from "@/lib/analytics/analysis-hash"
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -106,9 +108,13 @@ export async function getPlaylistAnalysis(
     reorderSuggested: reorder !== null,
   })
 
-  // History snapshot for the "playlists analyzed" KPI — fire-and-forget so
-  // a storage hiccup never breaks the results page.
-  void recordAnalysisSnapshot(profileId, playlistId, analysis, reorder)
+  // History snapshot for the "playlists analyzed" KPI. Scheduled with
+  // after() rather than a bare fire-and-forget promise: on serverless the
+  // function can freeze once the response streams, dropping an un-awaited
+  // write — after() keeps the runtime alive until the insert completes.
+  // recordAnalysisSnapshot swallows its own errors, so it never breaks the
+  // results page.
+  after(() => recordAnalysisSnapshot(profileId, playlistId, analysis, reorder))
 
   return {
     status: "ok",

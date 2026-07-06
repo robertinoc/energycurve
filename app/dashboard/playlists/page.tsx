@@ -8,6 +8,7 @@ import { DeletePlaylistButton } from "@/components/playlists/delete-playlist-but
 import { PlaylistCreateForm } from "@/components/playlists/playlist-create-form"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { buildReturnToHref } from "@/lib/auth/return-to"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -77,13 +78,11 @@ export default async function PlaylistsPage() {
         <PlaylistCreateForm />
 
         {playlists.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-[26px] border border-dashed border-white/14 bg-white/[0.02] px-6 py-14 text-center">
-            <ListMusic className="size-8 text-white/32" />
-            <p className="text-sm text-white/58">
-              No playlists yet. Create your first one above — then add tracks
-              manually or paste a full tracklist.
-            </p>
-          </div>
+          <EmptyState
+            icon={<ListMusic className="size-8" />}
+            title="No playlists yet"
+            description="Create your first one above — then add tracks manually or paste a full tracklist."
+          />
         ) : (
           <section className="space-y-3">
             {playlists.map((playlist) => (

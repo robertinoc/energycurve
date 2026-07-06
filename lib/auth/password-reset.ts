@@ -8,6 +8,7 @@ import {
   buildOriginFromHeaders,
   mapPasswordResetError,
 } from "@/lib/auth/password-auth-helpers"
+import { buildBrandedEmail } from "@/lib/email/build-email-html"
 import {
   isEmailDeliveryConfigured,
   sendTransactionalEmail,
@@ -24,33 +25,16 @@ function getFormValue(formData: FormData, key: string) {
 }
 
 function buildResetEmail(resetUrl: string) {
-  const text = [
-    "Someone requested a password reset for your EnergyCurve account.",
-    "",
-    `Reset your password: ${resetUrl}`,
-    "",
-    "The link expires shortly. If you didn't request this, you can ignore this email — your password stays unchanged.",
-  ].join("\n")
-
-  const html = `
-    <div style="font-family: Inter, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #14101F;">
-      <h2 style="margin: 0 0 16px;">Reset your EnergyCurve password</h2>
-      <p style="margin: 0 0 20px; line-height: 1.6;">
-        Someone requested a password reset for your EnergyCurve account.
-        Click the button below to choose a new password.
-      </p>
-      <p style="margin: 0 0 24px;">
-        <a href="${resetUrl}" style="display: inline-block; padding: 12px 20px; background: #A24DE0; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 600;">
-          Reset password
-        </a>
-      </p>
-      <p style="margin: 0; font-size: 13px; color: #6E6788; line-height: 1.6;">
-        The link expires shortly. If you didn't request this, you can safely
-        ignore this email — your password stays unchanged.
-      </p>
-    </div>`
-
-  return { text, html }
+  return buildBrandedEmail({
+    preview: "Reset your EnergyCurve password",
+    heading: "Reset your EnergyCurve password",
+    paragraphs: [
+      "Someone requested a password reset for your EnergyCurve account. Click the button below to choose a new password.",
+    ],
+    button: { label: "Reset password", url: resetUrl },
+    footnote:
+      "The link expires shortly. If you didn't request this, you can safely ignore this email — your password stays unchanged.",
+  })
 }
 
 export async function forgotPasswordAction(formData: FormData) {
