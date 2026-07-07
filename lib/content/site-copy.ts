@@ -105,6 +105,23 @@ interface SiteCopySchema {
     rights: LocalizedLabel
     description: LocalizedLabel
   }
+  install: {
+    bannerTitle: LocalizedLabel
+    bannerBody: LocalizedLabel
+    bannerCta: LocalizedLabel
+    bannerDismiss: LocalizedLabel
+    footerLink: LocalizedLabel
+    title: LocalizedLabel
+    description: LocalizedLabel
+    androidTitle: LocalizedLabel
+    androidSteps: LocalizedLabel[]
+    iosTitle: LocalizedLabel
+    iosSteps: LocalizedLabel[]
+    noteTitle: LocalizedLabel
+    note: LocalizedLabel
+    openApp: LocalizedLabel
+    backHome: LocalizedLabel
+  }
   ui: {
     login: LocalizedLabel
     builtFor: LocalizedLabel
@@ -355,6 +372,81 @@ const siteCopy: SiteCopySchema = {
       es: "EnergyCurve ayuda a DJs a entender la energía del set, las transiciones y el flujo de la performance.",
     },
   },
+  install: {
+    bannerTitle: {
+      en: "Get the EnergyCurve app",
+      es: "Descargá la app de EnergyCurve",
+    },
+    bannerBody: {
+      en: "Add it to your home screen for the full-screen experience.",
+      es: "Agregala a tu pantalla de inicio para usarla a pantalla completa.",
+    },
+    bannerCta: { en: "Install", es: "Instalar" },
+    bannerDismiss: { en: "Dismiss", es: "Cerrar" },
+    footerLink: { en: "Install the app", es: "Instalá la app" },
+    title: {
+      en: "Add EnergyCurve to your home screen",
+      es: "Agregá EnergyCurve a tu pantalla de inicio",
+    },
+    description: {
+      en: "EnergyCurve works in your browser and installs like an app on your phone or tablet — no app store required. Once installed, it opens straight into your dashboard.",
+      es: "EnergyCurve funciona en tu navegador y se instala como una app en tu teléfono o tablet — sin pasar por ninguna tienda. Una vez instalada, se abre directo en tu dashboard.",
+    },
+    androidTitle: {
+      en: "Android / Chrome",
+      es: "Android / Chrome",
+    },
+    androidSteps: [
+      {
+        en: "Open energycurve.app in Chrome.",
+        es: "Abrí energycurve.app en Chrome.",
+      },
+      {
+        en: "Tap the ⋮ menu in the top-right corner.",
+        es: "Tocá el menú ⋮ arriba a la derecha.",
+      },
+      {
+        en: "Tap “Add to Home screen” (or “Install app”).",
+        es: "Tocá “Agregar a la pantalla principal” (o “Instalar app”).",
+      },
+      {
+        en: "Confirm — the EnergyCurve icon appears on your home screen.",
+        es: "Confirmá — el ícono de EnergyCurve aparece en tu pantalla de inicio.",
+      },
+    ],
+    iosTitle: {
+      en: "iPhone / iPad (Safari)",
+      es: "iPhone / iPad (Safari)",
+    },
+    iosSteps: [
+      {
+        en: "Open energycurve.app in Safari.",
+        es: "Abrí energycurve.app en Safari.",
+      },
+      {
+        en: "Tap the Share button (the square with an arrow).",
+        es: "Tocá el botón Compartir (el cuadrado con la flecha).",
+      },
+      {
+        en: "Scroll and tap “Add to Home Screen”.",
+        es: "Deslizá y tocá “Agregar a pantalla de inicio”.",
+      },
+      {
+        en: "Tap “Add” — the EnergyCurve icon appears on your home screen.",
+        es: "Tocá “Agregar” — el ícono de EnergyCurve aparece en tu pantalla de inicio.",
+      },
+    ],
+    noteTitle: {
+      en: "How it opens",
+      es: "Cómo se abre",
+    },
+    note: {
+      en: "Launching the app takes you straight to your dashboard when you're logged in — otherwise you'll land on the login screen first.",
+      es: "Al abrir la app vas directo a tu dashboard si ya iniciaste sesión — si no, primero ves la pantalla de login.",
+    },
+    openApp: { en: "Open EnergyCurve", es: "Abrir EnergyCurve" },
+    backHome: { en: "Back to home", es: "Volver al inicio" },
+  },
   ui: {
     login: { en: "Login", es: "Ingresar" },
     builtFor: { en: "Built for", es: "Creado para" },
@@ -498,6 +590,23 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       contact: siteCopy.footer.contact[locale],
       rights: siteCopy.footer.rights[locale],
       description: siteCopy.footer.description[locale],
+    },
+    install: {
+      bannerTitle: siteCopy.install.bannerTitle[locale],
+      bannerBody: siteCopy.install.bannerBody[locale],
+      bannerCta: siteCopy.install.bannerCta[locale],
+      bannerDismiss: siteCopy.install.bannerDismiss[locale],
+      footerLink: siteCopy.install.footerLink[locale],
+      title: siteCopy.install.title[locale],
+      description: siteCopy.install.description[locale],
+      androidTitle: siteCopy.install.androidTitle[locale],
+      androidSteps: siteCopy.install.androidSteps.map((step) => step[locale]),
+      iosTitle: siteCopy.install.iosTitle[locale],
+      iosSteps: siteCopy.install.iosSteps.map((step) => step[locale]),
+      noteTitle: siteCopy.install.noteTitle[locale],
+      note: siteCopy.install.note[locale],
+      openApp: siteCopy.install.openApp[locale],
+      backHome: siteCopy.install.backHome[locale],
     },
     ui: {
       login: siteCopy.ui.login[locale],

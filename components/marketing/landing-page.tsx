@@ -17,7 +17,9 @@ import {
   HowItWorksSection,
   StorySection,
 } from "@/components/marketing/landing-sections"
+import { InstallBanner } from "@/components/marketing/install-banner"
 import { getSiteCopy, SiteLocale } from "@/lib/content/site-copy"
+import { isStandaloneDisplayMode } from "@/lib/pwa"
 
 const STORAGE_KEY = "energycurve:locale"
 const SECTION_IDS = ["features", "how-it-works", "story", "contact"]
@@ -38,6 +40,14 @@ export function LandingPage() {
     window.localStorage.setItem(STORAGE_KEY, locale)
     document.documentElement.lang = locale
   }, [locale])
+
+  useEffect(() => {
+    // Installed-app launches should never sit on the marketing page: send
+    // them to /login, which forwards logged-in users straight to /dashboard.
+    if (isStandaloneDisplayMode() && window.location.pathname === "/") {
+      window.location.replace("/login")
+    }
+  }, [])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -137,6 +147,8 @@ export function LandingPage() {
         <FinalCTASection copy={copy} signupHref={signupHref} />
         <FooterSection copy={copy} />
       </div>
+
+      <InstallBanner copy={copy.install} />
     </main>
   )
 }

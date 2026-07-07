@@ -404,6 +404,9 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
           <a href="#contact" className="transition hover:text-white">
             {copy.footer.contact}
           </a>
+          <a href="/install" className="transition hover:text-white">
+            {copy.install.footerLink}
+          </a>
         </div>
       </div>
       <p>{copy.footer.rights}</p>
