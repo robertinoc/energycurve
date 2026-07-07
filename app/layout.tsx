@@ -38,7 +38,12 @@ export const metadata: Metadata = {
       },
     ],
     shortcut: ["/brand-kit/app-icon.png"],
-    apple: ["/brand-kit/app-icon.png"],
+    apple: ["/apple-touch-icon.png"],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "EnergyCurve",
   },
 }
 
