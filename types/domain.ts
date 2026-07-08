@@ -41,6 +41,8 @@ export interface TrackWriteInput {
   name: string
   bpm: number | null
   energyScore: number | null
+  /** Native file reference (Rekordbox Location / Traktor location key). */
+  sourceUri?: string | null
 }
 
 export interface ProductStrategySnapshot {

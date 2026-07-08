@@ -23,6 +23,7 @@ interface RawTrack {
   "@_AverageBpm"?: string
   "@_Tonality"?: string
   "@_Comments"?: string
+  "@_Location"?: string
 }
 
 interface RawNode {
@@ -49,6 +50,7 @@ function toImportedTrack(raw: RawTrack): ImportedTrack {
     key: (raw["@_Tonality"] ?? "").trim() || null,
     genre: (raw["@_Genre"] ?? "").trim() || null,
     energy: extractEnergyFromComment(comment),
+    sourceUri: (raw["@_Location"] ?? "").trim() || null,
   }
 }
 

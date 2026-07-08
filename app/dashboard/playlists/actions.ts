@@ -493,6 +493,7 @@ export async function importPlaylistAction(
       name,
       genre,
       context: contextRaw,
+      importSource: parsed.source,
     })
     playlistId = playlist.id
 
@@ -504,6 +505,7 @@ export async function importPlaylistAction(
         name: track.name || "Untitled",
         bpm: track.bpm,
         energyScore: track.energy,
+        sourceUri: track.sourceUri,
       }))
     )
   } catch (error) {

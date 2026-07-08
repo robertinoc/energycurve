@@ -18,6 +18,8 @@ export interface PlaylistCreateData {
   name: string
   genre: SupportedGenre
   context: PlaylistContext
+  /** How the playlist was imported, so exports can default to that format. */
+  importSource?: string | null
 }
 
 export async function createPlaylist(
@@ -33,6 +35,7 @@ export async function createPlaylist(
       name: input.name,
       genre: input.genre,
       context: input.context,
+      import_source: input.importSource ?? null,
     })
     .select()
     .single()
@@ -208,6 +211,7 @@ export async function addTrack(
       name: input.name,
       bpm: input.bpm,
       energy_score: input.energyScore,
+      source_uri: input.sourceUri ?? null,
     })
     .select()
     .single()
@@ -419,6 +423,7 @@ export async function replaceTracks(
       name: track.name,
       bpm: track.bpm,
       energy_score: track.energyScore,
+      source_uri: track.sourceUri ?? null,
     }))
   )
 

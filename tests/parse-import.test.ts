@@ -9,7 +9,15 @@ import {
 import type { ImportedTrack } from "@/lib/playlists/imported-track"
 
 function track(genre: string | null): ImportedTrack {
-  return { artist: "A", name: "N", bpm: 120, key: null, genre, energy: null }
+  return {
+    artist: "A",
+    name: "N",
+    bpm: 120,
+    key: null,
+    genre,
+    energy: null,
+    sourceUri: null,
+  }
 }
 
 describe("parseImport format detection", () => {

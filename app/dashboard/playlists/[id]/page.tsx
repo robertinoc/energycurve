@@ -4,11 +4,13 @@ import Link from "next/link"
 import { ArrowLeft, AudioWaveform, Clock3 } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
+import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
 import { TrackEditor } from "@/components/playlists/track-editor"
 import { TracklistImport } from "@/components/playlists/tracklist-import"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { buildReturnToHref } from "@/lib/auth/return-to"
+import type { ExportPlaylist } from "@/lib/playlists/export"
 import { STANDARD_TRACK_DURATION_MINUTES, GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -54,6 +56,19 @@ export default async function PlaylistDetailPage({
   const estimatedMinutes =
     playlist.tracks.length * STANDARD_TRACK_DURATION_MINUTES
 
+  const exportPlaylist: ExportPlaylist = {
+    name: playlist.name,
+    importSource: playlist.import_source,
+    tracks: playlist.tracks.map((track) => ({
+      position: track.position,
+      artist: track.artist,
+      name: track.name,
+      bpm: track.bpm,
+      energyScore: track.energy_score,
+      sourceUri: track.source_uri,
+    })),
+  }
+
   return (
     <main className="min-h-screen bg-[#08050F] text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
@@ -70,13 +85,16 @@ export default async function PlaylistDetailPage({
               Playlists
             </Link>
 
-            <Link
-              href={`/dashboard/playlists/${playlist.id}/analysis`}
-              className={cn(buttonVariants({ size: "default" }))}
-            >
-              <AudioWaveform className="size-4" />
-              Analyze set
-            </Link>
+            <div className="flex items-center gap-2">
+              <PlaylistExportButton playlist={exportPlaylist} />
+              <Link
+                href={`/dashboard/playlists/${playlist.id}/analysis`}
+                className={cn(buttonVariants({ size: "default" }))}
+              >
+                <AudioWaveform className="size-4" />
+                Analyze set
+              </Link>
+            </div>
           </div>
 
           <div className="space-y-3">
