@@ -1,17 +1,17 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, AudioWaveform, Clock3 } from "lucide-react"
+import { ArrowLeft, AudioWaveform } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
-import { TrackEditor } from "@/components/playlists/track-editor"
+import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
 import { TracklistImport } from "@/components/playlists/tracklist-import"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { buildReturnToHref } from "@/lib/auth/return-to"
 import type { ExportPlaylist } from "@/lib/playlists/export"
-import { STANDARD_TRACK_DURATION_MINUTES, GENRE_LABELS } from "@/lib/product/strategy"
+import { CONTEXT_LABELS, GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
@@ -21,12 +21,6 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = "force-dynamic"
-
-const CONTEXT_LABELS: Record<string, string> = {
-  opening: "Opening",
-  main: "Main time",
-  closing: "Closing",
-}
 
 export default async function PlaylistDetailPage({
   params,
@@ -52,9 +46,6 @@ export default async function PlaylistDetailPage({
   if (!playlist) {
     notFound()
   }
-
-  const estimatedMinutes =
-    playlist.tracks.length * STANDARD_TRACK_DURATION_MINUTES
 
   const exportPlaylist: ExportPlaylist = {
     name: playlist.name,
@@ -111,16 +102,16 @@ export default async function PlaylistDetailPage({
                   {CONTEXT_LABELS[playlist.context] ?? playlist.context}
                 </Badge>
               ) : null}
-              <span className="flex items-center gap-1.5 text-xs text-white/48">
-                <Clock3 className="size-3" />
-                ~{estimatedMinutes} min ({playlist.tracks.length} track(s) ×{" "}
-                {STANDARD_TRACK_DURATION_MINUTES} min)
-              </span>
             </div>
           </div>
         </header>
 
-        <TrackEditor playlistId={playlist.id} tracks={playlist.tracks} />
+        <PlaylistWorkspace
+          playlistId={playlist.id}
+          genre={playlist.genre}
+          context={playlist.context}
+          tracks={playlist.tracks}
+        />
 
         <TracklistImport
           playlistId={playlist.id}

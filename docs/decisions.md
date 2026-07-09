@@ -414,6 +414,24 @@ Persist each analysis as an append-only row in `analyses` (deduped by an input h
 - Server and browser share the profile id as the PostHog distinct id (`AnalyticsIdentify` on the dashboard ties the anonymous session to it).
 - Dashboards for actives/analyses/retention are configured in PostHog itself, not in code.
 
+## 25. DJ-familiar tracklist detail page (visual workbench)
+
+The playlist **detail** page is a DJ-familiar workbench: a dense, Rekordbox-style track table plus a **live set energy curve**, and it is **visual only** — the full scored report (score, sub-scores, issues, recommendations, suggested reorder) stays on the separate **Analyze** page.
+
+**Why**
+
+- EnergyCurve's users live in Rekordbox/Traktor. A table + column layout they already recognize collapses the learning curve; the energy curve as the hero is our differentiator (Rekordbox's waveform is per-track, ours is per-set).
+- Keeping score/issues off the detail view avoids two competing "verdicts" and keeps the workbench about *arranging* the set, not judging it.
+- Per-track key/genre/comment/duration were already carried by DJ exports; persisting them (migration `0008`) lets the table show DJ-standard columns and lets native exports round-trip.
+- Camelot is shown **without** harmonic coloring on purpose: sorting by key would line the colors up and imply a "harmonically optimal" set, which is false.
+
+**Consequence**
+
+- Migration `0008_track_metadata.sql` adds `tracks.musical_key/genre/comment/duration_seconds` (nullable). Parsers capture duration (Rekordbox `TotalTime` / Traktor `PLAYTIME`) + comment.
+- The detail page renders `PlaylistWorkspace` (curve + genre note + `TrackTable`) instead of the old card list; the curve reuses `resolveTrackEnergies` + `buildTargetCurve` + `curve-geometry` (no new engine rules — honors the frozen-constants rule).
+- Reordering is a preview-until-saved flow (drag + column sort) landing in a later PR; column preferences persist in `localStorage`.
+- Full write-up: `docs/product-feature-03-dj-tracklist.md`.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

@@ -200,6 +200,18 @@ What remains operational (not code):
 - external uptime monitor pointed at `/api/health`
 - collecting user feedback post-launch
 
+## Post-launch — DJ-familiar tracklist (feature 03)
+
+**Status:** In progress (post-launch enhancement)
+
+Making the playlist screen read like Rekordbox/Traktor so DJs feel at home. Full write-up: `docs/product-feature-03-dj-tracklist.md`; rationale in decision 25.
+
+- PR1 — per-track metadata (key/genre/comment/duration) captured on import + persisted (migration `0008`) + `lib/music/camelot.ts`: **done**.
+- PR2 — dense track table + live set curve + collapsible genre note + customizable columns, replacing the card-list editor: **done**.
+- PR3 — reorder & save (drag + column sort → preview/Undo/Save + toast, persisted): planned.
+- PR4 — Export dropdown (For Rekordbox/Traktor/Serato-soon/CSV/TXT) + native metadata round-trip: planned.
+- PR5 — sidebar playlist tree: planned.
+
 Repository anchors:
 
 - [lib/auth/password-reset.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/password-reset.ts)
