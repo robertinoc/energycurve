@@ -61,6 +61,7 @@ function toImportedTrack(raw: RawEntry): ImportedTrack {
     key: (raw.INFO?.["@_KEY"] ?? "").trim() || null,
     genre: (raw.INFO?.["@_GENRE"] ?? "").trim() || null,
     energy: extractEnergyFromComment(comment),
+    sourceUri: locationKey(raw.LOCATION),
   }
 }
 

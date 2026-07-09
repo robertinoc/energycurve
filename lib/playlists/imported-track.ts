@@ -15,6 +15,13 @@ export interface ImportedTrack {
   genre: string | null
   /** Energy 1–10 when derivable (Mixed In Key tag); null otherwise. */
   energy: number | null
+  /**
+   * Native file reference from the source export, kept verbatim so a same-format
+   * export relinks to the DJ's library. Rekordbox: the `Location` file URL.
+   * Traktor: the collection location key (VOLUME + DIR + FILE). Null for paste
+   * imports and tracks without a resolvable location.
+   */
+  sourceUri: string | null
 }
 
 export type ImportSource = "rekordbox" | "traktor"

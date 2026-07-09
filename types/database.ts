@@ -43,6 +43,7 @@ export interface Database {
           name: string
           genre: Database["public"]["Enums"]["playlist_genre"] | null
           context: Database["public"]["Enums"]["playlist_context"] | null
+          import_source: string | null
           created_at: string
           updated_at: string
         }
@@ -52,6 +53,7 @@ export interface Database {
           name: string
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
+          import_source?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -61,6 +63,7 @@ export interface Database {
           name?: string
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
+          import_source?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -82,6 +85,7 @@ export interface Database {
           name: string
           bpm: number | null
           energy_score: number | null
+          source_uri: string | null
           created_at: string
         }
         Insert: {
@@ -92,6 +96,7 @@ export interface Database {
           name: string
           bpm?: number | null
           energy_score?: number | null
+          source_uri?: string | null
           created_at?: string
         }
         Update: {
@@ -102,6 +107,7 @@ export interface Database {
           name?: string
           bpm?: number | null
           energy_score?: number | null
+          source_uri?: string | null
           created_at?: string
         }
         Relationships: [
