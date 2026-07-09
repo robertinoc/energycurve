@@ -25,6 +25,12 @@ const NAV_ITEMS: NavItem[] = [
   },
 ]
 
+export interface SidebarPlaylist {
+  id: string
+  name: string
+  trackCount: number
+}
+
 function isActive(pathname: string, item: NavItem): boolean {
   if (item.match === "exact") {
     return pathname === item.href
@@ -35,6 +41,7 @@ function isActive(pathname: string, item: NavItem): boolean {
 interface DashboardShellProps {
   displayName: string
   email: string
+  playlists: SidebarPlaylist[]
   logoutAction: () => Promise<void>
   children: React.ReactNode
 }
@@ -42,6 +49,7 @@ interface DashboardShellProps {
 export function DashboardShell({
   displayName,
   email,
+  playlists,
   logoutAction,
   children,
 }: DashboardShellProps) {
@@ -64,7 +72,7 @@ export function DashboardShell({
         </button>
       </div>
 
-      <nav className="flex-1 space-y-1">
+      <nav className="flex-1 space-y-1 overflow-y-auto">
         <p className="px-3 pb-1 text-[0.62rem] uppercase tracking-[0.22em] text-white/32">
           Workspace
         </p>
@@ -72,21 +80,52 @@ export function DashboardShell({
           const active = isActive(pathname, item)
           const Icon = item.icon
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setDrawerOpen(false)}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                active
-                  ? "bg-white/10 text-white"
-                  : "text-white/62 hover:bg-white/[0.06] hover:text-white"
-              )}
-            >
-              <Icon className="size-4 shrink-0" />
-              {item.label}
-            </Link>
+            <div key={item.href}>
+              <Link
+                href={item.href}
+                onClick={() => setDrawerOpen(false)}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-white/10 text-white"
+                    : "text-white/62 hover:bg-white/[0.06] hover:text-white"
+                )}
+              >
+                <Icon className="size-4 shrink-0" />
+                {item.label}
+              </Link>
+
+              {/* Playlist tree under the Playlists item (Rekordbox left panel). */}
+              {item.href === "/dashboard/playlists" && playlists.length > 0 ? (
+                <ul className="mt-1 space-y-0.5 border-l border-white/8 pl-3">
+                  {playlists.map((playlist) => {
+                    const href = `/dashboard/playlists/${playlist.id}`
+                    const playlistActive = pathname.startsWith(href)
+                    return (
+                      <li key={playlist.id}>
+                        <Link
+                          href={href}
+                          onClick={() => setDrawerOpen(false)}
+                          aria-current={playlistActive ? "page" : undefined}
+                          className={cn(
+                            "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] transition-colors",
+                            playlistActive
+                              ? "bg-white/[0.07] text-white"
+                              : "text-white/52 hover:bg-white/[0.05] hover:text-white/80"
+                          )}
+                        >
+                          <span className="truncate">{playlist.name}</span>
+                          <span className="ml-auto shrink-0 font-mono text-[11px] text-white/28">
+                            {playlist.trackCount}
+                          </span>
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : null}
+            </div>
           )
         })}
       </nav>
