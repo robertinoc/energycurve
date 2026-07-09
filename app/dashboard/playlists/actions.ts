@@ -506,6 +506,10 @@ export async function importPlaylistAction(
         bpm: track.bpm,
         energyScore: track.energy,
         sourceUri: track.sourceUri,
+        musicalKey: track.key,
+        genre: track.genre,
+        comment: track.comment,
+        durationSeconds: track.durationSeconds,
       }))
     )
   } catch (error) {

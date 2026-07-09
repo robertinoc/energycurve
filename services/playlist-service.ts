@@ -212,6 +212,10 @@ export async function addTrack(
       bpm: input.bpm,
       energy_score: input.energyScore,
       source_uri: input.sourceUri ?? null,
+      musical_key: input.musicalKey ?? null,
+      genre: input.genre ?? null,
+      comment: input.comment ?? null,
+      duration_seconds: input.durationSeconds ?? null,
     })
     .select()
     .single()
@@ -424,6 +428,10 @@ export async function replaceTracks(
       bpm: track.bpm,
       energy_score: track.energyScore,
       source_uri: track.sourceUri ?? null,
+      musical_key: track.musicalKey ?? null,
+      genre: track.genre ?? null,
+      comment: track.comment ?? null,
+      duration_seconds: track.durationSeconds ?? null,
     }))
   )
 

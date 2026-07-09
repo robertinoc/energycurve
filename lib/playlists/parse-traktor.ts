@@ -3,6 +3,7 @@ import { XMLParser } from "fast-xml-parser"
 import {
   extractEnergyFromComment,
   parseBpm,
+  parseDurationSeconds,
   type ImportedTrack,
   type ParsedImport,
 } from "@/lib/playlists/imported-track"
@@ -17,7 +18,7 @@ interface RawEntry {
   "@_TITLE"?: string
   "@_ARTIST"?: string
   LOCATION?: { "@_DIR"?: string; "@_FILE"?: string; "@_VOLUME"?: string }
-  INFO?: { "@_GENRE"?: string; "@_COMMENT"?: string; "@_KEY"?: string }
+  INFO?: { "@_GENRE"?: string; "@_COMMENT"?: string; "@_KEY"?: string; "@_PLAYTIME"?: string }
   TEMPO?: { "@_BPM"?: string }
   MUSICAL_KEY?: { "@_VALUE"?: string }
   PRIMARYKEY?: { "@_TYPE"?: string; "@_KEY"?: string }
@@ -62,6 +63,8 @@ function toImportedTrack(raw: RawEntry): ImportedTrack {
     genre: (raw.INFO?.["@_GENRE"] ?? "").trim() || null,
     energy: extractEnergyFromComment(comment),
     sourceUri: locationKey(raw.LOCATION),
+    comment: (comment ?? "").trim() || null,
+    durationSeconds: parseDurationSeconds(raw.INFO?.["@_PLAYTIME"]),
   }
 }
 

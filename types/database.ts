@@ -86,6 +86,10 @@ export interface Database {
           bpm: number | null
           energy_score: number | null
           source_uri: string | null
+          musical_key: string | null
+          genre: string | null
+          comment: string | null
+          duration_seconds: number | null
           created_at: string
         }
         Insert: {
@@ -97,6 +101,10 @@ export interface Database {
           bpm?: number | null
           energy_score?: number | null
           source_uri?: string | null
+          musical_key?: string | null
+          genre?: string | null
+          comment?: string | null
+          duration_seconds?: number | null
           created_at?: string
         }
         Update: {
@@ -108,6 +116,10 @@ export interface Database {
           bpm?: number | null
           energy_score?: number | null
           source_uri?: string | null
+          musical_key?: string | null
+          genre?: string | null
+          comment?: string | null
+          duration_seconds?: number | null
           created_at?: string
         }
         Relationships: [
