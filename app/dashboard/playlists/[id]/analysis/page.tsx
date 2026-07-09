@@ -74,25 +74,23 @@ export default async function PlaylistAnalysisPage({
         : "This playlist has no genre or context set, so the engine has nothing to score against. Recreate it with both fields set."
 
     return (
-      <main className="min-h-screen bg-[#08050F] text-white">
-        <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-8 lg:px-10">
-          <Link
-            href={backHref}
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "w-fit text-white/58 hover:text-white"
-            )}
-          >
-            <ArrowLeft className="size-3.5" />
-            {result.playlist.name}
-          </Link>
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8 lg:px-10">
+        <Link
+          href={backHref}
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "w-fit text-white/58 hover:text-white"
+          )}
+        >
+          <ArrowLeft className="size-3.5" />
+          {result.playlist.name}
+        </Link>
 
-          <div className="flex flex-col items-center gap-3 rounded-[26px] border border-dashed border-white/14 bg-white/[0.02] px-6 py-14 text-center">
-            <TriangleAlert className="size-8 text-ec-amber/80" />
-            <p className="max-w-md text-sm leading-6 text-white/58">{message}</p>
-          </div>
+        <div className="flex flex-col items-center gap-3 rounded-[26px] border border-dashed border-white/14 bg-white/[0.02] px-6 py-14 text-center">
+          <TriangleAlert className="size-8 text-ec-amber/80" />
+          <p className="max-w-md text-sm leading-6 text-white/58">{message}</p>
         </div>
-      </main>
+      </div>
     )
   }
 
@@ -113,9 +111,8 @@ export default async function PlaylistAnalysisPage({
   }))
 
   return (
-    <main className="min-h-screen bg-[#08050F] text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
-        <header className="space-y-4">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
+      <header className="space-y-4">
           <Link
             href={backHref}
             className={cn(
@@ -207,7 +204,6 @@ export default async function PlaylistAnalysisPage({
             />
           </section>
         ) : null}
-      </div>
-    </main>
+    </div>
   )
 }
