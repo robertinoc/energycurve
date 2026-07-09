@@ -57,6 +57,10 @@ export default async function PlaylistDetailPage({
       bpm: track.bpm,
       energyScore: track.energy_score,
       sourceUri: track.source_uri,
+      musicalKey: track.musical_key,
+      genre: track.genre,
+      comment: track.comment,
+      durationSeconds: track.duration_seconds,
     })),
   }
 

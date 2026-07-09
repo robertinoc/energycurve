@@ -209,7 +209,7 @@ Making the playlist screen read like Rekordbox/Traktor so DJs feel at home. Full
 - PR1 — per-track metadata (key/genre/comment/duration) captured on import + persisted (migration `0008`) + `lib/music/camelot.ts`: **done**.
 - PR2 — dense track table + live set curve + collapsible genre note + customizable columns, replacing the card-list editor: **done**.
 - PR3 — reorder & save (drag + column sort → preview/Undo/Save + toast, persisted): planned.
-- PR4 — Export dropdown (For Rekordbox/Traktor/Serato-soon/CSV/TXT) + native metadata round-trip: planned.
+- PR4 — Export dropdown (For Rekordbox/Traktor/Serato-soon/CSV/TXT) + native metadata round-trip: **done**.
 - PR5 — sidebar playlist tree: planned.
 
 Repository anchors:
