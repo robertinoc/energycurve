@@ -95,9 +95,10 @@ captured on import and persisted — see migration `0008` and the parsers.
 - **PR3 — reorder & save** (planned): column sort + drag-to-reorder that both
   drive the curve, unified into the Save / Undo / Discard preview flow + toast,
   persisted via a new bulk `reorderTracks` service function.
-- **PR4 — export** (planned): "Export…" dropdown (For Rekordbox / Traktor /
+- **PR4 — export** (done): "Export…" dropdown (For Rekordbox / Traktor /
   Serato-soon / CSV / TXT) + native exports that round-trip key/genre/comment/
-  duration.
+  duration (Rekordbox `Tonality/Genre/Comments/TotalTime`, Traktor `INFO
+  KEY/GENRE/COMMENT/PLAYTIME`), and CSV gains Key/Genre/Time columns.
 - **PR5 — sidebar playlist tree** (planned): list the user's sets under the
   Playlists nav item.
 
