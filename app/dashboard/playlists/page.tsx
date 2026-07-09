@@ -1,18 +1,16 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, ChevronRight, ListMusic } from "lucide-react"
+import { ChevronRight, ListMusic } from "lucide-react"
 import { redirect } from "next/navigation"
 
 import { DeletePlaylistButton } from "@/components/playlists/delete-playlist-button"
 import { PlaylistCreateForm } from "@/components/playlists/playlist-create-form"
 import { PlaylistImportUpload } from "@/components/playlists/playlist-import-upload"
 import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
 import { buildReturnToHref } from "@/lib/auth/return-to"
 import { GENRE_LABELS } from "@/lib/product/strategy"
-import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { listPlaylists } from "@/services/playlist-service"
 
@@ -45,29 +43,16 @@ export default async function PlaylistsPage() {
   const playlists = await listPlaylists(profile.id)
 
   return (
-    <main className="min-h-screen bg-[#08050F] text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
-        <header className="space-y-4">
-          <Link
-            href="/dashboard"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "w-fit text-white/58 hover:text-white"
-            )}
-          >
-            <ArrowLeft className="size-3.5" />
-            Dashboard
-          </Link>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Your playlists
-            </h1>
-            <p className="max-w-2xl text-sm leading-7 text-white/60">
-              Each playlist is a set you can analyze: name, genre, and context
-              drive how the energy engine reads the flow.
-            </p>
-          </div>
-        </header>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          Your playlists
+        </h1>
+        <p className="max-w-2xl text-sm leading-7 text-white/60">
+          Each playlist is a set you can analyze: name, genre, and context drive
+          how the energy engine reads the flow.
+        </p>
+      </header>
 
         <PlaylistImportUpload />
 
@@ -120,7 +105,6 @@ export default async function PlaylistsPage() {
             ))}
           </section>
         )}
-      </div>
-    </main>
+    </div>
   )
 }

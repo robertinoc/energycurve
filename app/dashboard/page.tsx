@@ -1,17 +1,16 @@
-import { signOut, withAuth } from "@workos-inc/authkit-nextjs"
+import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Database, ListMusic, Pencil, Plus, TrendingUp } from "lucide-react"
+import { Database, Pencil, Plus, TrendingUp } from "lucide-react"
 import { redirect } from "next/navigation"
 
 import { AnalyticsIdentify } from "@/components/analytics/analytics-tracker"
-import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { ScoreSparkline } from "@/components/analysis/score-sparkline"
 import { DeletePlaylistButton } from "@/components/playlists/delete-playlist-button"
 import { PlaylistImportUpload } from "@/components/playlists/playlist-import-upload"
 import { SetupRequiredState } from "@/components/setup/setup-required-state"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { buildReturnToHref } from "@/lib/auth/return-to"
 import {
   getGenericWorkOSConfigurationIssue,
@@ -29,17 +28,6 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = "force-dynamic"
-
-async function logoutAction() {
-  "use server"
-
-  try {
-    await signOut({ returnTo: "/" })
-  } catch (error) {
-    logWorkOSRuntimeError("Logout failed", error)
-    redirect("/")
-  }
-}
 
 export default async function DashboardPage() {
   const infrastructureStatus = getInfrastructureStatus()
@@ -107,48 +95,18 @@ export default async function DashboardPage() {
   const latestPlaylists = snapshot?.latestPlaylists ?? []
 
   return (
-    <main className="min-h-screen bg-[#08050F] text-white">
+    <>
       {profile ? <AnalyticsIdentify profileId={profile.id} /> : null}
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
         <header className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(162,77,224,0.14),rgba(12,9,23,0.92))] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-4">
-              <EnergyCurveLogo
-                tone="light"
-                size="md"
-                kind="horizontal"
-                caption="Build sets that move the floor."
-              />
-              <div className="space-y-3">
-                <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                  {greeting}
-                </h1>
-                <p className="max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
-                  Upload a set, get its energy curve, set score, and concrete
-                  fixes per track.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard/playlists"
-                className={cn(buttonVariants({ size: "lg" }))}
-              >
-                <ListMusic className="size-4" />
-                My playlists
-              </Link>
-              <form action={logoutAction}>
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="lg"
-                  className="border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
-                >
-                  Log out
-                </Button>
-              </form>
-            </div>
+          <div className="space-y-3">
+            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              {greeting}
+            </h1>
+            <p className="max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
+              Upload a set, get its energy curve, set score, and concrete fixes
+              per track.
+            </p>
           </div>
         </header>
 
@@ -270,6 +228,6 @@ export default async function DashboardPage() {
           </section>
         ) : null}
       </div>
-    </main>
+    </>
   )
 }
