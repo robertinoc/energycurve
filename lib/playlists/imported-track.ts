@@ -22,6 +22,10 @@ export interface ImportedTrack {
    * imports and tracks without a resolvable location.
    */
   sourceUri: string | null
+  /** Free-text comment/grouping tag, verbatim (the same field energy is read from). */
+  comment: string | null
+  /** Track length in seconds (Rekordbox TotalTime / Traktor PLAYTIME); null if absent. */
+  durationSeconds: number | null
 }
 
 export type ImportSource = "rekordbox" | "traktor"
@@ -54,6 +58,25 @@ export function extractEnergyFromComment(
   const value = Number.parseInt(match[1], 10)
 
   if (!Number.isFinite(value) || value < 1 || value > 10) {
+    return null
+  }
+
+  return value
+}
+
+/**
+ * Parses a track duration into whole seconds. Rekordbox stores `TotalTime` and
+ * Traktor stores `PLAYTIME` as integer seconds. Returns null for missing or
+ * non-positive values.
+ */
+export function parseDurationSeconds(raw: unknown): number | null {
+  if (raw === null || raw === undefined || raw === "") {
+    return null
+  }
+
+  const value = Math.round(Number.parseFloat(String(raw)))
+
+  if (!Number.isFinite(value) || value <= 0) {
     return null
   }
 

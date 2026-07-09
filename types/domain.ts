@@ -43,6 +43,14 @@ export interface TrackWriteInput {
   energyScore: number | null
   /** Native file reference (Rekordbox Location / Traktor location key). */
   sourceUri?: string | null
+  /** Musical key as written by the DJ software (e.g. "8A", "Am", "Bbm"). */
+  musicalKey?: string | null
+  /** Genre tag from the imported track, verbatim. */
+  genre?: string | null
+  /** Free-text comment/grouping tag from the source track. */
+  comment?: string | null
+  /** Track length in seconds, when the source export provides it. */
+  durationSeconds?: number | null
 }
 
 export interface ProductStrategySnapshot {

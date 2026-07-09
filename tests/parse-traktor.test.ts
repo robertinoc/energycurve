@@ -13,7 +13,7 @@ const TRAKTOR_NML = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     </ENTRY>
     <ENTRY MODIFIED_DATE="2024/1/1" TITLE="Peak Freq" ARTIST="Mira Phase">
       <LOCATION DIR="/:Music/:" FILE="peak.mp3" VOLUME="Macintosh HD"/>
-      <INFO GENRE="Techno" COMMENT="Energy 8" KEY="9A"/>
+      <INFO GENRE="Techno" COMMENT="Energy 8" KEY="9A" PLAYTIME="317"/>
       <TEMPO BPM="130.000000"/>
     </ENTRY>
   </COLLECTION>
@@ -58,6 +58,8 @@ describe("parseTraktor", () => {
       key: "9A",
       genre: "Techno",
       energy: 8,
+      comment: "Energy 8",
+      durationSeconds: 317,
     })
   })
 

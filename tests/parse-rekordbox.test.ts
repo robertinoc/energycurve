@@ -6,8 +6,8 @@ const REKORDBOX_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <DJ_PLAYLISTS Version="1.0.0">
   <PRODUCT Name="rekordbox" Version="6.0.0" Company="AlphaTheta"/>
   <COLLECTION Entries="3">
-    <TRACK TrackID="1" Name="Intro Bloom" Artist="Nova Relay" Genre="Deep House" AverageBpm="120.00" Tonality="8A" Rating="102" Comments="8A - Energy 5"/>
-    <TRACK TrackID="2" Name="Peak Freq" Artist="Mira Phase" Genre="Techno" AverageBpm="130.00" Tonality="9A" Rating="204" Comments="9A - Energy 8"/>
+    <TRACK TrackID="1" Name="Intro Bloom" Artist="Nova Relay" Genre="Deep House" AverageBpm="120.00" Tonality="8A" Rating="102" TotalTime="312" Comments="8A - Energy 5"/>
+    <TRACK TrackID="2" Name="Peak Freq" Artist="Mira Phase" Genre="Techno" AverageBpm="130.00" Tonality="9A" Rating="204" TotalTime="317" Comments="9A - Energy 8"/>
     <TRACK TrackID="3" Name="Cyan After" Artist="Night Logic" Genre="Progressive" AverageBpm="128.00" Tonality="10A" Comments=""/>
   </COLLECTION>
   <PLAYLISTS>
@@ -52,8 +52,13 @@ describe("parseRekordbox", () => {
       key: "9A",
       genre: "Techno",
       energy: 8,
+      comment: "9A - Energy 8",
+      durationSeconds: 317,
     })
     expect(intro.energy).toBe(5)
+    expect(intro.durationSeconds).toBe(312)
+    // Track 3 has no TotalTime → null duration.
+    expect(cyan.durationSeconds).toBeNull()
     // No "Energy N" in comments → null energy, but other fields present.
     expect(cyan.energy).toBeNull()
     expect(cyan.bpm).toBe(128)

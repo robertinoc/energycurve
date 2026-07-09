@@ -17,6 +17,8 @@ function track(genre: string | null): ImportedTrack {
     genre,
     energy: null,
     sourceUri: null,
+    comment: null,
+    durationSeconds: null,
   }
 }
 
