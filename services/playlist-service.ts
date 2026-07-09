@@ -2,6 +2,7 @@ import "server-only"
 
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { logError, logInfo } from "@/lib/observability/logger"
+import { finalPositions, isValidReorder } from "@/lib/tracklist/reorder"
 import type {
   Playlist,
   PlaylistContext,
@@ -450,4 +451,65 @@ export async function replaceTracks(
   })
 
   return tracks.length
+}
+
+/**
+ * Persists a full manual reorder of a playlist's tracks. `orderedTrackIds` must
+ * be a permutation of the playlist's current track ids. Applied in two phases —
+ * park every row at a high temp position, then assign the final 1..n — so the
+ * unique(playlist_id, position) constraint never trips mid-update (same trick as
+ * moveTrack, generalized to the whole list).
+ */
+export async function reorderTracks(
+  profileId: string,
+  playlistId: string,
+  orderedTrackIds: string[]
+): Promise<void> {
+  const playlist = await getOwnedPlaylist(profileId, playlistId)
+
+  if (!playlist) {
+    throw new Error("Playlist not found.")
+  }
+
+  const current = await getOrderedTracks(playlistId)
+
+  if (!isValidReorder(current.map((track) => track.id), orderedTrackIds)) {
+    throw new Error("Track order does not match the playlist.")
+  }
+
+  const supabase = getSupabaseAdminClient()
+
+  // Phase 1: park every track at a unique temp position above the real range.
+  for (let index = 0; index < orderedTrackIds.length; index++) {
+    const { error } = await supabase
+      .from("tracks")
+      .update({ position: MOVE_TEMP_POSITION_OFFSET + index + 1 })
+      .eq("id", orderedTrackIds[index])
+      .eq("playlist_id", playlistId)
+
+    if (error) {
+      logError("track.reorder_park_failed", error, { profileId, playlistId })
+      throw new Error("Unable to save the new order.")
+    }
+  }
+
+  // Phase 2: assign the final contiguous 1..n positions in the requested order.
+  for (const { id, position } of finalPositions(orderedTrackIds)) {
+    const { error } = await supabase
+      .from("tracks")
+      .update({ position })
+      .eq("id", id)
+      .eq("playlist_id", playlistId)
+
+    if (error) {
+      logError("track.reorder_assign_failed", error, { profileId, playlistId })
+      throw new Error("Unable to save the new order.")
+    }
+  }
+
+  logInfo("tracks.reordered", {
+    profileId,
+    playlistId,
+    count: orderedTrackIds.length,
+  })
 }

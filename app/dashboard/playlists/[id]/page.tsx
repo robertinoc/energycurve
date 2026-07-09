@@ -107,6 +107,7 @@ export default async function PlaylistDetailPage({
         </header>
 
         <PlaylistWorkspace
+          key={playlist.tracks.map((t) => `${t.id}:${t.position}`).join("|")}
           playlistId={playlist.id}
           genre={playlist.genre}
           context={playlist.context}

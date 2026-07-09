@@ -1,10 +1,13 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useTransition } from "react"
 
+import { reorderTracksAction } from "@/app/dashboard/playlists/actions"
 import { GenreNote } from "@/components/playlists/genre-note"
 import { SetCurve } from "@/components/playlists/set-curve"
 import { TrackTable, type TrackEnergyView } from "@/components/playlists/track-table"
+import { Button } from "@/components/ui/button"
+import { Toast } from "@/components/ui/toast"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
 import {
@@ -28,6 +31,10 @@ function formatMinutes(minutes: number): string {
   return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`
 }
 
+function sameOrder(a: Track[], b: Track[]): boolean {
+  return a.length === b.length && a.every((t, i) => t.id === b[i].id)
+}
+
 export function PlaylistWorkspace({
   playlistId,
   genre,
@@ -35,45 +42,92 @@ export function PlaylistWorkspace({
   tracks,
 }: PlaylistWorkspaceProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  // Working order (drives the curve). `baseline` is the last saved order; the
+  // parent re-mounts this component (via a key on the server track signature)
+  // whenever the persisted order changes, so both re-seed from fresh props.
+  const [order, setOrder] = useState<Track[]>(tracks)
+  const [baseline, setBaseline] = useState<Track[]>(tracks)
+  const [undoStack, setUndoStack] = useState<Track[][]>([])
+  const [toast, setToast] = useState<{ show: boolean; message: string }>({
+    show: false,
+    message: "",
+  })
+  const [isSaving, startSaving] = useTransition()
+
+  const dirty = !sameOrder(order, baseline)
 
   const energies: TrackEnergyView[] = useMemo(
     () =>
-      resolveTrackEnergies(tracks, context, genre).map((e) => ({
+      resolveTrackEnergies(order, context, genre).map((e) => ({
         score: e.score,
         source: e.source,
       })),
-    [tracks, context, genre]
+    [order, context, genre]
   )
 
   const scores = useMemo(() => energies.map((e) => e.score), [energies])
 
   const target = useMemo(
-    () =>
-      genre && context ? buildTargetCurve(tracks.length, context, genre) : null,
-    [genre, context, tracks.length]
+    () => (genre && context ? buildTargetCurve(order.length, context, genre) : null),
+    [genre, context, order.length]
   )
 
   const stats = useMemo(() => {
-    const n = tracks.length
-    const bpms = tracks.map((t) => t.bpm).filter((b): b is number => b !== null)
+    const n = order.length
+    const bpms = order.map((t) => t.bpm).filter((b): b is number => b !== null)
     const avgBpm =
       bpms.length > 0 ? Math.round(bpms.reduce((s, b) => s + b, 0) / bpms.length) : null
-
-    const everyHasDuration =
-      n > 0 && tracks.every((t) => t.duration_seconds !== null)
+    const everyHasDuration = n > 0 && order.every((t) => t.duration_seconds !== null)
     const totalMinutes = everyHasDuration
-      ? Math.round(tracks.reduce((s, t) => s + (t.duration_seconds ?? 0), 0) / 60)
+      ? Math.round(order.reduce((s, t) => s + (t.duration_seconds ?? 0), 0) / 60)
       : n * STANDARD_TRACK_DURATION_MINUTES
-
     const eMin = scores.length ? Math.min(...scores) : null
     const eMax = scores.length ? Math.max(...scores) : null
-
     return { n, avgBpm, totalMinutes, everyHasDuration, eMin, eMax }
-  }, [tracks, scores])
+  }, [order, scores])
+
+  function handleReorder(next: Track[]) {
+    setUndoStack((stack) => [...stack, order])
+    setOrder(next)
+  }
+
+  function handleUndo() {
+    setUndoStack((stack) => {
+      if (stack.length === 0) {
+        return stack
+      }
+      const prev = stack[stack.length - 1]
+      setOrder(prev)
+      return stack.slice(0, -1)
+    })
+  }
+
+  function handleDiscard() {
+    setOrder(baseline)
+    setUndoStack([])
+  }
+
+  function handleSave() {
+    startSaving(async () => {
+      const result = await reorderTracksAction(
+        playlistId,
+        order.map((t) => t.id)
+      )
+      if (result.ok) {
+        setBaseline(order)
+        setUndoStack([])
+        setToast({ show: true, message: "Set order saved" })
+        window.setTimeout(() => setToast((t) => ({ ...t, show: false })), 1900)
+      } else {
+        setToast({ show: true, message: result.message ?? "Could not save order" })
+        window.setTimeout(() => setToast((t) => ({ ...t, show: false })), 2600)
+      }
+    })
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      {tracks.length > 0 ? (
+      {order.length > 0 ? (
         <div className="rounded-[16px] border border-ec-border bg-[#14101F] p-4">
           <div className="mb-1 flex items-center justify-between gap-3">
             <div>
@@ -104,16 +158,51 @@ export function PlaylistWorkspace({
         </div>
       ) : null}
 
-      <GenreNote genre={genre} context={context} tracks={tracks} />
+      <GenreNote genre={genre} context={context} tracks={order} />
+
+      {dirty ? (
+        <div className="flex items-center gap-3 rounded-xl border border-[#A24DE0]/40 bg-[#A24DE0]/[0.08] px-4 py-2.5">
+          <span className="flex items-center gap-2 text-[12.5px] font-semibold text-[#e6d3fb]">
+            <span className="size-2 rounded-full bg-[#A24DE0]" />
+            Preview — unsaved order
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={undoStack.length === 0 || isSaving}
+              onClick={handleUndo}
+              className="text-white/62 hover:text-white"
+            >
+              Undo
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isSaving}
+              onClick={handleDiscard}
+              className="text-white/62 hover:text-white"
+            >
+              Discard
+            </Button>
+            <Button type="button" size="sm" disabled={isSaving} onClick={handleSave}>
+              {isSaving ? "Saving…" : "Save order"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <TrackTable
         playlistId={playlistId}
-        tracks={tracks}
+        tracks={order}
         energies={energies}
         onHover={setHoveredIndex}
+        onReorder={handleReorder}
       />
 
-      {tracks.length > 0 ? (
+      {order.length > 0 ? (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-1 text-[12.5px] text-white/45">
           <span>
             <b className="font-mono font-bold text-white">{stats.n}</b> tracks
@@ -146,6 +235,8 @@ export function PlaylistWorkspace({
           ) : null}
         </div>
       ) : null}
+
+      <Toast show={toast.show} message={toast.message} />
     </div>
   )
 }
