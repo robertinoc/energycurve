@@ -91,6 +91,13 @@ export const GENRE_LABELS: Record<SupportedGenre, string> = {
   bounce: "Bounce",
 }
 
+/** Display names for set contexts (single source of truth). */
+export const CONTEXT_LABELS: Record<PlaylistContext, string> = {
+  opening: "Opening",
+  main: "Main time",
+  closing: "Closing",
+}
+
 export const PRODUCT_PRINCIPLES = [
   "Simple over complex",
   "Explainable over magical",
