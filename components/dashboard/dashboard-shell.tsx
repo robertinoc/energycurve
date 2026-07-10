@@ -5,21 +5,29 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, ListMusic, LogOut, Menu, X, type LucideIcon } from "lucide-react"
 
+import { LocaleToggle } from "@/components/analysis/locale-toggle"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
+import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import { cn } from "@/lib/utils"
 
 interface NavItem {
   href: string
-  label: string
+  label: Record<SiteLocale, string>
   icon: LucideIcon
   match: "exact" | "prefix"
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Home", icon: Home, match: "exact" },
+  {
+    href: "/dashboard",
+    label: DASHBOARD_COPY.shell.home,
+    icon: Home,
+    match: "exact",
+  },
   {
     href: "/dashboard/playlists",
-    label: "Playlists",
+    label: DASHBOARD_COPY.shell.playlists,
     icon: ListMusic,
     match: "prefix",
   },
@@ -42,6 +50,7 @@ interface DashboardShellProps {
   displayName: string
   email: string
   playlists: SidebarPlaylist[]
+  locale: SiteLocale
   logoutAction: () => Promise<void>
   children: React.ReactNode
 }
@@ -50,11 +59,13 @@ export function DashboardShell({
   displayName,
   email,
   playlists,
+  locale,
   logoutAction,
   children,
 }: DashboardShellProps) {
   const pathname = usePathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const copy = DASHBOARD_COPY.shell
 
   const sidebarBody = (
     <div className="flex h-full flex-col gap-6 p-4">
@@ -64,7 +75,7 @@ export function DashboardShell({
         </Link>
         <button
           type="button"
-          aria-label="Close menu"
+          aria-label={copy.closeMenu[locale]}
           onClick={() => setDrawerOpen(false)}
           className="rounded-lg p-1.5 text-white/60 hover:bg-white/10 hover:text-white lg:hidden"
         >
@@ -74,7 +85,7 @@ export function DashboardShell({
 
       <nav className="flex-1 space-y-1 overflow-y-auto">
         <p className="px-3 pb-1 text-[0.62rem] uppercase tracking-[0.22em] text-white/32">
-          Workspace
+          {copy.workspace[locale]}
         </p>
         {NAV_ITEMS.map((item) => {
           const active = isActive(pathname, item)
@@ -93,7 +104,7 @@ export function DashboardShell({
                 )}
               >
                 <Icon className="size-4 shrink-0" />
-                {item.label}
+                {item.label[locale]}
               </Link>
 
               {/* Playlist tree under the Playlists item (Rekordbox left panel). */}
@@ -131,9 +142,12 @@ export function DashboardShell({
       </nav>
 
       <div className="space-y-3 border-t border-white/8 pt-4">
-        <div className="px-1">
-          <p className="truncate text-sm font-medium text-white">{displayName}</p>
-          <p className="truncate text-xs text-white/45">{email}</p>
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-white">{displayName}</p>
+            <p className="truncate text-xs text-white/45">{email}</p>
+          </div>
+          <LocaleToggle current={locale} />
         </div>
         <form action={logoutAction}>
           <button
@@ -141,7 +155,7 @@ export function DashboardShell({
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/62 transition-colors hover:bg-white/[0.06] hover:text-white"
           >
             <LogOut className="size-4 shrink-0" />
-            Log out
+            {copy.logOut[locale]}
           </button>
         </form>
       </div>
@@ -160,7 +174,7 @@ export function DashboardShell({
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            aria-label="Close menu"
+            aria-label={copy.closeMenu[locale]}
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setDrawerOpen(false)}
           />
@@ -181,7 +195,7 @@ export function DashboardShell({
           </Link>
           <button
             type="button"
-            aria-label="Open menu"
+            aria-label={copy.openMenu[locale]}
             onClick={() => setDrawerOpen(true)}
             className="rounded-lg p-2 text-white/70 hover:bg-white/10 hover:text-white"
           >

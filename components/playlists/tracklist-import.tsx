@@ -19,20 +19,26 @@ import {
 } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { formatTemplate } from "@/lib/content/analysis-copy"
+import { DASHBOARD_COPY, type LocalizedLabel } from "@/lib/content/dashboard-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   parseTracklist,
   TRACKLIST_FORMATS,
   type TracklistFormat,
 } from "@/lib/playlists/parse-tracklist"
 
+const COPY = DASHBOARD_COPY.tracklistImport
+
 interface TracklistImportProps {
   playlistId: string
   existingTrackCount: number
+  locale: SiteLocale
 }
 
-const FORMAT_LABELS: Record<TracklistFormat, string> = {
-  "artist-track": "Artist – Track",
-  "track-artist": "Track – Artist",
+const FORMAT_LABELS: Record<TracklistFormat, LocalizedLabel> = {
+  "artist-track": COPY.formatArtistTrack,
+  "track-artist": COPY.formatTrackArtist,
 }
 
 const PLACEHOLDER = [
@@ -44,6 +50,7 @@ const PLACEHOLDER = [
 export function TracklistImport({
   playlistId,
   existingTrackCount,
+  locale,
 }: TracklistImportProps) {
   const [text, setText] = useState("")
   const [format, setFormat] = useState<TracklistFormat>("artist-track")
@@ -63,12 +70,10 @@ export function TracklistImport({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <ClipboardPaste className="size-4 text-white/58" />
-          Paste a tracklist
+          {COPY.title[locale]}
         </CardTitle>
         <CardDescription className="text-white/58">
-          One track per line. Numbering prefixes and a trailing
-          &quot;(128 bpm)&quot; are picked up automatically. Flip the format if
-          the preview looks swapped.
+          {COPY.description[locale]}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -77,7 +82,7 @@ export function TracklistImport({
 
           <div className="flex flex-wrap items-center gap-4">
             <span className="text-xs uppercase tracking-[0.18em] text-white/38">
-              Line format
+              {COPY.lineFormat[locale]}
             </span>
             {TRACKLIST_FORMATS.map((option) => (
               <label
@@ -92,14 +97,14 @@ export function TracklistImport({
                   onChange={() => setFormat(option)}
                   className="accent-[#A24DE0]"
                 />
-                {FORMAT_LABELS[option]}
+                {FORMAT_LABELS[option][locale]}
               </label>
             ))}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="tracklist-text" className="text-white/72">
-              Tracklist
+              {COPY.tracklist[locale]}
             </Label>
             <Textarea
               id="tracklist-text"
@@ -116,9 +121,13 @@ export function TracklistImport({
           {preview ? (
             <div className="space-y-3 rounded-2xl border border-white/10 bg-black/18 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-white/38">
-                Preview — {preview.tracks.length} track(s)
+                {formatTemplate(COPY.preview[locale], {
+                  count: preview.tracks.length,
+                })}
                 {preview.errors.length > 0
-                  ? `, ${preview.errors.length} skipped line(s)`
+                  ? formatTemplate(COPY.skippedSuffix[locale], {
+                      count: preview.errors.length,
+                    })
                   : ""}
               </p>
 
@@ -146,7 +155,9 @@ export function TracklistImport({
                   ))}
                   {preview.tracks.length > 30 ? (
                     <li className="text-xs text-white/42">
-                      …and {preview.tracks.length - 30} more
+                      {formatTemplate(COPY.andMore[locale], {
+                        count: preview.tracks.length - 30,
+                      })}
                     </li>
                   ) : null}
                 </ol>
@@ -160,8 +171,9 @@ export function TracklistImport({
                       className="flex items-center gap-2 text-xs text-ec-amber/90"
                     >
                       <TriangleAlert className="size-3 shrink-0" />
-                      Line {error.line}: no “Artist – Track” separator found —
-                      it will be skipped.
+                      {formatTemplate(COPY.lineError[locale], {
+                        line: error.line,
+                      })}
                     </p>
                   ))}
                 </div>
@@ -172,8 +184,9 @@ export function TracklistImport({
           {existingTrackCount > 0 ? (
             <p className="flex items-center gap-2 text-xs text-ec-amber/90">
               <TriangleAlert className="size-3 shrink-0" />
-              Importing replaces the {existingTrackCount} track(s) currently in
-              this playlist.
+              {formatTemplate(COPY.replacesWarning[locale], {
+                count: existingTrackCount,
+              })}
             </p>
           ) : null}
 
@@ -183,8 +196,10 @@ export function TracklistImport({
               disabled={isPending || !preview || preview.tracks.length === 0}
             >
               {isPending
-                ? "Importing…"
-                : `Import ${preview?.tracks.length ?? 0} track(s)`}
+                ? COPY.importing[locale]
+                : formatTemplate(COPY.importCta[locale], {
+                    count: preview?.tracks.length ?? 0,
+                  })}
             </Button>
             {state.message ? (
               <p

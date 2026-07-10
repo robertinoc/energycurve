@@ -20,42 +20,38 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"
+import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import { SET_CONTEXTS, SUPPORTED_GENRES, GENRE_LABELS } from "@/lib/product/strategy"
 
-const CONTEXT_LABELS: Record<(typeof SET_CONTEXTS)[number], string> = {
-  opening: "Opening",
-  main: "Main time",
-  closing: "Closing",
-}
-
-export function PlaylistCreateForm() {
+export function PlaylistCreateForm({ locale }: { locale: SiteLocale }) {
   const [state, formAction, isPending] = useActionState(
     createPlaylistAction,
     initialPlaylistActionState
   )
+  const copy = DASHBOARD_COPY.createForm
 
   return (
     <Card className="border-white/10 bg-[#0C0917] text-white ring-0">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <ListMusic className="size-4 text-white/58" />
-          New playlist
+          {copy.title[locale]}
         </CardTitle>
         <CardDescription className="text-white/58">
-          Name your set and lock in the genre and context — the analysis
-          engine adapts to both.
+          {copy.description[locale]}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form action={formAction} className="grid gap-4 sm:grid-cols-[1.4fr_1fr_1fr_auto]">
           <div className="space-y-2">
             <Label htmlFor="playlist-name" className="text-white/72">
-              Name
+              {copy.name[locale]}
             </Label>
             <Input
               id="playlist-name"
               name="name"
-              placeholder="Warehouse opening set"
+              placeholder={copy.namePlaceholder[locale]}
               maxLength={120}
               required
               className="border-white/12 text-white placeholder:text-white/32"
@@ -67,7 +63,7 @@ export function PlaylistCreateForm() {
 
           <div className="space-y-2">
             <Label htmlFor="playlist-genre" className="text-white/72">
-              Genre
+              {copy.genre[locale]}
             </Label>
             <NativeSelect
               id="playlist-genre"
@@ -88,7 +84,7 @@ export function PlaylistCreateForm() {
 
           <div className="space-y-2">
             <Label htmlFor="playlist-context" className="text-white/72">
-              Context
+              {copy.context[locale]}
             </Label>
             <NativeSelect
               id="playlist-context"
@@ -98,7 +94,7 @@ export function PlaylistCreateForm() {
             >
               {SET_CONTEXTS.map((context) => (
                 <option key={context} value={context}>
-                  {CONTEXT_LABELS[context]}
+                  {CONTEXT_COPY[context][locale]}
                 </option>
               ))}
             </NativeSelect>
@@ -111,7 +107,7 @@ export function PlaylistCreateForm() {
 
           <div className="flex items-end">
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Creating…" : "Create playlist"}
+              {isPending ? copy.creating[locale] : copy.create[locale]}
             </Button>
           </div>
         </form>

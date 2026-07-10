@@ -19,8 +19,11 @@ import {
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
 import { cn } from "@/lib/utils"
+import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { pickGreeting } from "@/lib/content/greetings"
+import { formatTemplate } from "@/lib/content/analysis-copy"
 import { GENRE_LABELS } from "@/lib/product/strategy"
+import { getRequestLocale } from "@/lib/server-locale"
 import { getDashboardSnapshot } from "@/services/dashboard-service"
 
 export const metadata: Metadata = {
@@ -63,12 +66,14 @@ export default async function DashboardPage() {
     redirect(buildReturnToHref("/login", "/dashboard"))
   }
 
+  const locale = await getRequestLocale()
+  const copy = DASHBOARD_COPY.home
+
   let snapshot: Awaited<ReturnType<typeof getDashboardSnapshot>> | null = null
   let infrastructureMessage: string | null = null
 
   if (!infrastructureStatus.supabaseConfigured) {
-    infrastructureMessage =
-      "Your WorkOS session is valid, but Supabase is not configured yet. Add the required Supabase environment variables and restart the dev server."
+    infrastructureMessage = copy.supabaseMissing[locale]
   } else {
     try {
       snapshot = await getDashboardSnapshot({
@@ -84,13 +89,12 @@ export default async function DashboardPage() {
         reason:
           error instanceof Error ? error.message : "Unknown dashboard bootstrap error",
       })
-      infrastructureMessage =
-        "Your WorkOS session is valid, but the application database could not be initialized. Confirm the Supabase environment variables and apply the initial schema migration."
+      infrastructureMessage = copy.dbBootstrapFailed[locale]
     }
   }
 
   const displayName = user.firstName?.trim() || user.email.split("@")[0]
-  const greeting = pickGreeting(displayName)
+  const greeting = pickGreeting(displayName, locale)
   const profile = snapshot?.profile ?? null
   const latestPlaylists = snapshot?.latestPlaylists ?? []
 
@@ -104,8 +108,7 @@ export default async function DashboardPage() {
               {greeting}
             </h1>
             <p className="max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
-              Upload a set, get its energy curve, set score, and concrete fixes
-              per track.
+              {copy.heroSubtitle[locale]}
             </p>
           </div>
         </header>
@@ -113,7 +116,7 @@ export default async function DashboardPage() {
         {infrastructureMessage ? (
           <Alert className="border-white/10 bg-[#0C0917] text-white">
             <Database className="size-4 text-white/72" />
-            <AlertTitle>Database setup still needs attention</AlertTitle>
+            <AlertTitle>{copy.dbAlertTitle[locale]}</AlertTitle>
             <AlertDescription className="text-white/62">
               {infrastructureMessage}
             </AlertDescription>
@@ -123,15 +126,15 @@ export default async function DashboardPage() {
         {/* Primary action: upload a playlist. New-from-scratch is the quieter,
             secondary path underneath. */}
         <section className="space-y-3">
-          <PlaylistImportUpload />
+          <PlaylistImportUpload locale={locale} />
           <div className="flex flex-wrap items-center gap-2 text-sm text-white/56">
-            <span>Prefer to build it by hand?</span>
+            <span>{copy.byHand[locale]}</span>
             <Link
               href="/dashboard/playlists"
               className="inline-flex items-center gap-1.5 font-medium text-white underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
             >
               <Plus className="size-3.5" />
-              New playlist from scratch
+              {copy.newFromScratch[locale]}
             </Link>
           </div>
         </section>
@@ -141,10 +144,10 @@ export default async function DashboardPage() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-white/42">
-                  Latest playlists
+                  {copy.latestPlaylists[locale]}
                 </p>
                 <h2 className="mt-2 font-heading text-xl font-semibold text-white">
-                  Pick up where you left off
+                  {copy.pickUp[locale]}
                 </h2>
               </div>
               <Link
@@ -154,7 +157,7 @@ export default async function DashboardPage() {
                   "border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
                 )}
               >
-                View all
+                {copy.viewAll[locale]}
               </Link>
             </div>
 
@@ -188,8 +191,10 @@ export default async function DashboardPage() {
                         ) : null}
                       </div>
                       <p className="mt-1 text-xs text-white/48">
-                        {playlist.trackCount} track
-                        {playlist.trackCount === 1 ? "" : "s"}
+                        {formatTemplate(copy.trackCount[locale], {
+                          count: playlist.trackCount,
+                          plural: playlist.trackCount === 1 ? "" : "s",
+                        })}
                         {genreLabel ? ` · ${genreLabel}` : ""}
                       </p>
                     </div>
@@ -208,17 +213,18 @@ export default async function DashboardPage() {
                         )}
                       >
                         <Pencil className="size-3" />
-                        Edit
+                        {copy.edit[locale]}
                       </Link>
                       <Link
                         href={`/dashboard/playlists/${playlist.id}/analysis`}
                         className={cn(buttonVariants({ size: "xs" }))}
                       >
-                        Analyze
+                        {copy.analyze[locale]}
                       </Link>
                       <DeletePlaylistButton
                         playlistId={playlist.id}
                         playlistName={playlist.name}
+                        locale={locale}
                       />
                     </div>
                   </li>

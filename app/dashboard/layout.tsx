@@ -8,6 +8,7 @@ import {
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
+import { getRequestLocale } from "@/lib/server-locale"
 import { getProfileByWorkOSUserId } from "@/services/profile-service"
 import { listPlaylists } from "@/services/playlist-service"
 
@@ -79,12 +80,14 @@ export default async function DashboardLayout({
   }
 
   const displayName = user.firstName?.trim() || user.email.split("@")[0]
+  const locale = await getRequestLocale()
 
   return (
     <DashboardShell
       displayName={displayName}
       email={user.email}
       playlists={playlists}
+      locale={locale}
       logoutAction={logoutAction}
     >
       {children}

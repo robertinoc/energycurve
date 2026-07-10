@@ -18,6 +18,7 @@ import {
   StorySection,
 } from "@/components/marketing/landing-sections"
 import { InstallBanner } from "@/components/marketing/install-banner"
+import { ANALYSIS_LOCALE_COOKIE } from "@/lib/analysis-locale"
 import { getSiteCopy, SiteLocale } from "@/lib/content/site-copy"
 import { isStandaloneDisplayMode } from "@/lib/pwa"
 
@@ -38,6 +39,9 @@ export function LandingPage() {
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, locale)
+    // Mirror into the app cookie so the language chosen on the landing
+    // carries into the dashboard (which is server-rendered off the cookie).
+    document.cookie = `${ANALYSIS_LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`
     document.documentElement.lang = locale
   }, [locale])
 

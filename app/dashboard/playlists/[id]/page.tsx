@@ -10,8 +10,10 @@ import { TracklistImport } from "@/components/playlists/tracklist-import"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { buildReturnToHref } from "@/lib/auth/return-to"
+import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { ExportPlaylist } from "@/lib/playlists/export"
-import { CONTEXT_LABELS, GENRE_LABELS } from "@/lib/product/strategy"
+import { GENRE_LABELS } from "@/lib/product/strategy"
+import { getRequestLocale } from "@/lib/server-locale"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
@@ -47,6 +49,9 @@ export default async function PlaylistDetailPage({
     notFound()
   }
 
+  const locale = await getRequestLocale()
+  const copy = DASHBOARD_COPY.playlistDetail
+
   const exportPlaylist: ExportPlaylist = {
     name: playlist.name,
     importSource: playlist.import_source,
@@ -76,17 +81,17 @@ export default async function PlaylistDetailPage({
               )}
             >
               <ArrowLeft className="size-3.5" />
-              Playlists
+              {copy.back[locale]}
             </Link>
 
             <div className="flex items-center gap-2">
-              <PlaylistExportButton playlist={exportPlaylist} />
+              <PlaylistExportButton playlist={exportPlaylist} locale={locale} />
               <Link
                 href={`/dashboard/playlists/${playlist.id}/analysis`}
                 className={cn(buttonVariants({ size: "default" }))}
               >
                 <AudioWaveform className="size-4" />
-                Analyze set
+                {copy.analyzeSet[locale]}
               </Link>
             </div>
           </div>
@@ -103,7 +108,7 @@ export default async function PlaylistDetailPage({
               ) : null}
               {playlist.context ? (
                 <Badge>
-                  {CONTEXT_LABELS[playlist.context] ?? playlist.context}
+                  {CONTEXT_COPY[playlist.context]?.[locale] ?? playlist.context}
                 </Badge>
               ) : null}
             </div>
@@ -116,11 +121,13 @@ export default async function PlaylistDetailPage({
           genre={playlist.genre}
           context={playlist.context}
           tracks={playlist.tracks}
+          locale={locale}
         />
 
         <TracklistImport
           playlistId={playlist.id}
           existingTrackCount={playlist.tracks.length}
+          locale={locale}
         />
     </div>
   )
