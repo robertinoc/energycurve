@@ -104,6 +104,7 @@ interface SiteCopySchema {
     contact: LocalizedLabel
     rights: LocalizedLabel
     description: LocalizedLabel
+    madeIn: LocalizedLabel
   }
   install: {
     bannerTitle: LocalizedLabel
@@ -371,6 +372,10 @@ const siteCopy: SiteCopySchema = {
       en: "EnergyCurve helps DJs understand set energy, transitions, and performance flow.",
       es: "EnergyCurve ayuda a DJs a entender la energía del set, las transiciones y el flujo de la performance.",
     },
+    madeIn: {
+      en: "Built in Argentina 🇦🇷 — for DJs all over the world.",
+      es: "Hecho en Argentina 🇦🇷 — para DJs de todo el mundo.",
+    },
   },
   install: {
     bannerTitle: {
@@ -590,6 +595,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       contact: siteCopy.footer.contact[locale],
       rights: siteCopy.footer.rights[locale],
       description: siteCopy.footer.description[locale],
+      madeIn: siteCopy.footer.madeIn[locale],
     },
     install: {
       bannerTitle: siteCopy.install.bannerTitle[locale],
