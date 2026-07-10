@@ -48,6 +48,27 @@ export function isCamelot(value: string): boolean {
 }
 
 /**
+ * Traktor exports keys in Open Key notation: 1–12 + "m" (minor) / "d" (dur =
+ * major), e.g. "11m", "9d". Same wheel as Camelot, rotated by 7: Open Key 1d
+ * = C major = Camelot 8B, Open Key 1m = A minor = Camelot 8A.
+ */
+const OPEN_KEY_PATTERN = /^(?:[1-9]|1[0-2])[md]$/i
+
+function openKeyToCamelot(value: string): string | null {
+  const match = value.trim().match(/^([1-9]|1[0-2])([md])$/i)
+
+  if (!match) {
+    return null
+  }
+
+  const openNumber = Number.parseInt(match[1], 10)
+  const camelotNumber = ((openNumber + 6) % 12) + 1
+  const ring = match[2].toLowerCase() === "m" ? "A" : "B"
+
+  return `${camelotNumber}${ring}`
+}
+
+/**
  * Normalizes a musical key string ("A minor", "Am", "AMin", "F#m") to the
  * compact form used by the lookup ("Am", "F#m").
  */
@@ -83,6 +104,10 @@ export function toCamelot(musicalKey: string | null | undefined): string | null 
 
   if (isCamelot(raw)) {
     return raw.toUpperCase()
+  }
+
+  if (OPEN_KEY_PATTERN.test(raw)) {
+    return openKeyToCamelot(raw)
   }
 
   return MUSICAL_TO_CAMELOT[normalizeMusicalKey(raw)] ?? null

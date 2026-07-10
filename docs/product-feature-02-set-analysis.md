@@ -137,6 +137,44 @@ for main/closing sets and rarely improved anything.
     snapshot and mixed into `computeAnalysisInputHash`, so re-analyzing
     after an engine bump records a fresh history row.
 
+### V3 additions (B13–B16)
+
+Driven by the first real production import (21 tracks at 155–160 BPM, all
+energies clamped to 10, genre mis-detected as techno, score 5.5 for
+artifacts): garbage-in fixes plus an explicit confidence layer.
+
+13. **Energy confidence (B13)** — BPM alone cannot discriminate energy
+    inside a homogeneous-BPM set, so the engine says "I don't know" instead
+    of punishing its own missing signal (`ENERGY_CONFIDENCE_RULES_V3`).
+    `analyzePlaylist` accepts optional per-track `trackMeta`
+    (source + BPM). A flat zone is *suppressed* (no penalty, no issue) when
+    every track in it is BPM-sourced and the zone's BPMs span ≤ 2. The
+    missing-climax penalty is suppressed when ≥ 70% of tracks are
+    BPM-sourced and the resolved curve spans < 1.5. Any suppression (or the
+    global condition) emits one informational `low_energy_confidence` issue
+    telling the DJ to add manual energies or Mixed In Key data. The reorder
+    optimizer scores with the same rules so its objective matches the final
+    score.
+14. **Per-track genre anchors + wider edge ramp (B14)** — a track's own
+    imported genre tag (when it maps) anchors its BPM→energy band; unmapped
+    tags fall back to the playlist genre. `BPM_PROFILE_EDGE_RAMP` widened
+    10 → 20 so a mis-detected genre no longer collapses every out-of-band
+    BPM to the same clamped 10, and nearby out-of-band BPMs keep
+    differentiating.
+15. **Genre detection v2 (B15)** — compound tags map by containment
+    (longest known token wins: "Techno (Peak Time / Driving)" → techno,
+    "Hard Techno Industrial" → hard-techno; alias table extended, moved to
+    `lib/playlists/genre-mapping.ts`). Candidate genres = voted ∪ genres
+    whose BPM-band fit ≥ 0.6. Score = 0.45·voteShare + 0.55·bpmFit
+    (`GENRE_DETECTION_RULES_V3`) — BPM outweighs votes on purpose:
+    unanimous mislabeled tags must lose to a perfect BPM fit. Ties break by
+    median-BPM distance to band center, then narrower band, then name.
+    With no usable BPMs, votes decide alone; with neither, dominant is null.
+16. **Open Key → Camelot (B16)** — Traktor exports keys in Open Key
+    (1–12 + m/d); `toCamelot` in `lib/music/camelot.ts` now converts it
+    (same wheel rotated by 7: 1d = 8B, 1m = 8A), fixing the empty Camelot
+    column and Camelot sorting for NML imports.
+
 ## Key Files
 
 - `lib/engine/energy-score.ts` — BPM → energy (genre-aware + universal

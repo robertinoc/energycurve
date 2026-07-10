@@ -6,9 +6,11 @@ import {
   ENERGY_SCORE_RANGE,
   GENRE_BPM_PROFILES_V2,
   STANDARD_TRACK_DURATION_MINUTES,
+  TRACK_GENRE_ANCHOR_BPM_MARGIN,
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
+import { mapGenreTag } from "@/lib/playlists/genre-mapping"
 import type { EnergySource, ResolvedTrackEnergy } from "@/types/analysis"
 
 /**
@@ -153,13 +155,17 @@ export interface TrackEnergyInput {
   position: number
   bpm: number | null
   energy_score: number | null
+  /** Free-text genre tag from import metadata; anchors this track's BPM mapping (B14). */
+  genre?: string | null
 }
 
 /**
  * Resolves the energy score for every track with the precedence
  * manual > BPM-derived > position-estimated (A3), tagging the source so the
- * UI can label where each value came from. When the playlist has a genre the
- * BPM mapping is genre-relative (B1).
+ * UI can label where each value came from. The BPM mapping anchors to the
+ * track's own genre tag when it maps to a known genre (B14) — a psy-trance
+ * track inside a hard-techno set is judged on its own band — falling back to
+ * the playlist's genre (B1).
  */
 export function resolveTrackEnergies(
   tracks: TrackEnergyInput[],
@@ -179,7 +185,20 @@ export function resolveTrackEnergies(
       )
       source = "manual"
     } else if (track.bpm !== null) {
-      score = energyScoreFromBpm(track.bpm, genre)
+      // The track's own tag anchors its band only when the BPM is plausible
+      // for that genre (B14) — a "Techno"-tagged track at 158 BPM is
+      // mislabeled and would saturate on the wrong band.
+      const tagGenre = mapGenreTag(track.genre)
+      const tagProfile = tagGenre
+        ? (GENRE_BPM_PROFILES_V2[tagGenre] ?? DEFAULT_GENRE_BPM_PROFILE)
+        : null
+      const tagPlausible =
+        tagProfile !== null &&
+        track.bpm >= tagProfile.bpmLow - TRACK_GENRE_ANCHOR_BPM_MARGIN &&
+        track.bpm <= tagProfile.bpmHigh + TRACK_GENRE_ANCHOR_BPM_MARGIN
+      const trackGenre = tagPlausible ? tagGenre : genre
+
+      score = energyScoreFromBpm(track.bpm, trackGenre)
       source = "bpm"
     } else {
       score = estimatedScoreFromPosition(index, tracks.length, context)
@@ -191,6 +210,7 @@ export function resolveTrackEnergies(
       position: track.position,
       score,
       source,
+      bpm: track.bpm,
     }
   })
 }

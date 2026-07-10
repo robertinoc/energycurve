@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { analyzePlaylist, computeSetScore } from "@/lib/engine/analysis"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
+import type { TrackEnergyMeta } from "@/types/analysis"
 
 describe("analyzePlaylist — V2 scoring", () => {
   it("scores a set that rides its ideal curve at 10 with no penalties", () => {
@@ -223,6 +224,90 @@ describe("analyzePlaylist — V2 scoring", () => {
     expect(analysis.contextScores.opening).toBeGreaterThan(
       analysis.contextScores.main
     )
+  })
+
+  it("suppresses flat zones that BPM-only data can't support (B13)", () => {
+    // All energies derived from near-identical BPMs: identical values prove
+    // nothing about real monotony, so no flat_zone penalty — instead a
+    // low_energy_confidence heads-up.
+    const curve = [9.1, 9.1, 9.2, 9.1, 9.1, 9.2, 9.1, 9.1, 9.2, 9.1, 9.1, 9.2]
+    const trackMeta: TrackEnergyMeta[] = curve.map((_, i) => ({
+      source: "bpm",
+      bpm: 158 + (i % 3),
+    }))
+
+    const withMeta = analyzePlaylist({
+      curve,
+      genre: "hard-techno",
+      context: "main",
+      trackMeta,
+    })
+
+    expect(withMeta.issues.some((issue) => issue.type === "flat_zone")).toBe(
+      false
+    )
+    expect(
+      withMeta.issues.some((issue) => issue.type === "low_energy_confidence")
+    ).toBe(true)
+
+    // Without meta (or with manual energies) the same curve is judged as-is.
+    const withoutMeta = analyzePlaylist({
+      curve,
+      genre: "hard-techno",
+      context: "main",
+    })
+    expect(
+      withoutMeta.issues.some(
+        (issue) => issue.type === "low_energy_confidence"
+      )
+    ).toBe(false)
+  })
+
+  it("does not suppress flat zones backed by manual energies", () => {
+    const curve = [6, 6.1, 6, 6.2, 6.1, 6, 6.1, 6, 6.2, 6.1, 6, 6.1]
+    const trackMeta: TrackEnergyMeta[] = curve.map(() => ({
+      source: "manual",
+      bpm: null,
+    }))
+
+    const analysis = analyzePlaylist({
+      curve,
+      genre: "house",
+      context: "main",
+      trackMeta,
+    })
+
+    expect(analysis.issues.some((issue) => issue.type === "flat_zone")).toBe(
+      true
+    )
+    expect(
+      analysis.issues.some((issue) => issue.type === "low_energy_confidence")
+    ).toBe(false)
+  })
+
+  it("suppresses no_climax when the whole curve is low-confidence BPM data", () => {
+    const curve = Array.from({ length: 12 }, () => 6.5)
+    const trackMeta: TrackEnergyMeta[] = curve.map(() => ({
+      source: "bpm",
+      bpm: 124,
+    }))
+
+    const suppressed = analyzePlaylist({
+      curve,
+      genre: "house",
+      context: "main",
+      trackMeta,
+    })
+    expect(
+      suppressed.issues.some((issue) => issue.type === "no_climax")
+    ).toBe(false)
+
+    const judged = analyzePlaylist({ curve, genre: "house", context: "main" })
+    expect(judged.issues.some((issue) => issue.type === "no_climax")).toBe(
+      true
+    )
+    // Suppression is worth points: the low-confidence read scores higher.
+    expect(suppressed.setScore).toBeGreaterThan(judged.setScore)
   })
 
   it("orders issues penalty-first and attributes traceable point costs", () => {

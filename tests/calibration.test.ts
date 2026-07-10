@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { computeSetScore } from "@/lib/engine/analysis"
+import { analyzePlaylist, computeSetScore } from "@/lib/engine/analysis"
+import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
+import { detectGenres } from "@/lib/playlists/parse-import"
+import type { ImportedTrack } from "@/lib/playlists/imported-track"
 
 /**
  * Product-level score invariants (V2 calibration). These assert RANGES, not
@@ -81,6 +84,91 @@ describe("V2 score calibration", () => {
     const longScore = computeSetScore(long, "house", "main")
 
     expect(Math.abs(shortScore - longScore)).toBeLessThanOrEqual(0.5)
+  })
+
+  it("scores a real hard-techno NML import fairly end-to-end (V3 regression)", () => {
+    // Modeled on the first real production import ("ENJOY THE HARD #7"):
+    // 21 tracks, BPMs 155–160, no Mixed In Key energies, Beatport-style
+    // genre tags. V2 detected "techno", clamped every energy to 10, and
+    // punished the flat artifact down to 5.5.
+    const spec: Array<[number, string | null]> = [
+      [155, "Psy-Trance"],
+      [160, "Techno (Peak Time / Driving)"],
+      [160, "Techno (Peak Time / Driving)"],
+      [160, "Hard Techno"],
+      [155, "Techno (Peak Time / Driving)"],
+      [156, "Techno (Peak Time / Driving)"],
+      [160, "Techno (Peak Time / Driving)"],
+      [160, "Hard Techno"],
+      [160, "Techno (Peak Time / Driving)"],
+      [155, null],
+      [155, "Techno (Peak Time / Driving)"],
+      [155, "Techno (Peak Time / Driving)"],
+      [160, "Hard Techno"],
+      [158, "Techno (Peak Time / Driving)"],
+      [156, "Techno (Peak Time / Driving)"],
+      [160, "Techno (Peak Time / Driving)"],
+      [155, "Techno (Peak Time / Driving)"],
+      [160, "Hard Techno"],
+      [158, "Techno (Peak Time / Driving)"],
+      [160, "Techno (Peak Time / Driving)"],
+      [155, "Techno (Peak Time / Driving)"],
+    ]
+
+    const imported: ImportedTrack[] = spec.map(([bpm, genre], index) => ({
+      artist: `Artist ${index + 1}`,
+      name: `Track ${index + 1}`,
+      bpm,
+      key: null,
+      genre,
+      energy: null,
+      sourceUri: null,
+      comment: null,
+      durationSeconds: null,
+    }))
+
+    // 1. Genre detection: BPMs at 155–160 overrule the plain-techno tags.
+    const { dominant } = detectGenres(imported)
+    expect(dominant).toBe("hard-techno")
+
+    // 2. Energy resolution: no more everything-at-10 flat line.
+    const energies = resolveTrackEnergies(
+      imported.map((track, index) => ({
+        id: String(index + 1),
+        position: index + 1,
+        bpm: track.bpm,
+        energy_score: null,
+        genre: track.genre,
+      })),
+      "main",
+      dominant
+    )
+    const scores = energies.map((entry) => entry.score)
+
+    expect(scores.some((score) => score !== 10)).toBe(true)
+    expect(Math.max(...scores) - Math.min(...scores)).toBeGreaterThan(0.5)
+
+    // 3. Analysis: an honest score with a confidence heads-up instead of
+    // penalties for artifacts the data can't support.
+    const analysis = analyzePlaylist({
+      curve: scores,
+      genre: dominant!,
+      context: "main",
+      trackMeta: energies.map((entry) => ({
+        source: entry.source,
+        bpm: entry.bpm,
+      })),
+    })
+
+    expect(analysis.setScore).toBeGreaterThanOrEqual(7.5)
+    expect(
+      analysis.issues.filter(
+        (issue) => issue.type === "flat_zone" && issue.severity === "penalty"
+      )
+    ).toEqual([])
+    expect(
+      analysis.issues.some((issue) => issue.type === "low_energy_confidence")
+    ).toBe(true)
   })
 
   it("a realistic imperfect-but-decent set lands in the encouraging middle", () => {

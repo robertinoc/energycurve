@@ -8,11 +8,11 @@ import {
 } from "@/lib/playlists/parse-import"
 import type { ImportedTrack } from "@/lib/playlists/imported-track"
 
-function track(genre: string | null): ImportedTrack {
+function track(genre: string | null, bpm: number | null = 120): ImportedTrack {
   return {
     artist: "A",
     name: "N",
-    bpm: 120,
+    bpm,
     key: null,
     genre,
     energy: null,
@@ -60,6 +60,14 @@ describe("mapGenreTag", () => {
     expect(mapGenreTag("Afro House")).toBe("organic-house")
   })
 
+  it("maps compound tags by containment, longest token first (B15)", () => {
+    expect(mapGenreTag("Techno (Peak Time / Driving)")).toBe("techno")
+    expect(mapGenreTag("Techno (Raw / Deep / Hypnotic)")).toBe("techno")
+    expect(mapGenreTag("Hard Techno Industrial")).toBe("hard-techno")
+    expect(mapGenreTag("Progressive Psy-Trance")).toBe("psy-trance")
+    expect(mapGenreTag("Uplifting Trance 138")).toBe("trance")
+  })
+
   it("returns null for unknown or empty tags", () => {
     expect(mapGenreTag("Reggaeton")).toBeNull()
     expect(mapGenreTag(null)).toBeNull()
@@ -68,26 +76,66 @@ describe("mapGenreTag", () => {
 })
 
 describe("detectGenres", () => {
-  it("returns the dominant genre and a share breakdown", () => {
+  it("returns the dominant genre and a vote/BPM breakdown", () => {
     const { dominant, breakdown } = detectGenres([
-      track("Deep House"),
-      track("Deep House"),
-      track("Techno"),
-      track("Reggaeton"), // unmapped → ignored
+      track("Deep House", 120),
+      track("Deep House", 122),
+      track("Techno", 121),
+      track("Reggaeton", 120), // unmapped → ignored for votes
     ])
 
     expect(dominant).toBe("deep-house")
-    // 2 deep-house + 1 techno = 3 mapped; reggaeton excluded from totals.
-    expect(breakdown).toEqual([
-      { genre: "deep-house", count: 2, share: 67 },
-      { genre: "techno", count: 1, share: 33 },
-    ])
+
+    const deepHouse = breakdown.find((entry) => entry.genre === "deep-house")
+    const techno = breakdown.find((entry) => entry.genre === "techno")
+
+    // 2 deep-house + 1 techno = 3 mapped votes; reggaeton excluded.
+    expect(deepHouse).toMatchObject({ count: 2, share: 67 })
+    expect(techno).toMatchObject({ count: 1, share: 33 })
+    expect(deepHouse!.score).toBeGreaterThan(techno!.score)
   })
 
-  it("returns null dominant when no tags map", () => {
-    expect(detectGenres([track("Reggaeton"), track(null)])).toEqual({
-      dominant: null,
-      breakdown: [],
-    })
+  it("lets the BPM prior overrule mislabeled tags (B15)", () => {
+    // Every track tagged plain "Techno", but the set lives at 155–160 BPM —
+    // that's hard techno territory, and techno's band fits none of it.
+    const tracks = [155, 156, 158, 160, 160, 157, 159, 160, 155, 158].map(
+      (bpm) => track("Techno (Peak Time / Driving)", bpm)
+    )
+
+    const { dominant, breakdown } = detectGenres(tracks)
+
+    expect(dominant).toBe("hard-techno")
+
+    const hardTechno = breakdown.find((entry) => entry.genre === "hard-techno")
+    expect(hardTechno?.bpmFit).toBe(1)
+  })
+
+  it("guesses from BPM alone when no tags map", () => {
+    const { dominant } = detectGenres([
+      track("Reggaeton", 157),
+      track(null, 158),
+      track(null, 160),
+    ])
+
+    expect(dominant).toBe("hard-techno")
+  })
+
+  it("returns null when there are neither mappable tags nor BPMs", () => {
+    expect(detectGenres([track("Reggaeton", null), track(null, null)])).toEqual(
+      {
+        dominant: null,
+        breakdown: [],
+      }
+    )
+  })
+
+  it("keeps trusting tags when the BPMs agree with them", () => {
+    const { dominant } = detectGenres([
+      track("Techno", 130),
+      track("Techno", 133),
+      track("Techno", 138),
+    ])
+
+    expect(dominant).toBe("techno")
   })
 })

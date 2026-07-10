@@ -94,7 +94,6 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
 
   const activeIndex = hoveredIndex ?? selectedIndex
   const activeTrack = tracks[activeIndex]
-  const activePoint = points[activeIndex]
   const peakPoint = points[peakIndex]
   const peakTrack = tracks[peakIndex]
 
@@ -116,13 +115,6 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
       })
     )
   }, [target, tracks.length])
-
-  const tooltipStyle = activePoint
-    ? {
-        left: `${clamp((activePoint.x / WIDTH) * 100 - 13, 4, 76)}%`,
-        top: `${clamp((activePoint.y / HEIGHT) * 100 - 24, 6, 64)}%`,
-      }
-    : undefined
 
   const peakPillStyle = peakPoint
     ? {
@@ -259,33 +251,6 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
           </div>
         ) : null}
 
-        {activeTrack && activePoint ? (
-          <div
-            className="pointer-events-none absolute w-44 rounded-xl border border-ec-border-strong bg-ec-surface/96 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur"
-            style={tooltipStyle}
-          >
-            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ec-cyan">
-              Track {activeTrack.position}
-            </p>
-            <p className="mt-2 font-heading text-sm font-semibold text-ec-text">
-              {activeTrack.name}
-            </p>
-            <p className="mt-1 text-xs text-ec-text-muted">
-              {activeTrack.artist}
-            </p>
-            <div className="mt-3 flex items-center justify-between font-mono text-[11.5px] text-ec-text-dim">
-              <span>
-                {activeTrack.bpm !== null ? `${activeTrack.bpm} BPM` : "no BPM"}
-              </span>
-              <span style={{ color: MARKER_STYLES[markerKind(activeIndex, tracks, peakIndex)].fill }}>
-                {activeTrack.score}
-              </span>
-            </div>
-            <p className="mt-2 text-xs text-ec-text-dim">
-              Energy {SOURCE_LABELS[activeTrack.source]}
-            </p>
-          </div>
-        ) : null}
       </div>
 
       {targetPath ? (
@@ -310,6 +275,42 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
           <span key={phase}>{phase}</span>
         ))}
       </div>
+
+      {/* Docked track card: fixed slot below the chart instead of a floating
+          tooltip, so hovering point to point never occludes the curve. */}
+      {activeTrack ? (
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-ec-border-strong bg-ec-surface/96 px-4 py-3">
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ec-cyan">
+            Track {activeTrack.position}
+          </p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-heading text-sm font-semibold text-ec-text">
+              {activeTrack.name}
+            </p>
+            <p className="truncate text-xs text-ec-text-muted">
+              {activeTrack.artist}
+            </p>
+          </div>
+          <div className="flex items-center gap-4 font-mono text-[11.5px] text-ec-text-dim">
+            <span>
+              {activeTrack.bpm !== null ? `${activeTrack.bpm} BPM` : "no BPM"}
+            </span>
+            <span
+              className="text-sm font-bold"
+              style={{
+                color:
+                  MARKER_STYLES[markerKind(activeIndex, tracks, peakIndex)]
+                    .fill,
+              }}
+            >
+              {activeTrack.score}
+            </span>
+            <span className="text-xs text-ec-text-dim">
+              Energy {SOURCE_LABELS[activeTrack.source]}
+            </span>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

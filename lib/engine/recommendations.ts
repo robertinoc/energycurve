@@ -130,6 +130,10 @@ export function suggestReorder(
     curve: orderedEnergies.map((entry) => entry.score),
     genre,
     context,
+    trackMeta: orderedEnergies.map((entry) => ({
+      source: entry.source,
+      bpm: entry.bpm,
+    })),
   })
 
   return {

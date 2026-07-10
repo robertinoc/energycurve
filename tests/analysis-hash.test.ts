@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { computeAnalysisInputHash } from "@/lib/analytics/analysis-hash"
+import { CURRENT_ANALYSIS_ALGORITHM_VERSION } from "@/lib/product/strategy"
 
 describe("computeAnalysisInputHash", () => {
   it("is deterministic for the same input", () => {
@@ -42,7 +43,10 @@ describe("computeAnalysisInputHash", () => {
     const base = { curve: [4, 5, 6], genre: "house", context: "main" }
 
     expect(computeAnalysisInputHash(base)).toBe(
-      computeAnalysisInputHash({ ...base, algorithmVersion: 2 })
+      computeAnalysisInputHash({
+        ...base,
+        algorithmVersion: CURRENT_ANALYSIS_ALGORITHM_VERSION,
+      })
     )
   })
 

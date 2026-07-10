@@ -7,6 +7,14 @@ export interface ResolvedTrackEnergy {
   position: number
   score: number
   source: EnergySource
+  /** Raw BPM the score came from (null for manual/estimated without BPM). */
+  bpm: number | null
+}
+
+/** Per-track provenance the confidence layer needs (B13). */
+export interface TrackEnergyMeta {
+  source: EnergySource
+  bpm: number | null
 }
 
 export type IssueType =
@@ -19,6 +27,7 @@ export type IssueType =
   | "context_high_peak"
   | "no_climax"
   | "good_breather"
+  | "low_energy_confidence"
   | "no_progression"
   | "too_many_rests"
   | "set_too_short"
@@ -66,6 +75,12 @@ export interface PlaylistAnalysisInput {
   curve: number[]
   genre: SupportedGenre
   context: PlaylistContext
+  /**
+   * Per-track energy provenance, same length/order as `curve` (B13). When
+   * present, penalties that require per-track differentiation are suppressed
+   * where BPM-only data cannot support them. Optional for backward compat.
+   */
+  trackMeta?: TrackEnergyMeta[]
 }
 
 export interface PlaylistAnalysis {
