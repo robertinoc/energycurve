@@ -4,6 +4,8 @@ import { useState } from "react"
 import { ChevronDown, Download } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { DASHBOARD_COPY, type LocalizedLabel } from "@/lib/content/dashboard-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   defaultExportFormat,
   exportFilename,
@@ -13,22 +15,25 @@ import {
   type ExportPlaylist,
 } from "@/lib/playlists/export"
 
+const COPY = DASHBOARD_COPY.exportMenu
+
 interface PlaylistExportButtonProps {
   playlist: ExportPlaylist
+  locale: SiteLocale
 }
 
 interface MenuItem {
   format: ExportFormat
-  label: string
+  label: LocalizedLabel
   ext: string
   group: "dj" | "plain"
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { format: "rekordbox", label: "For Rekordbox", ext: ".xml", group: "dj" },
-  { format: "traktor", label: "For Traktor", ext: ".nml", group: "dj" },
-  { format: "csv", label: "CSV file", ext: ".csv", group: "plain" },
-  { format: "txt", label: "Text file", ext: ".txt", group: "plain" },
+  { format: "rekordbox", label: COPY.forRekordbox, ext: ".xml", group: "dj" },
+  { format: "traktor", label: COPY.forTraktor, ext: ".nml", group: "dj" },
+  { format: "csv", label: COPY.csvFile, ext: ".csv", group: "plain" },
+  { format: "txt", label: COPY.textFile, ext: ".txt", group: "plain" },
 ]
 
 function downloadFile(filename: string, mimeType: string, content: string) {
@@ -43,7 +48,10 @@ function downloadFile(filename: string, mimeType: string, content: string) {
   URL.revokeObjectURL(url)
 }
 
-export function PlaylistExportButton({ playlist }: PlaylistExportButtonProps) {
+export function PlaylistExportButton({
+  playlist,
+  locale,
+}: PlaylistExportButtonProps) {
   const [open, setOpen] = useState(false)
   const disabled = playlist.tracks.length === 0
   const defaultFormat = defaultExportFormat(playlist.importSource)
@@ -70,7 +78,7 @@ export function PlaylistExportButton({ playlist }: PlaylistExportButtonProps) {
         className="border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
       >
         <Download className="size-3.5" />
-        Export…
+        {COPY.export[locale]}
         <ChevronDown className="size-3.5" />
       </Button>
 
@@ -85,7 +93,7 @@ export function PlaylistExportButton({ playlist }: PlaylistExportButtonProps) {
           />
           <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-white/12 bg-[#17121f] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <p className="px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/40">
-              DJ software
+              {COPY.djSoftware[locale]}
             </p>
             {djItems.map((item) => (
               <ExportRow
@@ -93,6 +101,7 @@ export function PlaylistExportButton({ playlist }: PlaylistExportButtonProps) {
                 item={item}
                 isDefault={item.format === defaultFormat}
                 onClick={() => handleExport(item.format)}
+                locale={locale}
               />
             ))}
             <button
@@ -100,15 +109,15 @@ export function PlaylistExportButton({ playlist }: PlaylistExportButtonProps) {
               disabled
               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-white/45"
             >
-              For Serato
+              {COPY.forSerato[locale]}
               <span className="ml-auto rounded-md border border-white/12 px-1.5 text-[9.5px] uppercase tracking-[0.12em] text-white/40">
-                soon
+                {COPY.soon[locale]}
               </span>
             </button>
 
             <div className="my-1 h-px bg-white/[0.08]" />
             <p className="px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/40">
-              Plain
+              {COPY.plain[locale]}
             </p>
             {plainItems.map((item) => (
               <ExportRow
@@ -116,6 +125,7 @@ export function PlaylistExportButton({ playlist }: PlaylistExportButtonProps) {
                 item={item}
                 isDefault={item.format === defaultFormat}
                 onClick={() => handleExport(item.format)}
+                locale={locale}
               />
             ))}
           </div>
@@ -129,10 +139,12 @@ function ExportRow({
   item,
   isDefault,
   onClick,
+  locale,
 }: {
   item: MenuItem
   isDefault: boolean
   onClick: () => void
+  locale: SiteLocale
 }) {
   return (
     <button
@@ -140,11 +152,11 @@ function ExportRow({
       onClick={onClick}
       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-white/78 transition hover:bg-white/[0.06] hover:text-white"
     >
-      {item.label}
+      {item.label[locale]}
       <span className="font-mono text-[11px] text-white/38">{item.ext}</span>
       {isDefault ? (
         <span className="ml-auto text-[9.5px] uppercase tracking-[0.16em] text-white/38">
-          default
+          {COPY.defaultTag[locale]}
         </span>
       ) : null}
     </button>

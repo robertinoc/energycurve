@@ -42,7 +42,7 @@ export function LocaleToggle({ current }: LocaleToggleProps) {
         isPending && "opacity-60"
       )}
       role="group"
-      aria-label="Recommendations language"
+      aria-label="Language"
     >
       {OPTIONS.map((option) => (
         <button

@@ -8,6 +8,8 @@ import { SetCurve } from "@/components/playlists/set-curve"
 import { TrackTable, type TrackEnergyView } from "@/components/playlists/track-table"
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/ui/toast"
+import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
 import {
@@ -22,6 +24,7 @@ interface PlaylistWorkspaceProps {
   genre: SupportedGenre | null
   context: PlaylistContext | null
   tracks: Track[]
+  locale: SiteLocale
 }
 
 function formatMinutes(minutes: number): string {
@@ -40,7 +43,9 @@ export function PlaylistWorkspace({
   genre,
   context,
   tracks,
+  locale,
 }: PlaylistWorkspaceProps) {
+  const copy = DASHBOARD_COPY.workspace
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   // Working order (drives the curve). `baseline` is the last saved order; the
   // parent re-mounts this component (via a key on the server track signature)
@@ -116,10 +121,13 @@ export function PlaylistWorkspace({
       if (result.ok) {
         setBaseline(order)
         setUndoStack([])
-        setToast({ show: true, message: "Set order saved" })
+        setToast({ show: true, message: copy.orderSaved[locale] })
         window.setTimeout(() => setToast((t) => ({ ...t, show: false })), 1900)
       } else {
-        setToast({ show: true, message: result.message ?? "Could not save order" })
+        setToast({
+          show: true,
+          message: result.message ?? copy.orderSaveFailed[locale],
+        })
         window.setTimeout(() => setToast((t) => ({ ...t, show: false })), 2600)
       }
     })
@@ -132,10 +140,10 @@ export function PlaylistWorkspace({
           <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
             <div>
               <p className="text-[10px] uppercase tracking-[0.22em] text-white/42">
-                Set energy curve
+                {copy.curveEyebrow[locale]}
               </p>
               <h2 className="mt-0.5 font-heading text-[15px] font-semibold text-white">
-                The shape of the night
+                {copy.curveTitle[locale]}
               </h2>
             </div>
             <div className="flex items-center gap-4 text-[11px] text-white/42">
@@ -144,12 +152,12 @@ export function PlaylistWorkspace({
                   className="h-1.5 w-4 rounded-full"
                   style={{ background: "linear-gradient(90deg,#4C6EF5,#A24DE0,#F0348A)" }}
                 />
-                your set
+                {copy.legendYourSet[locale]}
               </span>
               {target ? (
                 <span className="flex items-center gap-1.5">
                   <span className="inline-block h-0 w-4 border-t-2 border-dashed border-white/55" />
-                  target
+                  {copy.legendTarget[locale]}
                 </span>
               ) : null}
             </div>
@@ -158,13 +166,13 @@ export function PlaylistWorkspace({
         </div>
       ) : null}
 
-      <GenreNote genre={genre} context={context} tracks={order} />
+      <GenreNote genre={genre} context={context} tracks={order} locale={locale} />
 
       {dirty ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-[#A24DE0]/40 bg-[#A24DE0]/[0.08] px-4 py-2.5">
           <span className="flex items-center gap-2 text-[12.5px] font-semibold text-[#e6d3fb]">
             <span className="size-2 rounded-full bg-[#A24DE0]" />
-            Preview — unsaved order
+            {copy.previewUnsaved[locale]}
           </span>
           <div className="ml-auto flex items-center gap-2">
             <Button
@@ -175,7 +183,7 @@ export function PlaylistWorkspace({
               onClick={handleUndo}
               className="text-white/62 hover:text-white"
             >
-              Undo
+              {copy.undo[locale]}
             </Button>
             <Button
               type="button"
@@ -185,10 +193,10 @@ export function PlaylistWorkspace({
               onClick={handleDiscard}
               className="text-white/62 hover:text-white"
             >
-              Discard
+              {copy.discard[locale]}
             </Button>
             <Button type="button" size="sm" disabled={isSaving} onClick={handleSave}>
-              {isSaving ? "Saving…" : "Save order"}
+              {isSaving ? copy.saving[locale] : copy.saveOrder[locale]}
             </Button>
           </div>
         </div>
@@ -200,12 +208,14 @@ export function PlaylistWorkspace({
         energies={energies}
         onHover={setHoveredIndex}
         onReorder={handleReorder}
+        locale={locale}
       />
 
       {order.length > 0 ? (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-1 text-[12.5px] text-white/45">
           <span>
-            <b className="font-mono font-bold text-white">{stats.n}</b> tracks
+            <b className="font-mono font-bold text-white">{stats.n}</b>{" "}
+            {copy.statsTracks[locale]}
           </span>
           <span className="text-white/20">·</span>
           <span>
@@ -218,7 +228,8 @@ export function PlaylistWorkspace({
             <>
               <span className="text-white/20">·</span>
               <span>
-                avg <b className="font-mono font-bold text-white">{stats.avgBpm}</b> BPM
+                {copy.statsAvg[locale]}{" "}
+                <b className="font-mono font-bold text-white">{stats.avgBpm}</b> BPM
               </span>
             </>
           ) : null}
@@ -226,7 +237,7 @@ export function PlaylistWorkspace({
             <>
               <span className="text-white/20">·</span>
               <span>
-                energy{" "}
+                {copy.statsEnergy[locale]}{" "}
                 <b className="font-mono font-bold text-white">
                   {stats.eMin}–{stats.eMax}
                 </b>

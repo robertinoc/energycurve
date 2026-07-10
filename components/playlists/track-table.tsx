@@ -19,17 +19,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { energyBarGradient, energyColor } from "@/lib/charts/energy-colors"
+import { formatTemplate } from "@/lib/content/analysis-copy"
+import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import { toCamelot } from "@/lib/music/camelot"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
 import {
   COLUMN_PREFS_STORAGE_KEY,
   OPTIONAL_COLUMNS,
-  OPTIONAL_COLUMN_LABELS,
   parseColumnPrefs,
   type OptionalColumn,
 } from "@/lib/tracklist/column-prefs"
 import type { EnergySource } from "@/types/analysis"
 import type { Track } from "@/types/domain"
+
+const COPY = DASHBOARD_COPY.trackTable
 
 export interface TrackEnergyView {
   score: number
@@ -53,6 +57,7 @@ interface TrackTableProps {
   onHover: (index: number | null) => void
   /** Called with the new track order after a drag or a column sort. */
   onReorder: (tracks: Track[]) => void
+  locale: SiteLocale
 }
 
 function formatDuration(seconds: number | null): string {
@@ -69,9 +74,11 @@ function formatDuration(seconds: number | null): string {
 function ColumnsMenu({
   active,
   onToggle,
+  locale,
 }: {
   active: OptionalColumn[]
   onToggle: (col: OptionalColumn, on: boolean) => void
+  locale: SiteLocale
 }) {
   const [open, setOpen] = useState(false)
 
@@ -86,7 +93,7 @@ function ColumnsMenu({
         className="text-white/62 hover:text-white"
       >
         <Columns3 className="size-3.5" />
-        Columns
+        {COPY.columns[locale]}
       </Button>
       {open ? (
         <>
@@ -99,7 +106,7 @@ function ColumnsMenu({
           />
           <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-white/12 bg-[#17121f] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <p className="px-2 pb-1 text-[10px] uppercase tracking-[0.16em] text-white/40">
-              Optional columns
+              {COPY.optionalColumns[locale]}
             </p>
             {OPTIONAL_COLUMNS.map((col) => (
               <label
@@ -112,7 +119,7 @@ function ColumnsMenu({
                   checked={active.includes(col)}
                   onChange={(e) => onToggle(col, e.target.checked)}
                 />
-                {OPTIONAL_COLUMN_LABELS[col]}
+                {DASHBOARD_COPY.columnLabels[col][locale]}
               </label>
             ))}
           </div>
@@ -128,16 +135,28 @@ function TrackFields({
   idPrefix,
   defaults,
   fieldErrors,
+  locale,
 }: {
   idPrefix: string
   defaults?: Track
   fieldErrors: Record<string, string> | null
+  locale: SiteLocale
 }) {
   return (
     <div className="grid gap-3 sm:grid-cols-[1.2fr_1.4fr_0.6fr_0.6fr]">
       {[
-        { name: "artist", label: "Artist", value: defaults?.artist ?? "", placeholder: "Artist" },
-        { name: "name", label: "Track", value: defaults?.name ?? "", placeholder: "Track title" },
+        {
+          name: "artist",
+          label: COPY.fieldArtist[locale],
+          value: defaults?.artist ?? "",
+          placeholder: COPY.fieldArtist[locale],
+        },
+        {
+          name: "name",
+          label: COPY.fieldTrack[locale],
+          value: defaults?.name ?? "",
+          placeholder: COPY.fieldTrackPlaceholder[locale],
+        },
       ].map((f) => (
         <div key={f.name} className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-${f.name}`} className="text-white/72">
@@ -178,7 +197,7 @@ function TrackFields({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor={`${idPrefix}-energy`} className="text-white/72">
-          Energy (1–10)
+          {COPY.fieldEnergy[locale]}
         </Label>
         <Input
           id={`${idPrefix}-energy`}
@@ -188,7 +207,7 @@ function TrackFields({
           min={1}
           max={10}
           defaultValue={defaults?.energy_score ?? ""}
-          placeholder="Optional"
+          placeholder={COPY.fieldEnergyPlaceholder[locale]}
           className="border-white/12 text-white placeholder:text-white/32"
         />
         {fieldErrors?.energyScore ? (
@@ -206,11 +225,13 @@ function EditTrackRow({
   track,
   colSpan,
   onClose,
+  locale,
 }: {
   playlistId: string
   track: Track
   colSpan: number
   onClose: () => void
+  locale: SiteLocale
 }) {
   const [state, formAction, pending] = useActionState(
     updateTrackAction,
@@ -235,10 +256,11 @@ function EditTrackRow({
             idPrefix={`edit-${track.id}`}
             defaults={track}
             fieldErrors={state.fieldErrors}
+            locale={locale}
           />
           <div className="flex items-center gap-2">
             <Button type="submit" size="sm" disabled={pending}>
-              {pending ? "Saving…" : "Save changes"}
+              {pending ? COPY.saving[locale] : COPY.saveChanges[locale]}
             </Button>
             <Button
               type="button"
@@ -247,7 +269,7 @@ function EditTrackRow({
               className="text-white/48"
               onClick={onClose}
             >
-              Cancel
+              {COPY.cancel[locale]}
             </Button>
           </div>
         </form>
@@ -271,6 +293,7 @@ function TrackRow({
   onDragOver,
   onDrop,
   onDragEnd,
+  locale,
 }: {
   playlistId: string
   track: Track
@@ -284,6 +307,7 @@ function TrackRow({
   onDragOver: (index: number) => void
   onDrop: (index: number) => void
   onDragEnd: () => void
+  locale: SiteLocale
 }) {
   const [editing, setEditing] = useState(false)
   const [confirmingRemove, setConfirmingRemove] = useState(false)
@@ -299,6 +323,7 @@ function TrackRow({
         track={track}
         colSpan={colSpan}
         onClose={() => setEditing(false)}
+        locale={locale}
       />
     )
   }
@@ -322,7 +347,10 @@ function TrackRow({
       onMouseLeave={() => onHover(null)}
       className={`border-b border-white/[0.05] last:border-0 hover:bg-white/[0.045] ${isDragOver ? "shadow-[inset_0_2px_0_#A24DE0]" : ""}`}
     >
-      <td className="w-6 cursor-grab px-1 text-center text-white/28 active:cursor-grabbing" title="Drag to reorder">
+      <td
+        className="w-6 cursor-grab px-1 text-center text-white/28 active:cursor-grabbing"
+        title={COPY.dragToReorder[locale]}
+      >
         <GripVertical className="mx-auto size-3.5" />
       </td>
       <td className="w-7 px-2 py-1.5 text-right font-mono text-xs text-white/28">
@@ -342,7 +370,9 @@ function TrackRow({
           <span
             className="w-6 text-right font-mono text-xs font-bold"
             style={{ color: energyColor(energy.score) }}
-            title={`energy source: ${energy.source}`}
+            title={formatTemplate(COPY.energySource[locale], {
+              source: energy.source,
+            })}
           >
             {energy.score}
           </span>
@@ -396,7 +426,7 @@ function TrackRow({
             type="button"
             variant="ghost"
             size="icon-xs"
-            aria-label="Edit track"
+            aria-label={COPY.editTrack[locale]}
             className="text-white/40 hover:text-white"
             onClick={() => setEditing(true)}
           >
@@ -407,13 +437,13 @@ function TrackRow({
               <input type="hidden" name="playlistId" value={playlistId} />
               <input type="hidden" name="trackId" value={track.id} />
               <Button type="submit" variant="destructive" size="xs" disabled={removePending}>
-                {removePending ? "…" : "Confirm"}
+                {removePending ? "…" : COPY.confirm[locale]}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                aria-label="Cancel remove"
+                aria-label={COPY.cancelRemove[locale]}
                 className="text-white/40"
                 onClick={() => setConfirmingRemove(false)}
               >
@@ -425,7 +455,7 @@ function TrackRow({
               type="button"
               variant="ghost"
               size="icon-xs"
-              aria-label="Remove track"
+              aria-label={COPY.removeTrack[locale]}
               className="text-white/40 hover:text-ec-error"
               onClick={() => setConfirmingRemove(true)}
             >
@@ -440,7 +470,13 @@ function TrackRow({
 
 // ---- Add-track form ----
 
-function AddTrackForm({ playlistId }: { playlistId: string }) {
+function AddTrackForm({
+  playlistId,
+  locale,
+}: {
+  playlistId: string
+  locale: SiteLocale
+}) {
   const formRef = useRef<HTMLFormElement>(null)
   const [state, formAction, isPending] = useActionState(
     addTrackAction,
@@ -465,7 +501,7 @@ function AddTrackForm({ playlistId }: { playlistId: string }) {
           onClick={() => setOpen(true)}
         >
           <Plus className="size-3.5" />
-          Add track
+          {COPY.addTrack[locale]}
         </Button>
       </div>
     )
@@ -478,10 +514,10 @@ function AddTrackForm({ playlistId }: { playlistId: string }) {
       className="space-y-3 border-t border-white/[0.06] p-4"
     >
       <input type="hidden" name="playlistId" value={playlistId} />
-      <TrackFields idPrefix="add" fieldErrors={state.fieldErrors} />
+      <TrackFields idPrefix="add" fieldErrors={state.fieldErrors} locale={locale} />
       <div className="flex items-center gap-2">
         <Button type="submit" size="sm" disabled={isPending}>
-          {isPending ? "Adding…" : "Add track"}
+          {isPending ? COPY.adding[locale] : COPY.addTrack[locale]}
         </Button>
         <Button
           type="button"
@@ -490,7 +526,7 @@ function AddTrackForm({ playlistId }: { playlistId: string }) {
           className="text-white/48"
           onClick={() => setOpen(false)}
         >
-          Close
+          {COPY.close[locale]}
         </Button>
         {!state.ok && state.message ? (
           <span className="text-sm text-ec-error">{state.message}</span>
@@ -587,6 +623,7 @@ export function TrackTable({
   energies,
   onHover,
   onReorder,
+  locale,
 }: TrackTableProps) {
   const [optional, setOptional] = useState<OptionalColumn[]>([])
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null)
@@ -643,24 +680,24 @@ export function TrackTable({
     <div className="overflow-hidden rounded-[16px] border border-ec-border bg-[#0C0917]">
       <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-2.5">
         <span className="text-[10px] uppercase tracking-[0.22em] text-white/42">
-          Tracklist
+          {COPY.tracklist[locale]}
         </span>
         <div className="flex items-center gap-4">
           <div className="hidden items-center gap-2 text-[11px] text-white/40 sm:flex">
-            <span>Energy</span>
+            <span>{COPY.energyLegend[locale]}</span>
             <span
               className="h-2 w-[88px] rounded-full"
               style={{ background: "linear-gradient(90deg,#4C6EF5,#22D3EE,#A24DE0,#F0348A)" }}
             />
-            <span>low → high</span>
+            <span>{COPY.energyLegendLow[locale]}</span>
           </div>
-          <ColumnsMenu active={optional} onToggle={toggleColumn} />
+          <ColumnsMenu active={optional} onToggle={toggleColumn} locale={locale} />
         </div>
       </div>
 
       {tracks.length === 0 ? (
         <p className="px-4 py-8 text-center text-sm text-white/48">
-          No tracks yet. Add one below, or paste a full tracklist in the import panel.
+          {COPY.emptyState[locale]}
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -669,19 +706,21 @@ export function TrackTable({
               <tr className="border-b border-white/12 text-left text-[10px] uppercase tracking-[0.13em] text-white/40">
                 <th className="w-6" />
                 <th className="px-2 py-2 text-right">#</th>
-                <SortHeader label="Energy" sortKey="energy" active={sort?.key === "energy"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
-                <SortHeader label="Artist" sortKey="artist" active={sort?.key === "artist"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
-                <SortHeader label="Title" sortKey="title" active={sort?.key === "title"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
-                <SortHeader label="BPM" sortKey="bpm" active={sort?.key === "bpm"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-right" />
-                <SortHeader label="Camelot" sortKey="camelot" active={sort?.key === "camelot"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-center" />
-                <SortHeader label="Key" sortKey="key" active={sort?.key === "key"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-center" />
+                <SortHeader label={COPY.headerEnergy[locale]} sortKey="energy" active={sort?.key === "energy"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
+                <SortHeader label={COPY.headerArtist[locale]} sortKey="artist" active={sort?.key === "artist"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
+                <SortHeader label={COPY.headerTitle[locale]} sortKey="title" active={sort?.key === "title"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
+                <SortHeader label={COPY.headerBpm[locale]} sortKey="bpm" active={sort?.key === "bpm"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-right" />
+                <SortHeader label={COPY.headerCamelot[locale]} sortKey="camelot" active={sort?.key === "camelot"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-center" />
+                <SortHeader label={COPY.headerKey[locale]} sortKey="key" active={sort?.key === "key"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-center" />
                 {optional.includes("genre") ? (
-                  <SortHeader label="Genre" sortKey="genre" active={sort?.key === "genre"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
+                  <SortHeader label={DASHBOARD_COPY.columnLabels.genre[locale]} sortKey="genre" active={sort?.key === "genre"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
                 ) : null}
                 {optional.includes("duration") ? (
-                  <SortHeader label="Time" sortKey="duration" active={sort?.key === "duration"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-right" />
+                  <SortHeader label={DASHBOARD_COPY.columnLabels.duration[locale]} sortKey="duration" active={sort?.key === "duration"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-right" />
                 ) : null}
-                {optional.includes("comment") ? <th className="px-3 py-2">Comment</th> : null}
+                {optional.includes("comment") ? (
+                  <th className="px-3 py-2">{COPY.headerComment[locale]}</th>
+                ) : null}
                 <th className="px-3 py-2" />
               </tr>
             </thead>
@@ -704,6 +743,7 @@ export function TrackTable({
                     setDragIndex(null)
                     setDragOverIndex(null)
                   }}
+                  locale={locale}
                 />
               ))}
             </tbody>
@@ -711,7 +751,7 @@ export function TrackTable({
         </div>
       )}
 
-      <AddTrackForm playlistId={playlistId} />
+      <AddTrackForm playlistId={playlistId} locale={locale} />
     </div>
   )
 }

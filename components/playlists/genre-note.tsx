@@ -3,9 +3,10 @@
 import { useState } from "react"
 import { Activity, ChevronDown } from "lucide-react"
 
+import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import { genreTip } from "@/lib/engine/genre-tips"
 import {
-  CONTEXT_LABELS,
   GENRE_LABELS,
   type PlaylistContext,
   type SupportedGenre,
@@ -15,16 +16,17 @@ interface GenreNoteProps {
   genre: SupportedGenre | null
   context: PlaylistContext | null
   tracks: { bpm: number | null }[]
+  locale: SiteLocale
 }
 
-export function GenreNote({ genre, context, tracks }: GenreNoteProps) {
+export function GenreNote({ genre, context, tracks, locale }: GenreNoteProps) {
   const [open, setOpen] = useState(false)
 
   if (!genre) {
     return null
   }
 
-  const contextLabel = context ? CONTEXT_LABELS[context] : null
+  const contextLabel = context ? CONTEXT_COPY[context][locale] : null
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-ec-border bg-white/[0.03]">
@@ -39,7 +41,7 @@ export function GenreNote({ genre, context, tracks }: GenreNoteProps) {
         </span>
         <span className="min-w-0">
           <span className="block text-[10.5px] uppercase tracking-[0.16em] text-ec-text-dim">
-            Main genre detected
+            {DASHBOARD_COPY.genreNote.detected[locale]}
           </span>
           <span className="block text-sm font-bold text-ec-text">
             <span className="text-ec-cyan">{GENRE_LABELS[genre] ?? genre}</span>
@@ -52,7 +54,7 @@ export function GenreNote({ genre, context, tracks }: GenreNoteProps) {
       </button>
       {open ? (
         <p className="px-4 pb-3 pl-[54px] text-[12.5px] leading-relaxed text-white/62">
-          {genreTip(genre, context, tracks)}
+          {genreTip(genre, context, tracks, locale)}
         </p>
       ) : null}
     </div>

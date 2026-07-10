@@ -7,6 +7,10 @@ import type { ZodError } from "zod"
 
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { buildReturnToHref } from "@/lib/auth/return-to"
+import { formatTemplate } from "@/lib/content/analysis-copy"
+import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
+import { getRequestLocale } from "@/lib/server-locale"
 import type { PlaylistActionState } from "@/lib/playlists/action-state"
 import { logError, logWarn } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
@@ -39,11 +43,9 @@ import {
   updateTrack,
 } from "@/services/playlist-service"
 
-const GENERIC_ERROR_MESSAGE =
-  "Something went wrong while saving. Please try again."
-
-const RATE_LIMIT_MESSAGE =
-  "Too many changes in a short time. Wait a moment and try again."
+// Action messages come from the shared dashboard copy table, in the
+// requester's language (cookie via getRequestLocale).
+const ACTION_COPY = DASHBOARD_COPY.actions
 
 // Per-profile sliding windows: generous for humans, tight for scripts.
 const RATE_LIMITS = {
@@ -53,7 +55,8 @@ const RATE_LIMITS = {
 
 function rateLimitFailure(
   profileId: string,
-  kind: keyof typeof RATE_LIMITS
+  kind: keyof typeof RATE_LIMITS,
+  locale: SiteLocale
 ): PlaylistActionState | null {
   const config = RATE_LIMITS[kind]
   const { allowed } = checkRateLimit({
@@ -67,7 +70,7 @@ function rateLimitFailure(
   }
 
   logWarn("playlist.action_rate_limited", { profileId, kind })
-  return failure(RATE_LIMIT_MESSAGE)
+  return failure(ACTION_COPY.rateLimited[locale])
 }
 
 async function requireProfile() {
@@ -124,14 +127,15 @@ export async function createPlaylistAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+  const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation")
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
   }
 
-  const parsed = createPlaylistSchema("en").safeParse({
+  const parsed = createPlaylistSchema(locale).safeParse({
     name: String(formData.get("name") ?? ""),
     genre: String(formData.get("genre") ?? ""),
     context: String(formData.get("context") ?? ""),
@@ -139,7 +143,7 @@ export async function createPlaylistAction(
 
   if (!parsed.success) {
     return failure(
-      "Review the highlighted fields.",
+      ACTION_COPY.reviewFields[locale],
       collectFieldErrors(parsed.error)
     )
   }
@@ -151,7 +155,7 @@ export async function createPlaylistAction(
     playlistId = playlist.id
   } catch (error) {
     logError("playlist.create_action_failed", error, { profileId: profile.id })
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   captureServerEvent(profile.id, "playlist_created", {
@@ -170,8 +174,9 @@ export async function deletePlaylistAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+  const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation")
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -179,7 +184,7 @@ export async function deletePlaylistAction(
   const playlistId = String(formData.get("playlistId") ?? "")
 
   if (!playlistId) {
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   try {
@@ -189,12 +194,12 @@ export async function deletePlaylistAction(
       profileId: profile.id,
       playlistId,
     })
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   revalidatePath("/dashboard/playlists")
   revalidatePath("/dashboard")
-  return success("Playlist deleted.")
+  return success(ACTION_COPY.playlistDeleted[locale])
 }
 
 export async function addTrackAction(
@@ -202,8 +207,9 @@ export async function addTrackAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+  const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation")
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -211,16 +217,16 @@ export async function addTrackAction(
   const playlistId = String(formData.get("playlistId") ?? "")
 
   if (!playlistId) {
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
-  const parsed = createTrackInputSchema("en").safeParse(
+  const parsed = createTrackInputSchema(locale).safeParse(
     readTrackFormData(formData)
   )
 
   if (!parsed.success) {
     return failure(
-      "Review the highlighted fields.",
+      ACTION_COPY.reviewFields[locale],
       collectFieldErrors(parsed.error)
     )
   }
@@ -232,11 +238,11 @@ export async function addTrackAction(
       profileId: profile.id,
       playlistId,
     })
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   revalidatePath(`/dashboard/playlists/${playlistId}`)
-  return success("Track added.")
+  return success(ACTION_COPY.trackAdded[locale])
 }
 
 export async function updateTrackAction(
@@ -244,8 +250,9 @@ export async function updateTrackAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+  const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation")
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -254,16 +261,16 @@ export async function updateTrackAction(
   const trackId = String(formData.get("trackId") ?? "")
 
   if (!playlistId || !trackId) {
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
-  const parsed = createTrackInputSchema("en").safeParse(
+  const parsed = createTrackInputSchema(locale).safeParse(
     readTrackFormData(formData)
   )
 
   if (!parsed.success) {
     return failure(
-      "Review the highlighted fields.",
+      ACTION_COPY.reviewFields[locale],
       collectFieldErrors(parsed.error)
     )
   }
@@ -276,11 +283,11 @@ export async function updateTrackAction(
       playlistId,
       trackId,
     })
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   revalidatePath(`/dashboard/playlists/${playlistId}`)
-  return success("Track updated.")
+  return success(ACTION_COPY.trackUpdated[locale])
 }
 
 export async function removeTrackAction(
@@ -288,8 +295,9 @@ export async function removeTrackAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+  const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation")
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -298,7 +306,7 @@ export async function removeTrackAction(
   const trackId = String(formData.get("trackId") ?? "")
 
   if (!playlistId || !trackId) {
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   try {
@@ -309,11 +317,11 @@ export async function removeTrackAction(
       playlistId,
       trackId,
     })
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   revalidatePath(`/dashboard/playlists/${playlistId}`)
-  return success("Track removed.")
+  return success(ACTION_COPY.trackRemoved[locale])
 }
 
 export async function moveTrackAction(
@@ -321,8 +329,9 @@ export async function moveTrackAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+  const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation")
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -332,7 +341,7 @@ export async function moveTrackAction(
   const direction = String(formData.get("direction") ?? "")
 
   if (!playlistId || !trackId || (direction !== "up" && direction !== "down")) {
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   try {
@@ -343,11 +352,11 @@ export async function moveTrackAction(
       playlistId,
       trackId,
     })
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   revalidatePath(`/dashboard/playlists/${playlistId}`)
-  return success("Track moved.")
+  return success(ACTION_COPY.trackMoved[locale])
 }
 
 export async function importTracklistAction(
@@ -355,8 +364,9 @@ export async function importTracklistAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+  const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "import")
+  const rateLimited = rateLimitFailure(profile.id, "import", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -364,17 +374,17 @@ export async function importTracklistAction(
   const playlistId = String(formData.get("playlistId") ?? "")
 
   if (!playlistId) {
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
-  const parsed = createTracklistImportSchema("en").safeParse({
+  const parsed = createTracklistImportSchema(locale).safeParse({
     text: String(formData.get("text") ?? ""),
     format: String(formData.get("format") ?? ""),
   })
 
   if (!parsed.success) {
     return failure(
-      "Review the highlighted fields.",
+      ACTION_COPY.reviewFields[locale],
       collectFieldErrors(parsed.error)
     )
   }
@@ -385,8 +395,10 @@ export async function importTracklistAction(
   if (tracks.length === 0) {
     return failure(
       errors.length > 0
-        ? `No valid lines found — ${errors.length} line(s) could not be parsed.`
-        : "No valid lines found in the pasted text."
+        ? formatTemplate(ACTION_COPY.noValidLinesParsed[locale], {
+            count: errors.length,
+          })
+        : ACTION_COPY.noValidLines[locale]
     )
   }
 
@@ -408,15 +420,24 @@ export async function importTracklistAction(
       profileId: profile.id,
       playlistId,
     })
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   revalidatePath(`/dashboard/playlists/${playlistId}`)
 
   const skippedSuffix =
-    errors.length > 0 ? ` ${errors.length} line(s) were skipped.` : ""
+    errors.length > 0
+      ? formatTemplate(ACTION_COPY.importSkippedSuffix[locale], {
+          count: errors.length,
+        })
+      : ""
 
-  return success(`Imported ${importedCount} track(s).${skippedSuffix}`)
+  return success(
+    formatTemplate(ACTION_COPY.importedTracks[locale], {
+      count: importedCount,
+      skipped: skippedSuffix,
+    })
+  )
 }
 
 const IMPORT_MAX_FILE_BYTES = 12 * 1024 * 1024 // 12 MB — full collections can be large
@@ -435,8 +456,9 @@ export async function importPlaylistAction(
   formData: FormData
 ): Promise<PlaylistActionState> {
   const profile = await requireProfile()
+  const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "import")
+  const rateLimited = rateLimitFailure(profile.id, "import", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -448,15 +470,15 @@ export async function importPlaylistAction(
   const nameOverride = String(formData.get("name") ?? "").trim()
 
   if (!(file instanceof File) || file.size === 0) {
-    return failure("Choose a Rekordbox XML or Traktor NML file to import.")
+    return failure(ACTION_COPY.chooseFile[locale])
   }
 
   if (file.size > IMPORT_MAX_FILE_BYTES) {
-    return failure("That file is too large. Export a single playlist and retry.")
+    return failure(ACTION_COPY.fileTooLarge[locale])
   }
 
   if (!isPlaylistContext(contextRaw)) {
-    return failure("Pick a set context (opening, main, or closing).")
+    return failure(ACTION_COPY.pickContext[locale])
   }
 
   let parsed
@@ -467,9 +489,7 @@ export async function importPlaylistAction(
       return failure(error.message)
     }
     logError("playlist.import_parse_failed", error, { profileId: profile.id })
-    return failure(
-      "We couldn't read that file. Make sure it's a Rekordbox XML or Traktor NML export."
-    )
+    return failure(ACTION_COPY.cantReadFile[locale])
   }
 
   const { dominant } = detectGenres(parsed.tracks)
@@ -482,7 +502,9 @@ export async function importPlaylistAction(
   const name =
     nameOverride ||
     parsed.playlistName ||
-    `Imported ${parsed.source === "rekordbox" ? "Rekordbox" : "Traktor"} set`
+    formatTemplate(ACTION_COPY.importedSetName[locale], {
+      source: parsed.source === "rekordbox" ? "Rekordbox" : "Traktor",
+    })
 
   const tracks = parsed.tracks.slice(0, IMPORT_MAX_TRACKS)
   const skipped = parsed.tracks.length - tracks.length
@@ -518,7 +540,7 @@ export async function importPlaylistAction(
       profileId: profile.id,
       source: parsed.source,
     })
-    return failure(GENERIC_ERROR_MESSAGE)
+    return failure(ACTION_COPY.genericError[locale])
   }
 
   captureServerEvent(profile.id, "playlist_created", {
@@ -556,8 +578,9 @@ export async function reorderTracksAction(
   orderedTrackIds: string[]
 ): Promise<ReorderResult> {
   const profile = await requireProfile()
+  const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation")
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
   }
@@ -567,7 +590,7 @@ export async function reorderTracksAction(
     !Array.isArray(orderedTrackIds) ||
     orderedTrackIds.length === 0
   ) {
-    return { ok: false, message: GENERIC_ERROR_MESSAGE }
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
   }
 
   try {
@@ -577,7 +600,7 @@ export async function reorderTracksAction(
       profileId: profile.id,
       playlistId,
     })
-    return { ok: false, message: GENERIC_ERROR_MESSAGE }
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
   }
 
   revalidatePath(`/dashboard/playlists/${playlistId}`)

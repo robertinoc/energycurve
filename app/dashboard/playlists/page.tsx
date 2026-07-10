@@ -10,7 +10,10 @@ import { PlaylistImportUpload } from "@/components/playlists/playlist-import-upl
 import { Badge } from "@/components/ui/badge"
 import { EmptyState } from "@/components/ui/empty-state"
 import { buildReturnToHref } from "@/lib/auth/return-to"
-import { GENRE_LABELS } from "@/lib/product/strategy"
+import { formatTemplate } from "@/lib/content/analysis-copy"
+import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import { GENRE_LABELS, type PlaylistContext } from "@/lib/product/strategy"
+import { getRequestLocale } from "@/lib/server-locale"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { listPlaylists } from "@/services/playlist-service"
 
@@ -19,12 +22,6 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = "force-dynamic"
-
-const CONTEXT_LABELS: Record<string, string> = {
-  opening: "Opening",
-  main: "Main time",
-  closing: "Closing",
-}
 
 export default async function PlaylistsPage() {
   const { user } = await withAuth()
@@ -41,28 +38,29 @@ export default async function PlaylistsPage() {
   })
 
   const playlists = await listPlaylists(profile.id)
+  const locale = await getRequestLocale()
+  const copy = DASHBOARD_COPY.playlists
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          Your playlists
+          {copy.title[locale]}
         </h1>
         <p className="max-w-2xl text-sm leading-7 text-white/60">
-          Each playlist is a set you can analyze: name, genre, and context drive
-          how the energy engine reads the flow.
+          {copy.subtitle[locale]}
         </p>
       </header>
 
-        <PlaylistImportUpload />
+        <PlaylistImportUpload locale={locale} />
 
-        <PlaylistCreateForm />
+        <PlaylistCreateForm locale={locale} />
 
         {playlists.length === 0 ? (
           <EmptyState
             icon={<ListMusic className="size-8" />}
-            title="No playlists yet"
-            description="Create your first one above — then add tracks manually or paste a full tracklist."
+            title={copy.emptyTitle[locale]}
+            description={copy.emptyDescription[locale]}
           />
         ) : (
           <section className="space-y-3">
@@ -87,11 +85,15 @@ export default async function PlaylistsPage() {
                       ) : null}
                       {playlist.context ? (
                         <Badge>
-                          {CONTEXT_LABELS[playlist.context] ?? playlist.context}
+                          {CONTEXT_COPY[playlist.context as PlaylistContext]?.[
+                            locale
+                          ] ?? playlist.context}
                         </Badge>
                       ) : null}
                       <span className="text-xs text-white/48">
-                        {playlist.trackCount} track(s)
+                        {formatTemplate(copy.trackCount[locale], {
+                          count: playlist.trackCount,
+                        })}
                       </span>
                     </div>
                   </div>
@@ -100,6 +102,7 @@ export default async function PlaylistsPage() {
                 <DeletePlaylistButton
                   playlistId={playlist.id}
                   playlistName={playlist.name}
+                  locale={locale}
                 />
               </div>
             ))}
