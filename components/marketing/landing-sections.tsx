@@ -388,45 +388,88 @@ export function FinalCTASection({
   )
 }
 
+function FooterColumn({
+  heading,
+  links,
+}: {
+  heading: string
+  links: { href: string; label: string }[]
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
+        {heading}
+      </p>
+      <nav className="flex flex-col gap-2">
+        {links.map((link) => (
+          <a
+            key={link.label}
+            href={link.href}
+            className="text-sm font-medium text-white/64 transition hover:text-white"
+          >
+            {link.label}
+          </a>
+        ))}
+      </nav>
+    </div>
+  )
+}
+
 export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
-    <footer className="flex flex-col gap-5 border-t border-white/8 pt-6 text-sm text-white/46 md:flex-row md:items-end md:justify-between">
-      <div className="space-y-4">
-        <EnergyCurveLogo kind="horizontal" size="md" tone="light" />
-        <p className="max-w-md text-sm leading-6 text-white/52">
-          {copy.footer.description}
-        </p>
-        <p className="max-w-md text-sm leading-6 text-white/52">
-          {copy.footer.family.split("StageLink").map((part, index, parts) => (
-            <span key={index}>
-              {part}
-              {index < parts.length - 1 ? (
-                <a
-                  href="https://stagelink.art"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-white/72 underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
-                >
-                  StageLink
-                </a>
-              ) : null}
-            </span>
-          ))}
-        </p>
-        <div className="flex items-center gap-6">
-          <span>{copy.footer.product}</span>
-          <a href="#features" className="transition hover:text-white">
-            {copy.footer.features}
-          </a>
-          <a href="#contact" className="transition hover:text-white">
-            {copy.footer.contact}
-          </a>
-          <a href="/install" className="transition hover:text-white">
-            {copy.install.footerLink}
-          </a>
+    <footer className="flex flex-col gap-10 border-t border-white/8 pt-8 text-sm text-white/46">
+      <div className="flex flex-col gap-10 md:flex-row md:justify-between">
+        {/* Brand */}
+        <div className="max-w-xs space-y-4">
+          <EnergyCurveLogo kind="horizontal" size="md" tone="light" />
+          <p className="text-sm leading-6 text-white/52">{copy.footer.description}</p>
+          <p className="text-sm leading-6 text-white/52">
+            {copy.footer.family.split("StageLink").map((part, index, parts) => (
+              <span key={index}>
+                {part}
+                {index < parts.length - 1 ? (
+                  <a
+                    href="https://stagelink.art"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-white/72 underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
+                  >
+                    StageLink
+                  </a>
+                ) : null}
+              </span>
+            ))}
+          </p>
+        </div>
+
+        {/* Link columns */}
+        <div className="flex flex-col gap-8 sm:flex-row sm:gap-14">
+          <FooterColumn
+            heading={copy.footer.product}
+            links={[
+              { href: "#features", label: copy.nav.features },
+              { href: "#how-it-works", label: copy.nav.how },
+              { href: "#story", label: copy.nav.story },
+              { href: "#contact", label: copy.nav.contact },
+            ]}
+          />
+          <FooterColumn
+            heading={copy.footer.resources}
+            links={[{ href: "/install", label: copy.install.footerLink }]}
+          />
+          <FooterColumn
+            heading={copy.footer.legal}
+            links={[
+              { href: "/privacy", label: copy.footer.privacy },
+              { href: "/terms", label: copy.footer.terms },
+              { href: "/cookie-policy", label: copy.footer.cookies },
+            ]}
+          />
         </div>
       </div>
-      <div className="flex flex-col gap-1.5 md:items-end">
+
+      {/* Bottom bar */}
+      <div className="flex flex-col gap-1.5 border-t border-white/8 pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="ec-gradient-text font-medium">{copy.footer.madeIn}</p>
         <p>{copy.footer.rights}</p>
       </div>
