@@ -92,9 +92,10 @@ captured on import and persisted — see migration `0008` and the parsers.
 - **PR2 — this UI** (done): the dense table + live curve + genre note + columns,
   replacing the old card-list track editor. Reordering is still via the existing
   up/down move buttons here.
-- **PR3 — reorder & save** (planned): column sort + drag-to-reorder that both
-  drive the curve, unified into the Save / Undo / Discard preview flow + toast,
-  persisted via a new bulk `reorderTracks` service function.
+- **PR3 — reorder & save** (done): column sort + drag-to-reorder that both drive
+  the curve, unified into the Save / Undo / Discard preview flow + toast,
+  persisted via a new bulk `reorderTracks` service function (two-phase
+  temp-offset writes; up/down move buttons removed in favor of drag).
 - **PR4 — export** (done): "Export…" dropdown (For Rekordbox / Traktor /
   Serato-soon / CSV / TXT) + native exports that round-trip key/genre/comment/
   duration (Rekordbox `Tonality/Genre/Comments/TotalTime`, Traktor `INFO

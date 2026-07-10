@@ -34,6 +34,7 @@ import {
   deletePlaylist,
   moveTrack,
   removeTrack,
+  reorderTracks,
   replaceTracks,
   updateTrack,
 } from "@/services/playlist-service"
@@ -539,4 +540,47 @@ export async function importPlaylistAction(
   revalidatePath("/dashboard/playlists")
   revalidatePath("/dashboard")
   redirect(`/dashboard/playlists/${playlistId}`)
+}
+
+export interface ReorderResult {
+  ok: boolean
+  message?: string
+}
+
+/**
+ * Persists a manual set reorder. Called directly (not through a form) by the
+ * tracklist's Save button with the full ordered track-id list.
+ */
+export async function reorderTracksAction(
+  playlistId: string,
+  orderedTrackIds: string[]
+): Promise<ReorderResult> {
+  const profile = await requireProfile()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation")
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message ?? undefined }
+  }
+
+  if (
+    !playlistId ||
+    !Array.isArray(orderedTrackIds) ||
+    orderedTrackIds.length === 0
+  ) {
+    return { ok: false, message: GENERIC_ERROR_MESSAGE }
+  }
+
+  try {
+    await reorderTracks(profile.id, playlistId, orderedTrackIds)
+  } catch (error) {
+    logError("playlist.reorder_action_failed", error, {
+      profileId: profile.id,
+      playlistId,
+    })
+    return { ok: false, message: GENERIC_ERROR_MESSAGE }
+  }
+
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+  revalidatePath("/dashboard")
+  return { ok: true }
 }
