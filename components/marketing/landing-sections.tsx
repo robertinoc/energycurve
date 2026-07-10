@@ -409,7 +409,10 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
           </a>
         </div>
       </div>
-      <p>{copy.footer.rights}</p>
+      <div className="flex flex-col gap-1.5 md:items-end">
+        <p className="ec-gradient-text font-medium">{copy.footer.madeIn}</p>
+        <p>{copy.footer.rights}</p>
+      </div>
     </footer>
   )
 }
