@@ -192,16 +192,14 @@ export function EnergyCurveHeroVisual({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 rounded-[16px] border border-white/8 bg-black/25 p-3 sm:grid-cols-5">
+      <div className="mt-4 flex flex-wrap gap-2 rounded-[16px] border border-white/8 bg-black/25 p-3">
         {labels.tags.map((label) => (
-          <div
+          <span
             key={label}
-            className="flex min-w-0 items-center rounded-xl bg-white/[0.03] px-2 py-2"
+            className="whitespace-nowrap rounded-lg bg-white/[0.03] px-2.5 py-1.5 text-[0.6rem] uppercase tracking-[0.08em] text-white/45"
           >
-            <p className="text-[0.58rem] uppercase leading-tight tracking-[0.06em] text-white/40 [overflow-wrap:anywhere]">
-              {label}
-            </p>
-          </div>
+            {label}
+          </span>
         ))}
       </div>
     </div>
