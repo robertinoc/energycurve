@@ -21,10 +21,16 @@ function scoreOrder(
   genre: SupportedGenre,
   context: PlaylistContext
 ): number {
+  // The optimizer's objective must match the final scoring, so per-track
+  // provenance travels with the permutation (confidence rules, B13).
   return computeSetScore(
     order.map((index) => energies[index].score),
     genre,
-    context
+    context,
+    order.map((index) => ({
+      source: energies[index].source,
+      bpm: energies[index].bpm,
+    }))
   )
 }
 

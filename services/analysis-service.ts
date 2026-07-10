@@ -84,6 +84,10 @@ export async function getPlaylistAnalysis(
     curve: energies.map((entry) => entry.score),
     genre: playlist.genre,
     context: playlist.context,
+    trackMeta: energies.map((entry) => ({
+      source: entry.source,
+      bpm: entry.bpm,
+    })),
   })
   const recommendations = buildRecommendations(analysis, locale)
   const reorder = suggestReorder(

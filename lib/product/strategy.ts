@@ -260,8 +260,11 @@ export const RESULT_OUTPUTS_V1 = [
  * Single source of truth for the engine version. Written to every analyses
  * snapshot and mixed into the dedupe hash — bump ONLY this constant when the
  * scoring rules change.
+ *
+ * v3 (B13–B16): per-track genre anchors, wider BPM edge ramp, confidence
+ * layer (BPM-only artifacts no longer penalized), BPM-aware genre detection.
  */
-export const CURRENT_ANALYSIS_ALGORITHM_VERSION = 2
+export const CURRENT_ANALYSIS_ALGORITHM_VERSION = 3
 
 export interface GenreBpmProfile {
   /** BPM that maps to energy 3 for this genre. */
@@ -297,8 +300,13 @@ export const DEFAULT_GENRE_BPM_PROFILE: GenreBpmProfile = {
   bpmHigh: 140,
 }
 
-/** BPM distance past a genre band over which energy slides to the 1/10 extremes (B1). */
-export const BPM_PROFILE_EDGE_RAMP = 10
+/**
+ * BPM distance past a genre band over which energy slides to the 1/10
+ * extremes (B1). Widened 10 → 20 in v3 (B14): a mis-detected genre no longer
+ * collapses every out-of-band BPM to the same clamped value, and nearby BPMs
+ * outside the band keep differentiating.
+ */
+export const BPM_PROFILE_EDGE_RAMP = 20
 
 export interface GenreCurveCharacter {
   /** Slow-build genres get gentler opening ramps and later climaxes. */
@@ -456,3 +464,48 @@ export const SET_SCORE_WEIGHTS_V2 = {
 
 /** Minimum improvement before the reorder optimizer suggests a new order (B11). */
 export const REORDER_MIN_IMPROVEMENT_V2 = 0.5
+
+// ---------------------------------------------------------------------------
+// Engine V3 additions (B13–B16).
+// ---------------------------------------------------------------------------
+
+/**
+ * Energy-confidence rules (B13). BPM alone cannot discriminate energy inside
+ * a homogeneous-BPM set, so fine-grained penalties that require per-track
+ * differentiation are suppressed when the data cannot support them — the
+ * engine says "I don't know" instead of punishing its own lack of signal.
+ */
+export const ENERGY_CONFIDENCE_RULES_V3 = {
+  /** A flat zone is unjudgeable when all its tracks are BPM-sourced and their BPMs span ≤ this. */
+  flatZoneBpmRange: 2,
+  /** Global low-confidence: at least this share of tracks is BPM-sourced... */
+  bpmSourceShareThreshold: 0.7,
+  /** ...and the resolved energies span less than this range. */
+  resolvedEnergyRangeThreshold: 1.5,
+} as const
+
+/**
+ * A track's own genre tag only anchors its BPM→energy mapping when the BPM
+ * is plausible for that genre — within [bpmLow − margin, bpmHigh + margin]
+ * (B14). A "Techno"-tagged track at 158 BPM is mislabeled; trusting the tag
+ * would saturate its energy on the wrong band, so it falls back to the
+ * playlist's genre instead.
+ */
+export const TRACK_GENRE_ANCHOR_BPM_MARGIN = 8
+
+/**
+ * Genre-detection scoring (B15): file tags vote, but the set's BPMs act as a
+ * prior — "Techno" tags on a 157-BPM set point at hard techno, not techno.
+ * bpmFitWeight > voteWeight on purpose: unanimous mislabeled tags must lose
+ * to a perfect BPM fit (tags describe tracks loosely; BPMs don't lie).
+ */
+export const GENRE_DETECTION_RULES_V3 = {
+  /** Weight of the tag-vote share in a candidate genre's score. */
+  voteWeight: 0.45,
+  /** Weight of the BPM-band fit in a candidate genre's score. */
+  bpmFitWeight: 0.55,
+  /** BPMs within [bpmLow − margin, bpmHigh + margin] count as fitting the band. */
+  bpmFitMargin: 5,
+  /** Unvoted genres still become candidates when their BPM fit reaches this. */
+  bpmFitCandidateThreshold: 0.6,
+} as const

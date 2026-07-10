@@ -2,6 +2,7 @@ import {
   DEFAULT_GENRE_TRANSITION_TOLERANCE,
   DYNAMICS_RULES_V2,
   ENDING_RULES_V2,
+  ENERGY_CONFIDENCE_RULES_V3,
   GENRE_TRANSITION_TOLERANCE_V2,
   SET_CONTEXTS,
   SET_SCORE_WEIGHTS_V2,
@@ -16,6 +17,7 @@ import type {
   PlaylistAnalysis,
   PlaylistAnalysisInput,
   SetScoreBreakdown,
+  TrackEnergyMeta,
 } from "@/types/analysis"
 
 /** Minimum tracks before early-peak detection makes sense (A6/B3). */
@@ -67,6 +69,44 @@ function attributedPenalty(finalPoints: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// Confidence (B13): BPM alone can't discriminate energy inside a
+// homogeneous-BPM set, so penalties that require per-track differentiation
+// are suppressed when the data can't support them.
+// ---------------------------------------------------------------------------
+
+/** Meta is only usable when it matches the curve one-to-one. */
+function usableMeta(
+  curve: number[],
+  meta: TrackEnergyMeta[] | undefined
+): TrackEnergyMeta[] | null {
+  return meta && meta.length === curve.length ? meta : null
+}
+
+/**
+ * Global low-confidence: most energies came from BPM and the resolved curve
+ * barely moves — any "no climax" or monotony reading would be an artifact of
+ * missing signal, not of the set (B13).
+ */
+function isLowEnergyConfidence(
+  curve: number[],
+  meta: TrackEnergyMeta[] | null
+): boolean {
+  if (!meta || curve.length === 0) {
+    return false
+  }
+
+  const rules = ENERGY_CONFIDENCE_RULES_V3
+  const bpmShare =
+    meta.filter((entry) => entry.source === "bpm").length / meta.length
+  const range = Math.max(...curve) - Math.min(...curve)
+
+  return (
+    bpmShare >= rules.bpmSourceShareThreshold &&
+    range < rules.resolvedEnergyRangeThreshold
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Shape fit (B3): tolerated RMSE against the target curve + missing climax.
 // ---------------------------------------------------------------------------
 
@@ -80,7 +120,11 @@ interface ShapeAssessment {
   rmseLoss: number
 }
 
-function assessShape(curve: number[], target: number[]): ShapeAssessment {
+function assessShape(
+  curve: number[],
+  target: number[],
+  suppressClimax = false
+): ShapeAssessment {
   const rules = SHAPE_FIT_RULES_V2
   const deviations = curve.map((score, index) =>
     Math.max(0, Math.abs(score - target[index]) - rules.toleranceBand)
@@ -88,10 +132,15 @@ function assessShape(curve: number[], target: number[]): ShapeAssessment {
   const rmse = Math.sqrt(
     averageOf(deviations.map((deviation) => deviation ** 2))
   )
-  const climaxGap = Math.max(
-    0,
-    Math.max(...target) - Math.max(...curve) - rules.climaxTolerance
-  )
+  // With low-confidence BPM-only energies a missing climax is an artifact of
+  // missing signal, not of the set — it neither costs points nor gets
+  // reported (B13).
+  const climaxGap = suppressClimax
+    ? 0
+    : Math.max(
+        0,
+        Math.max(...target) - Math.max(...curve) - rules.climaxTolerance
+      )
   const rmseLoss = rules.rmseWeight * rmse
   const score = roundToOneDecimal(
     clamp(10 - rmseLoss - rules.climaxWeight * climaxGap, 0, 10)
@@ -166,15 +215,23 @@ interface FlatZone {
   end: number
   penalty: number
   exempt: boolean
+  /** True when BPM-only data can't support a monotony claim here (B13). */
+  suppressed: boolean
 }
 
 /**
  * Flat zone = a run of 3+ tracks whose energy range stays within a small
  * tolerance (B5) — no more exact-equality blind spot. A zone is exempt when
  * the ideal curve is equally flat there and the set is riding it (a sustained
- * peak plateau is craft, a mid-energy stall is not).
+ * peak plateau is craft, a mid-energy stall is not). A zone is suppressed —
+ * no penalty, no issue — when every track in it is BPM-sourced and the BPMs
+ * barely differ: identical BPMs prove nothing about real energy (B13).
  */
-function findFlatZones(curve: number[], target: number[]): FlatZone[] {
+function findFlatZones(
+  curve: number[],
+  target: number[],
+  meta: TrackEnergyMeta[] | null
+): FlatZone[] {
   const rules = DYNAMICS_RULES_V2
   const zones: FlatZone[] = []
   let start = 0
@@ -212,6 +269,22 @@ function findFlatZones(curve: number[], target: number[]): FlatZone[] {
             SHAPE_FIT_RULES_V2.toleranceBand
         )
 
+      let suppressed = false
+
+      if (meta) {
+        const zoneMeta = meta.slice(start, end + 1)
+        const allBpmSourced = zoneMeta.every(
+          (entry) => entry.source === "bpm" && entry.bpm !== null
+        )
+
+        if (allBpmSourced) {
+          const zoneBpms = zoneMeta.map((entry) => entry.bpm as number)
+          suppressed =
+            Math.max(...zoneBpms) - Math.min(...zoneBpms) <=
+            ENERGY_CONFIDENCE_RULES_V3.flatZoneBpmRange
+        }
+      }
+
       zones.push({
         start,
         end,
@@ -221,6 +294,7 @@ function findFlatZones(curve: number[], target: number[]): FlatZone[] {
           rules.flatPenaltyCap
         ),
         exempt: targetIsFlat && ridesTarget,
+        suppressed,
       })
 
       start = end + 1
@@ -245,15 +319,18 @@ interface DynamicsAssessment {
   score: number
   problems: RankedDynamicsProblem[]
   breathers: TransitionAssessment[]
+  /** Flat zones dropped for lack of energy signal, not because they're fine (B13). */
+  suppressedFlatZoneCount: number
 }
 
 function assessDynamics(
   curve: number[],
   genre: SupportedGenre,
-  target: number[]
+  target: number[],
+  meta: TrackEnergyMeta[] | null
 ): DynamicsAssessment {
   const transitions = assessTransitions(curve, genre)
-  const flatZones = findFlatZones(curve, target)
+  const flatZones = findFlatZones(curve, target, meta)
 
   const pool: RankedDynamicsProblem[] = [
     ...transitions
@@ -265,7 +342,7 @@ function assessDynamics(
         weightedPenalty: 0,
       })),
     ...flatZones
-      .filter((zone) => !zone.exempt)
+      .filter((zone) => !zone.exempt && !zone.suppressed)
       .map((zone) => ({
         kind: "flat" as const,
         flatZone: zone,
@@ -288,6 +365,9 @@ function assessDynamics(
     score: roundToOneDecimal(clamp(10 - totalPenalty, 0, 10)),
     problems: pool,
     breathers: transitions.filter((transition) => transition.isBreather),
+    suppressedFlatZoneCount: flatZones.filter(
+      (zone) => zone.suppressed && !zone.exempt
+    ).length,
   }
 }
 
@@ -329,16 +409,21 @@ interface ScoredCurve {
   dynamics: DynamicsAssessment
   ending: EndingAssessment
   target: number[]
+  /** Global low-confidence flag (B13). */
+  lowConfidence: boolean
 }
 
 function scoreCurve(
   curve: number[],
   genre: SupportedGenre,
   context: PlaylistContext,
+  trackMeta?: TrackEnergyMeta[],
   target = buildTargetCurve(curve.length, context, genre)
 ): ScoredCurve {
-  const shape = assessShape(curve, target)
-  const dynamics = assessDynamics(curve, genre, target)
+  const meta = usableMeta(curve, trackMeta)
+  const lowConfidence = isLowEnergyConfidence(curve, meta)
+  const shape = assessShape(curve, target, lowConfidence)
+  const dynamics = assessDynamics(curve, genre, target, meta)
   const ending = assessEnding(curve, target)
   const weights = SET_SCORE_WEIGHTS_V2
 
@@ -356,16 +441,17 @@ function scoreCurve(
     finalScore: roundToOneDecimal(clamp(rawScore, 1, 10)),
   }
 
-  return { breakdown, shape, dynamics, ending, target }
+  return { breakdown, shape, dynamics, ending, target, lowConfidence }
 }
 
 /** Convenience export for callers that only need the number (reorder search). */
 export function computeSetScore(
   curve: number[],
   genre: SupportedGenre,
-  context: PlaylistContext
+  context: PlaylistContext,
+  trackMeta?: TrackEnergyMeta[]
 ): number {
-  return scoreCurve(curve, genre, context).breakdown.finalScore
+  return scoreCurve(curve, genre, context, trackMeta).breakdown.finalScore
 }
 
 function deriveDynamicsIssues(scored: ScoredCurve): DetectedIssue[] {
@@ -622,6 +708,19 @@ function deriveIssues(
     issues.push(endingIssue)
   }
 
+  // One actionable heads-up when the data limited the analysis (B13): the
+  // curve came (almost) entirely from near-identical BPMs, so fine-grained
+  // judgments were skipped rather than guessed.
+  if (scored.lowConfidence || scored.dynamics.suppressedFlatZoneCount > 0) {
+    issues.push({
+      type: "low_energy_confidence",
+      severity: "info",
+      trackPositions: [],
+      penaltyApplied: 0,
+      penaltyCategory: null,
+    })
+  }
+
   return issues.sort(
     (a, b) =>
       SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] ||
@@ -635,12 +734,18 @@ function deriveIssues(
  */
 export function scoreUnderAllContexts(
   curve: number[],
-  genre: SupportedGenre
+  genre: SupportedGenre,
+  trackMeta?: TrackEnergyMeta[]
 ): Record<PlaylistContext, number> {
   const scores = {} as Record<PlaylistContext, number>
 
   for (const context of SET_CONTEXTS) {
-    scores[context] = scoreCurve(curve, genre, context).breakdown.finalScore
+    scores[context] = scoreCurve(
+      curve,
+      genre,
+      context,
+      trackMeta
+    ).breakdown.finalScore
   }
 
   return scores
@@ -650,10 +755,11 @@ export function analyzePlaylist({
   curve,
   genre,
   context,
+  trackMeta,
 }: PlaylistAnalysisInput): PlaylistAnalysis {
-  const scored = scoreCurve(curve, genre, context)
+  const scored = scoreCurve(curve, genre, context, trackMeta)
   const issues = deriveIssues(scored, curve, genre, context)
-  const contextScores = scoreUnderAllContexts(curve, genre)
+  const contextScores = scoreUnderAllContexts(curve, genre, trackMeta)
 
   const bestFitContext = SET_CONTEXTS.reduce((best, candidate) =>
     contextScores[candidate] > contextScores[best] ? candidate : best

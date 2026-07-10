@@ -58,11 +58,22 @@ describe("energyScoreFromBpm — genre-relative (B1)", () => {
   })
 
   it("keeps sliding toward the extremes outside the band, then clamps", () => {
-    expect(energyScoreFromBpm(133, "house")).toBe(9.5)
-    expect(energyScoreFromBpm(138, "house")).toBe(10)
+    // 20-BPM edge ramp (B14): out-of-band BPMs keep differentiating instead
+    // of collapsing to the same clamped value.
+    expect(energyScoreFromBpm(133, "house")).toBe(9.3)
+    expect(energyScoreFromBpm(138, "house")).toBe(9.5)
+    expect(energyScoreFromBpm(148, "house")).toBe(10)
     expect(energyScoreFromBpm(200, "house")).toBe(10)
-    expect(energyScoreFromBpm(113, "house")).toBe(2)
+    expect(energyScoreFromBpm(113, "house")).toBe(2.5)
     expect(energyScoreFromBpm(90, "house")).toBe(1)
+  })
+
+  it("differentiates nearby BPMs even under a wrong genre band (B14)", () => {
+    // 155 vs 160 with the (mis-detected) techno band 125–140: both are far
+    // above the band, but they must not both clamp to 10.
+    expect(energyScoreFromBpm(155, "techno")).not.toBe(
+      energyScoreFromBpm(160, "techno")
+    )
   })
 
   it("falls back to the universal V1 bands without a genre", () => {
@@ -98,7 +109,25 @@ describe("resolveTrackEnergies", () => {
       "house"
     )
 
-    expect(resolved[0]).toMatchObject({ score: 9, source: "bpm" })
+    expect(resolved[0]).toMatchObject({ score: 9, source: "bpm", bpm: 128 })
+  })
+
+  it("anchors a track to its own genre tag over the playlist genre (B14)", () => {
+    const resolved = resolveTrackEnergies(
+      [
+        // Psy-trance track inside a hard-techno set: judged on its own band.
+        { id: "a", position: 1, bpm: 146, energy_score: null, genre: "Psy-Trance" },
+        // Unmappable tag falls back to the playlist genre.
+        { id: "b", position: 2, bpm: 146, energy_score: null, genre: "Reggaeton" },
+      ],
+      "main",
+      "hard-techno"
+    )
+
+    // 146 in psy-trance's 136–148 band ≈ energy 8; in hard-techno's 138–158
+    // band ≈ energy 5.4 — same BPM, different anchor.
+    expect(resolved[0].score).toBeGreaterThan(7.5)
+    expect(resolved[1].score).toBeLessThan(6)
   })
 
   it("applies precedence manual > bpm > estimated", () => {

@@ -205,6 +205,20 @@ export const ISSUE_COPY: Record<IssueType, IssueCopy> = {
       es: "Mantenelo: la tensión y descarga es lo que hace que un pico se sienta merecido.",
     },
   },
+  low_energy_confidence: {
+    title: {
+      en: "Limited energy data",
+      es: "Datos de energía limitados",
+    },
+    body: {
+      en: "These energies came from BPM alone, and your BPMs are very close together — from that data the engine can't tell how each track really moves the floor, so fine-grained checks (flat zones, missing climax) were skipped instead of guessed.",
+      es: "Estas energías salieron solo del BPM, y tus BPMs son muy parecidos entre sí — con esos datos el motor no puede saber cómo mueve la pista cada track, así que las evaluaciones finas (zonas planas, clímax) se omitieron en vez de adivinarse.",
+    },
+    recommendation: {
+      en: "Set each track's energy manually, or re-export with Mixed In Key energies in the comment field (\"Energy 7\") to unlock the real curve.",
+      es: "Cargá la energía de cada track a mano, o re-exportá con las energías de Mixed In Key en el campo comentario (\"Energy 7\") para desbloquear la curva real.",
+    },
+  },
 }
 
 export const REORDER_RATIONALE: LocalizedLabel = {
