@@ -100,7 +100,7 @@ export default async function DashboardPage() {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
         <header className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(162,77,224,0.14),rgba(12,9,23,0.92))] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur">
           <div className="space-y-3">
-            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+            <h1 className="max-w-3xl break-words text-3xl font-semibold tracking-tight text-white sm:text-5xl">
               {greeting}
             </h1>
             <p className="max-w-2xl text-sm leading-7 text-white/60 sm:text-base">

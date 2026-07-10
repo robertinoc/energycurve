@@ -67,7 +67,7 @@ export default async function PlaylistDetailPage({
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
       <header className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <Link
               href="/dashboard/playlists"
               className={cn(
@@ -92,7 +92,7 @@ export default async function PlaylistDetailPage({
           </div>
 
           <div className="space-y-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h1 className="break-words text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               {playlist.name}
             </h1>
             <div className="flex flex-wrap items-center gap-2">

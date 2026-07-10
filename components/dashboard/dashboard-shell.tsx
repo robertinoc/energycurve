@@ -170,8 +170,10 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      {/* Content column */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* Content column. overflow-x-clip keeps any stray wide child from
+          giving the whole PWA page a horizontal scrollbar (clip, unlike
+          hidden, creates no scroll container and doesn't break sticky). */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
         {/* Mobile top bar */}
         <div className="flex items-center justify-between border-b border-white/8 bg-[#0C0917] px-4 py-3 lg:hidden">
           <Link href="/dashboard">
