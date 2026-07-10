@@ -6,6 +6,7 @@ import { finalPositions, isValidReorder } from "@/lib/tracklist/reorder"
 import type {
   Playlist,
   PlaylistContext,
+  PlaylistTaxonomyNames,
   PlaylistWithTrackCount,
   PlaylistWithTracks,
   SupportedGenre,
@@ -21,6 +22,33 @@ export interface PlaylistCreateData {
   context: PlaylistContext
   /** How the playlist was imported, so exports can default to that format. */
   importSource?: string | null
+  /** Display-only custom taxonomy links ("behaves like" model). */
+  customContextId?: string | null
+  customGenreId?: string | null
+}
+
+/**
+ * PostgREST embed for the custom-taxonomy display names: joined via the
+ * playlists.custom_*_id FKs and flattened into PlaylistTaxonomyNames.
+ */
+const PLAYLIST_WITH_NAMES_SELECT =
+  "*, custom_context:user_contexts(name), custom_genre:user_genres(name)"
+
+type PlaylistNameJoins = {
+  custom_context: { name: string } | null
+  custom_genre: { name: string } | null
+}
+
+function flattenTaxonomyNames<T extends PlaylistNameJoins>(
+  row: T
+): Omit<T, keyof PlaylistNameJoins> & PlaylistTaxonomyNames {
+  const { custom_context, custom_genre, ...rest } = row
+
+  return {
+    ...rest,
+    custom_context_name: custom_context?.name ?? null,
+    custom_genre_name: custom_genre?.name ?? null,
+  }
 }
 
 export async function createPlaylist(
@@ -37,6 +65,8 @@ export async function createPlaylist(
       genre: input.genre,
       context: input.context,
       import_source: input.importSource ?? null,
+      custom_context_id: input.customContextId ?? null,
+      custom_genre_id: input.customGenreId ?? null,
     })
     .select()
     .single()
@@ -57,7 +87,7 @@ export async function listPlaylists(
 
   const { data: playlists, error } = await supabase
     .from("playlists")
-    .select("*")
+    .select(PLAYLIST_WITH_NAMES_SELECT)
     .eq("user_id", profileId)
     .order("updated_at", { ascending: false })
 
@@ -66,7 +96,9 @@ export async function listPlaylists(
     throw new Error("Unable to load your playlists.")
   }
 
-  const rows = playlists ?? []
+  const rows = ((playlists ?? []) as unknown as Array<
+    Playlist & PlaylistNameJoins
+  >).map(flattenTaxonomyNames)
 
   if (rows.length === 0) {
     return []
@@ -100,12 +132,12 @@ export async function listPlaylists(
 export async function getOwnedPlaylist(
   profileId: string,
   playlistId: string
-): Promise<Playlist | null> {
+): Promise<(Playlist & PlaylistTaxonomyNames) | null> {
   const supabase = getSupabaseAdminClient()
 
   const { data, error } = await supabase
     .from("playlists")
-    .select("*")
+    .select(PLAYLIST_WITH_NAMES_SELECT)
     .eq("id", playlistId)
     .eq("user_id", profileId)
     .maybeSingle()
@@ -116,6 +148,8 @@ export async function getOwnedPlaylist(
   }
 
   return data
+    ? flattenTaxonomyNames(data as unknown as Playlist & PlaylistNameJoins)
+    : null
 }
 
 export async function getOwnedPlaylistWithTracks(

@@ -16,6 +16,7 @@ import { GENRE_LABELS, type PlaylistContext } from "@/lib/product/strategy"
 import { getRequestLocale } from "@/lib/server-locale"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { listPlaylists } from "@/services/playlist-service"
+import { listUserContexts, listUserGenres } from "@/services/taxonomy-service"
 
 export const metadata: Metadata = {
   title: "Playlists",
@@ -37,8 +38,12 @@ export default async function PlaylistsPage() {
     lastName: user.lastName ?? null,
   })
 
-  const playlists = await listPlaylists(profile.id)
-  const locale = await getRequestLocale()
+  const [playlists, customContexts, customGenres, locale] = await Promise.all([
+    listPlaylists(profile.id),
+    listUserContexts(profile.id),
+    listUserGenres(profile.id),
+    getRequestLocale(),
+  ])
   const copy = DASHBOARD_COPY.playlists
 
   return (
@@ -52,9 +57,17 @@ export default async function PlaylistsPage() {
         </p>
       </header>
 
-        <PlaylistImportUpload locale={locale} />
+        <PlaylistImportUpload
+          locale={locale}
+          customContexts={customContexts}
+          customGenres={customGenres}
+        />
 
-        <PlaylistCreateForm locale={locale} />
+        <PlaylistCreateForm
+          locale={locale}
+          customContexts={customContexts}
+          customGenres={customGenres}
+        />
 
         {playlists.length === 0 ? (
           <EmptyState
@@ -80,14 +93,18 @@ export default async function PlaylistsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       {playlist.genre ? (
                         <Badge variant="accent">
-                          {GENRE_LABELS[playlist.genre] ?? playlist.genre}
+                          {playlist.custom_genre_name ??
+                            GENRE_LABELS[playlist.genre] ??
+                            playlist.genre}
                         </Badge>
                       ) : null}
                       {playlist.context ? (
                         <Badge>
-                          {CONTEXT_COPY[playlist.context as PlaylistContext]?.[
-                            locale
-                          ] ?? playlist.context}
+                          {playlist.custom_context_name ??
+                            CONTEXT_COPY[playlist.context as PlaylistContext]?.[
+                              locale
+                            ] ??
+                            playlist.context}
                         </Badge>
                       ) : null}
                       <span className="text-xs text-white/48">

@@ -328,4 +328,54 @@ export const DASHBOARD_COPY = {
       es: "Set importado de {source}",
     },
   },
+
+  /** Custom contexts & genres ("behaves like" model). */
+  taxonomy: {
+    groupStandard: { en: "Standard", es: "Estándar" },
+    groupYours: { en: "Yours", es: "Tuyos" },
+    behavesLikeHint: { en: "≈ {base}", es: "≈ {base}" },
+    addContext: { en: "Add your own context", es: "Agregá tu propio contexto" },
+    addGenre: { en: "Add your own genre", es: "Agregá tu propio género" },
+    modalContextTitle: {
+      en: "Add your own context",
+      es: "Agregá tu propio contexto",
+    },
+    modalGenreTitle: { en: "Add your own genre", es: "Agregá tu propio género" },
+    modalContextSub: {
+      en: "Name it the way you play it — the engine just needs to know what it feels like.",
+      es: "Nombralo como lo tocás — el motor solo necesita saber a qué se parece.",
+    },
+    modalGenreSub: {
+      en: "Name it the way you tag it — the engine just needs to know what it sounds closest to.",
+      es: "Nombralo como lo etiquetás — el motor solo necesita saber a qué suena más parecido.",
+    },
+    nameLabel: { en: "Name", es: "Nombre" },
+    contextNamePlaceholder: { en: "Sunset", es: "Sunset" },
+    genreNamePlaceholder: { en: "Folktronica", es: "Folktronica" },
+    feelsClosestTo: { en: "Feels closest to", es: "Se parece más a" },
+    whyContext: {
+      en: "EnergyCurve scores your set against an ideal curve per context. Your custom context borrows the curve of the one it feels closest to — so it gets a proven shape with your own name everywhere in the app.",
+      es: "EnergyCurve puntúa tu set contra una curva ideal por contexto. Tu contexto custom toma prestada la curva del que más se le parece — una forma probada, con tu nombre en toda la app.",
+    },
+    whyGenre: {
+      en: "Genres drive BPM bands and transition tolerances. Your custom genre borrows the rules of the closest one — no invented scoring, your name everywhere in the app.",
+      es: "Los géneros definen bandas de BPM y tolerancias de transición. Tu género custom toma prestadas las reglas del más cercano — sin reglas inventadas, con tu nombre en toda la app.",
+    },
+    create: { en: "Create", es: "Crear" },
+    creating: { en: "Creating…", es: "Creando…" },
+    cancel: { en: "Cancel", es: "Cancelar" },
+    deleteEntryAria: { en: "Delete {name}", es: "Eliminar {name}" },
+    nameInvalid: {
+      en: "Use 2–32 characters.",
+      es: "Usá entre 2 y 32 caracteres.",
+    },
+    limitReached: {
+      en: "You reached the limit of {max} custom entries.",
+      es: "Llegaste al límite de {max} entradas custom.",
+    },
+    duplicateName: {
+      en: "You already have one with that name.",
+      es: "Ya tenés una con ese nombre.",
+    },
+  },
 } as const

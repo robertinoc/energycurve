@@ -25,6 +25,7 @@ import { formatTemplate } from "@/lib/content/analysis-copy"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { getRequestLocale } from "@/lib/server-locale"
 import { getDashboardSnapshot } from "@/services/dashboard-service"
+import { listUserContexts, listUserGenres } from "@/services/taxonomy-service"
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -97,6 +98,12 @@ export default async function DashboardPage() {
   const greeting = pickGreeting(displayName, locale)
   const profile = snapshot?.profile ?? null
   const latestPlaylists = snapshot?.latestPlaylists ?? []
+  const [customContexts, customGenres] = profile
+    ? await Promise.all([
+        listUserContexts(profile.id),
+        listUserGenres(profile.id),
+      ])
+    : [[], []]
 
   return (
     <>
@@ -126,7 +133,11 @@ export default async function DashboardPage() {
         {/* Primary action: upload a playlist. New-from-scratch is the quieter,
             secondary path underneath. */}
         <section className="space-y-3">
-          <PlaylistImportUpload locale={locale} />
+          <PlaylistImportUpload
+            locale={locale}
+            customContexts={customContexts}
+            customGenres={customGenres}
+          />
           <div className="flex flex-wrap items-center gap-2 text-sm text-white/56">
             <span>{copy.byHand[locale]}</span>
             <Link
@@ -163,11 +174,13 @@ export default async function DashboardPage() {
 
             <ul className="divide-y divide-white/8">
               {latestPlaylists.map((playlist) => {
-                const genreLabel = playlist.genre
-                  ? GENRE_LABELS[
-                      playlist.genre as keyof typeof GENRE_LABELS
-                    ] ?? playlist.genre
-                  : null
+                const genreLabel =
+                  playlist.custom_genre_name ??
+                  (playlist.genre
+                    ? GENRE_LABELS[
+                        playlist.genre as keyof typeof GENRE_LABELS
+                      ] ?? playlist.genre
+                    : null)
                 const latestScore =
                   playlist.scoreHistory.length > 0
                     ? playlist.scoreHistory[playlist.scoreHistory.length - 1]
