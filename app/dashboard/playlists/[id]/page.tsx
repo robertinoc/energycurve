@@ -57,6 +57,10 @@ export default async function PlaylistDetailPage({
       bpm: track.bpm,
       energyScore: track.energy_score,
       sourceUri: track.source_uri,
+      musicalKey: track.musical_key,
+      genre: track.genre,
+      comment: track.comment,
+      durationSeconds: track.duration_seconds,
     })),
   }
 
@@ -107,6 +111,7 @@ export default async function PlaylistDetailPage({
         </header>
 
         <PlaylistWorkspace
+          key={playlist.tracks.map((t) => `${t.id}:${t.position}`).join("|")}
           playlistId={playlist.id}
           genre={playlist.genre}
           context={playlist.context}

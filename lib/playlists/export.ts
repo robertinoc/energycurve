@@ -18,6 +18,10 @@ export interface ExportTrack {
   bpm: number | null
   energyScore: number | null
   sourceUri: string | null
+  musicalKey: string | null
+  genre: string | null
+  comment: string | null
+  durationSeconds: number | null
 }
 
 export interface ExportPlaylist {
@@ -95,15 +99,36 @@ function csvCell(value: string): string {
   return `"${value.replace(/"/g, '""')}"`
 }
 
+function durationClock(seconds: number | null): string {
+  if (seconds === null || seconds <= 0) {
+    return ""
+  }
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${String(s).padStart(2, "0")}`
+}
+
 function toCsv(playlist: ExportPlaylist): string {
-  const header = ["Position", "Artist", "Title", "BPM", "Energy"].join(",")
+  const header = [
+    "Position",
+    "Artist",
+    "Title",
+    "BPM",
+    "Key",
+    "Genre",
+    "Energy",
+    "Time",
+  ].join(",")
   const rows = playlist.tracks.map((track) =>
     [
       track.position,
       csvCell(track.artist),
       csvCell(track.name),
       track.bpm ?? "",
+      csvCell(track.musicalKey ?? ""),
+      csvCell(track.genre ?? ""),
       track.energyScore ?? "",
+      durationClock(track.durationSeconds),
     ].join(",")
   )
   return [header, ...rows].join("\r\n") + "\r\n"
@@ -132,7 +157,18 @@ function bpmFixed(bpm: number | null): string | null {
   return bpm == null ? null : bpm.toFixed(2)
 }
 
-function energyComment(energy: number | null): string | null {
+/**
+ * Comment tag to emit: the track's real comment when present (it may already
+ * carry a Mixed In Key "Energy N" token), otherwise a synthesized "Energy N"
+ * from the resolved score so energy survives a native round-trip.
+ */
+function trackComment(
+  comment: string | null,
+  energy: number | null
+): string | null {
+  if (comment && comment.trim()) {
+    return comment
+  }
   return energy == null ? null : `Energy ${energy}`
 }
 
@@ -144,12 +180,17 @@ function toRekordbox(playlist: ExportPlaylist): string {
   const collection = tracks
     .map((track, index) => {
       const bpm = bpmFixed(track.bpm)
-      const comment = energyComment(track.energyScore)
+      const comment = trackComment(track.comment, track.energyScore)
       const attrs = [
         `TrackID="${index + 1}"`,
         `Name="${xmlAttr(track.name)}"`,
         `Artist="${xmlAttr(track.artist)}"`,
         bpm ? `AverageBpm="${bpm}"` : "",
+        track.musicalKey ? `Tonality="${xmlAttr(track.musicalKey)}"` : "",
+        track.genre ? `Genre="${xmlAttr(track.genre)}"` : "",
+        track.durationSeconds != null
+          ? `TotalTime="${track.durationSeconds}"`
+          : "",
         track.sourceUri ? `Location="${xmlAttr(track.sourceUri)}"` : "",
         comment ? `Comments="${xmlAttr(comment)}"` : "",
       ]
@@ -227,9 +268,19 @@ function toTraktor(playlist: ExportPlaylist): string {
     .map((track) => {
       const key = traktorLocationKey(track)
       const loc = splitTraktorLocation(key)
-      const comment = energyComment(track.energyScore)
+      const comment = trackComment(track.comment, track.energyScore)
       const bpm = track.bpm == null ? null : track.bpm.toFixed(6)
-      const info = comment ? `<INFO COMMENT="${xmlAttr(comment)}"/>` : ""
+      const infoAttrs = [
+        track.genre ? `GENRE="${xmlAttr(track.genre)}"` : "",
+        comment ? `COMMENT="${xmlAttr(comment)}"` : "",
+        track.musicalKey ? `KEY="${xmlAttr(track.musicalKey)}"` : "",
+        track.durationSeconds != null
+          ? `PLAYTIME="${track.durationSeconds}"`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+      const info = infoAttrs ? `<INFO ${infoAttrs}/>` : ""
       const tempo = bpm ? `<TEMPO BPM="${bpm}"/>` : ""
 
       return `    <ENTRY TITLE="${xmlAttr(track.name)}" ARTIST="${xmlAttr(track.artist)}">

@@ -2,9 +2,8 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import {
-  ArrowDown,
-  ArrowUp,
   Columns3,
+  GripVertical,
   Pencil,
   Plus,
   Trash2,
@@ -13,7 +12,6 @@ import {
 
 import {
   addTrackAction,
-  moveTrackAction,
   removeTrackAction,
   updateTrackAction,
 } from "@/app/dashboard/playlists/actions"
@@ -38,11 +36,23 @@ export interface TrackEnergyView {
   source: EnergySource
 }
 
+type SortKey =
+  | "energy"
+  | "artist"
+  | "title"
+  | "bpm"
+  | "camelot"
+  | "key"
+  | "genre"
+  | "duration"
+
 interface TrackTableProps {
   playlistId: string
   tracks: Track[]
   energies: TrackEnergyView[]
   onHover: (index: number | null) => void
+  /** Called with the new track order after a drag or a column sort. */
+  onReorder: (tracks: Track[]) => void
 }
 
 function formatDuration(seconds: number | null): string {
@@ -112,7 +122,7 @@ function ColumnsMenu({
   )
 }
 
-// ---- Track edit fields (shared by add + edit) ----
+// ---- Shared track fields (add + edit) ----
 
 function TrackFields({
   idPrefix,
@@ -126,8 +136,8 @@ function TrackFields({
   return (
     <div className="grid gap-3 sm:grid-cols-[1.2fr_1.4fr_0.6fr_0.6fr]">
       {[
-        { name: "artist", label: "Artist", value: defaults?.artist ?? "", type: "text", placeholder: "Artist" },
-        { name: "name", label: "Track", value: defaults?.name ?? "", type: "text", placeholder: "Track title" },
+        { name: "artist", label: "Artist", value: defaults?.artist ?? "", placeholder: "Artist" },
+        { name: "name", label: "Track", value: defaults?.name ?? "", placeholder: "Track title" },
       ].map((f) => (
         <div key={f.name} className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-${f.name}`} className="text-white/72">
@@ -253,25 +263,30 @@ function TrackRow({
   track,
   index,
   energy,
-  isFirst,
-  isLast,
   optional,
   colSpan,
   onHover,
+  isDragOver,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   playlistId: string
   track: Track
   index: number
   energy: TrackEnergyView
-  isFirst: boolean
-  isLast: boolean
   optional: OptionalColumn[]
   colSpan: number
   onHover: (index: number | null) => void
+  isDragOver: boolean
+  onDragStart: (index: number) => void
+  onDragOver: (index: number) => void
+  onDrop: (index: number) => void
+  onDragEnd: () => void
 }) {
   const [editing, setEditing] = useState(false)
   const [confirmingRemove, setConfirmingRemove] = useState(false)
-  const [, moveAction] = useActionState(moveTrackAction, initialPlaylistActionState)
   const [, removeAction, removePending] = useActionState(
     removeTrackAction,
     initialPlaylistActionState
@@ -292,11 +307,25 @@ function TrackRow({
 
   return (
     <tr
-      className="border-b border-white/[0.05] last:border-0 hover:bg-white/[0.045]"
+      draggable
+      onDragStart={() => onDragStart(index)}
+      onDragOver={(e) => {
+        e.preventDefault()
+        onDragOver(index)
+      }}
+      onDrop={(e) => {
+        e.preventDefault()
+        onDrop(index)
+      }}
+      onDragEnd={onDragEnd}
       onMouseEnter={() => onHover(index)}
       onMouseLeave={() => onHover(null)}
+      className={`border-b border-white/[0.05] last:border-0 hover:bg-white/[0.045] ${isDragOver ? "shadow-[inset_0_2px_0_#A24DE0]" : ""}`}
     >
-      <td className="w-8 px-3 py-1.5 text-right font-mono text-xs text-white/28">
+      <td className="w-6 cursor-grab px-1 text-center text-white/28 active:cursor-grabbing" title="Drag to reorder">
+        <GripVertical className="mx-auto size-3.5" />
+      </td>
+      <td className="w-7 px-2 py-1.5 text-right font-mono text-xs text-white/28">
         {index + 1}
       </td>
       <td className="px-3 py-1.5">
@@ -329,11 +358,19 @@ function TrackRow({
         {track.bpm !== null ? track.bpm.toFixed(2) : "—"}
       </td>
       <td className="px-3 py-1.5 text-center">
-        {camelot ? <span className="inline-block min-w-[40px] rounded-md border border-white/14 bg-white/[0.03] px-1.5 py-px text-center font-mono text-[11.5px] font-semibold text-white">{camelot}</span> : <span className="text-white/28">—</span>}
+        {camelot ? (
+          <span className="inline-block min-w-[40px] rounded-md border border-white/14 bg-white/[0.03] px-1.5 py-px text-center font-mono text-[11.5px] font-semibold text-white">
+            {camelot}
+          </span>
+        ) : (
+          <span className="text-white/28">—</span>
+        )}
       </td>
       <td className="px-3 py-1.5 text-center">
         {track.musical_key ? (
-          <span className="inline-block min-w-[40px] rounded-md border border-white/14 bg-white/[0.03] px-1.5 py-px text-center font-mono text-[11.5px] font-semibold text-white">{track.musical_key}</span>
+          <span className="inline-block min-w-[40px] rounded-md border border-white/14 bg-white/[0.03] px-1.5 py-px text-center font-mono text-[11.5px] font-semibold text-white">
+            {track.musical_key}
+          </span>
         ) : (
           <span className="text-white/28">—</span>
         )}
@@ -355,22 +392,6 @@ function TrackRow({
       ) : null}
       <td className="px-3 py-1.5">
         <div className="flex items-center justify-end gap-0.5">
-          <form action={moveAction}>
-            <input type="hidden" name="playlistId" value={playlistId} />
-            <input type="hidden" name="trackId" value={track.id} />
-            <input type="hidden" name="direction" value="up" />
-            <Button type="submit" variant="ghost" size="icon-xs" aria-label="Move up" disabled={isFirst} className="text-white/40 hover:text-white">
-              <ArrowUp />
-            </Button>
-          </form>
-          <form action={moveAction}>
-            <input type="hidden" name="playlistId" value={playlistId} />
-            <input type="hidden" name="trackId" value={track.id} />
-            <input type="hidden" name="direction" value="down" />
-            <Button type="submit" variant="ghost" size="icon-xs" aria-label="Move down" disabled={isLast} className="text-white/40 hover:text-white">
-              <ArrowDown />
-            </Button>
-          </form>
           <Button
             type="button"
             variant="ghost"
@@ -479,6 +500,85 @@ function AddTrackForm({ playlistId }: { playlistId: string }) {
   )
 }
 
+// ---- Sort helpers ----
+
+function sortTracks(
+  tracks: Track[],
+  energies: TrackEnergyView[],
+  key: SortKey,
+  dir: 1 | -1
+): Track[] {
+  const pairs = tracks.map((track, i) => ({ track, energy: energies[i] }))
+  const str = (v: string | null) => (v ?? "").toLowerCase()
+  const num = (v: number | null) => (v ?? Number.NEGATIVE_INFINITY)
+
+  pairs.sort((a, b) => {
+    let cmp = 0
+    switch (key) {
+      case "energy":
+        cmp = a.energy.score - b.energy.score
+        break
+      case "bpm":
+        cmp = num(a.track.bpm) - num(b.track.bpm)
+        break
+      case "duration":
+        cmp = num(a.track.duration_seconds) - num(b.track.duration_seconds)
+        break
+      case "artist":
+        cmp = str(a.track.artist).localeCompare(str(b.track.artist))
+        break
+      case "title":
+        cmp = str(a.track.name).localeCompare(str(b.track.name))
+        break
+      case "genre":
+        cmp = str(a.track.genre).localeCompare(str(b.track.genre))
+        break
+      case "key":
+        cmp = str(a.track.musical_key).localeCompare(str(b.track.musical_key))
+        break
+      case "camelot":
+        cmp = str(toCamelot(a.track.musical_key)).localeCompare(
+          str(toCamelot(b.track.musical_key))
+        )
+        break
+    }
+    return cmp * dir
+  })
+
+  return pairs.map((p) => p.track)
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  active,
+  dir,
+  onSort,
+  className,
+}: {
+  label: string
+  sortKey: SortKey
+  active: boolean
+  dir: 1 | -1
+  onSort: (key: SortKey) => void
+  className?: string
+}) {
+  return (
+    <th className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className="inline-flex items-center gap-1 uppercase tracking-[0.13em] hover:text-white/70"
+      >
+        {label}
+        {active ? (
+          <span className="text-[#A24DE0]">{dir > 0 ? "▲" : "▼"}</span>
+        ) : null}
+      </button>
+    </th>
+  )
+}
+
 // ---- The table ----
 
 export function TrackTable({
@@ -486,8 +586,12 @@ export function TrackTable({
   tracks,
   energies,
   onHover,
+  onReorder,
 }: TrackTableProps) {
   const [optional, setOptional] = useState<OptionalColumn[]>([])
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   // Read the persisted column choice once after mount. It must default to [] on
   // the server + first client render (localStorage isn't available at SSR), then
@@ -511,8 +615,29 @@ export function TrackTable({
     })
   }
 
-  // base 7 columns + optional + actions
-  const colSpan = 7 + optional.length + 1
+  function handleSort(key: SortKey) {
+    const dir: 1 | -1 = sort && sort.key === key && sort.dir === 1 ? -1 : 1
+    setSort({ key, dir })
+    onReorder(sortTracks(tracks, energies, key, dir))
+  }
+
+  function handleDrop(dropIndex: number) {
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+    const next = tracks.slice()
+    const [moved] = next.splice(dragIndex, 1)
+    next.splice(dropIndex, 0, moved)
+    setSort(null) // a manual drag defines a custom order, not a column sort
+    setDragIndex(null)
+    setDragOverIndex(null)
+    onReorder(next)
+  }
+
+  // base columns: handle, #, energy, artist, title, bpm, camelot, key = 8
+  const colSpan = 8 + optional.length + 1
 
   return (
     <div className="overflow-hidden rounded-[16px] border border-ec-border bg-[#0C0917]">
@@ -523,7 +648,10 @@ export function TrackTable({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-[11px] text-white/40">
             <span>Energy</span>
-            <span className="h-2 w-[88px] rounded-full" style={{ background: "linear-gradient(90deg,#4C6EF5,#22D3EE,#A24DE0,#F0348A)" }} />
+            <span
+              className="h-2 w-[88px] rounded-full"
+              style={{ background: "linear-gradient(90deg,#4C6EF5,#22D3EE,#A24DE0,#F0348A)" }}
+            />
             <span>low → high</span>
           </div>
           <ColumnsMenu active={optional} onToggle={toggleColumn} />
@@ -539,15 +667,20 @@ export function TrackTable({
           <table className="w-full border-collapse text-[12.5px]">
             <thead>
               <tr className="border-b border-white/12 text-left text-[10px] uppercase tracking-[0.13em] text-white/40">
-                <th className="px-3 py-2 text-right">#</th>
-                <th className="px-3 py-2">Energy</th>
-                <th className="px-3 py-2">Artist</th>
-                <th className="px-3 py-2">Title</th>
-                <th className="px-3 py-2 text-right">BPM</th>
-                <th className="px-3 py-2 text-center">Camelot</th>
-                <th className="px-3 py-2 text-center">Key</th>
-                {optional.includes("genre") ? <th className="px-3 py-2">Genre</th> : null}
-                {optional.includes("duration") ? <th className="px-3 py-2 text-right">Time</th> : null}
+                <th className="w-6" />
+                <th className="px-2 py-2 text-right">#</th>
+                <SortHeader label="Energy" sortKey="energy" active={sort?.key === "energy"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
+                <SortHeader label="Artist" sortKey="artist" active={sort?.key === "artist"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
+                <SortHeader label="Title" sortKey="title" active={sort?.key === "title"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
+                <SortHeader label="BPM" sortKey="bpm" active={sort?.key === "bpm"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-right" />
+                <SortHeader label="Camelot" sortKey="camelot" active={sort?.key === "camelot"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-center" />
+                <SortHeader label="Key" sortKey="key" active={sort?.key === "key"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-center" />
+                {optional.includes("genre") ? (
+                  <SortHeader label="Genre" sortKey="genre" active={sort?.key === "genre"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
+                ) : null}
+                {optional.includes("duration") ? (
+                  <SortHeader label="Time" sortKey="duration" active={sort?.key === "duration"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-right" />
+                ) : null}
                 {optional.includes("comment") ? <th className="px-3 py-2">Comment</th> : null}
                 <th className="px-3 py-2" />
               </tr>
@@ -560,11 +693,17 @@ export function TrackTable({
                   track={track}
                   index={index}
                   energy={energies[index] ?? { score: 0, source: "estimated" }}
-                  isFirst={index === 0}
-                  isLast={index === tracks.length - 1}
                   optional={optional}
                   colSpan={colSpan}
                   onHover={onHover}
+                  isDragOver={dragOverIndex === index && dragIndex !== index}
+                  onDragStart={setDragIndex}
+                  onDragOver={setDragOverIndex}
+                  onDrop={handleDrop}
+                  onDragEnd={() => {
+                    setDragIndex(null)
+                    setDragOverIndex(null)
+                  }}
                 />
               ))}
             </tbody>
