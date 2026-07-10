@@ -105,6 +105,7 @@ interface SiteCopySchema {
     rights: LocalizedLabel
     description: LocalizedLabel
     madeIn: LocalizedLabel
+    family: LocalizedLabel
   }
   install: {
     bannerTitle: LocalizedLabel
@@ -316,6 +317,10 @@ const siteCopy: SiteCopySchema = {
         en: "EnergyCurve is the tool I wanted when I was trying to understand not just what I played, but how the room actually felt because of it.",
         es: "EnergyCurve es la herramienta que me hubiera gustado tener cuando intentaba entender no sólo qué estaba tocando, sino cómo se sentía realmente la pista por eso.",
       },
+      {
+        en: "EnergyCurve is part of the StageLink family — the home for artists’ tools. Where StageLink serves performers of every kind, EnergyCurve is the sibling built for one craft: the DJ.",
+        es: "EnergyCurve es parte de la familia StageLink — la casa de las herramientas para artistas. Donde StageLink acompaña a artistas de todo tipo, EnergyCurve es el hermano hecho para un oficio: el del DJ.",
+      },
     ],
   },
   diff: {
@@ -375,6 +380,10 @@ const siteCopy: SiteCopySchema = {
     madeIn: {
       en: "Built in Argentina — for DJs all over the world.",
       es: "Hecho en Argentina — para DJs de todo el mundo.",
+    },
+    family: {
+      en: "Part of the StageLink family — built for artists, now for DJs.",
+      es: "Parte de la familia StageLink — para artistas, y ahora para DJs.",
     },
   },
   install: {
@@ -596,6 +605,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       rights: siteCopy.footer.rights[locale],
       description: siteCopy.footer.description[locale],
       madeIn: siteCopy.footer.madeIn[locale],
+      family: siteCopy.footer.family[locale],
     },
     install: {
       bannerTitle: siteCopy.install.bannerTitle[locale],
