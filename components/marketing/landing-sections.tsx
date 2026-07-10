@@ -396,6 +396,23 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
         <p className="max-w-md text-sm leading-6 text-white/52">
           {copy.footer.description}
         </p>
+        <p className="max-w-md text-sm leading-6 text-white/52">
+          {copy.footer.family.split("StageLink").map((part, index, parts) => (
+            <span key={index}>
+              {part}
+              {index < parts.length - 1 ? (
+                <a
+                  href="https://stagelink.art"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-white/72 underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
+                >
+                  StageLink
+                </a>
+              ) : null}
+            </span>
+          ))}
+        </p>
         <div className="flex items-center gap-6">
           <span>{copy.footer.product}</span>
           <a href="#features" className="transition hover:text-white">
