@@ -1,11 +1,15 @@
 import { signOut, withAuth } from "@workos-inc/authkit-nextjs"
 import { redirect } from "next/navigation"
 
-import { DashboardShell } from "@/components/dashboard/dashboard-shell"
+import {
+  DashboardShell,
+  type SidebarPlaylist,
+} from "@/components/dashboard/dashboard-shell"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
 import { getProfileByWorkOSUserId } from "@/services/profile-service"
+import { listPlaylists } from "@/services/playlist-service"
 
 async function logoutAction() {
   "use server"
@@ -20,14 +24,13 @@ async function logoutAction() {
 
 /**
  * Suspension gate + app shell for every /dashboard page. The suspension check
- * is the enforcement point that covers ALL login methods: the social/OAuth
- * callback saves the session before any profile check can run, so suspended
- * accounts are caught here on their first page load. Infrastructure problems
- * fail open — the pages below already render guided setup states, and
- * suspension must never take the whole dashboard down.
+ * covers ALL login methods (the social/OAuth callback saves the session before
+ * any profile check can run, so suspended accounts are caught here on first
+ * load). Infrastructure problems fail open — the pages below render their own
+ * setup states, and suspension must never take the whole dashboard down.
  *
- * When we have an authenticated user, pages render inside the sidebar shell.
- * Otherwise (not logged in / infra not configured) children render bare so the
+ * When we have an authenticated user, pages render inside the sidebar shell
+ * (which also lists the user's playlists). Otherwise children render bare so the
  * page can run its own login redirect or setup state.
  */
 export default async function DashboardLayout({
@@ -37,6 +40,7 @@ export default async function DashboardLayout({
 }) {
   const { workosConfigured, supabaseConfigured } = getInfrastructureStatus()
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
+  let playlists: SidebarPlaylist[] = []
 
   if (workosConfigured && supabaseConfigured) {
     let suspended = false
@@ -48,10 +52,19 @@ export default async function DashboardLayout({
       if (user) {
         const profile = await getProfileByWorkOSUserId(user.id)
         suspended = Boolean(profile?.suspended_at)
+
+        if (profile && !profile.suspended_at) {
+          const rows = await listPlaylists(profile.id)
+          playlists = rows.map((p) => ({
+            id: p.id,
+            name: p.name,
+            trackCount: p.trackCount,
+          }))
+        }
       }
     } catch (error) {
-      logWorkOSRuntimeError("Dashboard suspension check failed", error)
-      logWarn("dashboard.suspension_check_skipped", {
+      logWorkOSRuntimeError("Dashboard shell bootstrap failed", error)
+      logWarn("dashboard.shell_bootstrap_skipped", {
         reason: error instanceof Error ? error.message : "Unknown error",
       })
     }
@@ -71,6 +84,7 @@ export default async function DashboardLayout({
     <DashboardShell
       displayName={displayName}
       email={user.email}
+      playlists={playlists}
       logoutAction={logoutAction}
     >
       {children}

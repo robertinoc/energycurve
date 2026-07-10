@@ -100,8 +100,10 @@ captured on import and persisted — see migration `0008` and the parsers.
   Serato-soon / CSV / TXT) + native exports that round-trip key/genre/comment/
   duration (Rekordbox `Tonality/Genre/Comments/TotalTime`, Traktor `INFO
   KEY/GENRE/COMMENT/PLAYTIME`), and CSV gains Key/Genre/Time columns.
-- **PR5 — sidebar playlist tree** (planned): list the user's sets under the
-  Playlists nav item.
+- **PR5 — sidebar playlist tree** (done): the sidebar lists the user's sets
+  (name + track count, active highlighted) under the Playlists nav item — the
+  Rekordbox left-panel analogue. The dashboard layout passes `listPlaylists`
+  into the shell.
 
 ## Non-goals / follow-ups
 
