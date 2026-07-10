@@ -129,7 +129,7 @@ export function PlaylistWorkspace({
     <div className="flex flex-col gap-4">
       {order.length > 0 ? (
         <div className="rounded-[16px] border border-ec-border bg-[#14101F] p-4">
-          <div className="mb-1 flex items-center justify-between gap-3">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
             <div>
               <p className="text-[10px] uppercase tracking-[0.22em] text-white/42">
                 Set energy curve
@@ -161,7 +161,7 @@ export function PlaylistWorkspace({
       <GenreNote genre={genre} context={context} tracks={order} />
 
       {dirty ? (
-        <div className="flex items-center gap-3 rounded-xl border border-[#A24DE0]/40 bg-[#A24DE0]/[0.08] px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-[#A24DE0]/40 bg-[#A24DE0]/[0.08] px-4 py-2.5">
           <span className="flex items-center gap-2 text-[12.5px] font-semibold text-[#e6d3fb]">
             <span className="size-2 rounded-full bg-[#A24DE0]" />
             Preview — unsaved order

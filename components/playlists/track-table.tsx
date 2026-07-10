@@ -646,7 +646,7 @@ export function TrackTable({
           Tracklist
         </span>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-[11px] text-white/40">
+          <div className="hidden items-center gap-2 text-[11px] text-white/40 sm:flex">
             <span>Energy</span>
             <span
               className="h-2 w-[88px] rounded-full"
