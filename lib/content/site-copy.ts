@@ -373,8 +373,8 @@ const siteCopy: SiteCopySchema = {
       es: "EnergyCurve ayuda a DJs a entender la energía del set, las transiciones y el flujo de la performance.",
     },
     madeIn: {
-      en: "Built in Argentina 🇦🇷 — for DJs all over the world.",
-      es: "Hecho en Argentina 🇦🇷 — para DJs de todo el mundo.",
+      en: "Built in Argentina — for DJs all over the world.",
+      es: "Hecho en Argentina — para DJs de todo el mundo.",
     },
   },
   install: {
