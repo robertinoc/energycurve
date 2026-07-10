@@ -1,14 +1,17 @@
 "use client"
 
 import { useActionState, useRef, useState } from "react"
-import { CheckCircle2, ChevronDown, UploadCloud } from "lucide-react"
+import { CheckCircle2, UploadCloud } from "lucide-react"
 
 import {
   importPlaylistAction,
 } from "@/app/dashboard/playlists/actions"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
 import { Button } from "@/components/ui/button"
-import { NativeSelect } from "@/components/ui/native-select"
+import {
+  TaxonomySelect,
+  type TaxonomyCustomOption,
+} from "@/components/playlists/taxonomy-select"
 import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { cn } from "@/lib/utils"
@@ -17,56 +20,46 @@ import {
   SET_CONTEXTS,
   SUPPORTED_GENRES,
 } from "@/lib/product/strategy"
+import type { UserContext, UserGenre } from "@/types/domain"
 
 const COPY = DASHBOARD_COPY.importUpload
 
-/**
- * Select that unmistakably reads as a select: raised button-like trigger with
- * a boxed chevron (the bare appearance-none native select gave no visual cue
- * that it was a dropdown at all).
- */
-function SelectField({
-  id,
-  name,
-  defaultValue,
-  onChange,
-  children,
-}: {
-  id: string
-  name: string
-  defaultValue: string
-  onChange?: (value: string) => void
-  children: React.ReactNode
-}) {
-  return (
-    <div className="relative">
-      <NativeSelect
-        id={id}
-        name={name}
-        defaultValue={defaultValue}
-        onChange={(event) => onChange?.(event.target.value)}
-        className="h-12 rounded-[13px] border-white/14 bg-ec-raised pr-12 text-white transition-shadow hover:border-[#A24DE0]/55 hover:shadow-[0_0_0_3px_rgba(162,77,224,0.12)]"
-      >
-        {children}
-      </NativeSelect>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute right-3 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-[7px] bg-white/[0.06] text-ec-text-dim"
-      >
-        <ChevronDown className="size-3.5" />
-      </span>
-    </div>
-  )
+export function contextCustomOptions(
+  customs: UserContext[],
+  locale: SiteLocale
+): TaxonomyCustomOption[] {
+  return customs.map((entry) => ({
+    id: entry.id,
+    name: entry.name,
+    behavesLikeLabel: CONTEXT_COPY[entry.behaves_like][locale],
+  }))
 }
 
-export function PlaylistImportUpload({ locale }: { locale: SiteLocale }) {
+export function genreCustomOptions(
+  customs: UserGenre[]
+): TaxonomyCustomOption[] {
+  return customs.map((entry) => ({
+    id: entry.id,
+    name: entry.name,
+    behavesLikeLabel: GENRE_LABELS[entry.behaves_like] ?? entry.behaves_like,
+  }))
+}
+
+export function PlaylistImportUpload({
+  locale,
+  customContexts,
+  customGenres,
+}: {
+  locale: SiteLocale
+  customContexts: UserContext[]
+  customGenres: UserGenre[]
+}) {
   const [state, formAction, isPending] = useActionState(
     importPlaylistAction,
     initialPlaylistActionState
   )
   const [fileName, setFileName] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [genreValue, setGenreValue] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function acceptDroppedFile(files: FileList | null) {
@@ -206,40 +199,44 @@ export function PlaylistImportUpload({ locale }: { locale: SiteLocale }) {
               >
                 {COPY.setContext[locale]}
               </label>
-              <SelectField id="import-context" name="context" defaultValue="main">
-                {SET_CONTEXTS.map((context) => (
-                  <option key={context} value={context}>
-                    {CONTEXT_COPY[context][locale]}
-                  </option>
-                ))}
-              </SelectField>
+              <TaxonomySelect
+                id="import-context"
+                name="context"
+                kind="context"
+                locale={locale}
+                defaultValue="main"
+                baseOptions={SET_CONTEXTS.map((context) => ({
+                  value: context,
+                  label: CONTEXT_COPY[context][locale],
+                }))}
+                customs={contextCustomOptions(customContexts, locale)}
+              />
             </div>
 
             <div className="space-y-2">
               <label
                 htmlFor="import-genre"
-                className="flex items-center gap-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-ec-text-dim"
+                className="block font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-ec-text-dim"
               >
                 {COPY.genre[locale]}
-                {genreValue === "" ? (
-                  <span className="rounded-[12px] border border-[#22D3EE]/35 bg-[#22D3EE]/[0.09] px-1.5 py-px font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[#7DE6F7]">
-                    {COPY.recommended[locale]}
-                  </span>
-                ) : null}
               </label>
-              <SelectField
+              <TaxonomySelect
                 id="import-genre"
                 name="genre"
+                kind="genre"
+                locale={locale}
                 defaultValue=""
-                onChange={setGenreValue}
-              >
-                <option value="">{COPY.autoDetect[locale]}</option>
-                {SUPPORTED_GENRES.map((genre) => (
-                  <option key={genre} value={genre}>
-                    {GENRE_LABELS[genre]}
-                  </option>
-                ))}
-              </SelectField>
+                leadingOption={{
+                  value: "",
+                  label: COPY.autoDetect[locale],
+                  badge: COPY.recommended[locale],
+                }}
+                baseOptions={SUPPORTED_GENRES.map((genre) => ({
+                  value: genre,
+                  label: GENRE_LABELS[genre],
+                }))}
+                customs={genreCustomOptions(customGenres)}
+              />
             </div>
           </div>
 

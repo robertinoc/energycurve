@@ -11,7 +11,10 @@ import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { getRequestLocale } from "@/lib/server-locale"
-import type { PlaylistActionState } from "@/lib/playlists/action-state"
+import type {
+  PlaylistActionState,
+  TaxonomyActionState,
+} from "@/lib/playlists/action-state"
 import { logError, logWarn } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
@@ -42,6 +45,15 @@ import {
   replaceTracks,
   updateTrack,
 } from "@/services/playlist-service"
+import {
+  createUserContext,
+  createUserGenre,
+  CUSTOM_TAXONOMY_LIMIT,
+  deleteUserContext,
+  deleteUserGenre,
+  getUserContextById,
+  getUserGenreById,
+} from "@/services/taxonomy-service"
 
 // Action messages come from the shared dashboard copy table, in the
 // requester's language (cookie via getRequestLocale).
@@ -122,6 +134,49 @@ function readTrackFormData(formData: FormData) {
   }
 }
 
+const CUSTOM_VALUE_PREFIX = "custom:"
+
+/**
+ * Resolves a context form value that may be a base enum or "custom:<id>".
+ * Customs are ownership-checked and map to their base ("behaves like") for
+ * the engine, keeping the display link. Returns null when invalid.
+ */
+async function resolveContextChoice(
+  profileId: string,
+  raw: string
+): Promise<{ base: PlaylistContext; customId: string | null } | null> {
+  if (raw.startsWith(CUSTOM_VALUE_PREFIX)) {
+    const custom = await getUserContextById(
+      profileId,
+      raw.slice(CUSTOM_VALUE_PREFIX.length)
+    )
+
+    return custom ? { base: custom.behaves_like, customId: custom.id } : null
+  }
+
+  return (SET_CONTEXTS as readonly string[]).includes(raw)
+    ? { base: raw as PlaylistContext, customId: null }
+    : null
+}
+
+async function resolveGenreChoice(
+  profileId: string,
+  raw: string
+): Promise<{ base: SupportedGenre; customId: string | null } | null> {
+  if (raw.startsWith(CUSTOM_VALUE_PREFIX)) {
+    const custom = await getUserGenreById(
+      profileId,
+      raw.slice(CUSTOM_VALUE_PREFIX.length)
+    )
+
+    return custom ? { base: custom.behaves_like, customId: custom.id } : null
+  }
+
+  return (SUPPORTED_GENRES as readonly string[]).includes(raw)
+    ? { base: raw as SupportedGenre, customId: null }
+    : null
+}
+
 export async function createPlaylistAction(
   _prevState: PlaylistActionState,
   formData: FormData
@@ -135,10 +190,19 @@ export async function createPlaylistAction(
     return rateLimited
   }
 
+  const contextChoice = await resolveContextChoice(
+    profile.id,
+    String(formData.get("context") ?? "")
+  )
+  const genreChoice = await resolveGenreChoice(
+    profile.id,
+    String(formData.get("genre") ?? "")
+  )
+
   const parsed = createPlaylistSchema(locale).safeParse({
     name: String(formData.get("name") ?? ""),
-    genre: String(formData.get("genre") ?? ""),
-    context: String(formData.get("context") ?? ""),
+    genre: genreChoice?.base ?? "",
+    context: contextChoice?.base ?? "",
   })
 
   if (!parsed.success) {
@@ -151,7 +215,11 @@ export async function createPlaylistAction(
   let playlistId: string
 
   try {
-    const playlist = await createPlaylist(profile.id, parsed.data)
+    const playlist = await createPlaylist(profile.id, {
+      ...parsed.data,
+      customContextId: contextChoice?.customId ?? null,
+      customGenreId: genreChoice?.customId ?? null,
+    })
     playlistId = playlist.id
   } catch (error) {
     logError("playlist.create_action_failed", error, { profileId: profile.id })
@@ -443,14 +511,6 @@ export async function importTracklistAction(
 const IMPORT_MAX_FILE_BYTES = 12 * 1024 * 1024 // 12 MB — full collections can be large
 const IMPORT_MAX_TRACKS = 500
 
-function isSupportedGenre(value: string): value is SupportedGenre {
-  return (SUPPORTED_GENRES as readonly string[]).includes(value)
-}
-
-function isPlaylistContext(value: string): value is PlaylistContext {
-  return (SET_CONTEXTS as readonly string[]).includes(value)
-}
-
 export async function importPlaylistAction(
   _prevState: PlaylistActionState,
   formData: FormData
@@ -477,7 +537,9 @@ export async function importPlaylistAction(
     return failure(ACTION_COPY.fileTooLarge[locale])
   }
 
-  if (!isPlaylistContext(contextRaw)) {
+  const contextChoice = await resolveContextChoice(profile.id, contextRaw)
+
+  if (!contextChoice) {
     return failure(ACTION_COPY.pickContext[locale])
   }
 
@@ -493,11 +555,11 @@ export async function importPlaylistAction(
   }
 
   const { dominant } = detectGenres(parsed.tracks)
-  // Explicit choice wins; otherwise the detected dominant genre; otherwise a
-  // safe default so the playlist is analyzable (user can recreate to change).
-  const genre: SupportedGenre = isSupportedGenre(genreRaw)
-    ? genreRaw
-    : (dominant ?? "house")
+  // Explicit choice (base or custom) wins; otherwise the detected dominant
+  // genre; otherwise a safe default so the playlist is analyzable.
+  const genreChoice =
+    genreRaw === "" ? null : await resolveGenreChoice(profile.id, genreRaw)
+  const genre: SupportedGenre = genreChoice?.base ?? dominant ?? "house"
 
   const name =
     nameOverride ||
@@ -515,8 +577,10 @@ export async function importPlaylistAction(
     const playlist = await createPlaylist(profile.id, {
       name,
       genre,
-      context: contextRaw,
+      context: contextChoice.base,
       importSource: parsed.source,
+      customContextId: contextChoice.customId,
+      customGenreId: genreChoice?.customId ?? null,
     })
     playlistId = playlist.id
 
@@ -548,7 +612,7 @@ export async function importPlaylistAction(
     source: parsed.source,
     trackCount: tracks.length,
     genre,
-    context: contextRaw,
+    context: contextChoice.base,
   })
 
   if (skipped > 0) {
@@ -605,5 +669,108 @@ export async function reorderTracksAction(
 
   revalidatePath(`/dashboard/playlists/${playlistId}`)
   revalidatePath("/dashboard")
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Custom contexts & genres ("behaves like"): user-owned labels mapped to a
+// base context/genre. The playlist stores the base enum (the engine never
+// sees customs) plus a display-only link to the custom entry.
+// ---------------------------------------------------------------------------
+
+const TAXONOMY_COPY = DASHBOARD_COPY.taxonomy
+
+export async function createCustomTaxonomyAction(
+  _prevState: TaxonomyActionState,
+  formData: FormData
+): Promise<TaxonomyActionState> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message, createdId: null }
+  }
+
+  const kind = String(formData.get("kind") ?? "")
+  const name = String(formData.get("name") ?? "")
+  const behavesLike = String(formData.get("behavesLike") ?? "")
+
+  if (kind !== "context" && kind !== "genre") {
+    return {
+      ok: false,
+      message: ACTION_COPY.genericError[locale],
+      createdId: null,
+    }
+  }
+
+  try {
+    const result =
+      kind === "context"
+        ? await createUserContext(profile.id, name, behavesLike)
+        : await createUserGenre(profile.id, name, behavesLike)
+
+    if (result.validationError) {
+      const message =
+        result.validationError === "limit_reached"
+          ? formatTemplate(TAXONOMY_COPY.limitReached[locale], {
+              max: CUSTOM_TAXONOMY_LIMIT,
+            })
+          : result.validationError === "duplicate_name"
+            ? TAXONOMY_COPY.duplicateName[locale]
+            : TAXONOMY_COPY.nameInvalid[locale]
+
+      return { ok: false, message, createdId: null }
+    }
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/playlists")
+
+    return { ok: true, message: null, createdId: result.entry?.id ?? null }
+  } catch (error) {
+    logError("taxonomy.create_action_failed", error, {
+      profileId: profile.id,
+      kind,
+    })
+    return {
+      ok: false,
+      message: ACTION_COPY.genericError[locale],
+      createdId: null,
+    }
+  }
+}
+
+/** Direct-call action (no form): remove a custom entry; playlists fall back to the base label. */
+export async function deleteCustomTaxonomyAction(
+  kind: "context" | "genre",
+  id: string
+): Promise<{ ok: boolean }> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+
+  if (rateLimited || !id) {
+    return { ok: false }
+  }
+
+  try {
+    if (kind === "context") {
+      await deleteUserContext(profile.id, id)
+    } else {
+      await deleteUserGenre(profile.id, id)
+    }
+  } catch (error) {
+    logError("taxonomy.delete_action_failed", error, {
+      profileId: profile.id,
+      kind,
+      id,
+    })
+    return { ok: false }
+  }
+
+  revalidatePath("/dashboard")
+  revalidatePath("/dashboard/playlists")
   return { ok: true }
 }

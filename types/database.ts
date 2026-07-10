@@ -44,6 +44,8 @@ export interface Database {
           genre: Database["public"]["Enums"]["playlist_genre"] | null
           context: Database["public"]["Enums"]["playlist_context"] | null
           import_source: string | null
+          custom_context_id: string | null
+          custom_genre_id: string | null
           created_at: string
           updated_at: string
         }
@@ -54,6 +56,8 @@ export interface Database {
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
           import_source?: string | null
+          custom_context_id?: string | null
+          custom_genre_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -64,6 +68,8 @@ export interface Database {
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
           import_source?: string | null
+          custom_context_id?: string | null
+          custom_genre_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -127,6 +133,68 @@ export interface Database {
             foreignKeyName: "tracks_playlist_id_fkey"
             columns: ["playlist_id"]
             referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_contexts: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          behaves_like: Database["public"]["Enums"]["playlist_context"]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          behaves_like: Database["public"]["Enums"]["playlist_context"]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          behaves_like?: Database["public"]["Enums"]["playlist_context"]
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_contexts_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_genres: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          behaves_like: Database["public"]["Enums"]["playlist_genre"]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          behaves_like: Database["public"]["Enums"]["playlist_genre"]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          behaves_like?: Database["public"]["Enums"]["playlist_genre"]
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_genres_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
