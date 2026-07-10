@@ -106,6 +106,11 @@ interface SiteCopySchema {
     description: LocalizedLabel
     madeIn: LocalizedLabel
     family: LocalizedLabel
+    resources: LocalizedLabel
+    legal: LocalizedLabel
+    privacy: LocalizedLabel
+    terms: LocalizedLabel
+    cookies: LocalizedLabel
   }
   install: {
     bannerTitle: LocalizedLabel
@@ -385,6 +390,11 @@ const siteCopy: SiteCopySchema = {
       en: "Part of the StageLink family — built for artists, now for DJs.",
       es: "Parte de la familia StageLink — para artistas, y ahora para DJs.",
     },
+    resources: { en: "Resources", es: "Recursos" },
+    legal: { en: "Legal", es: "Legal" },
+    privacy: { en: "Privacy Policy", es: "Política de Privacidad" },
+    terms: { en: "Terms of Service", es: "Términos del Servicio" },
+    cookies: { en: "Cookie Policy", es: "Política de Cookies" },
   },
   install: {
     bannerTitle: {
@@ -606,6 +616,11 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       description: siteCopy.footer.description[locale],
       madeIn: siteCopy.footer.madeIn[locale],
       family: siteCopy.footer.family[locale],
+      resources: siteCopy.footer.resources[locale],
+      legal: siteCopy.footer.legal[locale],
+      privacy: siteCopy.footer.privacy[locale],
+      terms: siteCopy.footer.terms[locale],
+      cookies: siteCopy.footer.cookies[locale],
     },
     install: {
       bannerTitle: siteCopy.install.bannerTitle[locale],
