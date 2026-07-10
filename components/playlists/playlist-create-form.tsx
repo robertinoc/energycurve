@@ -19,12 +19,25 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { NativeSelect } from "@/components/ui/native-select"
+import {
+  contextCustomOptions,
+  genreCustomOptions,
+} from "@/components/playlists/playlist-import-upload"
+import { TaxonomySelect } from "@/components/playlists/taxonomy-select"
 import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { SET_CONTEXTS, SUPPORTED_GENRES, GENRE_LABELS } from "@/lib/product/strategy"
+import type { UserContext, UserGenre } from "@/types/domain"
 
-export function PlaylistCreateForm({ locale }: { locale: SiteLocale }) {
+export function PlaylistCreateForm({
+  locale,
+  customContexts,
+  customGenres,
+}: {
+  locale: SiteLocale
+  customContexts: UserContext[]
+  customGenres: UserGenre[]
+}) {
   const [state, formAction, isPending] = useActionState(
     createPlaylistAction,
     initialPlaylistActionState
@@ -65,18 +78,18 @@ export function PlaylistCreateForm({ locale }: { locale: SiteLocale }) {
             <Label htmlFor="playlist-genre" className="text-white/72">
               {copy.genre[locale]}
             </Label>
-            <NativeSelect
+            <TaxonomySelect
               id="playlist-genre"
               name="genre"
+              kind="genre"
+              locale={locale}
               defaultValue="house"
-              className="border-white/12 text-white"
-            >
-              {SUPPORTED_GENRES.map((genre) => (
-                <option key={genre} value={genre}>
-                  {GENRE_LABELS[genre]}
-                </option>
-              ))}
-            </NativeSelect>
+              baseOptions={SUPPORTED_GENRES.map((genre) => ({
+                value: genre,
+                label: GENRE_LABELS[genre],
+              }))}
+              customs={genreCustomOptions(customGenres)}
+            />
             {state.fieldErrors?.genre ? (
               <p className="text-xs text-ec-error">{state.fieldErrors.genre}</p>
             ) : null}
@@ -86,18 +99,18 @@ export function PlaylistCreateForm({ locale }: { locale: SiteLocale }) {
             <Label htmlFor="playlist-context" className="text-white/72">
               {copy.context[locale]}
             </Label>
-            <NativeSelect
+            <TaxonomySelect
               id="playlist-context"
               name="context"
+              kind="context"
+              locale={locale}
               defaultValue="main"
-              className="border-white/12 text-white"
-            >
-              {SET_CONTEXTS.map((context) => (
-                <option key={context} value={context}>
-                  {CONTEXT_COPY[context][locale]}
-                </option>
-              ))}
-            </NativeSelect>
+              baseOptions={SET_CONTEXTS.map((context) => ({
+                value: context,
+                label: CONTEXT_COPY[context][locale],
+              }))}
+              customs={contextCustomOptions(customContexts, locale)}
+            />
             {state.fieldErrors?.context ? (
               <p className="text-xs text-ec-error">
                 {state.fieldErrors.context}

@@ -103,12 +103,16 @@ export default async function PlaylistDetailPage({
             <div className="flex flex-wrap items-center gap-2">
               {playlist.genre ? (
                 <Badge variant="accent">
-                  {GENRE_LABELS[playlist.genre] ?? playlist.genre}
+                  {playlist.custom_genre_name ??
+                    GENRE_LABELS[playlist.genre] ??
+                    playlist.genre}
                 </Badge>
               ) : null}
               {playlist.context ? (
                 <Badge>
-                  {CONTEXT_COPY[playlist.context]?.[locale] ?? playlist.context}
+                  {playlist.custom_context_name ??
+                    CONTEXT_COPY[playlist.context]?.[locale] ??
+                    playlist.context}
                 </Badge>
               ) : null}
             </div>

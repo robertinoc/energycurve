@@ -7,7 +7,19 @@ import type {
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 export type Playlist = Database["public"]["Tables"]["playlists"]["Row"]
 export type Track = Database["public"]["Tables"]["tracks"]["Row"]
+export type UserContext = Database["public"]["Tables"]["user_contexts"]["Row"]
+export type UserGenre = Database["public"]["Tables"]["user_genres"]["Row"]
 export type { PlaylistContext, SupportedGenre }
+
+/**
+ * Display names of the custom context/genre a playlist is tagged with
+ * ("behaves like" model): the base enum stays in playlist.context/genre for
+ * the engine; these labels are what the UI shows when present.
+ */
+export interface PlaylistTaxonomyNames {
+  custom_context_name: string | null
+  custom_genre_name: string | null
+}
 
 export interface WorkOSUserIdentity {
   id: string
@@ -28,11 +40,13 @@ export interface DashboardPlaylist extends PlaylistWithTrackCount {
   scoreHistory: number[]
 }
 
-export interface PlaylistWithTrackCount extends Playlist {
+export interface PlaylistWithTrackCount
+  extends Playlist,
+    PlaylistTaxonomyNames {
   trackCount: number
 }
 
-export interface PlaylistWithTracks extends Playlist {
+export interface PlaylistWithTracks extends Playlist, PlaylistTaxonomyNames {
   tracks: Track[]
 }
 

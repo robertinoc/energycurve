@@ -2,7 +2,16 @@ import "server-only"
 
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
-import type { DashboardSnapshot, WorkOSUserIdentity } from "@/types/domain"
+import type {
+  DashboardSnapshot,
+  Playlist,
+  WorkOSUserIdentity,
+} from "@/types/domain"
+
+type PlaylistNameJoins = {
+  custom_context: { name: string } | null
+  custom_genre: { name: string } | null
+}
 
 const LATEST_PLAYLISTS_LIMIT = 5
 
@@ -18,7 +27,10 @@ export async function getDashboardSnapshot(
   const { data: playlists, count: playlistCount, error: playlistsError } =
     await supabase
       .from("playlists")
-      .select("*", { count: "exact" })
+      .select(
+        "*, custom_context:user_contexts(name), custom_genre:user_genres(name)",
+        { count: "exact" }
+      )
       .eq("user_id", profile.id)
       .order("updated_at", { ascending: false })
 
@@ -26,7 +38,11 @@ export async function getDashboardSnapshot(
     throw new Error("Unable to load playlists for the dashboard.")
   }
 
-  const rows = playlists ?? []
+  const playlistRows = (playlists ?? []) as unknown as Array<
+    Playlist & PlaylistNameJoins
+  >
+
+  const rows = playlistRows
   const playlistIds = rows.map((playlist) => playlist.id)
   let trackCount = 0
   const trackCounts = new Map<string, number>()
@@ -78,8 +94,10 @@ export async function getDashboardSnapshot(
     profile,
     playlistCount: playlistCount ?? 0,
     trackCount,
-    latestPlaylists: latestRows.map((playlist) => ({
+    latestPlaylists: latestRows.map(({ custom_context, custom_genre, ...playlist }) => ({
       ...playlist,
+      custom_context_name: custom_context?.name ?? null,
+      custom_genre_name: custom_genre?.name ?? null,
       trackCount: trackCounts.get(playlist.id) ?? 0,
       scoreHistory: (scoreHistories.get(playlist.id) ?? []).slice(
         -SCORE_HISTORY_LIMIT

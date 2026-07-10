@@ -130,12 +130,16 @@ export default async function PlaylistAnalysisPage({
             </h1>
             {playlist.genre ? (
               <Badge variant="accent">
-                {GENRE_LABELS[playlist.genre] ?? playlist.genre}
+                {playlist.custom_genre_name ??
+                  GENRE_LABELS[playlist.genre] ??
+                  playlist.genre}
               </Badge>
             ) : null}
             {playlist.context ? (
               <Badge>
-                {CONTEXT_LABELS[playlist.context] ?? playlist.context}
+                {playlist.custom_context_name ??
+                  CONTEXT_LABELS[playlist.context] ??
+                  playlist.context}
               </Badge>
             ) : null}
             <div className="ml-auto">
