@@ -179,21 +179,39 @@ export const DASHBOARD_COPY = {
   },
 
   importUpload: {
-    title: { en: "Import your playlist", es: "Importá tu playlist" },
-    description: {
-      en: "Upload an export from Rekordbox (.xml) or Traktor (.nml). We read the BPM, key, and — if you use Mixed In Key — the energy of each track automatically.",
-      es: "Subí un export de Rekordbox (.xml) o Traktor (.nml). Leemos el BPM, la key y — si usás Mixed In Key — la energía de cada track automáticamente.",
+    eyebrow: { en: "Import your playlist", es: "Importá tu playlist" },
+    title: {
+      en: "Drop your set. See its energy.",
+      es: "Soltá tu set. Mirá su energía.",
     },
-    fileLabel: { en: "Playlist file", es: "Archivo de la playlist" },
-    filePlaceholder: {
-      en: "Choose a .xml (Rekordbox) or .nml (Traktor) file",
-      es: "Elegí un archivo .xml (Rekordbox) o .nml (Traktor)",
+    subtitle: {
+      en: "Export from Rekordbox or Traktor and we chart the whole set — BPM, keys, genres and Mixed In Key energies included.",
+      es: "Exportá desde Rekordbox o Traktor y graficamos el set completo — BPM, keys, géneros y energías de Mixed In Key incluidos.",
     },
+    dropzoneMain: {
+      en: "Drag your playlist here, or",
+      es: "Arrastrá tu playlist acá, o",
+    },
+    browse: { en: "browse files", es: "elegí el archivo" },
+    dropzoneHint: {
+      en: "One file, straight from your DJ software",
+      es: "Un archivo, directo de tu software de DJ",
+    },
+    fileReady: { en: "Ready to import", es: "Listo para importar" },
+    readsLabel: { en: "We read for you", es: "Leemos por vos" },
+    readKey: { en: "Key → Camelot", es: "Key → Camelot" },
+    readGenres: { en: "Genre tags", es: "Tags de género" },
+    readMik: { en: "Mixed In Key energy", es: "Energía de Mixed In Key" },
     setContext: { en: "Set context", es: "Contexto del set" },
     genre: { en: "Genre", es: "Género" },
     autoDetect: { en: "Auto-detect from file", es: "Auto-detectar del archivo" },
+    recommended: { en: "Recommended", es: "Recomendado" },
     importing: { en: "Importing…", es: "Importando…" },
     importCta: { en: "Import playlist", es: "Importar playlist" },
+    ctaHint: {
+      en: "~5 seconds · nothing leaves your account",
+      es: "~5 segundos · nada sale de tu cuenta",
+    },
   },
 
   tracklistImport: {
