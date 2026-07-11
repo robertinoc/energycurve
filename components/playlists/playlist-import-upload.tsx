@@ -148,6 +148,12 @@ export function PlaylistImportUpload({
               <span className="rounded-[20px] border border-[#A24DE0]/40 bg-[#A24DE0]/[0.12] px-2.5 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#CDA2F1]">
                 .xml · Rekordbox
               </span>
+              <span className="rounded-[20px] border border-[#A24DE0]/40 bg-[#A24DE0]/[0.12] px-2.5 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#CDA2F1]">
+                .txt · Rekordbox
+              </span>
+              <span className="rounded-[20px] border border-[#5EEAD4]/40 bg-[#5EEAD4]/[0.1] px-2.5 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8CF3E2]">
+                .m3u8 · Music apps
+              </span>
               <span className="rounded-[20px] border border-[#22D3EE]/40 bg-[#22D3EE]/[0.1] px-2.5 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#7DE6F7]">
                 .nml · Traktor
               </span>
@@ -158,7 +164,7 @@ export function PlaylistImportUpload({
             id="import-file"
             name="file"
             type="file"
-            accept=".xml,.nml,text/xml,application/xml"
+            accept=".xml,.nml,.txt,.m3u8,.m3u,text/xml,application/xml,text/plain,audio/x-mpegurl"
             required
             className="sr-only"
             onChange={(event) =>

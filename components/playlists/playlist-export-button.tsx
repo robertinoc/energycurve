@@ -32,6 +32,7 @@ interface MenuItem {
 const MENU_ITEMS: MenuItem[] = [
   { format: "rekordbox", label: COPY.forRekordbox, ext: ".xml", group: "dj" },
   { format: "traktor", label: COPY.forTraktor, ext: ".nml", group: "dj" },
+  { format: "m3u8", label: COPY.forMusicApps, ext: ".m3u8", group: "dj" },
   { format: "csv", label: COPY.csvFile, ext: ".csv", group: "plain" },
   { format: "txt", label: COPY.textFile, ext: ".txt", group: "plain" },
 ]
