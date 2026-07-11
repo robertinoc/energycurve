@@ -371,7 +371,7 @@ function TrackRow({
             className="w-6 text-right font-mono text-xs font-bold"
             style={{ color: energyColor(energy.score) }}
             title={formatTemplate(COPY.energySource[locale], {
-              source: energy.source,
+              source: energy.source.replace("_", " + "),
             })}
           >
             {energy.score}

@@ -251,6 +251,7 @@ export async function addTrack(
       genre: input.genre ?? null,
       comment: input.comment ?? null,
       duration_seconds: input.durationSeconds ?? null,
+      perceived_db: input.perceivedDb ?? null,
     })
     .select()
     .single()
@@ -467,6 +468,7 @@ export async function replaceTracks(
       genre: track.genre ?? null,
       comment: track.comment ?? null,
       duration_seconds: track.durationSeconds ?? null,
+        perceived_db: track.perceivedDb ?? null,
     }))
   )
 

@@ -11,6 +11,7 @@ function energiesFrom(scores: number[]): ResolvedTrackEnergy[] {
     score,
     source: "manual" as const,
     bpm: null,
+    camelot: null,
   }))
 }
 
@@ -20,6 +21,60 @@ function isPermutation(order: number[], length: number) {
     [...order].sort((a, b) => a - b).every((value, index) => value === index)
   )
 }
+
+function keyedEnergies(
+  entries: Array<{ score: number; camelot: string | null }>
+) {
+  return entries.map((entry, index) => ({
+    trackId: `t${index + 1}`,
+    position: index + 1,
+    score: entry.score,
+    source: "manual" as const,
+    bpm: null,
+    camelot: entry.camelot,
+  }))
+}
+
+describe("optimizeOrder — harmonic objective (B20)", () => {
+  it("prefers the harmonic chain among energy-equivalent orders", () => {
+    // Six tracks at identical energy: energy score is the same for every
+    // permutation, so harmony decides. Keys allow a perfect wheel walk.
+    const energies = keyedEnergies([
+      { score: 8, camelot: "9A" },
+      { score: 8, camelot: "7A" },
+      { score: 8, camelot: "10A" },
+      { score: 8, camelot: "8A" },
+      { score: 8, camelot: "6A" },
+      { score: 8, camelot: "11A" },
+    ])
+
+    const optimized = optimizeOrder(energies, "hard-techno", "main")
+    const orderedKeys = optimized.order.map((i) => energies[i].camelot)
+
+    expect(optimized.harmonicRatio).toBe(1)
+    // A full chain: every adjacent pair within ±1 on the wheel.
+    for (let i = 1; i < orderedKeys.length; i += 1) {
+      const a = Number.parseInt(orderedKeys[i - 1]!, 10)
+      const b = Number.parseInt(orderedKeys[i]!, 10)
+      expect(Math.abs(a - b)).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it("ignores harmony when key coverage is too low", () => {
+    const energies = keyedEnergies([
+      { score: 6, camelot: "9A" },
+      { score: 7, camelot: null },
+      { score: 8, camelot: null },
+      { score: 9, camelot: null },
+      { score: 8.5, camelot: null },
+      { score: 9, camelot: "3B" },
+    ])
+
+    // No throw + valid permutation is the contract; ratio may be anything.
+    const optimized = optimizeOrder(energies, "house", "main")
+    expect(isPermutation(optimized.order, energies.length)).toBe(true)
+  })
+})
 
 describe("optimizeOrder", () => {
   it("returns a valid permutation that never scores below the input order", () => {

@@ -1,4 +1,5 @@
 import {
+  REORDER_HARMONY_V4,
   REORDER_MIN_IMPROVEMENT_V2,
   STANDARD_TRACK_DURATION_MINUTES,
   type PlaylistContext,
@@ -9,13 +10,15 @@ import {
   formatTemplate,
   ISSUE_COPY,
   REORDER_RATIONALE,
+  REORDER_RATIONALE_HARMONIC,
 } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   analyzePlaylist,
   SET_DURATION_GUIDELINE_MINUTES,
 } from "@/lib/engine/analysis"
-import { optimizeOrder } from "@/lib/engine/reorder"
+import { assessHarmony, type HarmonyAssessment } from "@/lib/engine/harmony"
+import { harmonyApplies, optimizeOrder } from "@/lib/engine/reorder"
 import type {
   DetectedIssue,
   PlaylistAnalysis,
@@ -101,12 +104,15 @@ export interface ReorderSuggestion {
   suggestedOrder: number[]
   suggestedAnalysis: PlaylistAnalysis
   rationale: string
+  /** Camelot read of both orders, when keys are available (B20). */
+  harmony: { before: HarmonyAssessment; after: HarmonyAssessment } | null
 }
 
 /**
  * Suggested order = the optimizer's best arrangement toward the ideal curve
- * (B11). Only returned when it beats the original score by a meaningful
- * margin, so users aren't nudged to reshuffle for a rounding error.
+ * (B11), keeping transitions harmonic on the Camelot wheel when keys are
+ * available (B20). Returned when it meaningfully improves the energy score,
+ * OR when it meaningfully improves harmony without trading the curve away.
  */
 export function suggestReorder(
   energies: ResolvedTrackEnergy[],
@@ -119,9 +125,20 @@ export function suggestReorder(
     return null
   }
 
+  const useHarmony = harmonyApplies(energies)
   const optimized = optimizeOrder(energies, genre, context)
+  const energyImprovement = optimized.score - originalScore
 
-  if (optimized.score - originalScore < REORDER_MIN_IMPROVEMENT_V2) {
+  const harmonyBefore = assessHarmony(energies.map((entry) => entry.camelot))
+  const harmonicImprovement = optimized.harmonicRatio - harmonyBefore.ratio
+
+  const worthItByEnergy = energyImprovement >= REORDER_MIN_IMPROVEMENT_V2
+  const worthItByHarmony =
+    useHarmony &&
+    harmonicImprovement >= REORDER_HARMONY_V4.minHarmonicImprovement &&
+    energyImprovement >= -REORDER_HARMONY_V4.maxEnergyRegression
+
+  if (!worthItByEnergy && !worthItByHarmony) {
     return null
   }
 
@@ -136,11 +153,22 @@ export function suggestReorder(
     })),
   })
 
+  const harmonyAfter = assessHarmony(
+    orderedEnergies.map((entry) => entry.camelot)
+  )
+
   return {
     suggestedOrder: orderedEnergies.map((entry) => entry.position),
     suggestedAnalysis,
-    rationale: formatTemplate(REORDER_RATIONALE[locale], {
-      context: CONTEXT_DISPLAY_NAMES[context][locale],
-    }),
+    rationale: useHarmony
+      ? formatTemplate(REORDER_RATIONALE_HARMONIC[locale], {
+          context: CONTEXT_DISPLAY_NAMES[context][locale],
+          harmonic: harmonyAfter.harmonicCount + harmonyAfter.boostCount,
+          known: harmonyAfter.knownTransitions,
+        })
+      : formatTemplate(REORDER_RATIONALE[locale], {
+          context: CONTEXT_DISPLAY_NAMES[context][locale],
+        }),
+    harmony: useHarmony ? { before: harmonyBefore, after: harmonyAfter } : null,
   }
 }

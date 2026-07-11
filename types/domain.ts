@@ -65,6 +65,8 @@ export interface TrackWriteInput {
   comment?: string | null
   /** Track length in seconds, when the source export provides it. */
   durationSeconds?: number | null
+  /** Perceived loudness in dB (Traktor PERCEIVED_DB) — energy signal (B19). */
+  perceivedDb?: number | null
 }
 
 export interface ProductStrategySnapshot {

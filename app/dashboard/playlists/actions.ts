@@ -603,6 +603,7 @@ export async function importPlaylistAction(
         genre: track.genre,
         comment: track.comment,
         durationSeconds: track.durationSeconds,
+        perceivedDb: track.perceivedDb ?? null,
       }))
     )
   } catch (error) {

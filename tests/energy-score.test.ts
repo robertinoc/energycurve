@@ -168,6 +168,83 @@ describe("resolveTrackEnergies", () => {
   })
 })
 
+describe("loudness as an energy signal (B19)", () => {
+  const homogeneous = (dbs: (number | null)[]) =>
+    dbs.map((db, i) => ({
+      id: String(i + 1),
+      position: i + 1,
+      bpm: 150,
+      energy_score: null,
+      perceived_db: db,
+    }))
+
+  it("differentiates equal-BPM tracks by perceived loudness", () => {
+    const resolved = resolveTrackEnergies(
+      homogeneous([-5, -4, -3, -2, -1, 0]),
+      "main",
+      "hard-techno"
+    )
+
+    const scores = resolved.map((entry) => entry.score)
+    expect(new Set(scores).size).toBeGreaterThan(1)
+    // Louder track ends higher than the quietest one.
+    expect(scores[5]).toBeGreaterThan(scores[0])
+    expect(resolved.every((entry) => entry.source === "bpm_loudness")).toBe(true)
+  })
+
+  it("caps the adjustment at ±0.8 around the BPM anchor", () => {
+    const resolved = resolveTrackEnergies(
+      homogeneous([-10, -5, -4.8, -5.2, -5.1, 0]),
+      "main",
+      "hard-techno"
+    )
+    const base = resolveTrackEnergies(
+      homogeneous([null, null, null, null, null, null]),
+      "main",
+      "hard-techno"
+    )[0].score
+
+    for (const entry of resolved) {
+      expect(Math.abs(entry.score - base)).toBeLessThanOrEqual(0.8 + 0.05)
+    }
+  })
+
+  it("applies no adjustment when the set is equally loud (spread < 1.5 dB)", () => {
+    const resolved = resolveTrackEnergies(
+      homogeneous([-3, -3.2, -2.9, -3.1, -3.3, -2.8]),
+      "main",
+      "hard-techno"
+    )
+
+    expect(new Set(resolved.map((entry) => entry.score)).size).toBe(1)
+    expect(resolved.every((entry) => entry.source === "bpm")).toBe(true)
+  })
+
+  it("applies no adjustment with too few dB readings", () => {
+    const resolved = resolveTrackEnergies(
+      homogeneous([-5, 0, null, null, null, null]),
+      "main",
+      "hard-techno"
+    )
+
+    expect(resolved.every((entry) => entry.source === "bpm")).toBe(true)
+  })
+
+  it("resolves the camelot key from musical_key (B18)", () => {
+    const resolved = resolveTrackEnergies(
+      [
+        { id: "a", position: 1, bpm: 150, energy_score: null, musical_key: "8m" },
+        { id: "b", position: 2, bpm: 150, energy_score: null, musical_key: "Am" },
+        { id: "c", position: 3, bpm: 150, energy_score: null },
+      ],
+      "main",
+      "hard-techno"
+    )
+
+    expect(resolved.map((entry) => entry.camelot)).toEqual(["3A", "8A", null])
+  })
+})
+
 describe("estimateSetDurationMinutes", () => {
   it("multiplies track count by the standard duration", () => {
     expect(estimateSetDurationMinutes(0)).toBe(0)

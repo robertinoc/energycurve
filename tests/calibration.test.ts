@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest"
 
+import prideBounceFixture from "./fixtures-pride-bounce.json"
+
 import { analyzePlaylist, computeSetScore } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
+import { suggestReorder } from "@/lib/engine/recommendations"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
+import { musicalKeyValueToOpenKey } from "@/lib/music/camelot"
 import { detectGenres } from "@/lib/playlists/parse-import"
 import type { ImportedTrack } from "@/lib/playlists/imported-track"
 
@@ -169,6 +173,74 @@ describe("V2 score calibration", () => {
     expect(
       analysis.issues.some((issue) => issue.type === "low_energy_confidence")
     ).toBe(true)
+  })
+
+  it("orders the real PRIDE - BOUNCE set harmonically like a fine DJ would (V4 regression)", () => {
+    // The 38 real tracks (bpm / numeric MUSICAL_KEY / perceived dB) from the
+    // production NML. Claude.ai ordered this set by Camelot compatibility and
+    // Robertino rated that ordering "very fine" — this fixture asserts the
+    // deterministic engine reaches comparable quality (B17–B20).
+    const fixture = prideBounceFixture as Array<{
+      title: string
+      bpm: number | null
+      infoKey: string | null
+      musicalKeyValue: number
+      perceivedDb: number | null
+    }>
+
+    expect(fixture).toHaveLength(38)
+
+    const inputs = fixture.map((row, index) => ({
+      id: String(index + 1),
+      position: index + 1,
+      bpm: row.bpm,
+      energy_score: null,
+      musical_key:
+        row.infoKey ?? musicalKeyValueToOpenKey(row.musicalKeyValue),
+      perceived_db: row.perceivedDb,
+    }))
+
+    const energies = resolveTrackEnergies(inputs, "main", "hard-techno")
+
+    // 1. Full key coverage (B17): every track resolves to a Camelot code.
+    expect(energies.every((entry) => entry.camelot !== null)).toBe(true)
+
+    // 2. Loudness differentiates the curve (B19): no flat line, real sources.
+    const scores = energies.map((entry) => entry.score)
+    expect(Math.max(...scores) - Math.min(...scores)).toBeGreaterThan(0.5)
+    expect(
+      energies.filter((entry) => entry.source === "bpm_loudness").length
+    ).toBeGreaterThan(30)
+
+    // 3. The suggested order is harmonically strong without trading energy
+    // away (B20) — the "replicate Claude" bar.
+    const original = analyzePlaylist({
+      curve: scores,
+      genre: "hard-techno",
+      context: "main",
+      trackMeta: energies.map((entry) => ({
+        source: entry.source,
+        bpm: entry.bpm,
+      })),
+    })
+
+    const suggestion = suggestReorder(
+      energies,
+      "hard-techno",
+      "main",
+      original.setScore,
+      "en"
+    )
+
+    expect(suggestion).not.toBeNull()
+    expect(suggestion!.harmony).not.toBeNull()
+
+    const { before, after } = suggestion!.harmony!
+    expect(after.ratio).toBeGreaterThan(before.ratio + 0.2)
+    expect(after.ratio).toBeGreaterThanOrEqual(0.7)
+    expect(suggestion!.suggestedAnalysis.setScore).toBeGreaterThanOrEqual(
+      original.setScore - 0.3
+    )
   })
 
   it("a realistic imperfect-but-decent set lands in the encouraging middle", () => {
