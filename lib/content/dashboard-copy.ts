@@ -85,6 +85,22 @@ export const DASHBOARD_COPY = {
       es: "Creá la primera acá arriba — después sumá tracks a mano o pegá un tracklist completo.",
     },
     trackCount: { en: "{count} track(s)", es: "{count} track(s)" },
+    // Two entry points framing on the playlists page.
+    startHere: { en: "Add a set", es: "Cargá un set" },
+    startImport: {
+      en: "① Import from your DJ software",
+      es: "① Importá desde tu software de DJ",
+    },
+    startImportHint: { en: "Recommended", es: "Recomendado" },
+    startManual: {
+      en: "② Or build it by hand",
+      es: "② O creala a mano",
+    },
+    startManualHint: {
+      en: "Name it, then add tracks yourself",
+      es: "Nombrala y sumá los tracks vos",
+    },
+    yourSets: { en: "Your sets", es: "Tus sets" },
   },
 
   playlistDetail: {
