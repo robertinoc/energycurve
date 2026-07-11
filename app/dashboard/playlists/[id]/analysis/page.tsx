@@ -16,6 +16,11 @@ import {
   ANALYSIS_LOCALE_COOKIE,
   toSiteLocale,
 } from "@/lib/analysis-locale"
+import {
+  ANALYSIS_UI,
+  CONTEXT_LABELS,
+  formatTemplate,
+} from "@/lib/content/analysis-copy"
 import { buildReturnToHref } from "@/lib/auth/return-to"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
@@ -30,12 +35,6 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = "force-dynamic"
-
-const CONTEXT_LABELS: Record<string, string> = {
-  opening: "Opening",
-  main: "Main time",
-  closing: "Closing",
-}
 
 export default async function PlaylistAnalysisPage({
   params,
@@ -70,8 +69,10 @@ export default async function PlaylistAnalysisPage({
   if (result.status === "not_analyzable") {
     const message =
       result.reason === "too_few_tracks"
-        ? `This playlist needs at least ${MIN_ANALYZABLE_TRACKS} tracks before the flow can be analyzed. Add tracks or paste a full tracklist first.`
-        : "This playlist has no genre or context set, so the engine has nothing to score against. Recreate it with both fields set."
+        ? formatTemplate(ANALYSIS_UI.notAnalyzableTooShort[locale], {
+            min: MIN_ANALYZABLE_TRACKS,
+          })
+        : ANALYSIS_UI.notAnalyzableNoGenre[locale]
 
     return (
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8 lg:px-10">
@@ -126,7 +127,7 @@ export default async function PlaylistAnalysisPage({
 
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Set analysis
+              {ANALYSIS_UI.heading[locale]}
             </h1>
             {playlist.genre ? (
               <Badge variant="accent">
@@ -138,7 +139,7 @@ export default async function PlaylistAnalysisPage({
             {playlist.context ? (
               <Badge>
                 {playlist.custom_context_name ??
-                  CONTEXT_LABELS[playlist.context] ??
+                  CONTEXT_LABELS[playlist.context]?.[locale] ??
                   playlist.context}
               </Badge>
             ) : null}
@@ -147,8 +148,7 @@ export default async function PlaylistAnalysisPage({
             </div>
           </div>
           <p className="max-w-2xl text-sm leading-7 text-white/60">
-            Every number below is traceable: the energy of each track, the
-            rules it breaks, and exactly what each one costs.
+            {ANALYSIS_UI.subtitle[locale]}
           </p>
         </header>
 
@@ -156,55 +156,56 @@ export default async function PlaylistAnalysisPage({
           <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.98),rgba(12,9,23,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
             <div className="mb-4">
               <p className="text-xs uppercase tracking-[0.22em] text-white/42">
-                Energy curve
+                {ANALYSIS_UI.curveEyebrow[locale]}
               </p>
               <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
-                How the set actually flows
+                {ANALYSIS_UI.curveTitle[locale]}
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/56">
-                Hover the curve to inspect each track. The dashed line is the
-                ideal curve for this context and genre — the score measures how
-                closely your set follows it.
+                {ANALYSIS_UI.curveSubtitle[locale]}
               </p>
             </div>
             <EnergyCurveChart
               tracks={chartTracks}
               target={analysis.targetCurve}
+              locale={locale}
             />
           </div>
 
           <SetScoreCard
             analysis={analysis}
             durationMinutes={result.durationMinutes}
+            locale={locale}
           />
         </section>
 
         <section className="space-y-4">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-white/42">
-              Issues &amp; recommendations
+              {ANALYSIS_UI.issuesEyebrow[locale]}
             </p>
             <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
-              What to fix, and how
+              {ANALYSIS_UI.issuesTitle[locale]}
             </h2>
           </div>
-          <IssueList recommendations={recommendations} />
+          <IssueList recommendations={recommendations} locale={locale} />
         </section>
 
         {reorder ? (
           <section className="space-y-4">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-white/42">
-                Suggested order
+                {ANALYSIS_UI.reorderEyebrow[locale]}
               </p>
               <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
-                A stronger version of the same set
+                {ANALYSIS_UI.reorderTitle[locale]}
               </h2>
             </div>
             <OrderComparison
               tracks={playlist.tracks}
               originalScore={analysis.setScore}
               reorder={reorder}
+              locale={locale}
             />
           </section>
         ) : null}

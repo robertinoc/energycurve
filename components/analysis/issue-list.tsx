@@ -1,20 +1,22 @@
 import { CircleCheck, Lightbulb } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { ANALYSIS_UI, SEVERITY_LABELS } from "@/lib/content/analysis-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import type { Recommendation } from "@/lib/engine/recommendations"
 
 interface IssueListProps {
   recommendations: Recommendation[]
+  locale: SiteLocale
 }
 
-export function IssueList({ recommendations }: IssueListProps) {
+export function IssueList({ recommendations, locale }: IssueListProps) {
   if (recommendations.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-ec-border bg-white/[0.02] px-6 py-12 text-center">
         <CircleCheck className="size-8 text-ec-cyan" />
         <p className="text-sm text-ec-text-muted">
-          No issues detected — the flow, context, and genre expectations all
-          line up.
+          {ANALYSIS_UI.noIssues[locale]}
         </p>
       </div>
     )
@@ -33,16 +35,18 @@ export function IssueList({ recommendations }: IssueListProps) {
             </p>
             {recommendation.issue.severity === "penalty" ? (
               <Badge variant="warning">
-                −{recommendation.issue.penaltyApplied} pts
+                −{recommendation.issue.penaltyApplied} {ANALYSIS_UI.points[locale]}
               </Badge>
             ) : recommendation.issue.severity === "positive" ? (
-              <Badge variant="accent">Working for you</Badge>
+              <Badge variant="accent">{SEVERITY_LABELS.positive[locale]}</Badge>
             ) : (
-              <Badge>Heads-up</Badge>
+              <Badge>{SEVERITY_LABELS.info[locale]}</Badge>
             )}
             {recommendation.issue.trackPositions.length > 0 ? (
               <span className="text-xs text-white/42">
-                Track{recommendation.issue.trackPositions.length > 1 ? "s" : ""}{" "}
+                {recommendation.issue.trackPositions.length > 1
+                  ? ANALYSIS_UI.trackPlural[locale]
+                  : ANALYSIS_UI.trackSingular[locale]}{" "}
                 {recommendation.issue.trackPositions.join(", ")}
               </span>
             ) : null}

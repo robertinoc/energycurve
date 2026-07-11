@@ -255,3 +255,120 @@ export const CONTEXT_DISPLAY_NAMES: Record<string, LocalizedLabel> = {
   main: { en: "main time", es: "main time" },
   closing: { en: "closing", es: "closing" },
 }
+
+/**
+ * Capitalized, standalone context labels (badges, "Best fit" line). DJ jargon
+ * (opening / main time / closing) stays untranslated in ES on purpose, matching
+ * CONTEXT_DISPLAY_NAMES — that's how the audience actually says it.
+ */
+export const CONTEXT_LABELS: Record<string, LocalizedLabel> = {
+  opening: { en: "Opening", es: "Opening" },
+  main: { en: "Main time", es: "Main time" },
+  closing: { en: "Closing", es: "Closing" },
+}
+
+/**
+ * Render-layer chrome for the analysis screen — page headings, chart labels,
+ * card labels and empty states. The scoring engine (recommendations.ts) is
+ * already localized; this covers the React/page strings that weren't. Slots
+ * (`{min}`, `{score}`, …) are filled with formatTemplate at the call site.
+ */
+export const ANALYSIS_UI: Record<string, LocalizedLabel> = {
+  // Page chrome
+  metaTitle: { en: "Set analysis", es: "Análisis del set" },
+  heading: { en: "Set analysis", es: "Análisis del set" },
+  subtitle: {
+    en: "Every number below is traceable: the energy of each track, the rules it breaks, and exactly what each one costs.",
+    es: "Cada número de acá abajo es rastreable: la energía de cada track, las reglas que rompe y exactamente cuánto cuesta cada una.",
+  },
+  curveEyebrow: { en: "Energy curve", es: "Curva de energía" },
+  curveTitle: {
+    en: "How the set actually flows",
+    es: "Cómo fluye realmente el set",
+  },
+  curveSubtitle: {
+    en: "Hover the curve to inspect each track. The dashed line is the ideal curve for this context and genre — the score measures how closely your set follows it.",
+    es: "Pasá el cursor por la curva para inspeccionar cada track. La línea punteada es la curva ideal para este contexto y género — el score mide qué tan de cerca la sigue tu set.",
+  },
+  issuesEyebrow: {
+    en: "Issues & recommendations",
+    es: "Problemas y recomendaciones",
+  },
+  issuesTitle: { en: "What to fix, and how", es: "Qué corregir, y cómo" },
+  reorderEyebrow: { en: "Suggested order", es: "Orden sugerido" },
+  reorderTitle: {
+    en: "A stronger version of the same set",
+    es: "Una versión más fuerte del mismo set",
+  },
+  notAnalyzableTooShort: {
+    en: "This playlist needs at least {min} tracks before the flow can be analyzed. Add tracks or paste a full tracklist first.",
+    es: "Esta playlist necesita al menos {min} tracks para poder analizar el flujo. Sumá tracks o pegá una tracklist completa primero.",
+  },
+  notAnalyzableNoGenre: {
+    en: "This playlist has no genre or context set, so the engine has nothing to score against. Recreate it with both fields set.",
+    es: "Esta playlist no tiene género ni contexto, así que el motor no tiene contra qué puntuar. Recreala con ambos campos definidos.",
+  },
+
+  // Energy curve chart
+  chartAria: {
+    en: "Energy curve of this playlist",
+    es: "Curva de energía de esta playlist",
+  },
+  idealCurve: { en: "Ideal curve", es: "Curva ideal" },
+  peak: { en: "Peak", es: "Pico" },
+  track: { en: "Track", es: "Track" },
+  energy: { en: "Energy", es: "Energía" },
+  noBpm: { en: "no BPM", es: "sin BPM" },
+  // Set phases (x-axis) — DJ jargon, kept in English in both locales.
+  phaseOpening: { en: "Opening", es: "Opening" },
+  phaseBuildup: { en: "Build-up", es: "Build-up" },
+  phasePeak: { en: "Peak time", es: "Peak time" },
+  phaseClosing: { en: "Closing", es: "Closing" },
+  // Energy source labels
+  sourceManual: { en: "manual", es: "manual" },
+  sourceBpm: { en: "from BPM", es: "desde BPM" },
+  sourceBpmLoudness: { en: "from BPM + loudness", es: "desde BPM + volumen" },
+  sourceEstimated: { en: "estimated", es: "estimado" },
+
+  // Order comparison
+  currentOrder: { en: "Current order", es: "Orden actual" },
+  suggestedOrder: { en: "Suggested order", es: "Orden sugerido" },
+
+  // Issue list
+  noIssues: {
+    en: "No issues detected — the flow, context, and genre expectations all line up.",
+    es: "No se detectaron problemas — el flujo, el contexto y las expectativas del género están alineados.",
+  },
+  points: { en: "pts", es: "pts" },
+  trackSingular: { en: "Track", es: "Track" },
+  trackPlural: { en: "Tracks", es: "Tracks" },
+
+  // Set score card
+  outOf10: { en: "Out of 10", es: "Sobre 10" },
+  setScore: { en: "Set score", es: "Score del set" },
+  scoreAria: {
+    en: "Set score {score} out of 10",
+    es: "Score del set {score} sobre 10",
+  },
+  clampedToMin: { en: "Clamped to minimum", es: "Ajustado al mínimo" },
+  estimatedDuration: {
+    en: "Estimated duration: ~{minutes} min",
+    es: "Duración estimada: ~{minutes} min",
+  },
+  bestFit: { en: "Best fit:", es: "Mejor encaje:" },
+  bestFitMatches: {
+    en: "— matches this playlist's context.",
+    es: "— coincide con el contexto de esta playlist.",
+  },
+  betterAsPrefix: {
+    en: "This curve scores higher as",
+    es: "Esta curva puntúa más alto como",
+  },
+  betterAsDetail: {
+    en: "({score}/10 vs {setScore}/10 as {context}).",
+    es: "({score}/10 vs {setScore}/10 como {context}).",
+  },
+
+  // Misc
+  language: { en: "Language", es: "Idioma" },
+}
