@@ -7,7 +7,12 @@ import {
 } from "@/lib/product/strategy"
 import { mapGenreTag } from "@/lib/playlists/genre-mapping"
 import type { ImportedTrack, ParsedImport } from "@/lib/playlists/imported-track"
+import { isM3u8, parseM3u8 } from "@/lib/playlists/parse-m3u8"
 import { isRekordboxXml, parseRekordbox } from "@/lib/playlists/parse-rekordbox"
+import {
+  isRekordboxTxt,
+  parseRekordboxTxt,
+} from "@/lib/playlists/parse-rekordbox-txt"
 import { isTraktorNml, parseTraktor } from "@/lib/playlists/parse-traktor"
 
 export { mapGenreTag } from "@/lib/playlists/genre-mapping"
@@ -15,11 +20,16 @@ export { mapGenreTag } from "@/lib/playlists/genre-mapping"
 export class UnsupportedImportError extends Error {}
 
 /**
- * Detects the export format and parses it. Rekordbox and Traktor are both
- * XML but with distinct roots (DJ_PLAYLISTS vs NML). Throws
- * UnsupportedImportError for anything else.
+ * Detects the export format and parses it. Supports the four shapes Rekordbox
+ * and Traktor emit: Rekordbox XML / Traktor NML (both XML, distinct roots), the
+ * Rekordbox tab-separated txt export, and Extended M3U/M3U8 ("for music apps").
+ * Throws UnsupportedImportError for anything else.
  */
 export function parseImport(fileContents: string): ParsedImport {
+  if (isM3u8(fileContents)) {
+    return parseM3u8(fileContents)
+  }
+
   if (isRekordboxXml(fileContents)) {
     return parseRekordbox(fileContents)
   }
@@ -28,8 +38,13 @@ export function parseImport(fileContents: string): ParsedImport {
     return parseTraktor(fileContents)
   }
 
+  // Checked after the XML formats because it's the loosest matcher.
+  if (isRekordboxTxt(fileContents)) {
+    return parseRekordboxTxt(fileContents)
+  }
+
   throw new UnsupportedImportError(
-    "Unrecognized file. Export a playlist as Rekordbox XML or Traktor NML."
+    "Unrecognized file. Export a playlist as Rekordbox (XML, TXT or M3U8) or Traktor NML."
   )
 }
 

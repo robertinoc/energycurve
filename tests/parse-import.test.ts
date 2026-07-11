@@ -39,7 +39,20 @@ describe("parseImport format detection", () => {
     expect(result.tracks).toHaveLength(1)
   })
 
+  it("routes an M3U8 playlist to the m3u8 parser", () => {
+    const result = parseImport("#EXTM3U\n#EXTINF:200,Y - X\n/Music/x.mp3\n")
+    expect(result.source).toBe("m3u8")
+    expect(result.tracks).toHaveLength(1)
+  })
+
+  it("routes a Rekordbox tab-separated txt to the txt parser", () => {
+    const result = parseImport("#\tTrack Title\tArtist\tBPM\n1\tX\tY\t120\n")
+    expect(result.source).toBe("text")
+    expect(result.tracks).toHaveLength(1)
+  })
+
   it("throws UnsupportedImportError for unknown formats", () => {
+    // A plain "artist - track" paste has no tab header and no EXTM3U marker.
     expect(() => parseImport("artist - track\nanother - one")).toThrow(
       UnsupportedImportError
     )

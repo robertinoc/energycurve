@@ -104,6 +104,26 @@ captured on import and persisted — see migration `0008` and the parsers.
   (name + track count, active highlighted) under the Playlists nav item — the
   Rekordbox left-panel analogue. The dashboard layout passes `listPlaylists`
   into the shell.
+- **`.txt` + `.m3u8` import/export** (done): Rekordbox' "Export a playlist to a
+  file" offers `.txt` (tab-separated grid) and `.m3u8` ("for music apps"). Both
+  are now importable and exportable.
+  - **Import.** `parse-m3u8.ts` reads Extended M3U (`#EXTINF:<sec>,Artist -
+    Title` + file path → `sourceUri`; derives Artist/Title from the filename
+    when there's no EXTINF). `parse-rekordbox-txt.ts` reads the tab-separated
+    export by resolving columns from the header row (tolerant to reordered /
+    renamed columns), parsing BPM, key, genre, and the `m:ss` "Time" column.
+    `parse-import.ts` sniffs both before the XML formats. Rekordbox writes the
+    `.txt` as **UTF-16** — `decode-upload.ts` picks the decoder by BOM (the
+    import action now reads `arrayBuffer()`, not `file.text()`), so UTF-16 no
+    longer arrives as mojibake.
+  - **Export.** `serializePlaylist` gains an `m3u8` format (`#EXTM3U` + EXTINF +
+    `sourceUri`), and the `txt` format is upgraded from a plain "Artist - Title"
+    list to the Rekordbox-style tab-separated grid so it round-trips back
+    through the txt parser. Both are offered on every playlist (universal
+    fallbacks alongside CSV); a playlist imported from `.txt`/`.m3u8` defaults
+    to its own format.
+  - `import_source` gained the free-text values `"text"` and `"m3u8"` (no
+    migration — the column is unconstrained text).
 
 ## Non-goals / follow-ups
 

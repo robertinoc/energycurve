@@ -253,6 +253,7 @@ export const DASHBOARD_COPY = {
     djSoftware: { en: "DJ software", es: "Software de DJ" },
     forRekordbox: { en: "For Rekordbox", es: "Para Rekordbox" },
     forTraktor: { en: "For Traktor", es: "Para Traktor" },
+    forMusicApps: { en: "For music apps", es: "Para apps de música" },
     forSerato: { en: "For Serato", es: "Para Serato" },
     soon: { en: "soon", es: "pronto" },
     plain: { en: "Plain", es: "Plano" },

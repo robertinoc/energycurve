@@ -18,6 +18,7 @@ import type {
 import { logError, logWarn } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
+import { decodeUploadedText } from "@/lib/playlists/decode-upload"
 import {
   detectGenres,
   parseImport,
@@ -545,7 +546,8 @@ export async function importPlaylistAction(
 
   let parsed
   try {
-    parsed = parseImport(await file.text())
+    // Decode by BOM: Rekordbox' .txt export is UTF-16, everything else UTF-8.
+    parsed = parseImport(decodeUploadedText(await file.arrayBuffer()))
   } catch (error) {
     if (error instanceof UnsupportedImportError) {
       return failure(error.message)
@@ -561,11 +563,15 @@ export async function importPlaylistAction(
     genreRaw === "" ? null : await resolveGenreChoice(profile.id, genreRaw)
   const genre: SupportedGenre = genreChoice?.base ?? dominant ?? "house"
 
+  // txt / m3u8 exports carry no embedded playlist name — fall back to the
+  // file's own name before the generic templated default.
+  const fileBaseName = file.name.replace(/\.[^.]+$/, "").trim()
   const name =
     nameOverride ||
     parsed.playlistName ||
+    fileBaseName ||
     formatTemplate(ACTION_COPY.importedSetName[locale], {
-      source: parsed.source === "rekordbox" ? "Rekordbox" : "Traktor",
+      source: parsed.source === "traktor" ? "Traktor" : "Rekordbox",
     })
 
   const tracks = parsed.tracks.slice(0, IMPORT_MAX_TRACKS)

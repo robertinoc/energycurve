@@ -8,7 +8,9 @@ import {
   type ExportPlaylist,
   type ExportTrack,
 } from "@/lib/playlists/export"
+import { parseM3u8 } from "@/lib/playlists/parse-m3u8"
 import { parseRekordbox } from "@/lib/playlists/parse-rekordbox"
+import { parseRekordboxTxt } from "@/lib/playlists/parse-rekordbox-txt"
 import { parseTraktor } from "@/lib/playlists/parse-traktor"
 
 function makeTrack(overrides: Partial<ExportTrack> = {}): ExportTrack {
@@ -60,22 +62,28 @@ function samplePlaylist(overrides: Partial<ExportPlaylist> = {}): ExportPlaylist
 }
 
 describe("format selection", () => {
-  it("defaults to the import format and offers csv/txt fallbacks", () => {
+  it("defaults to the import format and offers the universal fallbacks", () => {
     expect(defaultExportFormat("rekordbox")).toBe("rekordbox")
     expect(defaultExportFormat("traktor")).toBe("traktor")
+    expect(defaultExportFormat("m3u8")).toBe("m3u8")
+    expect(defaultExportFormat("text")).toBe("txt")
     expect(defaultExportFormat(null)).toBe("csv")
 
     expect(availableExportFormats("rekordbox")).toEqual([
       "rekordbox",
       "csv",
       "txt",
+      "m3u8",
     ])
-    expect(availableExportFormats(null)).toEqual(["csv", "txt"])
+    expect(availableExportFormats("text")).toEqual(["txt", "csv", "m3u8"])
+    expect(availableExportFormats("m3u8")).toEqual(["m3u8", "csv", "txt"])
+    expect(availableExportFormats(null)).toEqual(["csv", "txt", "m3u8"])
   })
 
   it("builds a slugified filename per format", () => {
     expect(exportFilename("rekordbox", "Warehouse Set")).toBe("warehouse-set.xml")
     expect(exportFilename("traktor", "Warehouse Set")).toBe("warehouse-set.nml")
+    expect(exportFilename("m3u8", "Warehouse Set")).toBe("warehouse-set.m3u8")
     expect(exportFilename("csv", "Late — Night!!")).toBe("late-night.csv")
     expect(exportFilename("txt", "   ")).toBe("playlist.txt")
   })
@@ -128,9 +136,67 @@ describe("CSV export", () => {
 })
 
 describe("TXT export", () => {
-  it("emits one 'Artist - Title' line per track", () => {
+  it("emits a Rekordbox-style tab-separated grid with a header", () => {
     const txt = serializePlaylist("txt", samplePlaylist())
-    expect(txt).toBe("Mira Phase - Peak Freq\nNova Relay - Intro Bloom\n")
+    const lines = txt.trimEnd().split("\r\n")
+    expect(lines[0]).toBe("#\tTrack Title\tArtist\tBPM\tTime\tKey\tGenre")
+    expect(lines[1]).toBe("1\tPeak Freq\tMira Phase\t130\t5:17\t9A\tHard Techno")
+    expect(lines[2]).toBe("2\tIntro Bloom\tNova Relay\t120\t5:12\t8A\tDeep House")
+  })
+
+  it("round-trips back through the Rekordbox txt parser", () => {
+    const txt = serializePlaylist("txt", samplePlaylist())
+    const parsed = parseRekordboxTxt(txt)
+    expect(parsed.source).toBe("text")
+    expect(parsed.tracks.map((t) => t.name)).toEqual(["Peak Freq", "Intro Bloom"])
+    expect(parsed.tracks[0]).toMatchObject({
+      artist: "Mira Phase",
+      bpm: 130,
+      key: "9A",
+      genre: "Hard Techno",
+      durationSeconds: 317,
+    })
+  })
+})
+
+describe("M3U8 export", () => {
+  it("emits an EXTM3U header with EXTINF + file path per track", () => {
+    const m3u8 = serializePlaylist("m3u8", samplePlaylist())
+    expect(m3u8).toBe(
+      "#EXTM3U\n" +
+        "#EXTINF:317,Mira Phase - Peak Freq\nfile://localhost/Music/peak.mp3\n" +
+        "#EXTINF:312,Nova Relay - Intro Bloom\nfile://localhost/Music/intro.mp3\n"
+    )
+  })
+
+  it("falls back to an 'Artist - Title' line and -1 duration without a path", () => {
+    const m3u8 = serializePlaylist(
+      "m3u8",
+      samplePlaylist({
+        tracks: [
+          makeTrack({
+            artist: "A",
+            name: "B",
+            sourceUri: null,
+            durationSeconds: null,
+          }),
+        ],
+      })
+    )
+    expect(m3u8).toBe("#EXTM3U\n#EXTINF:-1,A - B\nA - B\n")
+  })
+
+  it("round-trips order + path through the m3u8 parser", () => {
+    const m3u8 = serializePlaylist("m3u8", samplePlaylist())
+    const parsed = parseM3u8(m3u8)
+    expect(parsed.source).toBe("m3u8")
+    expect(parsed.tracks.map((t) => t.name)).toEqual(["Peak Freq", "Intro Bloom"])
+    expect(parsed.tracks[0]).toMatchObject({
+      artist: "Mira Phase",
+      name: "Peak Freq",
+      durationSeconds: 317,
+      sourceUri: "file://localhost/Music/peak.mp3",
+    })
   })
 })
 

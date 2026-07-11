@@ -28,7 +28,7 @@ export interface ImportedTrack {
   durationSeconds: number | null
 }
 
-export type ImportSource = "rekordbox" | "traktor"
+export type ImportSource = "rekordbox" | "traktor" | "text" | "m3u8"
 
 export interface ParsedImport {
   source: ImportSource
@@ -81,6 +81,38 @@ export function parseDurationSeconds(raw: unknown): number | null {
   }
 
   return value
+}
+
+/**
+ * Parses a clock-style duration ("m:ss", "h:mm:ss") or a plain seconds value
+ * into whole seconds. Rekordbox's .txt "Time" column is written as "6:58";
+ * m3u8's EXTINF carries plain seconds. Returns null for missing/invalid input.
+ */
+export function parseClockToSeconds(raw: unknown): number | null {
+  if (raw === null || raw === undefined) {
+    return null
+  }
+
+  const value = String(raw).trim()
+
+  if (!value) {
+    return null
+  }
+
+  // Plain seconds (integer or decimal) — defer to the seconds parser.
+  if (/^\d+(\.\d+)?$/.test(value)) {
+    return parseDurationSeconds(value)
+  }
+
+  const parts = value.split(":").map((part) => part.trim())
+
+  if (parts.length < 2 || parts.some((part) => !/^\d+$/.test(part))) {
+    return null
+  }
+
+  const seconds = parts.reduce((total, part) => total * 60 + Number(part), 0)
+
+  return seconds > 0 ? seconds : null
 }
 
 /** Parses a BPM string/number defensively into a positive number or null. */

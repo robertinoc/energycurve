@@ -9,7 +9,7 @@
  * references and fall back to CSV/TXT.
  */
 
-export type ExportFormat = "rekordbox" | "traktor" | "csv" | "txt"
+export type ExportFormat = "rekordbox" | "traktor" | "m3u8" | "csv" | "txt"
 
 export interface ExportTrack {
   position: number
@@ -39,28 +39,39 @@ interface FormatMeta {
 export const EXPORT_FORMAT_META: Record<ExportFormat, FormatMeta> = {
   rekordbox: { label: "Rekordbox (.xml)", extension: "xml", mimeType: "application/xml" },
   traktor: { label: "Traktor (.nml)", extension: "nml", mimeType: "application/xml" },
+  m3u8: { label: "M3U8 (.m3u8)", extension: "m3u8", mimeType: "audio/x-mpegurl" },
   csv: { label: "CSV (.csv)", extension: "csv", mimeType: "text/csv" },
   txt: { label: "Text (.txt)", extension: "txt", mimeType: "text/plain" },
 }
 
+// Portable formats offered for every playlist, whatever its origin.
+const UNIVERSAL_FORMATS: ExportFormat[] = ["csv", "txt", "m3u8"]
+
 /** Default export format = the format the playlist was imported from. */
 export function defaultExportFormat(importSource: string | null): ExportFormat {
-  return importSource === "rekordbox" || importSource === "traktor"
-    ? importSource
-    : "csv"
+  switch (importSource) {
+    case "rekordbox":
+    case "traktor":
+    case "m3u8":
+      return importSource
+    case "text":
+      return "txt"
+    default:
+      return "csv"
+  }
 }
 
 /**
  * Formats offered for a playlist: its native format first (only when it was
- * imported from that software), then CSV and TXT. We never offer cross-native
- * conversion (e.g. Rekordbox → Traktor) because the volume/path semantics don't
- * round-trip reliably.
+ * imported from that software), then the universal formats (CSV, TXT, M3U8). We
+ * never offer cross-native conversion (e.g. Rekordbox → Traktor) because the
+ * volume/path semantics don't round-trip reliably.
  */
 export function availableExportFormats(
   importSource: string | null
 ): ExportFormat[] {
   const primary = defaultExportFormat(importSource)
-  const extras = (["csv", "txt"] as ExportFormat[]).filter((f) => f !== primary)
+  const extras = UNIVERSAL_FORMATS.filter((f) => f !== primary)
   return [primary, ...extras]
 }
 
@@ -86,6 +97,8 @@ export function serializePlaylist(
       return toRekordbox(playlist)
     case "traktor":
       return toTraktor(playlist)
+    case "m3u8":
+      return toM3u8(playlist)
     case "csv":
       return toCsv(playlist)
     case "txt":
@@ -134,13 +147,55 @@ function toCsv(playlist: ExportPlaylist): string {
   return [header, ...rows].join("\r\n") + "\r\n"
 }
 
-// --- TXT -------------------------------------------------------------------
+// --- TXT (Rekordbox-style tab-separated grid) ------------------------------
 
+/**
+ * Emits the tab-separated grid Rekordbox writes for "Export a playlist to a
+ * file (*.txt)": a header row plus one row per track. Round-trips back through
+ * `parseRekordboxTxt` (header-driven column resolution). CRLF line endings and
+ * a leading "#" position column match Rekordbox's own output.
+ */
 function toTxt(playlist: ExportPlaylist): string {
-  return (
-    playlist.tracks.map((track) => `${track.artist} - ${track.name}`).join("\n") +
-    "\n"
+  const header = ["#", "Track Title", "Artist", "BPM", "Time", "Key", "Genre"]
+
+  const rows = playlist.tracks.map((track) =>
+    [
+      track.position,
+      track.name,
+      track.artist,
+      track.bpm ?? "",
+      durationClock(track.durationSeconds),
+      track.musicalKey ?? "",
+      track.genre ?? "",
+    ].join("\t")
   )
+
+  return [header.join("\t"), ...rows].join("\r\n") + "\r\n"
+}
+
+// --- M3U8 (Extended M3U for music apps) ------------------------------------
+
+/**
+ * Emits an Extended M3U playlist (Rekordbox' "for music apps" export): an
+ * `#EXTM3U` header, then per track an `#EXTINF:<seconds>,<Artist> - <Title>`
+ * line followed by its file reference. Uses the stored `sourceUri` so players
+ * relink to the real files; falls back to an "Artist - Title" line when the
+ * playlist has no file references (manual sets). Unknown durations use -1, the
+ * conventional M3U placeholder.
+ */
+function toM3u8(playlist: ExportPlaylist): string {
+  const lines = ["#EXTM3U"]
+
+  for (const track of playlist.tracks) {
+    const label = track.artist
+      ? `${track.artist} - ${track.name}`
+      : track.name
+    const duration = track.durationSeconds ?? -1
+    lines.push(`#EXTINF:${duration},${label}`)
+    lines.push(track.sourceUri ?? label)
+  }
+
+  return lines.join("\n") + "\n"
 }
 
 // --- Shared XML helpers ----------------------------------------------------
