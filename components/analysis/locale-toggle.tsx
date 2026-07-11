@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 
 import { ANALYSIS_LOCALE_COOKIE } from "@/lib/analysis-locale"
+import { ANALYSIS_UI } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { cn } from "@/lib/utils"
 
@@ -42,7 +43,7 @@ export function LocaleToggle({ current }: LocaleToggleProps) {
         isPending && "opacity-60"
       )}
       role="group"
-      aria-label="Language"
+      aria-label={ANALYSIS_UI.language[current]}
     >
       {OPTIONS.map((option) => (
         <button

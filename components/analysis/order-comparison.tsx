@@ -1,5 +1,7 @@
 import { ArrowRight, Music2 } from "lucide-react"
 
+import { ANALYSIS_UI } from "@/lib/content/analysis-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import type { HarmonyAssessment } from "@/lib/engine/harmony"
 import type { ReorderSuggestion } from "@/lib/engine/recommendations"
 import type { Track } from "@/types/domain"
@@ -8,6 +10,7 @@ interface OrderComparisonProps {
   tracks: Track[]
   originalScore: number
   reorder: ReorderSuggestion
+  locale: SiteLocale
 }
 
 /** "Harmonic 29/34" — perfect+smooth+boost transitions over known ones (B20). */
@@ -98,6 +101,7 @@ export function OrderComparison({
   tracks,
   originalScore,
   reorder,
+  locale,
 }: OrderComparisonProps) {
   const byPosition = new Map(tracks.map((track) => [track.position, track]))
   const suggestedTracks = reorder.suggestedOrder
@@ -113,14 +117,14 @@ export function OrderComparison({
       <p className="text-sm leading-6 text-white/58">{reorder.rationale}</p>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
         <TrackColumn
-          title="Current order"
+          title={ANALYSIS_UI.currentOrder[locale]}
           score={originalScore}
           entries={tracks}
           harmony={reorder.harmony?.before ?? null}
         />
         <ArrowRight className="mx-auto hidden size-5 text-white/32 lg:block" />
         <TrackColumn
-          title="Suggested order"
+          title={ANALYSIS_UI.suggestedOrder[locale]}
           score={reorder.suggestedAnalysis.setScore}
           entries={suggestedTracks}
           harmony={reorder.harmony?.after ?? null}

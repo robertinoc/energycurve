@@ -1,17 +1,19 @@
 import { Clock3, Compass } from "lucide-react"
 
-import { SUBSCORE_LABELS } from "@/lib/content/analysis-copy"
+import {
+  ANALYSIS_UI,
+  CONTEXT_DISPLAY_NAMES,
+  CONTEXT_LABELS,
+  formatTemplate,
+  SUBSCORE_LABELS,
+} from "@/lib/content/analysis-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import type { PlaylistAnalysis } from "@/types/analysis"
-
-const CONTEXT_LABELS: Record<string, string> = {
-  opening: "Opening",
-  main: "Main time",
-  closing: "Closing",
-}
 
 interface SetScoreCardProps {
   analysis: PlaylistAnalysis
   durationMinutes: number
+  locale: SiteLocale
 }
 
 interface SubScoreRow {
@@ -33,7 +35,15 @@ const GAUGE_RADIUS = (GAUGE_SIZE - GAUGE_STROKE) / 2
 const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS
 
 /** Circular score gauge per brand kit §4 — gradient ring + gradient mono number. */
-function ScoreGauge({ score }: { score: number }) {
+function ScoreGauge({
+  score,
+  ariaLabel,
+  outOfLabel,
+}: {
+  score: number
+  ariaLabel: string
+  outOfLabel: string
+}) {
   const progress = Math.min(Math.max(score / 10, 0), 1)
 
   return (
@@ -42,7 +52,7 @@ function ScoreGauge({ score }: { score: number }) {
         viewBox={`0 0 ${GAUGE_SIZE} ${GAUGE_SIZE}`}
         className="h-full w-full -rotate-90"
         role="img"
-        aria-label={`Set score ${score} out of 10`}
+        aria-label={ariaLabel}
       >
         <defs>
           <linearGradient id="score-gauge-stroke" x1="0" y1="0" x2="1" y2="1">
@@ -77,29 +87,33 @@ function ScoreGauge({ score }: { score: number }) {
           {score}
         </span>
         <span className="mt-1.5 font-mono text-[10.5px] uppercase tracking-[0.2em] text-ec-text-dim">
-          Out of 10
+          {outOfLabel}
         </span>
       </div>
     </div>
   )
 }
 
-export function SetScoreCard({ analysis, durationMinutes }: SetScoreCardProps) {
+export function SetScoreCard({
+  analysis,
+  durationMinutes,
+  locale,
+}: SetScoreCardProps) {
   const { breakdown } = analysis
 
   const subScoreRows: SubScoreRow[] = [
     {
-      label: SUBSCORE_LABELS.shape.en,
+      label: SUBSCORE_LABELS.shape[locale],
       value: breakdown.shapeFit,
       weight: breakdown.weights.shape,
     },
     {
-      label: SUBSCORE_LABELS.dynamics.en,
+      label: SUBSCORE_LABELS.dynamics[locale],
       value: breakdown.dynamicsQuality,
       weight: breakdown.weights.dynamics,
     },
     {
-      label: SUBSCORE_LABELS.ending.en,
+      label: SUBSCORE_LABELS.ending[locale],
       value: breakdown.endingQuality,
       weight: breakdown.weights.ending,
     },
@@ -109,10 +123,16 @@ export function SetScoreCard({ analysis, durationMinutes }: SetScoreCardProps) {
 
   return (
     <div className="rounded-2xl border border-ec-border bg-ec-surface p-6">
-      <p className="ec-eyebrow">Set score</p>
+      <p className="ec-eyebrow">{ANALYSIS_UI.setScore[locale]}</p>
 
       <div className="mt-5">
-        <ScoreGauge score={analysis.setScore} />
+        <ScoreGauge
+          score={analysis.setScore}
+          ariaLabel={formatTemplate(ANALYSIS_UI.scoreAria[locale], {
+            score: analysis.setScore,
+          })}
+          outOfLabel={ANALYSIS_UI.outOf10[locale]}
+        />
       </div>
 
       <div className="mt-6 space-y-3 rounded-xl border border-ec-border bg-ec-sunken p-4">
@@ -140,7 +160,9 @@ export function SetScoreCard({ analysis, durationMinutes }: SetScoreCardProps) {
         ))}
         {breakdown.rawScore < breakdown.finalScore ? (
           <div className="flex items-center justify-between border-t border-ec-border pt-2 text-sm">
-            <span className="text-ec-text-muted">Clamped to minimum</span>
+            <span className="text-ec-text-muted">
+              {ANALYSIS_UI.clampedToMin[locale]}
+            </span>
             <span className="font-mono text-ec-text">1</span>
           </div>
         ) : null}
@@ -149,28 +171,34 @@ export function SetScoreCard({ analysis, durationMinutes }: SetScoreCardProps) {
       <div className="mt-4 space-y-3 text-sm">
         <p className="flex items-center gap-2 text-ec-text-muted">
           <Clock3 className="size-3.5 shrink-0" />
-          Estimated duration: ~{durationMinutes} min
+          {formatTemplate(ANALYSIS_UI.estimatedDuration[locale], {
+            minutes: durationMinutes,
+          })}
         </p>
         <p className="flex items-start gap-2 text-ec-text-muted">
           <Compass className="mt-0.5 size-3.5 shrink-0" />
           <span>
             {bestFitIsCurrent ? (
               <>
-                Best fit:{" "}
+                {ANALYSIS_UI.bestFit[locale]}{" "}
                 <span className="text-ec-text">
-                  {CONTEXT_LABELS[analysis.bestFitContext]}
+                  {CONTEXT_LABELS[analysis.bestFitContext]?.[locale]}
                 </span>{" "}
-                — matches this playlist&apos;s context.
+                {ANALYSIS_UI.bestFitMatches[locale]}
               </>
             ) : (
               <>
-                This curve scores higher as{" "}
+                {ANALYSIS_UI.betterAsPrefix[locale]}{" "}
                 <span className="text-ec-text">
-                  {CONTEXT_LABELS[analysis.bestFitContext]}
+                  {CONTEXT_LABELS[analysis.bestFitContext]?.[locale]}
                 </span>{" "}
-                ({analysis.contextScores[analysis.bestFitContext]}/10 vs{" "}
-                {analysis.setScore}/10 as{" "}
-                {CONTEXT_LABELS[analysis.context]?.toLowerCase()}).
+                {formatTemplate(ANALYSIS_UI.betterAsDetail[locale], {
+                  score: analysis.contextScores[analysis.bestFitContext],
+                  setScore: analysis.setScore,
+                  context:
+                    CONTEXT_DISPLAY_NAMES[analysis.context]?.[locale] ??
+                    analysis.context,
+                })}
               </>
             )}
           </span>

@@ -8,6 +8,8 @@ import {
   mapValuesToCurvePoints,
 } from "@/lib/charts/curve-geometry"
 import { ENERGY_COLORS } from "@/lib/charts/energy-colors"
+import { ANALYSIS_UI } from "@/lib/content/analysis-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import { ENERGY_SCORE_RANGE } from "@/lib/product/strategy"
 import type { EnergySource } from "@/types/analysis"
 
@@ -29,16 +31,19 @@ interface EnergyCurveChartProps {
   tracks: ChartTrackPoint[]
   /** Ideal curve the set was scored against — rendered as a dashed ghost line. */
   target?: number[]
+  locale: SiteLocale
 }
 
-const SOURCE_LABELS: Record<EnergySource, string> = {
-  manual: "manual",
-  bpm: "from BPM",
-  bpm_loudness: "from BPM + loudness",
-  estimated: "estimated",
+// Each energy source maps to a localized label key in ANALYSIS_UI.
+const SOURCE_LABEL_KEYS: Record<EnergySource, string> = {
+  manual: "sourceManual",
+  bpm: "sourceBpm",
+  bpm_loudness: "sourceBpmLoudness",
+  estimated: "sourceEstimated",
 }
 
-const PHASE_LABELS = ["Opening", "Build-up", "Peak time", "Closing"]
+// Set-phase labels along the x-axis (DJ jargon, kept in English in both locales).
+const PHASE_KEYS = ["phaseOpening", "phaseBuildup", "phasePeak", "phaseClosing"]
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
@@ -69,7 +74,11 @@ const MARKER_STYLES: Record<
   default: { fill: "rgba(245,242,252,0.55)", r: 3.5, glow: null },
 }
 
-export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
+export function EnergyCurveChart({
+  tracks,
+  target,
+  locale,
+}: EnergyCurveChartProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
@@ -131,7 +140,7 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           className="h-[340px] w-full"
           role="img"
-          aria-label="Energy curve of this playlist"
+          aria-label={ANALYSIS_UI.chartAria[locale]}
         >
           <defs>
             <linearGradient
@@ -248,7 +257,7 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
             className="pointer-events-none absolute rounded-full border border-[#F0348A]/40 bg-[#F0348A]/[0.13] px-2.5 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#FF87BE]"
             style={peakPillStyle}
           >
-            ▲ Peak {peakTrack.score}
+            ▲ {ANALYSIS_UI.peak[locale]} {peakTrack.score}
           </div>
         ) : null}
 
@@ -267,13 +276,13 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
               strokeDasharray="4 4"
             />
           </svg>
-          Ideal curve
+          {ANALYSIS_UI.idealCurve[locale]}
         </div>
       ) : null}
 
       <div className="mt-3 flex items-center justify-between px-6 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ec-text-dim">
-        {PHASE_LABELS.map((phase) => (
-          <span key={phase}>{phase}</span>
+        {PHASE_KEYS.map((key) => (
+          <span key={key}>{ANALYSIS_UI[key][locale]}</span>
         ))}
       </div>
 
@@ -282,7 +291,7 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
       {activeTrack ? (
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-ec-border-strong bg-ec-surface/96 px-4 py-3">
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ec-cyan">
-            Track {activeTrack.position}
+            {ANALYSIS_UI.track[locale]} {activeTrack.position}
           </p>
           <div className="min-w-0 flex-1">
             <p className="truncate font-heading text-sm font-semibold text-ec-text">
@@ -294,7 +303,9 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
           </div>
           <div className="flex items-center gap-4 font-mono text-[11.5px] text-ec-text-dim">
             <span>
-              {activeTrack.bpm !== null ? `${activeTrack.bpm} BPM` : "no BPM"}
+              {activeTrack.bpm !== null
+                ? `${activeTrack.bpm} BPM`
+                : ANALYSIS_UI.noBpm[locale]}
             </span>
             <span
               className="text-sm font-bold"
@@ -307,7 +318,8 @@ export function EnergyCurveChart({ tracks, target }: EnergyCurveChartProps) {
               {activeTrack.score}
             </span>
             <span className="text-xs text-ec-text-dim">
-              Energy {SOURCE_LABELS[activeTrack.source]}
+              {ANALYSIS_UI.energy[locale]}{" "}
+              {ANALYSIS_UI[SOURCE_LABEL_KEYS[activeTrack.source]][locale]}
             </span>
           </div>
         </div>
