@@ -8,6 +8,7 @@ import {
   useState,
   useTransition,
 } from "react"
+import { createPortal } from "react-dom"
 import { Check, ChevronDown, Plus, X } from "lucide-react"
 
 import {
@@ -113,16 +114,56 @@ export function TaxonomySelect({
     })
   }
 
+  // The dropdown is portaled to <body> so it can't be trapped by an ancestor's
+  // overflow (the surrounding Card is `overflow-hidden`, the app shell is
+  // `overflow-x-clip`). We track the trigger's viewport rect to position the
+  // fixed panel under it, and keep it in sync on scroll/resize.
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const [rect, setRect] = useState<DOMRect | null>(null)
+
+  function updateRect() {
+    if (triggerRef.current) {
+      setRect(triggerRef.current.getBoundingClientRect())
+    }
+  }
+
+  function toggleOpen() {
+    setOpen((prev) => {
+      const next = !prev
+      if (next) {
+        updateRect()
+      }
+      return next
+    })
+  }
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const reposition = () => updateRect()
+    // `true` = capture, so we also catch scrolls on inner containers.
+    window.addEventListener("scroll", reposition, true)
+    window.addEventListener("resize", reposition)
+
+    return () => {
+      window.removeEventListener("scroll", reposition, true)
+      window.removeEventListener("resize", reposition)
+    }
+  }, [open])
+
   return (
     <div className="relative">
       <input type="hidden" name={name} value={value} />
 
       <button
+        ref={triggerRef}
         type="button"
         id={id}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
         className="flex h-12 w-full items-center justify-between gap-3 rounded-[13px] border border-white/14 bg-ec-raised px-3.5 text-left text-sm text-white transition-shadow hover:border-[#A24DE0]/55 hover:shadow-[0_0_0_3px_rgba(162,77,224,0.12)] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/15"
       >
         <span className="flex min-w-0 items-center gap-2.5">
@@ -142,19 +183,25 @@ export function TaxonomySelect({
         </span>
       </button>
 
-      {open ? (
-        <>
-          <button
-            type="button"
-            aria-hidden
-            tabIndex={-1}
-            className="fixed inset-0 z-10 cursor-default"
-            onClick={() => setOpen(false)}
-          />
-          <div
-            role="listbox"
-            className="absolute left-0 right-0 z-20 mt-1 max-h-80 overflow-y-auto rounded-2xl border border-white/14 bg-ec-raised shadow-[0_24px_60px_rgba(0,0,0,0.5)]"
-          >
+      {open && rect && typeof document !== "undefined"
+        ? createPortal(
+            <>
+              <button
+                type="button"
+                aria-hidden
+                tabIndex={-1}
+                className="fixed inset-0 z-40 cursor-default"
+                onClick={() => setOpen(false)}
+              />
+              <div
+                role="listbox"
+                className="fixed z-50 max-h-80 overflow-y-auto rounded-2xl border border-white/14 bg-ec-raised shadow-[0_24px_60px_rgba(0,0,0,0.5)]"
+                style={{
+                  top: rect.bottom + 4,
+                  left: rect.left,
+                  width: rect.width,
+                }}
+              >
             {leadingOption ? (
               <DropdownRow
                 selected={value === leadingOption.value}
@@ -241,9 +288,11 @@ export function TaxonomySelect({
                 ? COPY.addContext[locale]
                 : COPY.addGenre[locale]}
             </button>
-          </div>
-        </>
-      ) : null}
+              </div>
+            </>,
+            document.body
+          )
+        : null}
 
       {modalOpen ? (
         <AddTaxonomyModal
@@ -320,7 +369,14 @@ function AddTaxonomyModal({
     }
   }, [state, onCreated])
 
-  return (
+  // Portal the modal to <body>. Its own <form> must NOT be a descendant of the
+  // parent playlist <form> (import/create) — nested forms are invalid HTML and
+  // the inner action never fires, which is why "Create" did nothing.
+  if (typeof document === "undefined") {
+    return null
+  }
+
+  return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center p-4">
       <button
         type="button"
@@ -410,6 +466,7 @@ function AddTaxonomyModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

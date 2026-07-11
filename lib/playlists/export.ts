@@ -84,8 +84,13 @@ function slugify(value: string): string {
   )
 }
 
+// Badge appended to every exported file so a DJ can tell, at a glance in their
+// downloads, that this playlist was reordered by us. The real extension always
+// stays last, so "…energycurve.app.xml" still opens as an .xml.
+const EXPORT_BADGE = "optimized-with-energycurve.app"
+
 export function exportFilename(format: ExportFormat, playlistName: string): string {
-  return `${slugify(playlistName)}.${EXPORT_FORMAT_META[format].extension}`
+  return `${slugify(playlistName)}-${EXPORT_BADGE}.${EXPORT_FORMAT_META[format].extension}`
 }
 
 export function serializePlaylist(

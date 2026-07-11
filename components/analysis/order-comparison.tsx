@@ -51,7 +51,7 @@ function TrackColumn({
 }) {
   return (
     <div
-      className={`rounded-[22px] border p-4 ${
+      className={`min-w-0 overflow-hidden rounded-[22px] border p-4 ${
         highlight
           ? "border-[#22D3EE]/30 bg-[#22D3EE]/[0.05]"
           : "border-white/10 bg-black/18"
@@ -111,7 +111,7 @@ export function OrderComparison({
   return (
     <div className="space-y-4">
       <p className="text-sm leading-6 text-white/58">{reorder.rationale}</p>
-      <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
         <TrackColumn
           title="Current order"
           score={originalScore}
