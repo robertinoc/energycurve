@@ -226,6 +226,11 @@ export const REORDER_RATIONALE: LocalizedLabel = {
   es: "El orden sugerido reacomoda los mismos tracks para seguir la curva ideal de {context}: transiciones más suaves, un pico mejor ubicado y un cierre más fuerte.",
 }
 
+export const REORDER_RATIONALE_HARMONIC: LocalizedLabel = {
+  en: "Suggested order follows the ideal {context} curve while keeping {harmonic} of {known} transitions compatible on the Camelot wheel — smoother blends, key to key.",
+  es: "El orden sugerido sigue la curva ideal de {context} manteniendo {harmonic} de {known} transiciones compatibles en la rueda de Camelot — mezclas más suaves, key a key.",
+}
+
 export const SEVERITY_LABELS: Record<
   "penalty" | "info" | "positive",
   LocalizedLabel

@@ -26,6 +26,8 @@ export interface ImportedTrack {
   comment: string | null
   /** Track length in seconds (Rekordbox TotalTime / Traktor PLAYTIME); null if absent. */
   durationSeconds: number | null
+  /** Perceived loudness in dB (Traktor PERCEIVED_DB); an energy signal (B19). */
+  perceivedDb?: number | null
 }
 
 export type ImportSource = "rekordbox" | "traktor" | "text" | "m3u8"

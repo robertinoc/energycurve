@@ -96,6 +96,7 @@ export interface Database {
           genre: string | null
           comment: string | null
           duration_seconds: number | null
+          perceived_db: number | null
           created_at: string
         }
         Insert: {
@@ -111,6 +112,7 @@ export interface Database {
           genre?: string | null
           comment?: string | null
           duration_seconds?: number | null
+          perceived_db?: number | null
           created_at?: string
         }
         Update: {
@@ -126,6 +128,7 @@ export interface Database {
           genre?: string | null
           comment?: string | null
           duration_seconds?: number | null
+          perceived_db?: number | null
           created_at?: string
         }
         Relationships: [

@@ -263,8 +263,12 @@ export const RESULT_OUTPUTS_V1 = [
  *
  * v3 (B13–B16): per-track genre anchors, wider BPM edge ramp, confidence
  * layer (BPM-only artifacts no longer penalized), BPM-aware genre detection.
+ * v4 (B17–B20): full key coverage from Traktor's numeric MUSICAL_KEY,
+ * perceived-loudness as an energy signal, and a harmonic (Camelot) objective
+ * in the reorder optimizer. The set score's meaning is unchanged — harmony
+ * only shapes the suggested order.
  */
-export const CURRENT_ANALYSIS_ALGORITHM_VERSION = 3
+export const CURRENT_ANALYSIS_ALGORITHM_VERSION = 4
 
 export interface GenreBpmProfile {
   /** BPM that maps to energy 3 for this genre. */
@@ -508,4 +512,52 @@ export const GENRE_DETECTION_RULES_V3 = {
   bpmFitMargin: 5,
   /** Unvoted genres still become candidates when their BPM fit reaches this. */
   bpmFitCandidateThreshold: 0.6,
+} as const
+
+// ---------------------------------------------------------------------------
+// Engine V4 additions (B17–B20): harmony-aware reordering + loudness signal.
+// ---------------------------------------------------------------------------
+
+/**
+ * Harmonic-mixing costs per Camelot transition tier (B18). perfect/smooth are
+ * the classic wheel moves (free); "boost" (+2 same ring) is usable but not
+ * seamless; a clash costs full. harmonicRatio = 1 − Σcosts / knownTransitions.
+ */
+export const HARMONY_RULES_V4 = {
+  tierCosts: {
+    perfect: 0,
+    smooth: 0,
+    boost: 0.5,
+    clash: 1,
+  },
+} as const
+
+/**
+ * Perceived loudness (Traktor PERCEIVED_DB) as an energy signal (B19): within
+ * a set, louder tracks read as higher energy. Only applied when the set has
+ * enough dB data to be meaningful — never fabricated from thin signal.
+ */
+export const LOUDNESS_RULES_V4 = {
+  /** Minimum tracks with a dB reading before the adjustment kicks in. */
+  minTracksWithDb: 6,
+  /** Minimum dB spread (max − min) — below this the tracks are equally loud. */
+  minSpreadDb: 1.5,
+  /** Energy points a track can gain/lose relative to its BPM anchor. */
+  maxAdjustment: 0.8,
+} as const
+
+/**
+ * Harmony in the reorder objective (B20): the optimizer maximizes
+ * energyScore + harmonyWeight × harmonicRatio. Harmony can be worth up to
+ * `harmonyWeight` points — enough to dominate energy ties without trading
+ * away the curve (energy remains a 10-point scale). Applies only when at
+ * least `minKeyCoverage` of the transitions have both keys.
+ */
+export const REORDER_HARMONY_V4 = {
+  harmonyWeight: 2.0,
+  minKeyCoverage: 0.5,
+  /** Suggest on harmonic gain ≥ this even without an energy gain... */
+  minHarmonicImprovement: 0.2,
+  /** ...as long as energy doesn't get worse than this. */
+  maxEnergyRegression: 0.3,
 } as const

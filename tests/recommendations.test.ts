@@ -15,6 +15,7 @@ function energies(scores: number[]): ResolvedTrackEnergy[] {
     score,
     source: "manual" as const,
     bpm: null,
+    camelot: null,
   }))
 }
 

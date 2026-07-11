@@ -1,6 +1,11 @@
 import type { PlaylistContext, SupportedGenre } from "@/lib/product/strategy"
 
-export type EnergySource = "manual" | "bpm" | "estimated"
+/**
+ * Where a track's resolved energy came from. "bpm_loudness" = BPM anchor
+ * refined by the track's perceived loudness within the set (B19) — real
+ * differentiation, unlike plain "bpm".
+ */
+export type EnergySource = "manual" | "bpm" | "bpm_loudness" | "estimated"
 
 export interface ResolvedTrackEnergy {
   trackId: string | null
@@ -9,6 +14,8 @@ export interface ResolvedTrackEnergy {
   source: EnergySource
   /** Raw BPM the score came from (null for manual/estimated without BPM). */
   bpm: number | null
+  /** Camelot code of the track's key ("8A"), null when unknown (B18). */
+  camelot: string | null
 }
 
 /** Per-track provenance the confidence layer needs (B13). */

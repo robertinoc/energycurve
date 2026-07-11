@@ -5,11 +5,13 @@ import {
   ENERGY_SCORE_BPM_BANDS,
   ENERGY_SCORE_RANGE,
   GENRE_BPM_PROFILES_V2,
+  LOUDNESS_RULES_V4,
   STANDARD_TRACK_DURATION_MINUTES,
   TRACK_GENRE_ANCHOR_BPM_MARGIN,
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
+import { toCamelot } from "@/lib/music/camelot"
 import { mapGenreTag } from "@/lib/playlists/genre-mapping"
 import type { EnergySource, ResolvedTrackEnergy } from "@/types/analysis"
 
@@ -157,6 +159,44 @@ export interface TrackEnergyInput {
   energy_score: number | null
   /** Free-text genre tag from import metadata; anchors this track's BPM mapping (B14). */
   genre?: string | null
+  /** Musical key from import metadata; resolved to Camelot for harmony (B18). */
+  musical_key?: string | null
+  /** Perceived loudness in dB; refines the BPM energy within the set (B19). */
+  perceived_db?: number | null
+}
+
+interface LoudnessContext {
+  median: number
+  spread: number
+}
+
+/**
+ * Set-level loudness stats (B19). Only meaningful when enough tracks carry a
+ * dB reading and they actually differ — otherwise null and no adjustment is
+ * applied (never fabricate signal).
+ */
+function loudnessContextOf(tracks: TrackEnergyInput[]): LoudnessContext | null {
+  const rules = LOUDNESS_RULES_V4
+  const dbs = tracks
+    .map((track) => track.perceived_db)
+    .filter((db): db is number => db !== null && db !== undefined)
+
+  if (dbs.length < rules.minTracksWithDb) {
+    return null
+  }
+
+  const sorted = [...dbs].sort((a, b) => a - b)
+  const spread = sorted[sorted.length - 1] - sorted[0]
+
+  if (spread < rules.minSpreadDb) {
+    return null
+  }
+
+  const mid = Math.floor(sorted.length / 2)
+  const median =
+    sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+
+  return { median, spread }
 }
 
 /**
@@ -165,13 +205,17 @@ export interface TrackEnergyInput {
  * UI can label where each value came from. The BPM mapping anchors to the
  * track's own genre tag when it maps to a known genre (B14) — a psy-trance
  * track inside a hard-techno set is judged on its own band — falling back to
- * the playlist's genre (B1).
+ * the playlist's genre (B1). When the import carries perceived loudness, the
+ * BPM anchor is refined by how loud the track is relative to the set (B19):
+ * that is what differentiates the curve when BPMs are homogeneous.
  */
 export function resolveTrackEnergies(
   tracks: TrackEnergyInput[],
   context: PlaylistContext | null,
   genre: SupportedGenre | null = null
 ): ResolvedTrackEnergy[] {
+  const loudness = loudnessContextOf(tracks)
+
   return tracks.map((track, index) => {
     let score: number
     let source: EnergySource
@@ -200,6 +244,28 @@ export function resolveTrackEnergies(
 
       score = energyScoreFromBpm(track.bpm, trackGenre)
       source = "bpm"
+
+      const db = track.perceived_db
+
+      if (loudness && db !== null && db !== undefined) {
+        const adjustment = Math.max(
+          -LOUDNESS_RULES_V4.maxAdjustment,
+          Math.min(
+            LOUDNESS_RULES_V4.maxAdjustment,
+            ((db - loudness.median) / loudness.spread) *
+              LOUDNESS_RULES_V4.maxAdjustment *
+              2
+          )
+        )
+
+        score = roundToOneDecimal(
+          Math.min(
+            ENERGY_SCORE_RANGE.max,
+            Math.max(ENERGY_SCORE_RANGE.min, score + adjustment)
+          )
+        )
+        source = "bpm_loudness"
+      }
     } else {
       score = estimatedScoreFromPosition(index, tracks.length, context)
       source = "estimated"
@@ -211,6 +277,7 @@ export function resolveTrackEnergies(
       score,
       source,
       bpm: track.bpm,
+      camelot: toCamelot(track.musical_key ?? null),
     }
   })
 }

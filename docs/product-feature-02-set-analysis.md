@@ -175,6 +175,44 @@ artifacts): garbage-in fixes plus an explicit confidence layer.
     (same wheel rotated by 7: 1d = 8B, 1m = 8A), fixing the empty Camelot
     column and Camelot sorting for NML imports.
 
+### V4 additions (B17–B20) — harmonic reordering + loudness
+
+Driven by a head-to-head against a hand-crafted harmonic ordering of a real
+38-track set (PRIDE - BOUNCE): the reorder optimizer ignored keys entirely,
+the parser missed 14/38 keys, and the loudness signal in the file went
+unused. V4 closes all three gaps with deterministic Camelot math — no LLM,
+same explainability contract.
+
+17. **Full key coverage from Traktor (B17)** — `INFO @KEY` text is only
+    present when a tagger wrote it (24/38 on the reference file);
+    Traktor's own numeric `MUSICAL_KEY VALUE` (0–11 majors C…B, 12–23
+    minors C…B — verified against 24 tracks carrying both) covers 38/38.
+    The parser falls back to it (`musicalKeyValueToOpenKey`), emitting Open
+    Key text that `toCamelot` already converts. `PERCEIVED_DB` is now
+    extracted and persisted (`tracks.perceived_db`, migration 0010).
+18. **Camelot harmony math (B18)** — `harmonicTier(a, b)`: perfect (same
+    key), smooth (±1 same ring with 12↔1 wrap, or relative major/minor),
+    boost (+2 same ring, cost 0.5), clash (cost 1); unknown keys are
+    excluded, never treated as clashes. `assessHarmony` aggregates a
+    per-order ratio (`HARMONY_RULES_V4`).
+19. **Loudness as an energy signal (B19)** — for BPM-derived tracks with a
+    dB reading, energy adjusts by up to ±0.8 around the BPM anchor based on
+    the track's loudness relative to the set median (`LOUDNESS_RULES_V4`:
+    needs ≥6 dB readings and ≥1.5 dB spread — never fabricated). Source
+    becomes `bpm_loudness`, which the confidence layer (B13) treats as real
+    differentiation: no flat-zone suppression, no low-confidence nag.
+20. **Harmonic reorder objective (B20)** — the optimizer maximizes
+    `energyScore + 2.0 × harmonicRatio` when ≥50% of transitions have both
+    keys (`REORDER_HARMONY_V4`). Two deterministic seeds are hill-climbed
+    (2-opt) and the best objective wins: the energy seed protects the
+    curve, the harmonic seed (a walk around the Camelot wheel) assembles
+    the key chains that pairwise swaps can't build from scratch. Suggestion
+    gate: energy improves ≥0.5 OR harmony improves ≥0.2 with energy not
+    worse than 0.3. The set score's meaning is unchanged — harmony shapes
+    only the suggested order, surfaced as "Harmonic X/Y" badges in the
+    order comparison. On the reference set: 6/37 compatible transitions →
+    30/37 (ratio 0.76), clashes 31 → 7, energy 5.8 → 8.3.
+
 ## Key Files
 
 - `lib/engine/energy-score.ts` — BPM → energy (genre-aware + universal

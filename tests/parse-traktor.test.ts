@@ -77,3 +77,31 @@ describe("parseTraktor", () => {
     expect(() => parseTraktor("<DJ_PLAYLISTS></DJ_PLAYLISTS>")).toThrow()
   })
 })
+
+describe("key fallback + loudness (B17/B19)", () => {
+  it("falls back to the numeric MUSICAL_KEY when INFO @KEY is absent", () => {
+    const xml = `<NML><COLLECTION>
+      <ENTRY TITLE="With text key" ARTIST="A"><TEMPO BPM="150"/><INFO KEY="8m"/><MUSICAL_KEY VALUE="22"/></ENTRY>
+      <ENTRY TITLE="Numeric only" ARTIST="B"><TEMPO BPM="150"/><MUSICAL_KEY VALUE="4"/></ENTRY>
+      <ENTRY TITLE="No key at all" ARTIST="C"><TEMPO BPM="150"/></ENTRY>
+    </COLLECTION></NML>`
+
+    const { tracks } = parseTraktor(xml)
+
+    expect(tracks[0].key).toBe("8m") // text wins when present
+    expect(tracks[1].key).toBe("5d") // value 4 = E major = Open Key 5d
+    expect(tracks[2].key).toBeNull()
+  })
+
+  it("extracts PERCEIVED_DB as perceivedDb", () => {
+    const xml = `<NML><COLLECTION>
+      <ENTRY TITLE="Loud" ARTIST="A"><TEMPO BPM="150"/><INFO PERCEIVED_DB="-0.399780"/></ENTRY>
+      <ENTRY TITLE="No db" ARTIST="B"><TEMPO BPM="150"/></ENTRY>
+    </COLLECTION></NML>`
+
+    const { tracks } = parseTraktor(xml)
+
+    expect(tracks[0].perceivedDb).toBeCloseTo(-0.4, 1)
+    expect(tracks[1].perceivedDb).toBeNull()
+  })
+})

@@ -34,6 +34,7 @@ interface EnergyCurveChartProps {
 const SOURCE_LABELS: Record<EnergySource, string> = {
   manual: "manual",
   bpm: "from BPM",
+  bpm_loudness: "from BPM + loudness",
   estimated: "estimated",
 }
 

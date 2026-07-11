@@ -1,5 +1,10 @@
-import type { PlaylistContext, SupportedGenre } from "@/lib/product/strategy"
+import {
+  REORDER_HARMONY_V4,
+  type PlaylistContext,
+  type SupportedGenre,
+} from "@/lib/product/strategy"
 import { computeSetScore } from "@/lib/engine/analysis"
+import { assessHarmony, keyCoverage } from "@/lib/engine/harmony"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
 import type { ResolvedTrackEnergy } from "@/types/analysis"
 
@@ -12,17 +17,31 @@ const MAX_IMPROVEMENT_PASSES = 50
 export interface OptimizedOrder {
   /** Indexes into the input array, in suggested playing order. */
   order: number[]
+  /** Energy set score of the suggested order (same scale as the analysis). */
   score: number
+  /** Harmonic ratio of the suggested order (1 when keys are unknown). */
+  harmonicRatio: number
 }
 
-function scoreOrder(
+/**
+ * Whether the optimizer weighs harmony (B20): enough of the transitions must
+ * have both keys, otherwise the objective is energy-only (prior behavior).
+ */
+export function harmonyApplies(energies: ResolvedTrackEnergy[]): boolean {
+  return (
+    keyCoverage(energies.map((entry) => entry.camelot)) >=
+    REORDER_HARMONY_V4.minKeyCoverage
+  )
+}
+
+function energyScoreOf(
   energies: ResolvedTrackEnergy[],
   order: number[],
   genre: SupportedGenre,
   context: PlaylistContext
 ): number {
-  // The optimizer's objective must match the final scoring, so per-track
-  // provenance travels with the permutation (confidence rules, B13).
+  // Per-track provenance travels with the permutation so the confidence
+  // rules (B13) shape the optimizer's objective exactly like the analysis.
   return computeSetScore(
     order.map((index) => energies[index].score),
     genre,
@@ -34,15 +53,47 @@ function scoreOrder(
   )
 }
 
+function harmonicRatioOf(
+  energies: ResolvedTrackEnergy[],
+  order: number[]
+): number {
+  return assessHarmony(order.map((index) => energies[index].camelot)).ratio
+}
+
+/**
+ * Combined objective (B20): energy score + weighted harmonic ratio. Harmony
+ * can be worth up to `harmonyWeight` points — it dominates energy ties
+ * without trading the curve away.
+ */
+function objectiveOf(
+  energies: ResolvedTrackEnergy[],
+  order: number[],
+  genre: SupportedGenre,
+  context: PlaylistContext,
+  useHarmony: boolean
+): number {
+  const energy = energyScoreOf(energies, order, genre, context)
+
+  if (!useHarmony) {
+    return energy
+  }
+
+  return (
+    energy +
+    REORDER_HARMONY_V4.harmonyWeight * harmonicRatioOf(energies, order)
+  )
+}
+
 function exactBestOrder(
   energies: ResolvedTrackEnergy[],
   genre: SupportedGenre,
-  context: PlaylistContext
-): OptimizedOrder {
+  context: PlaylistContext,
+  useHarmony: boolean
+): number[] {
   const n = energies.length
   const indexes = Array.from({ length: n }, (_, i) => i)
   let best: number[] = [...indexes]
-  let bestScore = Number.NEGATIVE_INFINITY
+  let bestObjective = Number.NEGATIVE_INFINITY
 
   // Heap's algorithm, iterative — deterministic enumeration order, so ties
   // resolve to the first permutation found and results are reproducible.
@@ -50,10 +101,10 @@ function exactBestOrder(
   const current = [...indexes]
 
   const consider = (candidate: number[]) => {
-    const score = scoreOrder(energies, candidate, genre, context)
+    const objective = objectiveOf(energies, candidate, genre, context, useHarmony)
 
-    if (score > bestScore) {
-      bestScore = score
+    if (objective > bestObjective) {
+      bestObjective = objective
       best = [...candidate]
     }
   }
@@ -75,11 +126,11 @@ function exactBestOrder(
     }
   }
 
-  return { order: best, score: bestScore }
+  return best
 }
 
 /**
- * Greedy seed: assign tracks to the target-curve slots they fit best. Sorting
+ * Energy seed: assign tracks to the target-curve slots they fit best. Sorting
  * both tracks and target slots by energy pairs the lowest-energy track with
  * the lowest-energy slot, which already follows the ideal shape closely.
  */
@@ -105,13 +156,43 @@ function greedySeed(
   return order
 }
 
-function localSearchBestOrder(
+/**
+ * Harmonic seed: walk the Camelot wheel (a DJ's harmonic spine) — group
+ * same-key clusters together with adjacent wheel numbers adjacent, keeping
+ * each cluster sorted by energy. Starts highly harmonic; 2-opt then repairs
+ * the energy arc. Keyless tracks go last (they can slot anywhere).
+ */
+function harmonicSeed(energies: ResolvedTrackEnergy[]): number[] {
+  return energies
+    .map((entry, index) => {
+      const camelot = entry.camelot?.match(/^(\d{1,2})([AB])$/)
+
+      return {
+        index,
+        num: camelot ? Number.parseInt(camelot[1], 10) : 99,
+        ring: camelot ? camelot[2] : "Z",
+        score: entry.score,
+      }
+    })
+    .sort(
+      (a, b) =>
+        a.num - b.num ||
+        a.ring.localeCompare(b.ring) ||
+        a.score - b.score ||
+        a.index - b.index
+    )
+    .map((entry) => entry.index)
+}
+
+function twoOpt(
+  seed: number[],
   energies: ResolvedTrackEnergy[],
   genre: SupportedGenre,
-  context: PlaylistContext
-): OptimizedOrder {
-  const order = greedySeed(energies, genre, context)
-  let score = scoreOrder(energies, order, genre, context)
+  context: PlaylistContext,
+  useHarmony: boolean
+): { order: number[]; objective: number } {
+  const order = [...seed]
+  let objective = objectiveOf(energies, order, genre, context, useHarmony)
 
   // Best-improvement pairwise swaps until a full pass finds nothing better.
   // Deterministic: fixed scan order, strict improvement required.
@@ -122,10 +203,10 @@ function localSearchBestOrder(
     for (let a = 0; a < order.length - 1; a += 1) {
       for (let b = a + 1; b < order.length; b += 1) {
         ;[order[a], order[b]] = [order[b], order[a]]
-        const candidateScore = scoreOrder(energies, order, genre, context)
+        const candidate = objectiveOf(energies, order, genre, context, useHarmony)
         ;[order[a], order[b]] = [order[b], order[a]]
 
-        const gain = candidateScore - score
+        const gain = candidate - objective
 
         if (gain > bestGain) {
           bestGain = gain
@@ -140,28 +221,59 @@ function localSearchBestOrder(
 
     const [a, b] = bestSwap
     ;[order[a], order[b]] = [order[b], order[a]]
-    score += bestGain
-    score = Math.round(score * 10) / 10
+    objective += bestGain
   }
 
-  return { order, score: scoreOrder(energies, order, genre, context) }
+  return { order, objective }
+}
+
+function localSearchBestOrder(
+  energies: ResolvedTrackEnergy[],
+  genre: SupportedGenre,
+  context: PlaylistContext,
+  useHarmony: boolean
+): number[] {
+  // Two seeds, two hill climbs, best objective wins (B20): the energy seed
+  // protects the curve; the harmonic seed protects the Camelot chains that
+  // pairwise swaps alone can't assemble from scratch.
+  const seeds = useHarmony
+    ? [greedySeed(energies, genre, context), harmonicSeed(energies)]
+    : [greedySeed(energies, genre, context)]
+
+  let best: { order: number[]; objective: number } | null = null
+
+  for (const seed of seeds) {
+    const result = twoOpt(seed, energies, genre, context, useHarmony)
+
+    if (!best || result.objective > best.objective) {
+      best = result
+    }
+  }
+
+  return best!.order
 }
 
 /**
  * Finds the track order that best follows the ideal curve for this context
- * and genre (B11). Exact for small sets; greedy seed + deterministic 2-opt
- * for larger ones. Replaces V1's ascending sort, which was musically wrong
- * for main/closing sets (a set is waves, not a monotonic ramp) and rarely
- * improved the score.
+ * and genre — and, when keys are available, keeps the transitions harmonic
+ * on the Camelot wheel (B20). Exact for small sets; greedy seed +
+ * deterministic 2-opt for larger ones.
  */
 export function optimizeOrder(
   energies: ResolvedTrackEnergy[],
   genre: SupportedGenre,
   context: PlaylistContext
 ): OptimizedOrder {
-  if (energies.length <= EXACT_SEARCH_MAX_TRACKS) {
-    return exactBestOrder(energies, genre, context)
-  }
+  const useHarmony = harmonyApplies(energies)
 
-  return localSearchBestOrder(energies, genre, context)
+  const order =
+    energies.length <= EXACT_SEARCH_MAX_TRACKS
+      ? exactBestOrder(energies, genre, context, useHarmony)
+      : localSearchBestOrder(energies, genre, context, useHarmony)
+
+  return {
+    order,
+    score: energyScoreOf(energies, order, genre, context),
+    harmonicRatio: harmonicRatioOf(energies, order),
+  }
 }
