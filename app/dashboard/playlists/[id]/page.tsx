@@ -70,7 +70,7 @@ export default async function PlaylistDetailPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8 lg:px-10">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
       <header className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <Link
