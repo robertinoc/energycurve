@@ -81,11 +81,21 @@ describe("format selection", () => {
   })
 
   it("builds a slugified filename per format", () => {
-    expect(exportFilename("rekordbox", "Warehouse Set")).toBe("warehouse-set.xml")
-    expect(exportFilename("traktor", "Warehouse Set")).toBe("warehouse-set.nml")
-    expect(exportFilename("m3u8", "Warehouse Set")).toBe("warehouse-set.m3u8")
-    expect(exportFilename("csv", "Late — Night!!")).toBe("late-night.csv")
-    expect(exportFilename("txt", "   ")).toBe("playlist.txt")
+    expect(exportFilename("rekordbox", "Warehouse Set")).toBe(
+      "warehouse-set-optimized-with-energycurve.app.xml"
+    )
+    expect(exportFilename("traktor", "Warehouse Set")).toBe(
+      "warehouse-set-optimized-with-energycurve.app.nml"
+    )
+    expect(exportFilename("m3u8", "Warehouse Set")).toBe(
+      "warehouse-set-optimized-with-energycurve.app.m3u8"
+    )
+    expect(exportFilename("csv", "Late — Night!!")).toBe(
+      "late-night-optimized-with-energycurve.app.csv"
+    )
+    expect(exportFilename("txt", "   ")).toBe(
+      "playlist-optimized-with-energycurve.app.txt"
+    )
   })
 })
 

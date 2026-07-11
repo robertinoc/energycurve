@@ -8,6 +8,7 @@ import {
   useState,
   useTransition,
 } from "react"
+import { createPortal } from "react-dom"
 import { Check, ChevronDown, Plus, X } from "lucide-react"
 
 import {
@@ -320,7 +321,14 @@ function AddTaxonomyModal({
     }
   }, [state, onCreated])
 
-  return (
+  // Portal the modal to <body>. Its own <form> must NOT be a descendant of the
+  // parent playlist <form> (import/create) — nested forms are invalid HTML and
+  // the inner action never fires, which is why "Create" did nothing.
+  if (typeof document === "undefined") {
+    return null
+  }
+
+  return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center p-4">
       <button
         type="button"
@@ -410,6 +418,7 @@ function AddTaxonomyModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
