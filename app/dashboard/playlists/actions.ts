@@ -19,12 +19,14 @@ import { logError, logWarn } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
 import { decodeUploadedText } from "@/lib/playlists/decode-upload"
+import type { ImportedTrack } from "@/lib/playlists/imported-track"
 import {
   detectGenres,
   parseImport,
   UnsupportedImportError,
 } from "@/lib/playlists/parse-import"
 import {
+  createAudioImportSchema,
   createPlaylistSchema,
   createTrackInputSchema,
   createTracklistImportSchema,
@@ -633,6 +635,127 @@ export async function importPlaylistAction(
   revalidatePath("/dashboard/playlists")
   revalidatePath("/dashboard")
   redirect(`/dashboard/playlists/${playlistId}`)
+}
+
+export interface AudioImportResult {
+  ok: boolean
+  message?: string
+  playlistId?: string
+}
+
+/**
+ * Creates a playlist from client-parsed audio-file tags ("from your music
+ * files"). The browser reads each file's embedded tags with music-metadata
+ * and sends ONLY the parsed metadata — audio bytes never reach the server.
+ * That JSON is the trust boundary: createAudioImportSchema sanitizes strings
+ * and coerces out-of-range numbers to null before anything is persisted.
+ * Direct-call action (like reorderTracksAction); returns the playlist id so
+ * the preview UI can surface errors inline and navigate on success.
+ */
+export async function importAudioFilesAction(
+  payload: unknown
+): Promise<AudioImportResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "import", locale)
+
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message ?? undefined }
+  }
+
+  const parsed = createAudioImportSchema(locale).safeParse(payload)
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message:
+        parsed.error.issues[0]?.message ?? ACTION_COPY.genericError[locale],
+    }
+  }
+
+  const contextChoice = await resolveContextChoice(
+    profile.id,
+    parsed.data.context
+  )
+
+  if (!contextChoice) {
+    return { ok: false, message: ACTION_COPY.pickContext[locale] }
+  }
+
+  // Shape the validated tracks as ImportedTrack so detectGenres and the
+  // replaceTracks mapping below mirror the file-export import path.
+  const tracks: ImportedTrack[] = parsed.data.tracks.map((track) => ({
+    artist: track.artist,
+    name: track.name,
+    bpm: track.bpm,
+    key: track.key,
+    genre: track.genre,
+    energy: track.energy,
+    sourceUri: track.sourceUri,
+    comment: track.comment,
+    durationSeconds: track.durationSeconds,
+  }))
+
+  const { dominant } = detectGenres(tracks)
+  const genreChoice =
+    parsed.data.genre === ""
+      ? null
+      : await resolveGenreChoice(profile.id, parsed.data.genre)
+  const genre: SupportedGenre = genreChoice?.base ?? dominant ?? "house"
+
+  const name =
+    parsed.data.name ||
+    // "Imported audio set" / "Set importado de audio"
+    formatTemplate(ACTION_COPY.importedSetName[locale], { source: "audio" })
+
+  let playlistId: string
+
+  try {
+    const playlist = await createPlaylist(profile.id, {
+      name,
+      genre,
+      context: contextChoice.base,
+      importSource: "files",
+      customContextId: contextChoice.customId,
+      customGenreId: genreChoice?.customId ?? null,
+    })
+    playlistId = playlist.id
+
+    await replaceTracks(
+      profile.id,
+      playlistId,
+      tracks.map((track) => ({
+        artist: track.artist || "Unknown artist",
+        name: track.name || "Untitled",
+        bpm: track.bpm,
+        energyScore: track.energy,
+        sourceUri: track.sourceUri,
+        musicalKey: track.key,
+        genre: track.genre,
+        comment: track.comment,
+        durationSeconds: track.durationSeconds,
+        perceivedDb: null,
+      }))
+    )
+  } catch (error) {
+    logError("playlist.audio_import_failed", error, {
+      profileId: profile.id,
+      trackCount: tracks.length,
+    })
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  captureServerEvent(profile.id, "playlist_created", {
+    via: "files",
+    trackCount: tracks.length,
+    genre,
+    context: contextChoice.base,
+  })
+
+  revalidatePath("/dashboard/playlists")
+  revalidatePath("/dashboard")
+  return { ok: true, playlistId }
 }
 
 export interface ReorderResult {
