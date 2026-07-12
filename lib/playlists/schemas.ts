@@ -40,6 +40,8 @@ function getPlaylistValidationMessages(locale: SiteLocale) {
         importRequired: "Pegá al menos una línea con un track.",
         importLong: "El texto pegado es demasiado largo.",
         formatInvalid: "Elegí un formato de línea válido.",
+        audioTracksRequired: "No hay tracks para importar.",
+        audioTracksTooMany: "Demasiados tracks en un solo import.",
       }
     : {
         nameRequired: "Please enter a playlist name.",
@@ -55,6 +57,8 @@ function getPlaylistValidationMessages(locale: SiteLocale) {
         importRequired: "Paste at least one line with a track.",
         importLong: "The pasted text is too long.",
         formatInvalid: "Choose a valid line format.",
+        audioTracksRequired: "There are no tracks to import.",
+        audioTracksTooMany: "Too many tracks in a single import.",
       }
 }
 
@@ -142,6 +146,100 @@ export function createTrackInputSchema(locale: SiteLocale) {
   })
 }
 
+export const AUDIO_IMPORT_MAX_TRACKS = 500
+
+/** Positive-length source path; only control chars stripped (paths may
+ * legitimately contain "<" ">" — don't run the full sanitizer on them). */
+const sourceUriSchema = z.preprocess(
+  (value) =>
+    typeof value === "string"
+      ? value.replace(controlCharacters, "").trim().slice(0, 500)
+      : null,
+  z.union([z.null(), z.string()]).transform((value) => value || null)
+)
+
+/** Untrusted string → sanitized + truncated (never errors, unlike the manual
+ * form fields — one messy tag must not sink a 100-file import). */
+function lenientText(maxLength: number) {
+  return z.preprocess(
+    (value) => (typeof value === "string" ? value : ""),
+    z
+      .string()
+      .transform(sanitizeText)
+      .transform((value) => value.slice(0, maxLength))
+  )
+}
+
+/** Untrusted number → clamped to range or null (never errors). */
+function numberOrNull(options: {
+  min: number
+  max: number
+  integer?: boolean
+}) {
+  return z.preprocess((value) => {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return null
+    }
+    if (options.integer && !Number.isInteger(value)) {
+      return Math.round(value)
+    }
+    return value
+  }, z.union([z.null(), z.number()])).transform((value) => {
+    if (value === null || value < options.min || value > options.max) {
+      return null
+    }
+    return value
+  })
+}
+
+/**
+ * Validates the client-parsed audio-tags payload. Unlike the paste flow (raw
+ * text re-parsed server-side), here the parsed JSON IS the payload — the
+ * browser read the tags and the audio never leaves the user's machine — so
+ * this schema is the trust boundary. Stance: coerce garbage to null / truncate
+ * rather than reject; only structural problems (no tracks, too many) error.
+ */
+export function createAudioImportSchema(locale: SiteLocale) {
+  const messages = getPlaylistValidationMessages(locale)
+
+  const track = z.object({
+    artist: lenientText(TRACK_FIELD_MAX_LENGTH),
+    name: lenientText(TRACK_FIELD_MAX_LENGTH),
+    bpm: numberOrNull({
+      min: BPM_INPUT_RANGE.min,
+      max: BPM_INPUT_RANGE.max,
+    }),
+    // A musical/Camelot key longer than 12 chars is not a key at all —
+    // null it rather than persist a truncated fragment.
+    key: lenientText(TRACK_FIELD_MAX_LENGTH).transform((value) =>
+      value && value.length <= 12 ? value : null
+    ),
+    genre: lenientText(TRACK_FIELD_MAX_LENGTH).transform(
+      (value) => value || null
+    ),
+    energy: numberOrNull({
+      min: ENERGY_SCORE_RANGE.min,
+      max: ENERGY_SCORE_RANGE.max,
+      integer: true,
+    }),
+    comment: lenientText(TRACK_FIELD_MAX_LENGTH).transform(
+      (value) => value || null
+    ),
+    durationSeconds: numberOrNull({ min: 1, max: 86400, integer: true }),
+    sourceUri: sourceUriSchema,
+  })
+
+  return z.object({
+    name: lenientText(PLAYLIST_NAME_MAX_LENGTH),
+    context: z.string().max(64),
+    genre: z.string().max(64), // "" auto | base code | "custom:<id>"
+    tracks: z
+      .array(track)
+      .min(1, messages.audioTracksRequired)
+      .max(AUDIO_IMPORT_MAX_TRACKS, messages.audioTracksTooMany),
+  })
+}
+
 export function createTracklistImportSchema(locale: SiteLocale) {
   const messages = getPlaylistValidationMessages(locale)
 
@@ -160,4 +258,10 @@ export type PlaylistCreateInput = z.infer<
 export type TrackFormInput = z.infer<ReturnType<typeof createTrackInputSchema>>
 export type TracklistImportInput = z.infer<
   ReturnType<typeof createTracklistImportSchema>
+>
+export type AudioImportPayload = z.input<
+  ReturnType<typeof createAudioImportSchema>
+>
+export type AudioImportInput = z.infer<
+  ReturnType<typeof createAudioImportSchema>
 >

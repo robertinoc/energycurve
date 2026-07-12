@@ -7,6 +7,7 @@ import {
   importPlaylistAction,
 } from "@/app/dashboard/playlists/actions"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
+import { AudioFilesImport } from "@/components/playlists/audio-files-import"
 import { Button } from "@/components/ui/button"
 import {
   TaxonomySelect,
@@ -58,6 +59,7 @@ export function PlaylistImportUpload({
     importPlaylistAction,
     initialPlaylistActionState
   )
+  const [mode, setMode] = useState<"dj" | "audio">("dj")
   const [fileName, setFileName] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -90,7 +92,50 @@ export function PlaylistImportUpload({
           {COPY.subtitle[locale]}
         </p>
 
-        <form action={formAction} className="mt-5 space-y-4">
+        {/* Import mode: a DJ-software export file vs local audio files (tags
+            read in the browser). Same shell, two panels. */}
+        <div
+          role="tablist"
+          className="mt-5 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1"
+        >
+          {(
+            [
+              { value: "dj", label: COPY.tabDjSoftware[locale] },
+              { value: "audio", label: COPY.tabAudioFiles[locale] },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              role="tab"
+              aria-selected={mode === tab.value}
+              onClick={() => setMode(tab.value)}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 text-xs font-semibold tracking-[0.04em] transition-colors",
+                mode === tab.value
+                  ? "bg-white/12 text-white"
+                  : "text-white/48 hover:text-white"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {mode === "audio" ? (
+          <div className="mt-5">
+            <AudioFilesImport
+              locale={locale}
+              customContexts={customContexts}
+              customGenres={customGenres}
+            />
+          </div>
+        ) : null}
+
+        <form
+          action={formAction}
+          className={cn("mt-5 space-y-4", mode !== "dj" && "hidden")}
+        >
           <label
             htmlFor="import-file"
             onDragOver={(event) => {

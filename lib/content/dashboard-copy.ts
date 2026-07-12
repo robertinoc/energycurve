@@ -228,6 +228,64 @@ export const DASHBOARD_COPY = {
       en: "~5 seconds · nothing leaves your account",
       es: "~5 segundos · nada sale de tu cuenta",
     },
+    tabDjSoftware: { en: "From DJ software", es: "Desde tu software DJ" },
+    tabAudioFiles: {
+      en: "From your music files",
+      es: "Desde tus archivos de audio",
+    },
+  },
+
+  audioImport: {
+    dropzoneMain: {
+      en: "Drag your tracks here, or",
+      es: "Arrastrá tus tracks acá, o",
+    },
+    browse: { en: "choose files", es: "elegí los archivos" },
+    chooseFolder: { en: "Choose a folder", es: "Elegir una carpeta" },
+    dropzoneHint: {
+      en: "MP3, M4A, FLAC, WAV… — we read the tags, your audio never leaves your computer",
+      es: "MP3, M4A, FLAC, WAV… — leemos los tags, tu audio nunca sale de tu computadora",
+    },
+    readingProgress: {
+      en: "Reading tags… {done}/{total}",
+      es: "Leyendo tags… {done}/{total}",
+    },
+    filteredNote: {
+      en: "Kept {kept} of {total} files (audio only)",
+      es: "Quedaron {kept} de {total} archivos (solo audio)",
+    },
+    truncatedNote: {
+      en: "Keeping the first {max} files",
+      es: "Tomamos los primeros {max} archivos",
+    },
+    unreadableNote: {
+      en: "{count} file(s) couldn't be read — using their filenames",
+      es: "{count} archivo(s) no se pudieron leer — usamos sus nombres",
+    },
+    zeroReadable: {
+      en: "No audio files found in that selection.",
+      es: "No encontramos archivos de audio en esa selección.",
+    },
+    missingTagsNote: {
+      en: "{noBpm} of {total} tracks missing BPM · {noKey} missing key — analysis quality depends on your tags",
+      es: "{noBpm} de {total} tracks sin BPM · {noKey} sin key — la calidad del análisis depende de tus tags",
+    },
+    fromFilename: { en: "from filename", es: "del nombre de archivo" },
+    excludeAria: {
+      en: "Include {name} in the import",
+      es: "Incluir {name} en el import",
+    },
+    nameLabel: { en: "Set name", es: "Nombre del set" },
+    namePlaceholder: {
+      en: "Friday warm-up",
+      es: "Warm-up del viernes",
+    },
+    clearSelection: { en: "Start over", es: "Empezar de nuevo" },
+    createCta: {
+      en: "Create set with {count} tracks",
+      es: "Crear set con {count} tracks",
+    },
+    creating: { en: "Creating…", es: "Creando…" },
   },
 
   tracklistImport: {

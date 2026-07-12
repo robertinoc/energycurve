@@ -30,7 +30,7 @@ export interface ImportedTrack {
   perceivedDb?: number | null
 }
 
-export type ImportSource = "rekordbox" | "traktor" | "text" | "m3u8"
+export type ImportSource = "rekordbox" | "traktor" | "text" | "m3u8" | "files"
 
 export interface ParsedImport {
   source: ImportSource

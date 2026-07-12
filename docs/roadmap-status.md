@@ -212,6 +212,12 @@ Making the playlist screen read like Rekordbox/Traktor so DJs feel at home. Full
 - PR4 — Export dropdown (For Rekordbox/Traktor/Serato-soon/CSV/TXT) + native metadata round-trip: **done**.
 - PR5 — sidebar playlist tree: **done**.
 
+## Post-launch — local audio files import (feature 04)
+
+**Status:** Done
+
+Third way in: pick audio files (or a folder) from disk; tags (BPM/key/genre/MIK energy/duration) are parsed client-side with music-metadata — audio never leaves the browser, only the parsed JSON (validated by `createAudioImportSchema`) reaches the server. Full write-up: `docs/product-feature-04-local-audio-import.md`.
+
 Repository anchors:
 
 - [lib/auth/password-reset.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/password-reset.ts)
