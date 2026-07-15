@@ -86,6 +86,13 @@ export const DASHBOARD_COPY = {
     },
     trackCount: { en: "{count} track(s)", es: "{count} track(s)" },
     yourSets: { en: "Your sets", es: "Tus sets" },
+    searchPlaceholder: { en: "Search sets…", es: "Buscar sets…" },
+    viewRecent: { en: "Recent", es: "Recientes" },
+    viewByGenre: { en: "By genre", es: "Por género" },
+    noMatches: {
+      en: 'No sets match "{query}".',
+      es: 'Ningún set coincide con "{query}".',
+    },
   },
 
   playlistDetail: {

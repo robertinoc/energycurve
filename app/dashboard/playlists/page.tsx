@@ -1,17 +1,13 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
-import Link from "next/link"
-import { ChevronRight, ListMusic } from "lucide-react"
+import { ListMusic } from "lucide-react"
 import { redirect } from "next/navigation"
 
-import { DeletePlaylistButton } from "@/components/playlists/delete-playlist-button"
 import { PlaylistImportUpload } from "@/components/playlists/playlist-import-upload"
-import { Badge } from "@/components/ui/badge"
+import { PlaylistsBrowser } from "@/components/playlists/playlists-browser"
 import { EmptyState } from "@/components/ui/empty-state"
 import { buildReturnToHref } from "@/lib/auth/return-to"
-import { formatTemplate } from "@/lib/content/analysis-copy"
-import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
-import { GENRE_LABELS, type PlaylistContext } from "@/lib/product/strategy"
+import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { getRequestLocale } from "@/lib/server-locale"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { listPlaylists } from "@/services/playlist-service"
@@ -71,57 +67,7 @@ export default async function PlaylistsPage() {
             description={copy.emptyDescription[locale]}
           />
         ) : (
-          <section className="space-y-3">
-            <h2 className="font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-ec-text-dim">
-              {copy.yourSets[locale]}
-            </h2>
-            {playlists.map((playlist) => (
-              <div
-                key={playlist.id}
-                className="flex items-center justify-between gap-4 rounded-[22px] border border-white/10 bg-[#0C0917] p-4 transition-colors hover:border-white/18"
-              >
-                <Link
-                  href={`/dashboard/playlists/${playlist.id}`}
-                  className="flex min-w-0 flex-1 items-center justify-between gap-4"
-                >
-                  <div className="min-w-0 space-y-1.5">
-                    <p className="truncate text-base font-medium text-white">
-                      {playlist.name}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {playlist.genre ? (
-                        <Badge variant="accent">
-                          {playlist.custom_genre_name ??
-                            GENRE_LABELS[playlist.genre] ??
-                            playlist.genre}
-                        </Badge>
-                      ) : null}
-                      {playlist.context ? (
-                        <Badge>
-                          {playlist.custom_context_name ??
-                            CONTEXT_COPY[playlist.context as PlaylistContext]?.[
-                              locale
-                            ] ??
-                            playlist.context}
-                        </Badge>
-                      ) : null}
-                      <span className="text-xs text-white/48">
-                        {formatTemplate(copy.trackCount[locale], {
-                          count: playlist.trackCount,
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronRight className="size-4 shrink-0 text-white/32" />
-                </Link>
-                <DeletePlaylistButton
-                  playlistId={playlist.id}
-                  playlistName={playlist.name}
-                  locale={locale}
-                />
-              </div>
-            ))}
-          </section>
+          <PlaylistsBrowser playlists={playlists} locale={locale} />
         )}
     </div>
   )
