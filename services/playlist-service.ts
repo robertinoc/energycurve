@@ -178,6 +178,37 @@ export async function getOwnedPlaylistWithTracks(
   return { ...playlist, tracks: tracks ?? [] }
 }
 
+/** Renames a playlist and sets its optional description (V3 feedback). */
+export async function updatePlaylistDetails(
+  profileId: string,
+  playlistId: string,
+  input: { name: string; description: string | null }
+): Promise<void> {
+  const playlist = await getOwnedPlaylist(profileId, playlistId)
+
+  if (!playlist) {
+    throw new Error("Playlist not found.")
+  }
+
+  const supabase = getSupabaseAdminClient()
+
+  const { error } = await supabase
+    .from("playlists")
+    .update({ name: input.name, description: input.description })
+    .eq("id", playlistId)
+    .eq("user_id", profileId)
+
+  if (error) {
+    logError("playlist.update_details_failed", error, {
+      profileId,
+      playlistId,
+    })
+    throw new Error("Unable to update the playlist.")
+  }
+
+  logInfo("playlist.details_updated", { profileId, playlistId })
+}
+
 export async function deletePlaylist(
   profileId: string,
   playlistId: string
@@ -286,6 +317,9 @@ export async function updateTrack(
       name: input.name,
       bpm: input.bpm,
       energy_score: input.energyScore,
+      musical_key: input.musicalKey ?? null,
+      genre: input.genre ?? null,
+      comment: input.comment ?? null,
     })
     .eq("id", trackId)
     .eq("playlist_id", playlistId)

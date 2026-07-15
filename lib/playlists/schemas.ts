@@ -143,6 +143,39 @@ export function createTrackInputSchema(locale: SiteLocale) {
     }).transform((value) =>
       value === null ? null : Math.round(value * 10) / 10
     ),
+    // Rich tag fields, all optional (V3: editable so untagged wav/flac files
+    // can be completed by hand). Lenient — sanitized/nulled, never erroring.
+    musicalKey: lenientText(TRACK_FIELD_MAX_LENGTH).transform((value) =>
+      value && value.length <= 12 ? value : null
+    ),
+    genre: lenientText(TRACK_FIELD_MAX_LENGTH).transform(
+      (value) => value || null
+    ),
+    comment: lenientText(TRACK_FIELD_MAX_LENGTH).transform(
+      (value) => value || null
+    ),
+  })
+}
+
+export const PLAYLIST_DESCRIPTION_MAX_LENGTH = 500
+
+/** Rename + optional description for an existing playlist (V3 feedback). */
+export function updatePlaylistDetailsSchema(locale: SiteLocale) {
+  const messages = getPlaylistValidationMessages(locale)
+
+  return z.object({
+    name: z
+      .string()
+      .transform(sanitizeText)
+      .pipe(
+        z
+          .string()
+          .min(1, messages.nameRequired)
+          .max(PLAYLIST_NAME_MAX_LENGTH, messages.nameLong)
+      ),
+    description: lenientText(PLAYLIST_DESCRIPTION_MAX_LENGTH).transform(
+      (value) => value || null
+    ),
   })
 }
 

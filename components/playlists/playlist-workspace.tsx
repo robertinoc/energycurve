@@ -13,7 +13,6 @@ import type { SiteLocale } from "@/lib/content/site-copy"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
 import {
-  STANDARD_TRACK_DURATION_MINUTES,
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
@@ -25,13 +24,6 @@ interface PlaylistWorkspaceProps {
   context: PlaylistContext | null
   tracks: Track[]
   locale: SiteLocale
-}
-
-function formatMinutes(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes} min`
-  }
-  return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`
 }
 
 function sameOrder(a: Track[], b: Track[]): boolean {
@@ -76,20 +68,6 @@ export function PlaylistWorkspace({
     () => (genre && context ? buildTargetCurve(order.length, context, genre) : null),
     [genre, context, order.length]
   )
-
-  const stats = useMemo(() => {
-    const n = order.length
-    const bpms = order.map((t) => t.bpm).filter((b): b is number => b !== null)
-    const avgBpm =
-      bpms.length > 0 ? Math.round(bpms.reduce((s, b) => s + b, 0) / bpms.length) : null
-    const everyHasDuration = n > 0 && order.every((t) => t.duration_seconds !== null)
-    const totalMinutes = everyHasDuration
-      ? Math.round(order.reduce((s, t) => s + (t.duration_seconds ?? 0), 0) / 60)
-      : n * STANDARD_TRACK_DURATION_MINUTES
-    const eMin = scores.length ? Math.min(...scores) : null
-    const eMax = scores.length ? Math.max(...scores) : null
-    return { n, avgBpm, totalMinutes, everyHasDuration, eMin, eMax }
-  }, [order, scores])
 
   function handleReorder(next: Track[]) {
     setUndoStack((stack) => [...stack, order])
@@ -211,42 +189,8 @@ export function PlaylistWorkspace({
         locale={locale}
       />
 
-      {order.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-1 text-[12.5px] text-white/45">
-          <span>
-            <b className="font-mono font-bold text-white">{stats.n}</b>{" "}
-            {copy.statsTracks[locale]}
-          </span>
-          <span className="text-white/20">·</span>
-          <span>
-            {stats.everyHasDuration ? "" : "~"}
-            <b className="font-mono font-bold text-white">
-              {formatMinutes(stats.totalMinutes)}
-            </b>
-          </span>
-          {stats.avgBpm !== null ? (
-            <>
-              <span className="text-white/20">·</span>
-              <span>
-                {copy.statsAvg[locale]}{" "}
-                <b className="font-mono font-bold text-white">{stats.avgBpm}</b> BPM
-              </span>
-            </>
-          ) : null}
-          {stats.eMin !== null ? (
-            <>
-              <span className="text-white/20">·</span>
-              <span>
-                {copy.statsEnergy[locale]}{" "}
-                <b className="font-mono font-bold text-white">
-                  {stats.eMin}–{stats.eMax}
-                </b>
-              </span>
-            </>
-          ) : null}
-        </div>
-      ) : null}
-
+      {/* Set stats moved to the page header, next to the genre/context badges
+          (V3 feedback) — see PlaylistStatsPills in the detail page. */}
       <Toast show={toast.show} message={toast.message} />
     </div>
   )

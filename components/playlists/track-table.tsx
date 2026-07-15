@@ -214,6 +214,47 @@ function TrackFields({
           <p className="text-xs text-ec-error">{fieldErrors.energyScore}</p>
         ) : null}
       </div>
+      {/* Rich tag fields (V3): editable so untagged files (wav/flac without
+          BPM/key metadata) can be completed by hand. All optional. */}
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-musicalKey`} className="text-white/72">
+          {COPY.fieldKey[locale]}
+        </Label>
+        <Input
+          id={`${idPrefix}-musicalKey`}
+          name="musicalKey"
+          defaultValue={defaults?.musical_key ?? ""}
+          placeholder="8A / Am"
+          maxLength={12}
+          className="border-white/12 text-white placeholder:text-white/32"
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-genre`} className="text-white/72">
+          {COPY.fieldGenre[locale]}
+        </Label>
+        <Input
+          id={`${idPrefix}-genre`}
+          name="genre"
+          defaultValue={defaults?.genre ?? ""}
+          placeholder="Hard Techno"
+          maxLength={200}
+          className="border-white/12 text-white placeholder:text-white/32"
+        />
+      </div>
+      <div className="space-y-1.5 sm:col-span-2">
+        <Label htmlFor={`${idPrefix}-comment`} className="text-white/72">
+          {COPY.fieldComment[locale]}
+        </Label>
+        <Input
+          id={`${idPrefix}-comment`}
+          name="comment"
+          defaultValue={defaults?.comment ?? ""}
+          placeholder="Energy 7"
+          maxLength={200}
+          className="border-white/12 text-white placeholder:text-white/32"
+        />
+      </div>
     </div>
   )
 }

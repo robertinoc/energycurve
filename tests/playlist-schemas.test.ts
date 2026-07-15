@@ -71,7 +71,37 @@ describe("createTrackInputSchema", () => {
       name: "Glue",
       bpm: 128.5,
       energyScore: 7.3,
+      // Rich tag fields default to null when absent (V3: editable key/genre/comment).
+      musicalKey: null,
+      genre: null,
+      comment: null,
     })
+  })
+
+  it("accepts the rich tag fields and nulls an over-long key", () => {
+    const result = schema.parse({
+      artist: "Bicep",
+      name: "Glue",
+      bpm: "128",
+      energyScore: "",
+      musicalKey: " 8A ",
+      genre: "Melodic Techno",
+      comment: "Energy 7",
+    })
+
+    expect(result).toMatchObject({
+      musicalKey: "8A",
+      genre: "Melodic Techno",
+      comment: "Energy 7",
+    })
+
+    expect(
+      schema.parse({
+        artist: "A",
+        name: "B",
+        musicalKey: "definitely-not-a-key",
+      }).musicalKey
+    ).toBeNull()
   })
 
   it("treats empty optional fields as null", () => {
