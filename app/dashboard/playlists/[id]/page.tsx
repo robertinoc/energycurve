@@ -6,7 +6,6 @@ import { notFound, redirect } from "next/navigation"
 
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
 import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
-import { TracklistImport } from "@/components/playlists/tracklist-import"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { buildReturnToHref } from "@/lib/auth/return-to"
@@ -125,12 +124,6 @@ export default async function PlaylistDetailPage({
           genre={playlist.genre}
           context={playlist.context}
           tracks={playlist.tracks}
-          locale={locale}
-        />
-
-        <TracklistImport
-          playlistId={playlist.id}
-          existingTrackCount={playlist.tracks.length}
           locale={locale}
         />
     </div>

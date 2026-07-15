@@ -5,7 +5,6 @@ import { ChevronRight, ListMusic } from "lucide-react"
 import { redirect } from "next/navigation"
 
 import { DeletePlaylistButton } from "@/components/playlists/delete-playlist-button"
-import { PlaylistCreateForm } from "@/components/playlists/playlist-create-form"
 import { PlaylistImportUpload } from "@/components/playlists/playlist-import-upload"
 import { Badge } from "@/components/ui/badge"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -57,47 +56,13 @@ export default async function PlaylistsPage() {
         </p>
       </header>
 
-        <section className="space-y-4 rounded-[26px] border border-white/10 bg-white/[0.02] p-4 sm:p-5">
-          <p className="font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-ec-text-dim">
-            {copy.startHere[locale]}
-          </p>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-white">
-                {copy.startImport[locale]}
-              </h2>
-              <span className="rounded-full border border-[#22D3EE]/35 bg-[#22D3EE]/[0.09] px-2 py-px font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[#7DE6F7]">
-                {copy.startImportHint[locale]}
-              </span>
-            </div>
-            <PlaylistImportUpload
-              locale={locale}
-              customContexts={customContexts}
-              customGenres={customGenres}
-            />
-          </div>
-
-          <div className="flex items-center gap-3 py-1">
-            <span className="h-px flex-1 bg-white/8" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/32">
-              {locale === "es" ? "o" : "or"}
-            </span>
-            <span className="h-px flex-1 bg-white/8" />
-          </div>
-
-          <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-white">
-              {copy.startManual[locale]}
-            </h2>
-            <p className="text-xs text-white/48">{copy.startManualHint[locale]}</p>
-            <PlaylistCreateForm
-              locale={locale}
-              customContexts={customContexts}
-              customGenres={customGenres}
-            />
-          </div>
-        </section>
+        {/* Single entry point: the card hosts all three ways in (DJ export /
+            audio files / by hand) as tabs. */}
+        <PlaylistImportUpload
+          locale={locale}
+          customContexts={customContexts}
+          customGenres={customGenres}
+        />
 
         {playlists.length === 0 ? (
           <EmptyState

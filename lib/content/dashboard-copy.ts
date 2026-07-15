@@ -85,21 +85,6 @@ export const DASHBOARD_COPY = {
       es: "Creá la primera acá arriba — después sumá tracks a mano o pegá un tracklist completo.",
     },
     trackCount: { en: "{count} track(s)", es: "{count} track(s)" },
-    // Two entry points framing on the playlists page.
-    startHere: { en: "Add a set", es: "Cargá un set" },
-    startImport: {
-      en: "① Import from your DJ software",
-      es: "① Importá desde tu software de DJ",
-    },
-    startImportHint: { en: "Recommended", es: "Recomendado" },
-    startManual: {
-      en: "② Or build it by hand",
-      es: "② O creala a mano",
-    },
-    startManualHint: {
-      en: "Name it, then add tracks yourself",
-      es: "Nombrala y sumá los tracks vos",
-    },
     yourSets: { en: "Your sets", es: "Tus sets" },
   },
 
@@ -177,32 +162,24 @@ export const DASHBOARD_COPY = {
     comment: { en: "Comment", es: "Comentario" },
   },
 
-  createForm: {
-    title: { en: "New playlist", es: "Nueva playlist" },
-    description: {
-      en: "Name your set and lock in the genre and context — the analysis engine adapts to both.",
-      es: "Nombrá tu set y fijá el género y el contexto — el motor de análisis se adapta a los dos.",
-    },
-    name: { en: "Name", es: "Nombre" },
-    namePlaceholder: {
-      en: "Warehouse opening set",
-      es: "Set de opening en el warehouse",
-    },
-    genre: { en: "Genre", es: "Género" },
-    context: { en: "Context", es: "Contexto" },
-    creating: { en: "Creating…", es: "Creando…" },
-    create: { en: "Create playlist", es: "Crear playlist" },
-  },
-
   importUpload: {
-    eyebrow: { en: "Import your playlist", es: "Importá tu playlist" },
+    eyebrow: { en: "Upload your playlist", es: "Cargá tu playlist" },
     title: {
       en: "Drop your set. See its energy.",
       es: "Soltá tu set. Mirá su energía.",
     },
+    // Per-method subtitles — the card hosts three entry ways (tabs).
     subtitle: {
       en: "Export from Rekordbox or Traktor and we chart the whole set — BPM, keys, genres and Mixed In Key energies included.",
       es: "Exportá desde Rekordbox o Traktor y graficamos el set completo — BPM, keys, géneros y energías de Mixed In Key incluidos.",
+    },
+    subtitleAudio: {
+      en: "Pick tracks (or a whole folder) from your computer — we read BPM, keys, genres and Mixed In Key energies from the files' tags. Your audio never leaves your machine.",
+      es: "Elegí tracks (o una carpeta entera) de tu computadora — leemos BPM, keys, géneros y energías de Mixed In Key de los tags. Tu audio nunca sale de tu máquina.",
+    },
+    subtitleManual: {
+      en: "Name your set, pick genre and context, and optionally paste a tracklist — the analysis engine adapts to both.",
+      es: "Nombrá tu set, elegí género y contexto, y si querés pegá un tracklist — el motor de análisis se adapta a los dos.",
     },
     dropzoneMain: {
       en: "Drag your playlist here, or",
@@ -233,6 +210,26 @@ export const DASHBOARD_COPY = {
       en: "From your music files",
       es: "Desde tus archivos de audio",
     },
+    tabManual: { en: "By hand", es: "A mano" },
+  },
+
+  manualCreate: {
+    name: { en: "Set name", es: "Nombre del set" },
+    namePlaceholder: { en: "Friday warm-up", es: "Warm-up del viernes" },
+    pasteTitle: {
+      en: "Paste a tracklist (optional)",
+      es: "Pegá un tracklist (opcional)",
+    },
+    pasteHint: {
+      en: 'One track per line. Numbering prefixes and a trailing "(128 bpm)" are picked up automatically. Leave it empty to start from scratch and add tracks later.',
+      es: 'Un track por línea. Los prefijos numerados y un "(128 bpm)" al final se detectan solos. Dejalo vacío para arrancar de cero y sumar tracks después.',
+    },
+    createCta: { en: "Create playlist", es: "Crear playlist" },
+    createWithTracksCta: {
+      en: "Create playlist · {count} tracks",
+      es: "Crear playlist · {count} tracks",
+    },
+    creating: { en: "Creating…", es: "Creando…" },
   },
 
   audioImport: {

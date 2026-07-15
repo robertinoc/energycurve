@@ -180,7 +180,12 @@ async function resolveGenreChoice(
     : null
 }
 
-export async function createPlaylistAction(
+/**
+ * The "by hand" entry-point tab: creates a playlist and, when the user pasted
+ * a tracklist, seeds it in the same submit. The pasted text is re-parsed
+ * server-side (never trust the client preview), mirroring importTracklistAction.
+ */
+export async function createPlaylistWithTracksAction(
   _prevState: PlaylistActionState,
   formData: FormData
 ): Promise<PlaylistActionState> {
@@ -215,6 +220,41 @@ export async function createPlaylistAction(
     )
   }
 
+  // Optional pasted tracklist. Empty text = create an empty playlist.
+  const text = String(formData.get("text") ?? "").trim()
+  let pastedTracks: ReturnType<typeof parseTracklist>["tracks"] = []
+
+  if (text) {
+    const tracklistParsed = createTracklistImportSchema(locale).safeParse({
+      text,
+      format: String(formData.get("format") ?? ""),
+    })
+
+    if (!tracklistParsed.success) {
+      return failure(
+        ACTION_COPY.reviewFields[locale],
+        collectFieldErrors(tracklistParsed.error)
+      )
+    }
+
+    const { tracks, errors } = parseTracklist(
+      tracklistParsed.data.text,
+      tracklistParsed.data.format
+    )
+
+    if (tracks.length === 0) {
+      return failure(
+        errors.length > 0
+          ? formatTemplate(ACTION_COPY.noValidLinesParsed[locale], {
+              count: errors.length,
+            })
+          : ACTION_COPY.noValidLines[locale]
+      )
+    }
+
+    pastedTracks = tracks
+  }
+
   let playlistId: string
 
   try {
@@ -224,13 +264,30 @@ export async function createPlaylistAction(
       customGenreId: genreChoice?.customId ?? null,
     })
     playlistId = playlist.id
+
+    if (pastedTracks.length > 0) {
+      await replaceTracks(
+        profile.id,
+        playlistId,
+        pastedTracks.map((track) => ({
+          artist: track.artist,
+          name: track.name,
+          bpm: track.bpm,
+          energyScore: null,
+        }))
+      )
+    }
   } catch (error) {
-    logError("playlist.create_action_failed", error, { profileId: profile.id })
+    logError("playlist.create_with_tracks_failed", error, {
+      profileId: profile.id,
+    })
     return failure(ACTION_COPY.genericError[locale])
   }
 
   captureServerEvent(profile.id, "playlist_created", {
     playlistId,
+    via: "manual",
+    trackCount: pastedTracks.length,
     genre: parsed.data.genre,
     context: parsed.data.context,
   })
@@ -429,88 +486,6 @@ export async function moveTrackAction(
   revalidatePath(`/dashboard/playlists/${playlistId}`)
   return success(ACTION_COPY.trackMoved[locale])
 }
-
-export async function importTracklistAction(
-  _prevState: PlaylistActionState,
-  formData: FormData
-): Promise<PlaylistActionState> {
-  const profile = await requireProfile()
-  const locale = await getRequestLocale()
-
-  const rateLimited = rateLimitFailure(profile.id, "import", locale)
-
-  if (rateLimited) {
-    return rateLimited
-  }
-  const playlistId = String(formData.get("playlistId") ?? "")
-
-  if (!playlistId) {
-    return failure(ACTION_COPY.genericError[locale])
-  }
-
-  const parsed = createTracklistImportSchema(locale).safeParse({
-    text: String(formData.get("text") ?? ""),
-    format: String(formData.get("format") ?? ""),
-  })
-
-  if (!parsed.success) {
-    return failure(
-      ACTION_COPY.reviewFields[locale],
-      collectFieldErrors(parsed.error)
-    )
-  }
-
-  // Never trust the client-side preview: the raw text is re-parsed here.
-  const { tracks, errors } = parseTracklist(parsed.data.text, parsed.data.format)
-
-  if (tracks.length === 0) {
-    return failure(
-      errors.length > 0
-        ? formatTemplate(ACTION_COPY.noValidLinesParsed[locale], {
-            count: errors.length,
-          })
-        : ACTION_COPY.noValidLines[locale]
-    )
-  }
-
-  let importedCount = 0
-
-  try {
-    importedCount = await replaceTracks(
-      profile.id,
-      playlistId,
-      tracks.map((track) => ({
-        artist: track.artist,
-        name: track.name,
-        bpm: track.bpm,
-        energyScore: null,
-      }))
-    )
-  } catch (error) {
-    logError("tracks.import_action_failed", error, {
-      profileId: profile.id,
-      playlistId,
-    })
-    return failure(ACTION_COPY.genericError[locale])
-  }
-
-  revalidatePath(`/dashboard/playlists/${playlistId}`)
-
-  const skippedSuffix =
-    errors.length > 0
-      ? formatTemplate(ACTION_COPY.importSkippedSuffix[locale], {
-          count: errors.length,
-        })
-      : ""
-
-  return success(
-    formatTemplate(ACTION_COPY.importedTracks[locale], {
-      count: importedCount,
-      skipped: skippedSuffix,
-    })
-  )
-}
-
 const IMPORT_MAX_FILE_BYTES = 12 * 1024 * 1024 // 12 MB — full collections can be large
 const IMPORT_MAX_TRACKS = 500
 

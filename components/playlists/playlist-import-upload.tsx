@@ -8,6 +8,7 @@ import {
 } from "@/app/dashboard/playlists/actions"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
 import { AudioFilesImport } from "@/components/playlists/audio-files-import"
+import { ManualCreatePanel } from "@/components/playlists/manual-create-panel"
 import { Button } from "@/components/ui/button"
 import {
   TaxonomySelect,
@@ -59,7 +60,7 @@ export function PlaylistImportUpload({
     importPlaylistAction,
     initialPlaylistActionState
   )
-  const [mode, setMode] = useState<"dj" | "audio">("dj")
+  const [mode, setMode] = useState<"dj" | "audio" | "manual">("dj")
   const [fileName, setFileName] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -89,11 +90,16 @@ export function PlaylistImportUpload({
           {COPY.title[locale]}
         </h2>
         <p className="mt-1.5 max-w-2xl text-sm leading-6 text-ec-text-muted">
-          {COPY.subtitle[locale]}
+          {mode === "audio"
+            ? COPY.subtitleAudio[locale]
+            : mode === "manual"
+              ? COPY.subtitleManual[locale]
+              : COPY.subtitle[locale]}
         </p>
 
-        {/* Import mode: a DJ-software export file vs local audio files (tags
-            read in the browser). Same shell, two panels. */}
+        {/* The card hosts the three entry ways: a DJ-software export file,
+            local audio files (tags read in the browser), or by hand (name +
+            optional pasted tracklist). Same shell, one panel per tab. */}
         <div
           role="tablist"
           className="mt-5 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1"
@@ -102,6 +108,7 @@ export function PlaylistImportUpload({
             [
               { value: "dj", label: COPY.tabDjSoftware[locale] },
               { value: "audio", label: COPY.tabAudioFiles[locale] },
+              { value: "manual", label: COPY.tabManual[locale] },
             ] as const
           ).map((tab) => (
             <button
@@ -125,6 +132,16 @@ export function PlaylistImportUpload({
         {mode === "audio" ? (
           <div className="mt-5">
             <AudioFilesImport
+              locale={locale}
+              customContexts={customContexts}
+              customGenres={customGenres}
+            />
+          </div>
+        ) : null}
+
+        {mode === "manual" ? (
+          <div className="mt-5">
+            <ManualCreatePanel
               locale={locale}
               customContexts={customContexts}
               customGenres={customGenres}
