@@ -263,27 +263,31 @@ export function EnergyCurveChart({
 
       </div>
 
-      {targetPath ? (
-        <div className="pointer-events-none absolute right-6 top-5 flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ec-text-dim">
-          <svg width="18" height="6" aria-hidden>
-            <line
-              x1="0"
-              y1="3"
-              x2="18"
-              y2="3"
-              stroke="rgba(245,242,252,0.45)"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-            />
-          </svg>
-          {ANALYSIS_UI.idealCurve[locale]}
+      {/* The "Ideal curve" legend lives in normal flow (right-aligned under
+          the chart) instead of an absolute overlay: the overlay collided with
+          the peak pill whenever the peak sat in the top-right region. */}
+      <div className="mt-3 flex items-center gap-4 px-6">
+        <div className="flex flex-1 items-center justify-between font-mono text-[10.5px] uppercase tracking-[0.14em] text-ec-text-dim">
+          {PHASE_KEYS.map((key) => (
+            <span key={key}>{ANALYSIS_UI[key][locale]}</span>
+          ))}
         </div>
-      ) : null}
-
-      <div className="mt-3 flex items-center justify-between px-6 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ec-text-dim">
-        {PHASE_KEYS.map((key) => (
-          <span key={key}>{ANALYSIS_UI[key][locale]}</span>
-        ))}
+        {targetPath ? (
+          <div className="flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-black/30 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ec-text-dim">
+            <svg width="18" height="6" aria-hidden>
+              <line
+                x1="0"
+                y1="3"
+                x2="18"
+                y2="3"
+                stroke="rgba(245,242,252,0.45)"
+                strokeWidth="2"
+                strokeDasharray="4 4"
+              />
+            </svg>
+            {ANALYSIS_UI.idealCurve[locale]}
+          </div>
+        ) : null}
       </div>
 
       {/* Docked track card: fixed slot below the chart instead of a floating

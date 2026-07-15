@@ -18,6 +18,7 @@ const badgeVariants = cva(
         accent: "border-[#22D3EE]/40 bg-[#22D3EE]/[0.13] text-[#7DE6F7]",
         peak: "border-[#F0348A]/40 bg-[#F0348A]/[0.13] text-[#FF87BE]",
         warning: "border-[#F5A524]/40 bg-[#F5A524]/[0.13] text-[#FFC96B]",
+        positive: "border-[#4ADE80]/40 bg-[#4ADE80]/[0.13] text-[#86EFAC]",
       },
     },
     defaultVariants: {

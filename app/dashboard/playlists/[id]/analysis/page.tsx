@@ -2,7 +2,7 @@ import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import { cookies } from "next/headers"
 import Link from "next/link"
-import { ArrowLeft, TriangleAlert } from "lucide-react"
+import { ArrowLeft, CircleCheck, TriangleAlert } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { EnergyCurveChart, type ChartTrackPoint } from "@/components/analysis/energy-curve-chart"
@@ -10,8 +10,11 @@ import { IssueList } from "@/components/analysis/issue-list"
 import { LocaleToggle } from "@/components/analysis/locale-toggle"
 import { OrderComparison } from "@/components/analysis/order-comparison"
 import { SetScoreCard } from "@/components/analysis/set-score-card"
+import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
+import type { ExportPlaylist } from "@/lib/playlists/export"
+import type { Track } from "@/types/domain"
 import {
   ANALYSIS_LOCALE_COOKIE,
   toSiteLocale,
@@ -111,6 +114,29 @@ export default async function PlaylistAnalysisPage({
     hasIssue: issuePositions.has(track.position),
   }))
 
+  // Exportable version of the SUGGESTED order (V3): full track rows reordered
+  // by the suggestion, positions renumbered 1..N.
+  const byPosition = new Map(playlist.tracks.map((track) => [track.position, track]))
+  const suggestedExportPlaylist: ExportPlaylist = {
+    name: `${playlist.name} — ${ANALYSIS_UI.suggestedNameSuffix[locale]}`,
+    importSource: playlist.import_source,
+    tracks: (reorder?.suggestedOrder ?? [])
+      .map((position) => byPosition.get(position))
+      .filter((track): track is Track => Boolean(track))
+      .map((track, index) => ({
+        position: index + 1,
+        artist: track.artist,
+        name: track.name,
+        bpm: track.bpm,
+        energyScore: track.energy_score,
+        sourceUri: track.source_uri,
+        musicalKey: track.musical_key,
+        genre: track.genre,
+        comment: track.comment,
+        durationSeconds: track.duration_seconds,
+      })),
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
       <header className="space-y-4">
@@ -188,11 +214,17 @@ export default async function PlaylistAnalysisPage({
               {ANALYSIS_UI.issuesTitle[locale]}
             </h2>
           </div>
-          <IssueList recommendations={recommendations} locale={locale} />
+          <IssueList
+            recommendations={recommendations}
+            locale={locale}
+            tracks={playlist.tracks}
+          />
         </section>
 
-        {reorder ? (
-          <section className="space-y-4">
+        {/* Always visible (V3): when the engine finds no worthwhile
+            improvement, a positive state replaces the comparison. */}
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-white/42">
                 {ANALYSIS_UI.reorderEyebrow[locale]}
@@ -201,14 +233,40 @@ export default async function PlaylistAnalysisPage({
                 {ANALYSIS_UI.reorderTitle[locale]}
               </h2>
             </div>
+            {reorder ? (
+              <div className="flex flex-wrap items-center gap-2.5">
+                <PlaylistExportButton
+                  playlist={suggestedExportPlaylist}
+                  locale={locale}
+                />
+                <Link
+                  href={backHref}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "text-white/58 hover:text-white"
+                  )}
+                >
+                  {ANALYSIS_UI.reorderManually[locale]}
+                </Link>
+              </div>
+            ) : null}
+          </div>
+          {reorder ? (
             <OrderComparison
               tracks={playlist.tracks}
               originalScore={analysis.setScore}
               reorder={reorder}
               locale={locale}
             />
-          </section>
-        ) : null}
+          ) : (
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#4ADE80]/30 bg-[#4ADE80]/[0.04] px-6 py-10 text-center">
+              <CircleCheck className="size-8 text-[#86EFAC]" />
+              <p className="max-w-md text-sm leading-6 text-white/64">
+                {ANALYSIS_UI.reorderOptimal[locale]}
+              </p>
+            </div>
+          )}
+        </section>
     </div>
   )
 }
