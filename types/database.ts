@@ -41,6 +41,7 @@ export interface Database {
           id: string
           user_id: string
           name: string
+          description: string | null
           genre: Database["public"]["Enums"]["playlist_genre"] | null
           context: Database["public"]["Enums"]["playlist_context"] | null
           import_source: string | null
@@ -53,6 +54,7 @@ export interface Database {
           id?: string
           user_id: string
           name: string
+          description?: string | null
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
           import_source?: string | null
@@ -65,6 +67,7 @@ export interface Database {
           id?: string
           user_id?: string
           name?: string
+          description?: string | null
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
           import_source?: string | null

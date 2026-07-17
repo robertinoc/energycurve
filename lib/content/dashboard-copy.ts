@@ -86,6 +86,13 @@ export const DASHBOARD_COPY = {
     },
     trackCount: { en: "{count} track(s)", es: "{count} track(s)" },
     yourSets: { en: "Your sets", es: "Tus sets" },
+    searchPlaceholder: { en: "Search sets…", es: "Buscar sets…" },
+    viewRecent: { en: "Recent", es: "Recientes" },
+    viewByGenre: { en: "By genre", es: "Por género" },
+    noMatches: {
+      en: 'No sets match "{query}".',
+      es: 'Ningún set coincide con "{query}".',
+    },
   },
 
   playlistDetail: {
@@ -138,6 +145,9 @@ export const DASHBOARD_COPY = {
     fieldTrack: { en: "Track", es: "Track" },
     fieldTrackPlaceholder: { en: "Track title", es: "Título del track" },
     fieldEnergy: { en: "Energy (1–10)", es: "Energía (1–10)" },
+    fieldKey: { en: "Key", es: "Key" },
+    fieldGenre: { en: "Genre", es: "Género" },
+    fieldComment: { en: "Comment", es: "Comentario" },
     fieldEnergyPlaceholder: { en: "Optional", es: "Opcional" },
     addTrack: { en: "Add track", es: "Agregar track" },
     adding: { en: "Adding…", es: "Agregando…" },
@@ -210,7 +220,23 @@ export const DASHBOARD_COPY = {
       en: "From your music files",
       es: "Desde tus archivos de audio",
     },
-    tabManual: { en: "By hand", es: "A mano" },
+    tabManual: { en: "Manual entry", es: "Carga manual" },
+  },
+
+  playlistHeaderEdit: {
+    editAria: { en: "Edit name and description", es: "Editar nombre y descripción" },
+    nameLabel: { en: "Set name", es: "Nombre del set" },
+    descriptionLabel: {
+      en: "Description (optional)",
+      es: "Descripción (opcional)",
+    },
+    descriptionPlaceholder: {
+      en: "Notes about this set — venue, vibe, what you're going for…",
+      es: "Notas sobre este set — el lugar, la vibra, lo que buscás…",
+    },
+    save: { en: "Save", es: "Guardar" },
+    saving: { en: "Saving…", es: "Guardando…" },
+    cancel: { en: "Cancel", es: "Cancelar" },
   },
 
   manualCreate: {
@@ -363,6 +389,7 @@ export const DASHBOARD_COPY = {
     trackUpdated: { en: "Track updated.", es: "Track actualizado." },
     trackRemoved: { en: "Track removed.", es: "Track eliminado." },
     trackMoved: { en: "Track moved.", es: "Track movido." },
+    detailsSaved: { en: "Playlist updated.", es: "Playlist actualizada." },
     importedTracks: {
       en: "Imported {count} track(s).{skipped}",
       es: "Se importaron {count} track(s).{skipped}",

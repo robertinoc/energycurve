@@ -291,14 +291,28 @@ export const ANALYSIS_UI: Record<string, LocalizedLabel> = {
     es: "Pasá el cursor por la curva para inspeccionar cada track. La línea punteada es la curva ideal para este contexto y género — el score mide qué tan de cerca la sigue tu set.",
   },
   issuesEyebrow: {
-    en: "Issues & recommendations",
-    es: "Problemas y recomendaciones",
+    en: "Recommendations",
+    es: "Recomendaciones",
   },
   issuesTitle: { en: "What to fix, and how", es: "Qué corregir, y cómo" },
   reorderEyebrow: { en: "Suggested order", es: "Orden sugerido" },
   reorderTitle: {
     en: "A stronger version of the same set",
     es: "Una versión más fuerte del mismo set",
+  },
+  // Shown instead of the comparison when the engine finds no worthwhile
+  // improvement — the section is always visible (V3 feedback).
+  reorderOptimal: {
+    en: "Your order already follows the ideal curve for this context — nothing worth reordering.",
+    es: "Tu orden ya sigue la curva ideal para este contexto — no hay nada que valga la pena reordenar.",
+  },
+  suggestedNameSuffix: {
+    en: "suggested order",
+    es: "orden sugerido",
+  },
+  reorderManually: {
+    en: "Reorder by hand in the playlist",
+    es: "Reordenar a mano en la playlist",
   },
   notAnalyzableTooShort: {
     en: "This playlist needs at least {min} tracks before the flow can be analyzed. Add tracks or paste a full tracklist first.",

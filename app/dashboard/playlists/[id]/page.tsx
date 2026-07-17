@@ -5,6 +5,8 @@ import { ArrowLeft, AudioWaveform } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
+import { PlaylistHeaderEdit } from "@/components/playlists/playlist-header-edit"
+import { PlaylistStatsPills } from "@/components/playlists/playlist-stats-pills"
 import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -96,9 +98,12 @@ export default async function PlaylistDetailPage({
           </div>
 
           <div className="space-y-3">
-            <h1 className="break-words text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              {playlist.name}
-            </h1>
+            <PlaylistHeaderEdit
+              playlistId={playlist.id}
+              name={playlist.name}
+              description={playlist.description}
+              locale={locale}
+            />
             <div className="flex flex-wrap items-center gap-2">
               {playlist.genre ? (
                 <Badge variant="accent">
@@ -114,6 +119,12 @@ export default async function PlaylistDetailPage({
                     playlist.context}
                 </Badge>
               ) : null}
+              <PlaylistStatsPills
+                tracks={playlist.tracks}
+                genre={playlist.genre}
+                context={playlist.context}
+                locale={locale}
+              />
             </div>
           </div>
         </header>

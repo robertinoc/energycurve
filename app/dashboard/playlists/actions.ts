@@ -30,6 +30,7 @@ import {
   createPlaylistSchema,
   createTrackInputSchema,
   createTracklistImportSchema,
+  updatePlaylistDetailsSchema,
 } from "@/lib/playlists/schemas"
 import {
   SET_CONTEXTS,
@@ -46,6 +47,7 @@ import {
   removeTrack,
   reorderTracks,
   replaceTracks,
+  updatePlaylistDetails,
   updateTrack,
 } from "@/services/playlist-service"
 import {
@@ -134,6 +136,9 @@ function readTrackFormData(formData: FormData) {
     name: String(formData.get("name") ?? ""),
     bpm: formData.get("bpm"),
     energyScore: formData.get("energyScore"),
+    musicalKey: String(formData.get("musicalKey") ?? ""),
+    genre: String(formData.get("genre") ?? ""),
+    comment: String(formData.get("comment") ?? ""),
   }
 }
 
@@ -295,6 +300,54 @@ export async function createPlaylistWithTracksAction(
   revalidatePath("/dashboard/playlists")
   revalidatePath("/dashboard")
   redirect(`/dashboard/playlists/${playlistId}`)
+}
+
+/** Rename + optional description, from the detail-page header editor. */
+export async function updatePlaylistDetailsAction(
+  _prevState: PlaylistActionState,
+  formData: FormData
+): Promise<PlaylistActionState> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+
+  if (rateLimited) {
+    return rateLimited
+  }
+
+  const playlistId = String(formData.get("playlistId") ?? "")
+
+  if (!playlistId) {
+    return failure(ACTION_COPY.genericError[locale])
+  }
+
+  const parsed = updatePlaylistDetailsSchema(locale).safeParse({
+    name: String(formData.get("name") ?? ""),
+    description: String(formData.get("description") ?? ""),
+  })
+
+  if (!parsed.success) {
+    return failure(
+      ACTION_COPY.reviewFields[locale],
+      collectFieldErrors(parsed.error)
+    )
+  }
+
+  try {
+    await updatePlaylistDetails(profile.id, playlistId, parsed.data)
+  } catch (error) {
+    logError("playlist.update_details_action_failed", error, {
+      profileId: profile.id,
+      playlistId,
+    })
+    return failure(ACTION_COPY.genericError[locale])
+  }
+
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+  revalidatePath("/dashboard/playlists")
+  revalidatePath("/dashboard")
+  return success(ACTION_COPY.detailsSaved[locale])
 }
 
 export async function deletePlaylistAction(
