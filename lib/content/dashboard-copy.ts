@@ -220,7 +220,7 @@ export const DASHBOARD_COPY = {
       en: "From your music files",
       es: "Desde tus archivos de audio",
     },
-    tabManual: { en: "By hand", es: "A mano" },
+    tabManual: { en: "Manual entry", es: "Carga manual" },
   },
 
   playlistHeaderEdit: {
