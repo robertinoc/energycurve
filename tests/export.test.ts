@@ -230,6 +230,80 @@ describe("Rekordbox export round-trips through the parser", () => {
   })
 })
 
+describe("Traktor export key consistency", () => {
+  // Traktor links playlist entries to collection entries by the exact
+  // VOLUME+DIR+FILE concatenation. Bare-filename sourceUris (audio-files
+  // imports) get a synthesized VOLUME="EnergyCurve" location — the PRIMARYKEY
+  // must match that synthesized key, or Traktor shows the playlist as empty.
+  // (The parser round-trip can't catch this: it falls back to collection
+  // order when refs don't resolve, masking the mismatch.)
+  it("emits PRIMARYKEYs that exactly match each collection LOCATION", () => {
+    const nml = serializePlaylist(
+      "traktor",
+      samplePlaylist({
+        importSource: "files",
+        tracks: [
+          // Bare filename (audio-files import — no real path known)
+          makeTrack({
+            position: 1,
+            artist: "Binary Squad",
+            name: "Like A Candy",
+            sourceUri: "Binary Squad - Like A Candy.mp3",
+          }),
+          // Folder-relative path (folder pick)
+          makeTrack({
+            position: 2,
+            artist: "Revoxx",
+            name: "Hostile",
+            sourceUri: "Promos/Revoxx - Hostile.mp3",
+          }),
+          // Real Traktor key (Traktor import)
+          makeTrack({
+            position: 3,
+            artist: "Mira Phase",
+            name: "Peak Freq",
+            sourceUri: "Macintosh HD/:Users/:dj/:Music/:peak.mp3",
+          }),
+          // No sourceUri at all (manual track)
+          makeTrack({
+            position: 4,
+            artist: "Nova Relay",
+            name: "Intro Bloom",
+            sourceUri: null,
+          }),
+        ],
+      })
+    )
+
+    const refKeys = [...nml.matchAll(/PRIMARYKEY TYPE="TRACK" KEY="([^"]+)"/g)].map(
+      (match) => match[1]
+    )
+    const locationKeys = [
+      ...nml.matchAll(/<LOCATION DIR="([^"]*)" FILE="([^"]*)" VOLUME="([^"]*)"\/>/g),
+    ].map((match) => `${match[3]}${match[1]}${match[2]}`)
+
+    expect(refKeys).toHaveLength(4)
+    expect(refKeys).toEqual(locationKeys)
+  })
+
+  it("resolves the playlist refs on re-import for bare-filename tracks", () => {
+    const nml = serializePlaylist(
+      "traktor",
+      samplePlaylist({
+        importSource: "files",
+        tracks: [
+          makeTrack({ position: 1, artist: "A", name: "One", sourceUri: "one.mp3" }),
+          makeTrack({ position: 2, artist: "B", name: "Two", sourceUri: "two.mp3" }),
+        ],
+      })
+    )
+
+    const parsed = parseTraktor(nml)
+    expect(parsed.playlistName).toBe("Warehouse Set")
+    expect(parsed.tracks.map((t) => t.name)).toEqual(["One", "Two"])
+  })
+})
+
 describe("Traktor export round-trips through the parser", () => {
   it("preserves order, metadata, energy, key, genre, duration, and location key", () => {
     const playlist = samplePlaylist({

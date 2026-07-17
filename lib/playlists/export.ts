@@ -321,6 +321,20 @@ function traktorLocationKey(track: ExportTrack): string {
   return `EnergyCurve/:${safe}`
 }
 
+/**
+ * Traktor links a playlist ENTRY to a collection ENTRY by the exact
+ * VOLUME+DIR+FILE concatenation of the collection entry's LOCATION. So the
+ * PRIMARYKEY must be derived from the SAME split location we emit — not from
+ * the raw sourceUri. For real Traktor keys the two are identical, but for
+ * bare filenames (audio-files imports: the browser never exposes real paths)
+ * the location gets synthesized as VOLUME="EnergyCurve" DIR="/:", and a raw
+ * filename key would match nothing → Traktor showed the playlist as EMPTY.
+ */
+function canonicalTraktorKey(track: ExportTrack): string {
+  const location = splitTraktorLocation(traktorLocationKey(track))
+  return `${location.volume}${location.dir}${location.file}`
+}
+
 function toTraktor(playlist: ExportPlaylist): string {
   const { tracks } = playlist
 
@@ -353,7 +367,7 @@ function toTraktor(playlist: ExportPlaylist): string {
 
   const refs = tracks
     .map((track) => {
-      const key = traktorLocationKey(track)
+      const key = canonicalTraktorKey(track)
       return `          <ENTRY><PRIMARYKEY TYPE="TRACK" KEY="${xmlAttr(key)}"/></ENTRY>`
     })
     .join("\n")
