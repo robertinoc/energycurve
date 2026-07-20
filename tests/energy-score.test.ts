@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  correctBpmTagForGenre,
   energyScoreFromBpm,
   estimatedScoreFromPosition,
   estimateSetDurationMinutes,
@@ -242,6 +243,81 @@ describe("loudness as an energy signal (B19)", () => {
     )
 
     expect(resolved.map((entry) => entry.camelot)).toEqual(["3A", "8A", null])
+  })
+})
+
+describe("half/double-time BPM tag correction (B21)", () => {
+  const hardTechno = { bpmLow: 138, bpmHigh: 158 }
+
+  it("doubles a half-time tag that lands in the genre band", () => {
+    // The real-world case: a ~160 BPM hard-techno track tagged "80".
+    expect(correctBpmTagForGenre(80, hardTechno)).toBe(160)
+  })
+
+  it("halves a double-time tag that lands in the genre band", () => {
+    expect(correctBpmTagForGenre(300, hardTechno)).toBe(150)
+  })
+
+  it("trusts in-band (and near-band) tags as-is", () => {
+    expect(correctBpmTagForGenre(150, hardTechno)).toBe(150)
+    // Within the ±8 anchor margin — not "outside" the band, no correction.
+    expect(correctBpmTagForGenre(132, hardTechno)).toBe(132)
+    expect(correctBpmTagForGenre(164, hardTechno)).toBe(164)
+  })
+
+  it("leaves genuinely out-of-band tags unchanged when no multiple fits", () => {
+    // 100 → ×2 = 200 (too high), ×0.5 = 50 (too low): keep 100, low energy.
+    expect(correctBpmTagForGenre(100, hardTechno)).toBe(100)
+  })
+
+  it("scores the SIKOTI case like its 160 BPM neighbours", () => {
+    const resolved = resolveTrackEnergies(
+      [
+        { id: "a", position: 1, bpm: 160, energy_score: null },
+        { id: "b", position: 2, bpm: 80, energy_score: null }, // half-time tag
+        { id: "c", position: 3, bpm: 155, energy_score: null },
+      ],
+      "main",
+      "hard-techno"
+    )
+
+    // Before B21 the 80-tag scored 1.0 (58 BPM below the band, full ramp).
+    expect(resolved[1].score).toBe(resolved[0].score)
+    expect(resolved[1].score).toBe(9.1)
+    // Display BPM keeps the raw tag — the correction never mutates data.
+    expect(resolved[1].bpm).toBe(80)
+  })
+
+  it("lets a corrected tempo anchor the track's own genre tag (B14 + B21)", () => {
+    // Psy-trance band is 136–148: a "72"-tagged psy track inside a house set
+    // corrects to 144 and anchors to psy-trance, not to the playlist genre.
+    const [entry] = resolveTrackEnergies(
+      [
+        {
+          id: "a",
+          position: 1,
+          bpm: 72,
+          energy_score: null,
+          genre: "Psytrance",
+        },
+      ],
+      "main",
+      "house"
+    )
+
+    // 144 in the 136–148 band → 3 + (8/12)·6 = 7.
+    expect(entry.score).toBe(7)
+  })
+
+  it("does not correct when the playlist has no genre (universal bands)", () => {
+    const [entry] = resolveTrackEnergies(
+      [{ id: "a", position: 1, bpm: 80, energy_score: null }],
+      "main",
+      null
+    )
+
+    // No band to judge against — the raw tag maps through the V1 bands.
+    expect(entry.score).toBe(3)
   })
 })
 

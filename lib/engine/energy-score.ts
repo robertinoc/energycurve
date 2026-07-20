@@ -1,5 +1,6 @@
 import {
   BPM_PROFILE_EDGE_RAMP,
+  BPM_TAG_TIME_MULTIPLIERS_V4,
   CONTEXT_ENGINE_V1,
   DEFAULT_GENRE_BPM_PROFILE,
   ENERGY_SCORE_BPM_BANDS,
@@ -152,6 +153,47 @@ export function estimatedScoreFromPosition(
   return roundToOneDecimal(lerp(range.min, range.max, t))
 }
 
+interface GenreBpmBand {
+  bpmLow: number
+  bpmHigh: number
+}
+
+function withinBand(bpm: number, profile: GenreBpmBand): boolean {
+  return (
+    bpm >= profile.bpmLow - TRACK_GENRE_ANCHOR_BPM_MARGIN &&
+    bpm <= profile.bpmHigh + TRACK_GENRE_ANCHOR_BPM_MARGIN
+  )
+}
+
+/**
+ * Half/double-time BPM tag correction (B21). BPM detectors routinely halve
+ * fast tracks (a ~160 BPM hard-techno track tagged "80" scored energy 1 while
+ * its 160 neighbours scored 9+). When the tagged BPM falls outside the genre
+ * band but a ×2 / ×0.5 multiple lands inside it (± anchor margin), score with
+ * the corrected tempo. In-band tags are always trusted; tags that no multiple
+ * can bring into band are returned unchanged (a genuinely slow track keeps
+ * its low energy). Display/storage keep the raw tag — this only affects the
+ * energy mapping.
+ */
+export function correctBpmTagForGenre(
+  bpm: number,
+  profile: GenreBpmBand
+): number {
+  if (withinBand(bpm, profile)) {
+    return bpm
+  }
+
+  for (const multiplier of BPM_TAG_TIME_MULTIPLIERS_V4) {
+    const corrected = bpm * multiplier
+
+    if (withinBand(corrected, profile)) {
+      return corrected
+    }
+  }
+
+  return bpm
+}
+
 export interface TrackEnergyInput {
   id?: string | null
   position: number
@@ -231,18 +273,29 @@ export function resolveTrackEnergies(
     } else if (track.bpm !== null) {
       // The track's own tag anchors its band only when the BPM is plausible
       // for that genre (B14) — a "Techno"-tagged track at 158 BPM is
-      // mislabeled and would saturate on the wrong band.
+      // mislabeled and would saturate on the wrong band. Plausibility is
+      // checked on the half/double-time-corrected tempo (B21) so a hard-
+      // techno track tagged "80" still anchors to its own genre.
       const tagGenre = mapGenreTag(track.genre)
       const tagProfile = tagGenre
         ? (GENRE_BPM_PROFILES_V2[tagGenre] ?? DEFAULT_GENRE_BPM_PROFILE)
         : null
       const tagPlausible =
         tagProfile !== null &&
-        track.bpm >= tagProfile.bpmLow - TRACK_GENRE_ANCHOR_BPM_MARGIN &&
-        track.bpm <= tagProfile.bpmHigh + TRACK_GENRE_ANCHOR_BPM_MARGIN
+        withinBand(correctBpmTagForGenre(track.bpm, tagProfile), tagProfile)
       const trackGenre = tagPlausible ? tagGenre : genre
 
-      score = energyScoreFromBpm(track.bpm, trackGenre)
+      // Half/double-time tag correction (B21) against the band that will
+      // actually score this track. Without a genre there is no band to judge
+      // against, so the raw tag maps through the universal bands unchanged.
+      const scoringProfile = trackGenre
+        ? (GENRE_BPM_PROFILES_V2[trackGenre] ?? DEFAULT_GENRE_BPM_PROFILE)
+        : null
+      const effectiveBpm = scoringProfile
+        ? correctBpmTagForGenre(track.bpm, scoringProfile)
+        : track.bpm
+
+      score = energyScoreFromBpm(effectiveBpm, trackGenre)
       source = "bpm"
 
       const db = track.perceived_db
