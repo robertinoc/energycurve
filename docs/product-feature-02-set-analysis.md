@@ -212,6 +212,18 @@ same explainability contract.
     only the suggested order, surfaced as "Harmonic X/Y" badges in the
     order comparison. On the reference set: 6/37 compatible transitions →
     30/37 (ratio 0.76), clashes 31 → 7, energy 5.8 → 8.3.
+21. **Half/double-time BPM tag correction (B21)** — BPM detectors routinely
+    tag fast tracks at half tempo (real case: a ~160 BPM hard-techno track
+    tagged "80" scored energy 1.0 while its 160 BPM neighbours scored 9.1).
+    When a tagged BPM falls outside the scoring genre's band but a ×2 / ×0.5
+    multiple (`BPM_TAG_TIME_MULTIPLIERS_V4`) lands inside it (± the B14
+    anchor margin), the energy mapping uses the corrected tempo. The B14
+    tag-plausibility check also runs on the corrected tempo, so a half-time
+    tag can still anchor the track's own genre. Non-destructive: stored and
+    displayed BPM keep the tag's value; in-band tags are always trusted;
+    tags no multiple can rescue keep their genuine low/high energy. No
+    correction without a genre (universal bands have no band to judge
+    against).
 
 ## Key Files
 

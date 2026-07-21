@@ -498,6 +498,17 @@ export const ENERGY_CONFIDENCE_RULES_V3 = {
 export const TRACK_GENRE_ANCHOR_BPM_MARGIN = 8
 
 /**
+ * Half/double-time BPM tag correction (B21). BPM detectors routinely tag fast
+ * tracks at half their real tempo (a 160 BPM hard-techno track tagged "80"),
+ * and occasionally double a slow one. When a track's tagged BPM falls OUTSIDE
+ * the genre band but multiplying by one of these factors lands INSIDE it
+ * (± TRACK_GENRE_ANCHOR_BPM_MARGIN), the energy mapping uses the corrected
+ * tempo. Non-destructive: the stored/displayed BPM keeps the tag's value.
+ * Ordered — the half-time case (×2) is far more common than double-time (×0.5).
+ */
+export const BPM_TAG_TIME_MULTIPLIERS_V4 = [2, 0.5] as const
+
+/**
  * Genre-detection scoring (B15): file tags vote, but the set's BPMs act as a
  * prior — "Techno" tags on a 157-BPM set point at hard techno, not techno.
  * bpmFitWeight > voteWeight on purpose: unanimous mislabeled tags must lose
