@@ -74,6 +74,15 @@ function roundToOneDecimal(value: number) {
   return Math.round(value * 10) / 10
 }
 
+/** Stable fix id (type + involved positions) — shared with the panel so the
+ * localized recommendations can be joined back to their fix. */
+export function fixIdForIssue(issue: {
+  type: IssueType
+  trackPositions: number[]
+}): string {
+  return `${issue.type}-${issue.trackPositions.join(".") || "set"}`
+}
+
 /** Applies one move against a working array (immutable input, new array out). */
 function applyOperation(order: string[], operation: FixOperation): string[] {
   const from = order.indexOf(operation.trackId)
@@ -408,7 +417,7 @@ export function deriveFixes(input: FixDerivationInput): SetFix[] {
 
   return input.issues.map((issue) => {
     const operations = operationsForIssue(issue, opContext)
-    const id = `${issue.type}-${issue.trackPositions.join(".") || "set"}`
+    const id = fixIdForIssue(issue)
 
     let points = 0
 

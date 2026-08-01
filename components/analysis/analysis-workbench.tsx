@@ -1,8 +1,16 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { CircleCheck } from "lucide-react"
 
+import { FixMapCurve, type FixMarkerDatum } from "@/components/analysis/fix-map-curve"
+import { FixPanel, type FixStatus } from "@/components/analysis/fix-panel"
 import { ScoreHeader } from "@/components/analysis/score-header"
+import {
+  ANALYSIS_UI,
+  FIX_COPY,
+  formatTemplate,
+} from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   deriveOrder,
@@ -53,45 +61,77 @@ function readStoredDecisions(
   }
 }
 
+export interface WorkbenchTrack {
+  id: string
+  artist: string
+  name: string
+}
+
+/** Localized, already-interpolated copy per fix id (from the engine's
+ * recommendations) — the fallback when FIX_COPY has no short template. */
+export interface FixRecommendationCopy {
+  id: string
+  title: string
+  action: string
+  body: string
+}
+
 export interface AnalysisWorkbenchProps {
   playlistId: string
-  /** Track ids in the ORIGINAL saved order. */
-  originalIds: string[]
+  /** Tracks in the ORIGINAL saved order. */
+  tracks: WorkbenchTrack[]
   /** Energies resolved for the original order (index-aligned). */
   energies: ResolvedTrackEnergy[]
   fixes: SetFix[]
+  recommendations: FixRecommendationCopy[]
   genre: SupportedGenre
   context: PlaylistContext
   /** Score the engine computed for the original order. */
   baseScore: number
+  /** Ideal curve, index-aligned to the set length. */
+  targetCurve: number[]
   locale: SiteLocale
 }
 
 /**
  * Client container of the redesigned analysis screen. Owns the ONLY piece of
- * view state — `{applied, discarded}` fix-id sets — and derives everything
- * else: the current order (deriveOrder), the recalculated score (the same
- * engine that produced the base score) and the reachable potential. Zones 2
- * (curve + fix panel) and 3 (live tracklist) plug into this same state.
+ * view state — `{applied, discarded}` fix-id sets + the selected fix — and
+ * derives everything else: the current order (deriveOrder), the recalculated
+ * score (same engine as the base score) and the reachable potential.
  */
 export function AnalysisWorkbench({
   playlistId,
-  originalIds,
+  tracks,
   energies,
   fixes,
+  recommendations,
   genre,
   context,
   baseScore,
+  targetCurve,
   locale,
 }: AnalysisWorkbenchProps) {
+  const originalIds = useMemo(() => tracks.map((track) => track.id), [tracks])
+  const tracksById = useMemo(
+    () => new Map(tracks.map((track) => [track.id, track])),
+    [tracks]
+  )
+  const energiesById = useMemo(
+    () => new Map(originalIds.map((id, index) => [id, energies[index]])),
+    [originalIds, energies]
+  )
+  const recsById = useMemo(
+    () => new Map(recommendations.map((rec) => [rec.id, rec])),
+    [recommendations]
+  )
+
   const [applied, setApplied] = useState<Set<string>>(new Set())
   const [discarded, setDiscarded] = useState<Set<string>>(new Set())
   const [hydrated, setHydrated] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const fixIds = useMemo(() => new Set(fixes.map((fix) => fix.id)), [fixes])
 
-  // Restore persisted decisions after mount (localStorage is unavailable at
-  // SSR; starting empty avoids a hydration mismatch).
   useEffect(() => {
     const stored = readStoredDecisions(playlistId, fixIds)
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -140,6 +180,14 @@ export function AnalysisWorkbench({
     })
   }, [])
 
+  const reconsiderFix = useCallback((fixId: string) => {
+    setDiscarded((current) => {
+      const next = new Set(current)
+      next.delete(fixId)
+      return next
+    })
+  }, [])
+
   const resetAll = useCallback(() => {
     setApplied(new Set())
     setDiscarded(new Set())
@@ -149,6 +197,11 @@ export function AnalysisWorkbench({
   const order = useMemo(
     () => deriveOrder(originalIds, fixes, applied),
     [originalIds, fixes, applied]
+  )
+
+  const orderedScores = useMemo(
+    () => order.map((id) => energiesById.get(id)?.score ?? 0),
+    [order, energiesById]
   )
 
   const currentScore = useMemo(
@@ -166,25 +219,152 @@ export function AnalysisWorkbench({
   const decidedCount = decidable.filter(
     (fix) => applied.has(fix.id) || discarded.has(fix.id)
   ).length
-  const remainingCount = decidable.filter(
-    (fix) => !applied.has(fix.id) && !discarded.has(fix.id)
-  ).length
+  const remainingCount = decidable.length - decidedCount
 
-  // Potential never moves when applying (only discarding lowers it), and is
-  // never shown below the engine-measured current score.
   const potential = Math.max(
     potentialScore(baseScore, fixes, discarded),
     currentScore
   )
-
   const gainedPoints = Math.max(0, currentScore - baseScore)
   const totalPoints = Math.max(0, potential - baseScore)
 
-  // Zone 2/3 consumers (curve markers, fix panel, live tracklist) mount here
-  // in the next stages and receive {order, applyFix, undoFix, discardFix,
-  // resetAll} — the callbacks already exist so the header math is final.
-  void undoFix
-  void resetAll
+  // Navigable fixes (panel + arrows): every non-positive issue, curve order.
+  const navigable = useMemo(
+    () =>
+      fixes
+        .filter((fix) => fix.severity !== "positive")
+        .sort((a, b) => a.markerPosition - b.markerPosition),
+    [fixes]
+  )
+
+  const selectedFix =
+    fixes.find((fix) => fix.id === selectedId) ??
+    navigable.find(
+      (fix) => !applied.has(fix.id) && !discarded.has(fix.id)
+    ) ??
+    navigable[0] ??
+    null
+
+  const navigate = useCallback(
+    (direction: 1 | -1) => {
+      if (navigable.length === 0) {
+        return
+      }
+
+      const currentIndex = selectedFix
+        ? navigable.findIndex((fix) => fix.id === selectedFix.id)
+        : -1
+      const nextIndex =
+        (currentIndex + direction + navigable.length) % navigable.length
+      setSelectedId(navigable[nextIndex].id)
+    },
+    [navigable, selectedFix]
+  )
+
+  // Curve markers anchored on the track that causes each issue, located in
+  // the CURRENT derived order (markers follow their track when fixes move it).
+  const markers: FixMarkerDatum[] = useMemo(
+    () =>
+      fixes.map((fix) => {
+        const anchorId =
+          fix.tracks[0]?.id || originalIds[fix.markerPosition - 1] || order[0]
+        const index = Math.max(0, order.indexOf(anchorId))
+
+        return { fix, index, applied: applied.has(fix.id) }
+      }),
+    [fixes, originalIds, order, applied]
+  )
+
+  const status: FixStatus = selectedFix
+    ? applied.has(selectedFix.id)
+      ? "applied"
+      : discarded.has(selectedFix.id)
+        ? "discarded"
+        : "pending"
+    : "pending"
+
+  // Before/after windows: the real curve segment around the fix, without vs
+  // with this fix applied (on top of everything else currently applied).
+  const { beforeWindow, afterWindow } = useMemo(() => {
+    if (!selectedFix || selectedFix.operations.length === 0) {
+      return { beforeWindow: [], afterWindow: [] }
+    }
+
+    const without = new Set(applied)
+    without.delete(selectedFix.id)
+    const withFix = new Set(without).add(selectedFix.id)
+
+    const beforeOrder = deriveOrder(originalIds, fixes, without)
+    const afterOrder = deriveOrder(originalIds, fixes, withFix)
+    const anchorId =
+      selectedFix.operations[0]?.trackId ?? selectedFix.tracks[0]?.id
+
+    const center = Math.max(0, afterOrder.indexOf(anchorId ?? ""))
+    const start = Math.max(0, center - 3)
+    const end = Math.min(afterOrder.length, center + 4)
+
+    const scoresOf = (ids: string[]) =>
+      ids.slice(start, end).map((id) => energiesById.get(id)?.score ?? 0)
+
+    return {
+      beforeWindow: scoresOf(beforeOrder),
+      afterWindow: scoresOf(afterOrder),
+    }
+  }, [selectedFix, applied, originalIds, fixes, energiesById])
+
+  const panelCopy = useMemo(() => {
+    if (!selectedFix) {
+      return null
+    }
+
+    const rec = recsById.get(selectedFix.id)
+    const short = FIX_COPY[selectedFix.issueType]
+    const trackName = (id: string | undefined) =>
+      (id && tracksById.get(id)?.name) || "—"
+
+    if (!short) {
+      return {
+        title: rec?.title ?? selectedFix.issueType,
+        action: rec?.action ?? "",
+        why: rec?.body ?? "",
+      }
+    }
+
+    const bridgeId = selectedFix.operations[0]?.trackId
+    const params = {
+      bridge: trackName(bridgeId),
+      track: trackName(bridgeId),
+      from: selectedFix.tracks[0]?.position ?? "",
+      to:
+        selectedFix.issueType === "early_peak" ||
+        selectedFix.issueType === "context_high_peak"
+          ? (selectedFix.operations[0]?.toIndex ?? 0) + 1
+          : (selectedFix.tracks[1]?.position ?? ""),
+      delta: Math.abs(selectedFix.delta ?? 0),
+      count: selectedFix.tracks.length,
+    }
+
+    return {
+      title: rec?.title ?? selectedFix.issueType,
+      action: formatTemplate(short.action[locale], params),
+      why: formatTemplate(short.why[locale], params),
+    }
+  }, [selectedFix, recsById, tracksById, locale])
+
+  const chips = useMemo(() => {
+    if (!selectedFix) {
+      return []
+    }
+
+    return selectedFix.tracks.map((ref) => ({
+      position: ref.position,
+      name: tracksById.get(ref.id)?.name ?? "—",
+    }))
+  }, [selectedFix, tracksById])
+
+  const navigableIndex = selectedFix
+    ? navigable.findIndex((fix) => fix.id === selectedFix.id)
+    : -1
 
   return (
     <div className="space-y-5">
@@ -198,8 +378,58 @@ export function AnalysisWorkbench({
         decidedCount={decidedCount}
         locale={locale}
       />
-      {/* Zone 2 (curve as map + fix panel) and zone 3 (live tracklist) land
-          here next. */}
+
+      {fixes.length === 0 ? (
+        <div className="rounded-2xl border border-ec-border bg-ec-surface p-5">
+          <p className="mb-4 flex items-center gap-2 text-sm text-ec-text-muted">
+            <CircleCheck className="size-4 shrink-0 text-ec-cyan" />
+            {ANALYSIS_UI.noFixesCoach[locale]}
+          </p>
+          <FixMapCurve
+            scores={orderedScores}
+            target={targetCurve}
+            markers={[]}
+            selectedFixId={null}
+            onSelect={() => {}}
+            onNavigate={() => {}}
+            locale={locale}
+          />
+        </div>
+      ) : (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+          <FixMapCurve
+            scores={orderedScores}
+            target={targetCurve}
+            markers={markers}
+            selectedFixId={selectedFix?.id ?? null}
+            onSelect={setSelectedId}
+            onNavigate={navigate}
+            locale={locale}
+          />
+          {selectedFix && panelCopy ? (
+            <FixPanel
+              fix={selectedFix}
+              title={panelCopy.title}
+              actionText={panelCopy.action}
+              whyText={panelCopy.why}
+              index={navigableIndex + 1}
+              total={navigable.length}
+              status={status}
+              beforeWindow={beforeWindow}
+              afterWindow={afterWindow}
+              chips={chips}
+              onPrev={() => navigate(-1)}
+              onNext={() => navigate(1)}
+              onApply={() => applyFix(selectedFix.id)}
+              onUndo={() => undoFix(selectedFix.id)}
+              onDiscard={() => discardFix(selectedFix.id)}
+              onReconsider={() => reconsiderFix(selectedFix.id)}
+              locale={locale}
+            />
+          ) : null}
+        </div>
+      )}
+
       {applied.size === 0 && discarded.size === 0 ? null : (
         <button
           type="button"
@@ -209,37 +439,6 @@ export function AnalysisWorkbench({
           {locale === "es" ? "Reiniciar decisiones" : "Reset decisions"}
         </button>
       )}
-      {/* Temporary dev affordance until zone 2 lands: apply/discard the first
-          pending fix so the header can be exercised in the preview. Removed
-          when the fix panel arrives. */}
-      {process.env.NODE_ENV !== "production" && remainingCount > 0 ? (
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              const next = decidable.find(
-                (fix) => !applied.has(fix.id) && !discarded.has(fix.id)
-              )
-              if (next) applyFix(next.id)
-            }}
-            className="rounded-lg border border-white/14 px-3 py-1.5 text-xs text-white/72 hover:bg-white/10"
-          >
-            [dev] aplicar próximo arreglo
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const next = decidable.find(
-                (fix) => !applied.has(fix.id) && !discarded.has(fix.id)
-              )
-              if (next) discardFix(next.id)
-            }}
-            className="rounded-lg border border-white/14 px-3 py-1.5 text-xs text-white/72 hover:bg-white/10"
-          >
-            [dev] descartar próximo
-          </button>
-        </div>
-      ) : null}
     </div>
   )
 }

@@ -403,6 +403,149 @@ export const ANALYSIS_UI: Record<string, LocalizedLabel> = {
     es: "{done} de {total} decididos",
   },
 
-  // Misc
-  language: { en: "Language", es: "Idioma" },
+  // Fix map + panel (redesign zone 2)
+  fixCounter: { en: "Fix {index} of {total}", es: "Arreglo {index} de {total}" },
+  prevFixAria: { en: "Previous fix", es: "Arreglo anterior" },
+  nextFixAria: { en: "Next fix", es: "Arreglo siguiente" },
+  recoverable: { en: "recoverable score", es: "de score recuperables" },
+  theFixLabel: { en: "The fix", es: "El arreglo" },
+  beforeLabel: { en: "Before", es: "Antes" },
+  afterLabel: { en: "After", es: "Después" },
+  applyCta: { en: "Apply this fix", es: "Aplicar este arreglo" },
+  appliedCta: { en: "Applied — undo", es: "Aplicado — deshacer" },
+  discardCta: { en: "It's fine — leave it", es: "Así está bien, dejalo" },
+  discardedCta: {
+    en: "Discarded — reconsider",
+    es: "Descartado — reconsiderar",
+  },
+  positiveNothing: {
+    en: "This is already working — nothing to touch.",
+    es: "Esto ya está funcionando — nada que tocar.",
+  },
+  noFixesCoach: {
+    en: "The set already follows the curve. Nothing to correct.",
+    es: "El set ya sigue la curva. Nada que corregir.",
+  },
+}
+
+/** Short Space Mono labels next to each curve marker (zone 2). */
+export const MARKER_LABELS: Record<string, LocalizedLabel> = {
+  abrupt_drop: { en: "DROP {delta}", es: "CAÍDA {delta}" },
+  abrupt_spike: { en: "SPIKE +{delta}", es: "SUBIDA +{delta}" },
+  flat_zone: { en: "FLAT ZONE", es: "ZONA PLANA" },
+  early_peak: { en: "PEAK AT {n}", es: "PICO EN EL {n}" },
+  context_high_peak: { en: "PEAK AT {n}", es: "PICO EN EL {n}" },
+  weak_ending: { en: "WEAK CLOSE", es: "CIERRE FLOJO" },
+  context_range: { en: "OUT OF RANGE", es: "FUERA DE RANGO" },
+  no_progression: { en: "NO CLIMB", es: "SIN PROGRESIÓN" },
+  too_many_rests: { en: "RESTS", es: "DESCANSOS" },
+  no_climax: { en: "NO CLIMAX", es: "SIN CLÍMAX" },
+  good_breather: { en: "BREATHER", es: "RESPIRO" },
+  low_energy_confidence: { en: "THIN DATA", es: "POCOS DATOS" },
+  set_too_short: { en: "SHORT SET", es: "SET CORTO" },
+  set_too_long: { en: "LONG SET", es: "SET LARGO" },
+}
+
+interface FixActionCopy {
+  action: LocalizedLabel
+  why: LocalizedLabel
+}
+
+/**
+ * One-sentence action + one grey line of why, per actionable issue type
+ * (zone 2 panel). Slots: {bridge} {track} = track names, {from} {to} = 1-based
+ * positions, {delta} = energy delta, {count} = involved tracks. Advice-only
+ * types are not listed — the panel falls back to ISSUE_COPY.recommendation.
+ */
+export const FIX_COPY: Record<string, FixActionCopy> = {
+  abrupt_drop: {
+    action: {
+      en: "Move “{bridge}” between {from} and {to} as a bridge.",
+      es: "Mové «{bridge}» entre el {from} y el {to} como puente.",
+    },
+    why: {
+      en: "A sudden {delta}-point drop empties the floor; a step in between makes it feel intentional.",
+      es: "Una caída de {delta} puntos de golpe vacía la pista; un escalón en el medio la vuelve intencional.",
+    },
+  },
+  abrupt_spike: {
+    action: {
+      en: "Slot “{bridge}” in before {to} to stage the climb.",
+      es: "Meté «{bridge}» antes del {to} para escalonar la subida.",
+    },
+    why: {
+      en: "A +{delta} jump lands better with a step in the middle.",
+      es: "Un salto de +{delta} se siente ganado con un paso en el medio.",
+    },
+  },
+  weak_ending: {
+    action: {
+      en: "Close with “{track}” — move it to the end.",
+      es: "Cerrá con «{track}» — movelo al final.",
+    },
+    why: {
+      en: "Sets are remembered by how they end; your strongest track is buried mid-set.",
+      es: "Los sets se recuerdan por cómo terminan; tu track más fuerte está quedando enterrado.",
+    },
+  },
+  early_peak: {
+    action: {
+      en: "Move “{track}” to the final stretch (position {to}).",
+      es: "Mové «{track}» al tramo final (posición {to}).",
+    },
+    why: {
+      en: "Peaking this early leaves nowhere to go afterwards.",
+      es: "Un pico tan temprano no deja a dónde ir después.",
+    },
+  },
+  context_high_peak: {
+    action: {
+      en: "Move “{track}” to the final stretch (position {to}).",
+      es: "Mové «{track}» al tramo final (posición {to}).",
+    },
+    why: {
+      en: "This context should hold the room, not burn it early.",
+      es: "Este contexto pide sostener la sala, no quemarla antes de tiempo.",
+    },
+  },
+  flat_zone: {
+    action: {
+      en: "Drop “{track}” into the middle of the zone to vary the energy.",
+      es: "Meté «{track}» en el medio de la zona para variar la energía.",
+    },
+    why: {
+      en: "{count} tracks in a row at the same energy kill the momentum.",
+      es: "{count} tracks seguidos en la misma energía apagan el impulso.",
+    },
+  },
+  too_many_rests: {
+    action: {
+      en: "Bridge the rest after {from} with “{bridge}”.",
+      es: "Puenteá el descanso después del {from} con «{bridge}».",
+    },
+    why: {
+      en: "One breather is healthy; several cool the floor down.",
+      es: "Un respiro es sano; varios seguidos enfrían la pista.",
+    },
+  },
+  context_range: {
+    action: {
+      en: "Reseat these {count} tracks where the curve asks for their energy.",
+      es: "Reacomodá estos {count} tracks donde la curva pide su energía.",
+    },
+    why: {
+      en: "Where they sit now, they fall outside the context's range.",
+      es: "Donde están ahora quedan fuera del rango del contexto.",
+    },
+  },
+  no_progression: {
+    action: {
+      en: "Send your 2 strongest tracks to the final stretch.",
+      es: "Mandá tus 2 tracks más fuertes al tramo final.",
+    },
+    why: {
+      en: "The last third doesn't top the first — the journey stays flat.",
+      es: "El último tercio no supera al primero — el viaje queda plano.",
+    },
+  },
 }

@@ -6,12 +6,10 @@ import { ArrowLeft, CircleCheck, TriangleAlert } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { AnalysisWorkbench } from "@/components/analysis/analysis-workbench"
-import { EnergyCurveChart, type ChartTrackPoint } from "@/components/analysis/energy-curve-chart"
-import { IssueList } from "@/components/analysis/issue-list"
 import { LocaleToggle } from "@/components/analysis/locale-toggle"
 import { OrderComparison } from "@/components/analysis/order-comparison"
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
-import { deriveFixes } from "@/lib/engine/fixes"
+import { deriveFixes, fixIdForIssue } from "@/lib/engine/fixes"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import type { ExportPlaylist } from "@/lib/playlists/export"
@@ -101,20 +99,6 @@ export default async function PlaylistAnalysisPage({
 
   const { playlist, energies, analysis, recommendations, reorder } = result
 
-  const issuePositions = new Set(
-    analysis.issues.flatMap((issue) => issue.trackPositions)
-  )
-
-  const chartTracks: ChartTrackPoint[] = playlist.tracks.map((track, index) => ({
-    position: track.position,
-    artist: track.artist,
-    name: track.name,
-    bpm: track.bpm,
-    score: energies[index]?.score ?? 0,
-    source: energies[index]?.source ?? "estimated",
-    hasIssue: issuePositions.has(track.position),
-  }))
-
   // Redesign (zone 0/1): every issue becomes an actionable fix with concrete
   // reorder operations; the client workbench derives order + score from them.
   const fixes = deriveFixes({
@@ -126,6 +110,15 @@ export default async function PlaylistAnalysisPage({
     context: analysis.context,
     baseScore: analysis.setScore,
   })
+
+  // Localized, already-interpolated engine copy, joined to fixes by their
+  // stable id (panel fallback for advice-only issues + titles).
+  const recommendationCopy = recommendations.map((rec) => ({
+    id: fixIdForIssue(rec.issue),
+    title: rec.title,
+    action: rec.action,
+    body: rec.body,
+  }))
 
   // Exportable version of the SUGGESTED order (V3): full track rows reordered
   // by the suggestion, positions renumbered 1..N.
@@ -191,53 +184,25 @@ export default async function PlaylistAnalysisPage({
           </p>
         </header>
 
-        {/* Redesign zone 1: score now → you can reach. The workbench owns the
-            applied/discarded state; zones 2-3 replace the sections below. */}
+        {/* Redesign zones 1-2: score header + curve-as-map + fix panel. The
+            workbench owns the applied/discarded state; zone 3 (live
+            tracklist) replaces the suggested-order section below. */}
         <AnalysisWorkbench
           playlistId={playlist.id}
-          originalIds={playlist.tracks.map((track) => track.id)}
+          tracks={playlist.tracks.map((track) => ({
+            id: track.id,
+            artist: track.artist,
+            name: track.name,
+          }))}
           energies={energies}
           fixes={fixes}
+          recommendations={recommendationCopy}
           genre={analysis.genre}
           context={analysis.context}
           baseScore={analysis.setScore}
+          targetCurve={analysis.targetCurve}
           locale={locale}
         />
-
-        <section className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.98),rgba(12,9,23,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
-          <div className="mb-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/42">
-              {ANALYSIS_UI.curveEyebrow[locale]}
-            </p>
-            <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
-              {ANALYSIS_UI.curveTitle[locale]}
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/56">
-              {ANALYSIS_UI.curveSubtitle[locale]}
-            </p>
-          </div>
-          <EnergyCurveChart
-            tracks={chartTracks}
-            target={analysis.targetCurve}
-            locale={locale}
-          />
-        </section>
-
-        <section className="space-y-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-white/42">
-              {ANALYSIS_UI.issuesEyebrow[locale]}
-            </p>
-            <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
-              {ANALYSIS_UI.issuesTitle[locale]}
-            </h2>
-          </div>
-          <IssueList
-            recommendations={recommendations}
-            locale={locale}
-            tracks={playlist.tracks}
-          />
-        </section>
 
         {/* Always visible (V3): when the engine finds no worthwhile
             improvement, a positive state replaces the comparison. */}
