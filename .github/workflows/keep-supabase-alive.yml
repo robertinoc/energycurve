@@ -1,0 +1,27 @@
+# Supabase pauses free-tier projects after 7 days without database activity
+# (this took production down on 2026-07-28). /api/health runs a real query
+# against the profiles table, so pinging it counts as activity. Twice a week
+# keeps the project comfortably inside the window.
+name: Keep Supabase alive
+
+on:
+  schedule:
+    # Mondays and Thursdays at 09:17 UTC (odd minute to avoid the top-of-hour
+    # congestion where GitHub may delay or drop scheduled runs).
+    - cron: "17 9 * * 1,4"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping /api/health (queries the database)
+        run: |
+          status=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 30 https://energycurve.app/api/health)
+          echo "HTTP $status"
+          cat /tmp/health.json
+          if [ "$status" != "200" ]; then
+            echo "::error::Health check failed with HTTP $status — Supabase may be paused or the app is down."
+            exit 1
+          fi
