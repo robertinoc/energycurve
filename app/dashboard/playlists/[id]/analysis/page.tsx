@@ -5,12 +5,13 @@ import Link from "next/link"
 import { ArrowLeft, CircleCheck, TriangleAlert } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
+import { AnalysisWorkbench } from "@/components/analysis/analysis-workbench"
 import { EnergyCurveChart, type ChartTrackPoint } from "@/components/analysis/energy-curve-chart"
 import { IssueList } from "@/components/analysis/issue-list"
 import { LocaleToggle } from "@/components/analysis/locale-toggle"
 import { OrderComparison } from "@/components/analysis/order-comparison"
-import { SetScoreCard } from "@/components/analysis/set-score-card"
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
+import { deriveFixes } from "@/lib/engine/fixes"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import type { ExportPlaylist } from "@/lib/playlists/export"
@@ -114,6 +115,18 @@ export default async function PlaylistAnalysisPage({
     hasIssue: issuePositions.has(track.position),
   }))
 
+  // Redesign (zone 0/1): every issue becomes an actionable fix with concrete
+  // reorder operations; the client workbench derives order + score from them.
+  const fixes = deriveFixes({
+    trackIds: playlist.tracks.map((track) => track.id),
+    energies,
+    issues: analysis.issues,
+    targetCurve: analysis.targetCurve,
+    genre: analysis.genre,
+    context: analysis.context,
+    baseScore: analysis.setScore,
+  })
+
   // Exportable version of the SUGGESTED order (V3): full track rows reordered
   // by the suggestion, positions renumbered 1..N.
   const byPosition = new Map(playlist.tracks.map((track) => [track.position, track]))
@@ -178,29 +191,34 @@ export default async function PlaylistAnalysisPage({
           </p>
         </header>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.98),rgba(12,9,23,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
-            <div className="mb-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-white/42">
-                {ANALYSIS_UI.curveEyebrow[locale]}
-              </p>
-              <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
-                {ANALYSIS_UI.curveTitle[locale]}
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/56">
-                {ANALYSIS_UI.curveSubtitle[locale]}
-              </p>
-            </div>
-            <EnergyCurveChart
-              tracks={chartTracks}
-              target={analysis.targetCurve}
-              locale={locale}
-            />
-          </div>
+        {/* Redesign zone 1: score now → you can reach. The workbench owns the
+            applied/discarded state; zones 2-3 replace the sections below. */}
+        <AnalysisWorkbench
+          playlistId={playlist.id}
+          originalIds={playlist.tracks.map((track) => track.id)}
+          energies={energies}
+          fixes={fixes}
+          genre={analysis.genre}
+          context={analysis.context}
+          baseScore={analysis.setScore}
+          locale={locale}
+        />
 
-          <SetScoreCard
-            analysis={analysis}
-            durationMinutes={result.durationMinutes}
+        <section className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.98),rgba(12,9,23,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
+          <div className="mb-4">
+            <p className="text-xs uppercase tracking-[0.22em] text-white/42">
+              {ANALYSIS_UI.curveEyebrow[locale]}
+            </p>
+            <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
+              {ANALYSIS_UI.curveTitle[locale]}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/56">
+              {ANALYSIS_UI.curveSubtitle[locale]}
+            </p>
+          </div>
+          <EnergyCurveChart
+            tracks={chartTracks}
+            target={analysis.targetCurve}
             locale={locale}
           />
         </section>

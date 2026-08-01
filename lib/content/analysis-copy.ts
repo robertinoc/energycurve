@@ -383,6 +383,26 @@ export const ANALYSIS_UI: Record<string, LocalizedLabel> = {
     es: "({score}/10 vs {setScore}/10 como {context}).",
   },
 
+  // Score header (redesign zone 1)
+  scoreNow: { en: "Score now", es: "Score ahora" },
+  canReach: { en: "You can reach", es: "Podés llegar a" },
+  applyAllNote: {
+    en: "if you apply the {count} fixes",
+    es: "si aplicás los {count} arreglos",
+  },
+  applyRemainingNote: {
+    en: "if you apply the {count} remaining",
+    es: "si aplicás los {count} que faltan",
+  },
+  claudeOrderNote: {
+    en: "Order generated with Claude",
+    es: "Orden generado con Claude",
+  },
+  decidedCounter: {
+    en: "{done} of {total} decided",
+    es: "{done} de {total} decididos",
+  },
+
   // Misc
   language: { en: "Language", es: "Idioma" },
 }
