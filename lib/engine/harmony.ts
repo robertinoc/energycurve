@@ -4,7 +4,7 @@ import { harmonicTier, type HarmonicTier } from "@/lib/music/camelot"
 /**
  * Harmonic read of an ordered set (B18): how many adjacent transitions are
  * compatible on the Camelot wheel. Pure — feeds the reorder optimizer's
- * objective and the order-comparison UI. Transitions with a missing key on
+ * objective. Transitions with a missing key on
  * either side are excluded (unknown ≠ clash).
  */
 
