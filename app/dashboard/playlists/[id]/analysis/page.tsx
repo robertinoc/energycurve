@@ -2,18 +2,14 @@ import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import { cookies } from "next/headers"
 import Link from "next/link"
-import { ArrowLeft, CircleCheck, TriangleAlert } from "lucide-react"
+import { ArrowLeft, TriangleAlert } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { AnalysisWorkbench } from "@/components/analysis/analysis-workbench"
 import { LocaleToggle } from "@/components/analysis/locale-toggle"
-import { OrderComparison } from "@/components/analysis/order-comparison"
-import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
 import { deriveFixes, fixIdForIssue } from "@/lib/engine/fixes"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
-import type { ExportPlaylist } from "@/lib/playlists/export"
-import type { Track } from "@/types/domain"
 import {
   ANALYSIS_LOCALE_COOKIE,
   toSiteLocale,
@@ -97,7 +93,7 @@ export default async function PlaylistAnalysisPage({
     )
   }
 
-  const { playlist, energies, analysis, recommendations, reorder } = result
+  const { playlist, energies, analysis, recommendations } = result
 
   // Redesign (zone 0/1): every issue becomes an actionable fix with concrete
   // reorder operations; the client workbench derives order + score from them.
@@ -119,29 +115,6 @@ export default async function PlaylistAnalysisPage({
     action: rec.action,
     body: rec.body,
   }))
-
-  // Exportable version of the SUGGESTED order (V3): full track rows reordered
-  // by the suggestion, positions renumbered 1..N.
-  const byPosition = new Map(playlist.tracks.map((track) => [track.position, track]))
-  const suggestedExportPlaylist: ExportPlaylist = {
-    name: `${playlist.name} — ${ANALYSIS_UI.suggestedNameSuffix[locale]}`,
-    importSource: playlist.import_source,
-    tracks: (reorder?.suggestedOrder ?? [])
-      .map((position) => byPosition.get(position))
-      .filter((track): track is Track => Boolean(track))
-      .map((track, index) => ({
-        position: index + 1,
-        artist: track.artist,
-        name: track.name,
-        bpm: track.bpm,
-        energyScore: track.energy_score,
-        sourceUri: track.source_uri,
-        musicalKey: track.musical_key,
-        genre: track.genre,
-        comment: track.comment,
-        durationSeconds: track.duration_seconds,
-      })),
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
@@ -184,9 +157,9 @@ export default async function PlaylistAnalysisPage({
           </p>
         </header>
 
-        {/* Redesign zones 1-2: score header + curve-as-map + fix panel. The
-            workbench owns the applied/discarded state; zone 3 (live
-            tracklist) replaces the suggested-order section below. */}
+        {/* Redesign zones 1-4: score header + curve-as-map + fix panel +
+            live tracklist + smart ordering. The workbench owns the
+            applied/discarded/smart-order state and derives everything else. */}
         <AnalysisWorkbench
           playlistId={playlist.id}
           tracks={playlist.tracks.map((track) => ({
@@ -204,52 +177,6 @@ export default async function PlaylistAnalysisPage({
           locale={locale}
         />
 
-        {/* Always visible (V3): when the engine finds no worthwhile
-            improvement, a positive state replaces the comparison. */}
-        <section className="space-y-4">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-white/42">
-                {ANALYSIS_UI.reorderEyebrow[locale]}
-              </p>
-              <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
-                {ANALYSIS_UI.reorderTitle[locale]}
-              </h2>
-            </div>
-            {reorder ? (
-              <div className="flex flex-wrap items-center gap-2.5">
-                <PlaylistExportButton
-                  playlist={suggestedExportPlaylist}
-                  locale={locale}
-                />
-                <Link
-                  href={backHref}
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "sm" }),
-                    "text-white/58 hover:text-white"
-                  )}
-                >
-                  {ANALYSIS_UI.reorderManually[locale]}
-                </Link>
-              </div>
-            ) : null}
-          </div>
-          {reorder ? (
-            <OrderComparison
-              tracks={playlist.tracks}
-              originalScore={analysis.setScore}
-              reorder={reorder}
-              locale={locale}
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#4ADE80]/30 bg-[#4ADE80]/[0.04] px-6 py-10 text-center">
-              <CircleCheck className="size-8 text-[#86EFAC]" />
-              <p className="max-w-md text-sm leading-6 text-white/64">
-                {ANALYSIS_UI.reorderOptimal[locale]}
-              </p>
-            </div>
-          )}
-        </section>
     </div>
   )
 }

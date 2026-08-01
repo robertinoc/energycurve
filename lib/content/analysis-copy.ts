@@ -426,6 +426,65 @@ export const ANALYSIS_UI: Record<string, LocalizedLabel> = {
     en: "The set already follows the curve. Nothing to correct.",
     es: "El set ya sigue la curva. Nada que corregir.",
   },
+
+  // Live tracklist (redesign zone 3)
+  liveOrderEyebrow: { en: "Live tracklist", es: "Tracklist en vivo" },
+  liveOrderTitle: {
+    en: "Your set, as it stands now",
+    es: "Tu set, como queda ahora",
+  },
+  movedSubtitle: {
+    en: "{moved} of {total} tracks moved",
+    es: "{moved} tracks movidos de {total}",
+  },
+  unmovedSubtitle: {
+    en: "Original order, no changes",
+    es: "Orden original, sin cambios",
+  },
+  fromChip: { en: "from {n}", es: "de {n}" },
+  backToOriginal: { en: "Back to original", es: "Volver al original" },
+  saveOrderCta: {
+    en: "Write this order to the playlist",
+    es: "Escribir este orden en la playlist",
+  },
+  savingOrder: { en: "Writing…", es: "Escribiendo…" },
+  savedOrderNote: {
+    en: "Order written to the playlist.",
+    es: "Orden escrito en la playlist.",
+  },
+  revertSavedCta: {
+    en: "Revert to the previous order",
+    es: "Revertir al orden anterior",
+  },
+  saveOrderError: {
+    en: "The order couldn't be written. Try again.",
+    es: "No se pudo escribir el orden. Probá de nuevo.",
+  },
+
+  // Smart ordering (redesign zone 4)
+  smartOrderCta: { en: "Smart ordering", es: "Ordenación inteligente" },
+  smartOrderThinking: { en: "Thinking the order…", es: "Pensando el orden…" },
+  smartOrderDone: { en: "Reordered with Claude", es: "Reordenado con Claude" },
+  smartThinkingBanner: {
+    en: "Claude is testing orders against the ideal {context} curve and the Camelot wheel…",
+    es: "Claude está probando órdenes contra la curva ideal de {context} y la rueda de Camelot…",
+  },
+  smartDoneBanner: {
+    en: "New order ready: score goes from {from} to {to}. The shape now follows the {context} curve — and you can keep editing by hand.",
+    es: "Orden nuevo listo: el score pasa de {from} a {to}. La forma ahora sigue la curva de {context} — y podés seguir editando a mano.",
+  },
+  smartDoneBannerFlat: {
+    en: "New order ready. The shape now follows the {context} curve — and you can keep editing by hand.",
+    es: "Orden nuevo listo. La forma ahora sigue la curva de {context} — y podés seguir editando a mano.",
+  },
+  smartFallbackBanner: {
+    en: "Claude didn't answer in time, so the automatic order was used: ascending energy with two deliberate breathers. You can keep editing by hand.",
+    es: "Claude no respondió a tiempo, así que se usó el orden automático: energía ascendente con dos respiros intencionales. Podés seguir editando a mano.",
+  },
+  smartOrderError: {
+    en: "Smart ordering is unavailable right now. Try again in a minute.",
+    es: "La ordenación inteligente no está disponible ahora. Probá de nuevo en un minuto.",
+  },
 }
 
 /** Short Space Mono labels next to each curve marker (zone 2). */
