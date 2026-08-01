@@ -116,6 +116,10 @@ export const config = {
     "/dashboard/:path*",
     "/backstage/:path*",
     "/api/backstage/:path*",
+    // Session-gated app APIs: withAuth() inside a route handler requires the
+    // request to have passed through the authkit middleware, or it throws
+    // (500 for everyone, even logged-in users).
+    "/api/playlists/:path*",
     "/login",
     "/signup",
     // Backstage subdomain: every request must run through authkit because
