@@ -98,12 +98,27 @@ export default async function DashboardPage() {
   const greeting = pickGreeting(displayName, locale)
   const profile = snapshot?.profile ?? null
   const latestPlaylists = snapshot?.latestPlaylists ?? []
-  const [customContexts, customGenres] = profile
-    ? await Promise.all([
+  // Custom labels are decoration on the playlist cards, so a failure here must
+  // not take the whole dashboard down — every other query on this page already
+  // degrades gracefully, and an unguarded throw renders the browser's own
+  // "page couldn't load" error instead of the app.
+  let customContexts: Awaited<ReturnType<typeof listUserContexts>> = []
+  let customGenres: Awaited<ReturnType<typeof listUserGenres>> = []
+
+  if (profile) {
+    try {
+      ;[customContexts, customGenres] = await Promise.all([
         listUserContexts(profile.id),
         listUserGenres(profile.id),
       ])
-    : [[], []]
+    } catch (error) {
+      logWarn("dashboard.custom_taxonomy_unavailable", {
+        profileId: profile.id,
+        reason:
+          error instanceof Error ? error.message : "Unknown taxonomy error",
+      })
+    }
+  }
 
   return (
     <>
