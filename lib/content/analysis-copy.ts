@@ -273,7 +273,14 @@ export const CONTEXT_LABELS: Record<string, LocalizedLabel> = {
  * already localized; this covers the React/page strings that weren't. Slots
  * (`{min}`, `{score}`, …) are filled with formatTemplate at the call site.
  */
-export const ANALYSIS_UI: Record<string, LocalizedLabel> = {
+// `satisfies` instead of a `Record<string, …>` annotation ON PURPOSE: the
+// annotation made EVERY key name type-check, so deleting one still compiled
+// and only blew up at runtime as `undefined[locale]`. That is exactly how
+// `language` was dropped and took the dashboard down (it is read by the
+// locale toggle, which renders inside the dashboard layout). With
+// `satisfies` the literal key set is preserved, so a missing key is a
+// compile error while the value shape is still checked.
+export const ANALYSIS_UI = {
   // Page chrome
   metaTitle: { en: "Set analysis", es: "Análisis del set" },
   heading: { en: "Set analysis", es: "Análisis del set" },
@@ -485,7 +492,12 @@ export const ANALYSIS_UI: Record<string, LocalizedLabel> = {
     en: "Smart ordering is unavailable right now. Try again in a minute.",
     es: "La ordenación inteligente no está disponible ahora. Probá de nuevo en un minuto.",
   },
-}
+
+  // Misc — read by the locale toggle, which renders in the dashboard shell.
+  // Deleting this key crashes every /dashboard route, not just the analysis
+  // screen. See the `satisfies` note above.
+  language: { en: "Language", es: "Idioma" },
+} satisfies Record<string, LocalizedLabel>
 
 /** Short Space Mono labels next to each curve marker (zone 2). */
 export const MARKER_LABELS: Record<string, LocalizedLabel> = {
