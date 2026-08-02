@@ -51,6 +51,28 @@ export const DASHBOARD_COPY = {
       en: "Your WorkOS session is valid, but the application database could not be initialized. Confirm the Supabase environment variables and apply the initial schema migration.",
       es: "Tu sesión de WorkOS es válida, pero la base de datos de la aplicación no pudo inicializarse. Confirmá las variables de entorno de Supabase y aplicá la migración inicial del esquema.",
     },
+    // Error boundary: shown instead of the browser's own failure page when a
+    // dashboard render throws. Keeps the user inside the app, with a way out.
+    crashTitle: {
+      en: "The dashboard didn't load",
+      es: "El dashboard no cargó",
+    },
+    crashBody: {
+      en: "Something failed on our side while loading your sets. Your data is safe — try again, and if it keeps happening the reference below helps us trace it.",
+      es: "Algo falló de nuestro lado al cargar tus sets. Tus datos están a salvo — probá de nuevo, y si sigue pasando la referencia de abajo nos ayuda a rastrearlo.",
+    },
+    crashRetry: {
+      en: "Try again",
+      es: "Reintentar",
+    },
+    crashHome: {
+      en: "Back to home",
+      es: "Volver al inicio",
+    },
+    crashReference: {
+      en: "Reference",
+      es: "Referencia",
+    },
     byHand: {
       en: "Prefer to build it by hand?",
       es: "¿Preferís armarla a mano?",
