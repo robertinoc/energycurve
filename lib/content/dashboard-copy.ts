@@ -57,6 +57,15 @@ export const DASHBOARD_COPY = {
       en: "The dashboard didn't load",
       es: "El dashboard no cargó",
     },
+    // App-wide variant (app/error.tsx covers every route, not just /dashboard).
+    crashTitleApp: {
+      en: "This page didn't load",
+      es: "Esta página no cargó",
+    },
+    crashBodyApp: {
+      en: "Something failed on our side. Your data is safe — try again, and if it keeps happening the reference below helps us trace it.",
+      es: "Algo falló de nuestro lado. Tus datos están a salvo — probá de nuevo, y si sigue pasando la referencia de abajo nos ayuda a rastrearlo.",
+    },
     crashBody: {
       en: "Something failed on our side while loading your sets. Your data is safe — try again, and if it keeps happening the reference below helps us trace it.",
       es: "Algo falló de nuestro lado al cargar tus sets. Tus datos están a salvo — probá de nuevo, y si sigue pasando la referencia de abajo nos ayuda a rastrearlo.",
