@@ -28,6 +28,9 @@ interface LiveTracklistProps {
   smartStatus: SmartOrderStatus
   onSmartOrder: () => void
   onReset: () => void
+  /** Export dropdown for the current derived order (rendered next to the
+   * smart-order button so the flow ends where the user's eye ends). */
+  exportSlot?: React.ReactNode
   locale: SiteLocale
 }
 
@@ -44,6 +47,7 @@ export function LiveTracklist({
   smartStatus,
   onSmartOrder,
   onReset,
+  exportSlot,
   locale,
 }: LiveTracklistProps) {
   const subtitle =
@@ -75,6 +79,7 @@ export function LiveTracklist({
           <p className="mt-1 text-sm text-ec-text-muted">{subtitle}</p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-2.5">
+          {exportSlot}
           <button
             type="button"
             onClick={onSmartOrder}

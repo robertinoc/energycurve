@@ -162,10 +162,19 @@ export default async function PlaylistAnalysisPage({
             applied/discarded/smart-order state and derives everything else. */}
         <AnalysisWorkbench
           playlistId={playlist.id}
+          playlistName={playlist.name}
+          importSource={playlist.import_source}
           tracks={playlist.tracks.map((track) => ({
             id: track.id,
             artist: track.artist,
             name: track.name,
+            bpm: track.bpm,
+            energyScore: track.energy_score,
+            sourceUri: track.source_uri,
+            musicalKey: track.musical_key,
+            genre: track.genre,
+            comment: track.comment,
+            durationSeconds: track.duration_seconds,
           }))}
           energies={energies}
           fixes={fixes}

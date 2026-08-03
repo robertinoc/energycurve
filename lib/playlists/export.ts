@@ -9,6 +9,8 @@
  * references and fall back to CSV/TXT.
  */
 
+import { musicalKeyToTraktorValue } from "@/lib/music/camelot"
+
 export type ExportFormat = "rekordbox" | "traktor" | "m3u8" | "csv" | "txt"
 
 export interface ExportTrack {
@@ -356,10 +358,16 @@ function toTraktor(playlist: ExportPlaylist): string {
         .join(" ")
       const info = infoAttrs ? `<INFO ${infoAttrs}/>` : ""
       const tempo = bpm ? `<TEMPO BPM="${bpm}"/>` : ""
+      // Traktor's Key COLUMN reads the numeric MUSICAL_KEY, not the INFO KEY
+      // text — without this element exported keys were invisible in Traktor.
+      const keyValue = musicalKeyToTraktorValue(track.musicalKey)
+      const musicalKey =
+        keyValue !== null ? `<MUSICAL_KEY VALUE="${keyValue}"/>` : ""
 
       return `    <ENTRY TITLE="${xmlAttr(track.name)}" ARTIST="${xmlAttr(track.artist)}">
       <LOCATION DIR="${xmlAttr(loc.dir)}" FILE="${xmlAttr(loc.file)}" VOLUME="${xmlAttr(loc.volume)}"/>
       ${info}
+      ${musicalKey}
       ${tempo}
     </ENTRY>`
     })

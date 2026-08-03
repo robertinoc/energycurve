@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Brand kit documentation (interactive guide helpers, not app code):
     "docs/brand-kit/**",
+    // Claude Code session artifacts (agent worktrees are full repo copies):
+    ".claude/**",
   ]),
 ]);
 
