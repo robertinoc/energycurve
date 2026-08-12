@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 const TABS = [
   { href: "/backstage", label: "Users" },
   { href: "/backstage/analytics", label: "Analytics" },
+  { href: "/backstage/audio-spike", label: "Audio spike" },
 ] as const
 
 export function BackstageNav() {

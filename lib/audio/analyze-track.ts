@@ -1,0 +1,206 @@
+"use client"
+
+/**
+ * Orchestrates one track's analysis in the browser: decode → BPM → framewise
+ * features → key. Audio never leaves the machine; only the resulting numbers do.
+ *
+ * Dependency licensing is a hard constraint here, not a detail. Every
+ * batteries-included MIR library we looked at is copyleft (Essentia AGPL-3.0,
+ * aubio GPL-3.0) and can't ship in a closed-source commercial product, so this
+ * is assembled from MIT parts: `web-audio-beat-detector` for tempo, `meyda` for
+ * spectral features, and our own Krumhansl-Schmuckler key detection on top of
+ * Meyda's chroma. See docs/spike-browser-audio-analysis.md.
+ */
+
+import { detectKeyFromChroma } from "./key-detection"
+import type {
+  AudioFeatures,
+  TrackAnalysis,
+  WorkerRequest,
+  WorkerResponse,
+} from "./analysis-types"
+
+/** Analysis is mono — downmixing halves the frame loop for no accuracy cost
+ *  on the features we use. */
+function toMono(buffer: AudioBuffer): Float32Array {
+  const channels = buffer.numberOfChannels
+
+  if (channels === 1) {
+    // Copy: the worker takes ownership of the transferred buffer.
+    return Float32Array.from(buffer.getChannelData(0))
+  }
+
+  const length = buffer.length
+  const mono = new Float32Array(length)
+
+  for (let channel = 0; channel < channels; channel += 1) {
+    const data = buffer.getChannelData(channel)
+    for (let i = 0; i < length; i += 1) {
+      mono[i] += data[i]
+    }
+  }
+
+  for (let i = 0; i < length; i += 1) {
+    mono[i] /= channels
+  }
+
+  return mono
+}
+
+/**
+ * One worker, reused across files. Spinning one up per track costs ~10-40ms
+ * each and re-parses Meyda every time.
+ */
+let worker: Worker | null = null
+const pending = new Map<
+  string,
+  { resolve: (value: { features: AudioFeatures; analyzeMs: number }) => void; reject: (error: Error) => void }
+>()
+
+function getWorker(): Worker {
+  if (worker) {
+    return worker
+  }
+
+  worker = new Worker(new URL("./analyze-features.worker.ts", import.meta.url), {
+    type: "module",
+  })
+
+  worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+    const message = event.data
+    const entry = pending.get(message.id)
+    if (!entry) {
+      return
+    }
+
+    pending.delete(message.id)
+    if (message.ok) {
+      entry.resolve({ features: message.features, analyzeMs: message.analyzeMs })
+    } else {
+      entry.reject(new Error(message.error))
+    }
+  }
+
+  worker.onerror = (event) => {
+    const error = new Error(event.message || "audio worker crashed")
+    for (const entry of pending.values()) {
+      entry.reject(error)
+    }
+    pending.clear()
+  }
+
+  return worker
+}
+
+/** Releases the shared worker. Call when leaving the screen. */
+export function disposeAudioWorker(): void {
+  worker?.terminate()
+  worker = null
+  pending.clear()
+}
+
+function extractFeatures(
+  samples: Float32Array,
+  sampleRate: number
+): Promise<{ features: AudioFeatures; analyzeMs: number }> {
+  const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  const active = getWorker()
+
+  return new Promise((resolve, reject) => {
+    pending.set(id, { resolve, reject })
+    const request: WorkerRequest = { id, samples, sampleRate }
+    // Transfer rather than clone: a 5-minute track is ~50 MB of Float32.
+    active.postMessage(request, [samples.buffer])
+  })
+}
+
+export interface AnalyzeOptions {
+  /** Tags already parsed for this file, used only for the accuracy comparison. */
+  taggedBpm?: number | null
+  taggedKey?: string | null
+}
+
+/**
+ * Analyses one audio file end to end. Never throws — failures land in the
+ * returned row's `error` so a bad file can't abort a batch.
+ */
+export async function analyzeAudioFile(
+  file: File,
+  options: AnalyzeOptions = {}
+): Promise<TrackAnalysis> {
+  const base: TrackAnalysis = {
+    fileName: file.name,
+    fileSizeBytes: file.size,
+    durationSeconds: 0,
+    decodeMs: 0,
+    bpmMs: 0,
+    featuresMs: 0,
+    totalMs: 0,
+    realtimeFactor: 0,
+    bpm: null,
+    detectedKey: null,
+    keyConfidence: null,
+    keyMargin: null,
+    features: null,
+    taggedBpm: options.taggedBpm ?? null,
+    taggedKey: options.taggedKey ?? null,
+    error: null,
+  }
+
+  const startedAt = performance.now()
+  // Opened per call and closed at the end — browsers cap concurrent contexts.
+  // Safari only exposes the prefixed constructor.
+  const AudioContextCtor =
+    window.AudioContext ??
+    (window as unknown as { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext
+
+  if (!AudioContextCtor) {
+    base.error = "Web Audio is unavailable in this browser"
+    return base
+  }
+
+  const context = new AudioContextCtor()
+
+  try {
+    const bytes = await file.arrayBuffer()
+
+    const decodeStart = performance.now()
+    const buffer = await context.decodeAudioData(bytes)
+    base.decodeMs = performance.now() - decodeStart
+    base.durationSeconds = buffer.duration
+
+    // BPM first: it needs the AudioBuffer, which the mono downmix consumes.
+    const bpmStart = performance.now()
+    try {
+      const { analyze } = await import("web-audio-beat-detector")
+      base.bpm = await analyze(buffer)
+    } catch {
+      // Beat detection legitimately fails on ambient/beatless material.
+      base.bpm = null
+    }
+    base.bpmMs = performance.now() - bpmStart
+
+    const samples = toMono(buffer)
+    const { features, analyzeMs } = await extractFeatures(samples, buffer.sampleRate)
+    base.featuresMs = analyzeMs
+    base.features = features
+
+    const key = detectKeyFromChroma(features.chroma)
+    if (key) {
+      base.detectedKey = key.key
+      base.keyConfidence = key.confidence
+      base.keyMargin = key.margin
+    }
+  } catch (error) {
+    base.error = error instanceof Error ? error.message : String(error)
+  } finally {
+    void context.close()
+  }
+
+  base.totalMs = performance.now() - startedAt
+  base.realtimeFactor =
+    base.totalMs > 0 ? base.durationSeconds / (base.totalMs / 1000) : 0
+
+  return base
+}

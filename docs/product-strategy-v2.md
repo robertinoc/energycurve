@@ -67,7 +67,7 @@ strongest predictors — solid, but upgradeable.
 energy = f(tempo, RMS loudness, spectral flux, spectral entropy, onset rate)
 ```
 
-- **Features**: computed in-browser by Essentia.js (§4) — no audio ever leaves
+- **Features**: computed in-browser by meyda + our own DSP (§4) — no audio ever leaves
   the DJ's machine.
 - **Calibration**: regress against the Mixed In Key energies we already parse
   from comment tags. Our user corpus doubles as a free labeled dataset; MIK's
@@ -79,7 +79,15 @@ energy = f(tempo, RMS loudness, spectral flux, spectral entropy, onset rate)
 
 ### Feasibility of "upload audio for analysis"
 
-Answered — and better than uploading: **[Essentia.js](https://mtg.github.io/essentia.js/)**
+> **Superseded 12 Aug 2026 by the spike.** Essentia.js is **AGPL-3.0** and
+> cannot ship in a closed-source paid product; its commercial licence is a
+> negotiation with UPF with no published price. Replaced by an MIT stack
+> (`web-audio-beat-detector` + `meyda` + our own flux/entropy/key). The
+> browser-first conclusion below still holds and is now measured — tempo is
+> 8/8 exact against Mixed In Key tags. Full findings and numbers:
+> [spike-browser-audio-analysis.md](./spike-browser-audio-analysis.md).
+
+The original reasoning, kept for the record: **[Essentia.js](https://mtg.github.io/essentia.js/)**
 (Music Technology Group, UPF Barcelona; open source) runs the Essentia C++ MIR
 library as WebAssembly **in the browser**, including BPM, key, all spectral
 features above, and TensorFlow.js models
@@ -108,7 +116,7 @@ The audio-files import already opens local files for tag reading; the same
 ## 5. Feature roadmap
 
 ### H1 — Now (1–2 months)
-1. **Real audio analysis in the browser** (Essentia.js): BPM + key + v3
+1. **Real audio analysis in the browser** (meyda + web-audio-beat-detector; *not* Essentia.js — AGPL): BPM + key + v3
    features for untagged files, opt-in per playlist, progress UI reusing the
    audio-import pattern. Validate key accuracy against MIK-tagged corpus
    before announcing accuracy claims.
@@ -190,7 +198,7 @@ whole-library workflow is PRO+.
 | 6 | **Residency mode** — "don't suggest anything I played at this venue in the last N gigs" | PRO+ | Needs the global library (already PRO+) plus played history, and it solves a real, specific pain for anyone holding a residency. |
 | 7 | **Collaborative B2B / B3B sets** — invite other EnergyCurve users to build one set together, alternating tracks while keeping harmony and energy coherent | PRO+ | Deliberately PRO+: it is genuinely complex (multi-user invitations, shared playlist state, conflict handling) and nobody in the market does it. Multi-user by definition, so it belongs at the top of the ladder. |
 
-**Sequencing note, not a pricing note:** PRO should not launch before Essentia.js
+**Sequencing note, not a pricing note:** PRO should not launch before in-browser
 audio analysis works. Without it, PRO is only "the limits are removed", which is
 hard to defend against SetFlow at £2.99–4.99/mo. With real audio analysis inside,
 the story carries itself.
@@ -206,8 +214,10 @@ the story carries itself.
 
 ## 7. Risks & open questions
 
-- **Essentia.js key accuracy** vs Mixed In Key: validate on our tagged corpus
-  before marketing claims; ship as "beta" label if <95% octave-agnostic match.
+- **Key accuracy** vs Mixed In Key: the spike measured 4/6 exact Camelot on a
+  6-track sample — far too small to be a rate, and both misses were major/minor
+  confusions. Validate on a corpus in the hundreds before any marketing claim;
+  ship behind a "beta" label or hold key back and ship tempo first.
 - **Claude cost per smart order**: per-playlist caching already implemented;
   monitor via ai-usage telemetry before raising FREE/PRO quotas.
 - **Hobbyist churn**: DJs gig seasonally; annual pricing + Gig Mode are the
