@@ -44,6 +44,60 @@ describe("pricing copy", () => {
     }
   )
 
+  it.each(supportedLocales)("recommends exactly PRO (%s)", (locale) => {
+    const { plans } = getSiteCopy(locale).pricing
+
+    expect(plans.filter((plan) => plan.recommended).map((plan) => plan.id)).toEqual(
+      ["pro"]
+    )
+  })
+
+  it.each(supportedLocales)(
+    "keeps native export on the free tier (%s)",
+    (locale) => {
+      const { plans, rows } = getSiteCopy(locale).pricing
+
+      // Exporting back to the booth is what makes the tool usable at all, so
+      // it ships free forever — it must never become a paid upgrade, and it
+      // must not be sold as a PRO differentiator.
+      const exportRow = rows.find((row) =>
+        row.capability.toLowerCase().includes("nativ")
+      )
+      expect(exportRow, "expected a native-export row").toBeDefined()
+      expect(exportRow!.free.kind).toBe("yes")
+      expect(exportRow!.pro.kind).toBe("yes")
+      expect(exportRow!.proPlus.kind).toBe("yes")
+
+      const free = plans.find((plan) => plan.id === "free")!
+      const pro = plans.find((plan) => plan.id === "pro")!
+      const mentionsExport = (plan: typeof free) =>
+        plan.highlights.some((highlight) =>
+          /rekordbox|traktor|m3u8/i.test(highlight.text)
+        )
+
+      expect(mentionsExport(free)).toBe(true)
+      expect(mentionsExport(pro)).toBe(false)
+    }
+  )
+
+  it.each(supportedLocales)(
+    "flags roadmap highlights instead of implying they ship today (%s)",
+    (locale) => {
+      const { plans } = getSiteCopy(locale).pricing
+      const pro = plans.find((plan) => plan.id === "pro")!
+
+      const audio = pro.highlights.find((highlight) =>
+        /audio/i.test(highlight.text)
+      )
+      expect(audio, "expected an audio-analysis highlight on PRO").toBeDefined()
+      expect(audio!.soon).toBe(true)
+
+      // The free plan promises nothing that isn't already shipped.
+      const free = plans.find((plan) => plan.id === "free")!
+      expect(free.highlights.every((highlight) => !highlight.soon)).toBe(true)
+    }
+  )
+
   // Roadmap-only capabilities, named precisely enough not to collide with the
   // import row (which legitimately mentions "audio files").
   const UNBUILT: Record<string, string[]> = {

@@ -140,6 +140,13 @@ The audio-files import already opens local files for tag reading; the same
 
 Design rule: **everything touching audio + the engine's depth is PRO;
 everything with variable cost (AI, lookups) or pro-workflow is PRO+.**
+
+One deliberate exception, decided 12 Aug 2026: **native export stays free
+forever.** Getting the fixed order back into Rekordbox or Traktor is what makes
+the analysis actionable at all — paywalling it breaks the loop the product is
+built around, and it's exactly the move that makes Lexicon and MIXO resented
+for charging per conversion. It also makes the free tier a genuine wedge rather
+than a crippled demo. PRO earns its price on limits and on audio depth.
 Claude smart ordering is THE PRO+ driver (real marginal cost → protected
 margin). FREE must deliver the "aha": see your set's curve, feel the gap.
 
@@ -150,7 +157,7 @@ margin). FREE must deliver the "aha": see your set's curve, feel the gap.
 | Analysis, score, curve, markers | ✅ | ✅ | ✅ |
 | Applicable fixes | 3/month | Unlimited | Unlimited |
 | Export CSV/TXT | ✅ | ✅ | ✅ |
-| Export native (Rekordbox/Traktor/M3U8) | — | ✅ | ✅ |
+| Export native (Rekordbox/Traktor/M3U8) | ✅ | ✅ | ✅ |
 | **Real audio analysis (browser)** | — | ✅ | ✅ |
 | Energy Model v3 | — | ✅ | ✅ |
 | Set version history | — | ✅ | ✅ |

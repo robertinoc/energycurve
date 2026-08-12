@@ -108,8 +108,12 @@ interface SiteCopySchema {
     eyebrow: LocalizedLabel
     title: LocalizedLabel
     subtitle: LocalizedLabel
+    teaserTitle: LocalizedLabel
+    teaserBody: LocalizedLabel
+    teaserCta: LocalizedLabel
     liveBadge: LocalizedLabel
     soonBadge: LocalizedLabel
+    recommendedBadge: LocalizedLabel
     included: LocalizedLabel
     notIncluded: LocalizedLabel
     perMonth: LocalizedLabel
@@ -120,8 +124,9 @@ interface SiteCopySchema {
       price: LocalizedLabel
       annual: LocalizedLabel | null
       tagline: LocalizedLabel
-      highlights: LocalizedLabel[]
+      highlights: { text: LocalizedLabel; soon?: boolean }[]
       live: boolean
+      recommended?: boolean
       cta: LocalizedLabel
       ctaHref: string
     }[]
@@ -538,8 +543,18 @@ const siteCopy: SiteCopySchema = {
       en: "EnergyCurve is free to use right now. PRO and PRO+ are in development — the prices below are final, and everything marked “Soon” is on the roadmap, not something you can buy yet.",
       es: "EnergyCurve es gratis ahora mismo. PRO y PRO+ están en desarrollo — los precios de acá abajo son los definitivos, y todo lo marcado como “Pronto” está en el roadmap, no es algo que ya puedas comprar.",
     },
+    teaserTitle: {
+      en: "Start free — and the export back to your DJ software is free too",
+      es: "Empezá gratis — y el export de vuelta a tu software de DJ también es gratis",
+    },
+    teaserBody: {
+      en: "The analysis, the energy curve, the fixes, and native export to Rekordbox, Traktor, and M3U8 all live on the free tier, permanently. PRO and PRO+ lift the limits and add real audio analysis — both are in development, and the prices are already public.",
+      es: "El análisis, la curva de energía, los arreglos y el export nativo a Rekordbox, Traktor y M3U8 están todos en el plan gratis, para siempre. PRO y PRO+ suben los límites y agregan análisis de audio real — están en desarrollo y los precios ya son públicos.",
+    },
+    teaserCta: { en: "See all plans", es: "Ver todos los planes" },
     liveBadge: { en: "Available now", es: "Disponible ahora" },
     soonBadge: { en: "Soon", es: "Pronto" },
+    recommendedBadge: { en: "Recommended", es: "Recomendado" },
     included: { en: "Included", es: "Incluido" },
     notIncluded: { en: "Not included", es: "No incluido" },
     perMonth: { en: "/month", es: "/mes" },
@@ -555,17 +570,33 @@ const siteCopy: SiteCopySchema = {
           es: "Mirá la curva de tu set y sentí la diferencia. Sin tarjeta y sin reloj de prueba.",
         },
         highlights: [
-          { en: "3 active playlists", es: "3 playlists activas" },
+          { text: { en: "3 active playlists", es: "3 playlists activas" } },
           {
-            en: "Import from every format, including your audio files",
-            es: "Import de todos los formatos, incluidos tus archivos de audio",
+            text: {
+              en: "Import from every format, including your audio files",
+              es: "Import de todos los formatos, incluidos tus archivos de audio",
+            },
           },
           {
-            en: "Full analysis: 1–10 score, energy curve, issue markers",
-            es: "Análisis completo: score de 1 a 10, curva de energía y marcadores",
+            text: {
+              en: "Full analysis: 1–10 score, energy curve, issue markers",
+              es: "Análisis completo: score de 1 a 10, curva de energía y marcadores",
+            },
           },
-          { en: "3 applied fixes per month", es: "3 arreglos aplicados por mes" },
-          { en: "Export to CSV and TXT", es: "Export a CSV y TXT" },
+          {
+            text: {
+              en: "3 applied fixes per month",
+              es: "3 arreglos aplicados por mes",
+            },
+          },
+          {
+            // Native export stays free, permanently. It is the thing that makes
+            // the tool usable at all, and paywalling it would break the loop.
+            text: {
+              en: "Export to Rekordbox, Traktor, M3U8, CSV, and TXT — all of it, free",
+              es: "Export a Rekordbox, Traktor, M3U8, CSV y TXT — todo, gratis",
+            },
+          },
         ],
         live: true,
         cta: { en: "Start free", es: "Empezar gratis" },
@@ -582,24 +613,41 @@ const siteCopy: SiteCopySchema = {
         },
         highlights: [
           {
-            en: "Unlimited playlists and unlimited fixes",
-            es: "Playlists ilimitadas y arreglos ilimitados",
+            text: {
+              en: "Unlimited playlists, unlimited fixes, unlimited custom genres",
+              es: "Playlists, arreglos y géneros propios ilimitados",
+            },
           },
           {
-            en: "Native export to Rekordbox, Traktor, and M3U8",
-            es: "Export nativo a Rekordbox, Traktor y M3U8",
+            text: {
+              en: "3 AI orderings per month",
+              es: "3 ordenamientos con IA por mes",
+            },
           },
           {
-            en: "Real audio analysis in your browser — BPM, key, and energy for untagged files",
-            es: "Análisis de audio real en tu navegador — BPM, tonalidad y energía para archivos sin tags",
+            text: {
+              en: "Real audio analysis in your browser — BPM, key, and energy for untagged files",
+              es: "Análisis de audio real en tu navegador — BPM, tonalidad y energía para archivos sin tags",
+            },
+            soon: true,
           },
           {
-            en: "Set version history: compare original, curated, and AI order",
-            es: "Historial de versiones: compará el orden original, el curado y el de la IA",
+            text: {
+              en: "Energy Model v3: energy from the audio itself, not just BPM",
+              es: "Energy Model v3: energía desde el audio, no sólo desde el BPM",
+            },
+            soon: true,
           },
-          { en: "3 AI orderings per month", es: "3 ordenamientos con IA por mes" },
+          {
+            text: {
+              en: "Set version history: compare original, curated, and AI order",
+              es: "Historial de versiones: compará el orden original, el curado y el de la IA",
+            },
+            soon: true,
+          },
         ],
         live: false,
+        recommended: true,
         cta: { en: "Tell me when it’s ready", es: "Avisame cuando esté" },
         ctaHref: "/#contact",
       },
@@ -613,22 +661,32 @@ const siteCopy: SiteCopySchema = {
           es: "Para el profesional: la cabina, la librería completa y sin límites.",
         },
         highlights: [
-          { en: "Everything in PRO", es: "Todo lo de PRO" },
+          { text: { en: "Everything in PRO", es: "Todo lo de PRO" } },
           {
-            en: "Unlimited AI ordering",
-            es: "Ordenamiento con IA ilimitado",
+            text: {
+              en: "Unlimited AI ordering",
+              es: "Ordenamiento con IA ilimitado",
+            },
           },
           {
-            en: "Gig Mode: offline performance view for the booth",
-            es: "Gig Mode: vista de performance offline para la cabina",
+            text: {
+              en: "Gig Mode: offline performance view for the booth",
+              es: "Gig Mode: vista de performance offline para la cabina",
+            },
+            soon: true,
           },
           {
-            en: "Global track library with cross-set insights",
-            es: "Librería global de tracks con insights entre sets",
+            text: {
+              en: "Global track library with cross-set insights",
+              es: "Librería global de tracks con insights entre sets",
+            },
+            soon: true,
           },
           {
-            en: "Priority support and early access",
-            es: "Soporte prioritario y acceso anticipado",
+            text: {
+              en: "Priority support and early access",
+              es: "Soporte prioritario y acceso anticipado",
+            },
           },
         ],
         live: false,
@@ -698,11 +756,13 @@ const siteCopy: SiteCopySchema = {
         proPlus: "yes",
       },
       {
+        // Free forever: exporting back to the booth is the whole point of the
+        // tool, so it is never a paid upgrade.
         capability: {
           en: "Native export (Rekordbox XML, Traktor NML, M3U8)",
           es: "Export nativo (XML de Rekordbox, NML de Traktor, M3U8)",
         },
-        free: "no",
+        free: "yes",
         pro: "yes",
         proPlus: "yes",
       },
@@ -1093,8 +1153,12 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       eyebrow: siteCopy.pricing.eyebrow[locale],
       title: siteCopy.pricing.title[locale],
       subtitle: siteCopy.pricing.subtitle[locale],
+      teaserTitle: siteCopy.pricing.teaserTitle[locale],
+      teaserBody: siteCopy.pricing.teaserBody[locale],
+      teaserCta: siteCopy.pricing.teaserCta[locale],
       liveBadge: siteCopy.pricing.liveBadge[locale],
       soonBadge: siteCopy.pricing.soonBadge[locale],
+      recommendedBadge: siteCopy.pricing.recommendedBadge[locale],
       included: siteCopy.pricing.included[locale],
       notIncluded: siteCopy.pricing.notIncluded[locale],
       perMonth: siteCopy.pricing.perMonth[locale],
@@ -1105,8 +1169,12 @@ export function getSiteCopy(locale: SiteLocale = "en") {
         price: plan.price[locale],
         annual: plan.annual ? plan.annual[locale] : null,
         tagline: plan.tagline[locale],
-        highlights: plan.highlights.map((entry) => entry[locale]),
+        highlights: plan.highlights.map((entry) => ({
+          text: entry.text[locale],
+          soon: entry.soon ?? false,
+        })),
         live: plan.live,
+        recommended: plan.recommended ?? false,
         cta: plan.cta[locale],
         ctaHref: plan.ctaHref,
       })),

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Check, CreditCard, Minus } from "lucide-react"
+import { Check, Clock, CreditCard, Minus } from "lucide-react"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import {
@@ -94,17 +94,23 @@ export function PricingPage() {
         </header>
 
         {/* Plan cards */}
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 pt-3 lg:grid-cols-3">
           {copy.plans.map((plan) => (
             <section
               key={plan.id}
               className={cn(
-                "flex flex-col rounded-3xl border p-6",
-                plan.live
-                  ? "border-[#A24DE0]/34 bg-[linear-gradient(165deg,rgba(162,77,224,0.14),rgba(20,16,31,0.9))]"
+                "relative flex flex-col rounded-3xl border p-6",
+                plan.recommended
+                  ? "border-[#A24DE0]/50 bg-[linear-gradient(165deg,rgba(162,77,224,0.18),rgba(20,16,31,0.92))] shadow-[0_18px_44px_rgba(120,60,220,0.22)] lg:-mt-3 lg:mb-3"
                   : "border-white/10 bg-[#14101F]/80"
               )}
             >
+              {plan.recommended ? (
+                <span className="ec-gradient-bg absolute -top-3 left-6 rounded-full px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_6px_18px_rgba(120,60,220,0.4)]">
+                  {copy.recommendedBadge}
+                </span>
+              ) : null}
+
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-heading text-xl font-semibold">{plan.name}</h2>
                 <span
@@ -137,12 +143,29 @@ export function PricingPage() {
 
               <ul className="mt-5 grid flex-1 gap-2.5">
                 {plan.highlights.map((highlight) => (
-                  <li key={highlight} className="flex gap-2.5 text-sm leading-6 text-white/78">
-                    <Check
-                      aria-hidden
-                      className="mt-1 size-4 shrink-0 text-[#5EE9B5]"
-                    />
-                    <span>{highlight}</span>
+                  <li
+                    key={highlight.text}
+                    className="flex gap-2.5 text-sm leading-6 text-white/78"
+                  >
+                    {highlight.soon ? (
+                      <Clock
+                        aria-hidden
+                        className="mt-1 size-4 shrink-0 text-[#F5C15E]"
+                      />
+                    ) : (
+                      <Check
+                        aria-hidden
+                        className="mt-1 size-4 shrink-0 text-[#5EE9B5]"
+                      />
+                    )}
+                    <span>
+                      {highlight.text}
+                      {highlight.soon ? (
+                        <span className="ml-1.5 whitespace-nowrap text-[0.7rem] font-medium uppercase tracking-[0.1em] text-[#F5C15E]">
+                          {copy.soonBadge}
+                        </span>
+                      ) : null}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -151,7 +174,7 @@ export function PricingPage() {
                 href={plan.ctaHref}
                 className={cn(
                   "mt-6 rounded-full px-6 py-3 text-center text-sm font-semibold transition",
-                  plan.live
+                  plan.live || plan.recommended
                     ? "ec-gradient-bg text-white shadow-[0_8px_24px_rgba(120,60,220,0.35)] hover:opacity-95"
                     : "border border-white/20 text-white/82 hover:border-white/40 hover:text-white"
                 )}
