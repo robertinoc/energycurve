@@ -12,4 +12,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Authentication must use WorkOS AuthKit. Do not introduce Supabase Auth.
 - Supabase is reserved for application data and is accessed server-side only through `lib/supabase/server.ts`.
 - `proxy.ts` fulfills the middleware/protected-route role because this project uses Next.js 16.
+- Product direction and plan gating live in `docs/product-strategy-v2.md` (vision, market, Energy Model v3, FREE/PRO/PRO+ matrix). New features must state their plan tier; engine scoring rules still come only from `lib/product/strategy.ts`.
 - Keep `README.md` and `docs/*.md` updated whenever infrastructure changes.

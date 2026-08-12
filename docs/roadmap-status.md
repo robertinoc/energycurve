@@ -224,3 +224,19 @@ Repository anchors:
 - [lib/auth/email-verification.ts](/Users/robertinoc/Documents/code/energycurve/lib/auth/email-verification.ts)
 - [lib/email/send-email.ts](/Users/robertinoc/Documents/code/energycurve/lib/email/send-email.ts)
 - [app/api/health/route.ts](/Users/robertinoc/Documents/code/energycurve/app/api/health/route.ts)
+
+## Strategy 2.0 — horizons (approved 2026-08-12)
+
+Full strategy: `docs/product-strategy-v2.md` (market analysis, science-based
+Energy Model v3, FREE/PRO/PRO+ plans at $5.99/$11.99).
+
+- **H1 (now)**: Essentia.js in-browser audio analysis · Energy Model v3
+  (arousal multi-feature, calibrated vs MIK tags) · set version history ·
+  NML missing-files warning · M3U8-first for file-sourced playlists ·
+  billing foundation (Stripe + plan gates).
+- **H2 (next)**: Gig Mode (offline PWA) · global track library + insights ·
+  set comparator · per-transition suggestions (B20 expansion) · USB export
+  research.
+- **H3 (later)**: server-side batch analysis (if demanded) · title-lookup
+  enrichment API (PRO+) · Beatport/Lexicon partnerships · public set curves
+  (growth loop).
