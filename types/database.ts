@@ -15,6 +15,11 @@ export interface Database {
           workos_user_id: string
           email: string
           suspended_at: string | null
+          plan: string
+          plan_status: string | null
+          plan_current_period_end: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           created_at: string
           updated_at: string
         }
@@ -23,6 +28,11 @@ export interface Database {
           workos_user_id: string
           email: string
           suspended_at?: string | null
+          plan?: string
+          plan_status?: string | null
+          plan_current_period_end?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -31,10 +41,46 @@ export interface Database {
           workos_user_id?: string
           email?: string
           suspended_at?: string | null
+          plan?: string
+          plan_status?: string | null
+          plan_current_period_end?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           created_at?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      billing_events: {
+        Row: {
+          id: string
+          type: string
+          profile_id: string | null
+          payload: Json | null
+          processed_at: string
+        }
+        Insert: {
+          id: string
+          type: string
+          profile_id?: string | null
+          payload?: Json | null
+          processed_at?: string
+        }
+        Update: {
+          id?: string
+          type?: string
+          profile_id?: string | null
+          payload?: Json | null
+          processed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_events_profile_id_fkey"
+            columns: ["profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       playlists: {
         Row: {
