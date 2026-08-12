@@ -103,6 +103,7 @@ export function LandingPage() {
     { href: "#how-it-works", label: copy.nav.how },
     { href: "#story", label: copy.nav.story },
     { href: "#faq", label: copy.nav.faq },
+    { href: "/pricing", label: copy.pricing.navLabel },
     { href: "#contact", label: copy.nav.contact },
   ]
 

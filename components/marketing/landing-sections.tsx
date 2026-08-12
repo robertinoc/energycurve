@@ -565,7 +565,10 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
           />
           <FooterColumn
             heading={copy.footer.resources}
-            links={[{ href: "/install", label: copy.install.footerLink }]}
+            links={[
+              { href: "/pricing", label: copy.pricing.navLabel },
+              { href: "/install", label: copy.install.footerLink },
+            ]}
           />
           <FooterColumn
             heading={copy.footer.legal}
