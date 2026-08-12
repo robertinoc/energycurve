@@ -66,3 +66,18 @@ checkouts, so without the exclusion the local run executes other branches'
 suites too — which is why runs once reported 643 tests for a repo that has ~350.
 The same reason `.claude/**` is in the eslint ignores. CI clones fresh and was
 always correct.
+
+## Dependency licensing is a hard constraint
+
+EnergyCurve is closed-source and charges money, and browser-side features **ship
+their dependencies to the user's machine**. So: **no AGPL or GPL dependencies**,
+ever, in anything that reaches the client.
+
+This is not hypothetical — it already changed the roadmap. Essentia.js, named in
+the strategy doc as the audio-analysis engine, is AGPL-3.0 and had to be dropped
+(its commercial licence is an unpriced negotiation with a university). aubio /
+aubiojs are GPL-3.0 and out for the same reason. Check `license` in a package's
+metadata before adding it; when the only good library is copyleft, implement the
+algorithm instead — that's why `lib/audio/key-detection.ts` exists.
+
+See `docs/spike-browser-audio-analysis.md`.

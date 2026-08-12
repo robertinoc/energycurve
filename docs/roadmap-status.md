@@ -230,7 +230,7 @@ Repository anchors:
 Full strategy: `docs/product-strategy-v2.md` (market analysis, science-based
 Energy Model v3, FREE/PRO/PRO+ plans at $5.99/$11.99).
 
-- **H1 (now)**: Essentia.js in-browser audio analysis · Energy Model v3
+- **H1 (now)**: in-browser audio analysis (meyda + web-audio-beat-detector — Essentia.js ruled out on AGPL, see spike-browser-audio-analysis.md) · Energy Model v3
   (arousal multi-feature, calibrated vs MIK tags) · set version history ·
   NML missing-files warning · M3U8-first for file-sourced playlists ·
   billing foundation (Stripe + plan gates).
@@ -276,3 +276,21 @@ Seven capabilities, tiered in `product-strategy-v2.md`:
 
 Native export (Rekordbox XML, Traktor NML, M3U8) is **free forever** — a
 deliberate exception to the "engine depth is PRO" rule; see the strategy doc.
+
+## Spike: browser audio analysis — done 12 Aug 2026
+
+`docs/spike-browser-audio-analysis.md`. Verdict: **browser-first is viable, no
+server needed**, with two corrections to the plan.
+
+- **Essentia.js is out** — AGPL-3.0, unusable in a closed-source paid product.
+  Replaced by MIT parts: `web-audio-beat-detector` (tempo), `meyda` (spectral
+  features), and our own spectral flux, spectral entropy, and Krumhansl-Schmuckler
+  key detection. Meyda's own `spectralFlux` extractor is broken (throws under ESM),
+  so that one is ours out of necessity.
+- **Tempo: 8/8 exact** against the Mixed In Key tags on 8 real tracks. Production
+  ready.
+- **Key: 4/6 on a 6-track sample** — not shippable yet, and n is far too small to
+  quote as a rate. Both misses were major/minor confusions, the tractable kind.
+- **Speed: ~6 s/track**, of which 88% is the framewise pass. Cost is exactly
+  linear in frame count (measured), so windowed sampling gets this under 1 s with
+  predictable arithmetic. Needed before shipping a 40-track playlist.
