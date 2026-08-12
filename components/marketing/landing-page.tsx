@@ -10,12 +10,14 @@ import { LandingNavbar } from "@/components/marketing/landing-navbar"
 import {
   ContactSection,
   DifferentiationSection,
+  FaqSection,
   FeaturesSection,
   FinalCTASection,
   FooterSection,
   HeroSection,
   HowItWorksSection,
   StorySection,
+  SuiteSection,
 } from "@/components/marketing/landing-sections"
 import { InstallBanner } from "@/components/marketing/install-banner"
 import { ANALYSIS_LOCALE_COOKIE } from "@/lib/analysis-locale"
@@ -23,7 +25,7 @@ import { getSiteCopy, SiteLocale } from "@/lib/content/site-copy"
 import { isStandaloneDisplayMode } from "@/lib/pwa"
 
 const STORAGE_KEY = "energycurve:locale"
-const SECTION_IDS = ["features", "how-it-works", "story", "contact"]
+const SECTION_IDS = ["features", "how-it-works", "story", "faq", "contact"]
 
 export function LandingPage() {
   const [locale, setLocale] = useState<SiteLocale>(() => {
@@ -100,6 +102,7 @@ export function LandingPage() {
     { href: "#features", label: copy.nav.features },
     { href: "#how-it-works", label: copy.nav.how },
     { href: "#story", label: copy.nav.story },
+    { href: "#faq", label: copy.nav.faq },
     { href: "#contact", label: copy.nav.contact },
   ]
 
@@ -147,6 +150,8 @@ export function LandingPage() {
         <HowItWorksSection copy={copy} signupHref={signupHref} />
         <DifferentiationSection copy={copy} />
         <StorySection copy={copy} />
+        <SuiteSection copy={copy} />
+        <FaqSection copy={copy} />
         <ContactSection copy={copy} />
         <FinalCTASection copy={copy} signupHref={signupHref} />
         <FooterSection copy={copy} />
