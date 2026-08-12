@@ -5,6 +5,16 @@ export type ResolvedSiteCopy = ReturnType<typeof getSiteCopy>
 
 type LocalizedLabel = Record<SiteLocale, string>
 
+/**
+ * A cell in the plan comparison table. Tokens keep the table readable and
+ * mean a check mark or a "soon" badge is spelled the same way everywhere;
+ * anything with real text (a quota) carries its own translation.
+ *
+ * "soon" is load-bearing honesty: several PRO capabilities are still being
+ * built, and a pricing page must not imply you can buy them today.
+ */
+type PlanCell = "yes" | "no" | "soon" | LocalizedLabel
+
 interface SiteCopySchema {
   nav: {
     features: LocalizedLabel
@@ -92,6 +102,49 @@ interface SiteCopySchema {
     title: LocalizedLabel
     intro: LocalizedLabel
     items: { q: LocalizedLabel; a: LocalizedLabel }[]
+  }
+  pricing: {
+    navLabel: LocalizedLabel
+    eyebrow: LocalizedLabel
+    title: LocalizedLabel
+    subtitle: LocalizedLabel
+    teaserTitle: LocalizedLabel
+    teaserBody: LocalizedLabel
+    teaserCta: LocalizedLabel
+    liveBadge: LocalizedLabel
+    soonBadge: LocalizedLabel
+    recommendedBadge: LocalizedLabel
+    included: LocalizedLabel
+    notIncluded: LocalizedLabel
+    perMonth: LocalizedLabel
+    annualPrefix: LocalizedLabel
+    plans: {
+      id: string
+      name: LocalizedLabel
+      price: LocalizedLabel
+      annual: LocalizedLabel | null
+      tagline: LocalizedLabel
+      highlights: { text: LocalizedLabel; soon?: boolean }[]
+      live: boolean
+      recommended?: boolean
+      cta: LocalizedLabel
+      ctaHref: string
+    }[]
+    matrixTitle: LocalizedLabel
+    matrixLegend: LocalizedLabel
+    columnCapability: LocalizedLabel
+    rows: {
+      capability: LocalizedLabel
+      free: PlanCell
+      pro: PlanCell
+      proPlus: PlanCell
+    }[]
+    billingTitle: LocalizedLabel
+    billingBody: LocalizedLabel
+    questionsTitle: LocalizedLabel
+    questionsBody: LocalizedLabel
+    questionsCta: LocalizedLabel
+    backHome: LocalizedLabel
   }
   contact: {
     title: LocalizedLabel
@@ -232,8 +285,8 @@ const siteCopy: SiteCopySchema = {
         es: "Visualizá el arco completo de energía",
       },
       desc: {
-        en: "Visualize how energy rises, plateaus, and drops across your full set so peak moments and flat stretches are obvious.",
-        es: "Visualizá cómo la energía sube, se sostiene y cae a lo largo de todo el set para detectar enseguida picos y momentos planos.",
+        en: "The energy flow of your whole set on one curve: warm-up, build, peak time, cool-down. Flat stretches and premature peaks stop being a feeling and become something you can point at.",
+        es: "El flujo de energía de todo tu set en una sola curva: warm-up, subida, peak time, bajada. Los tramos planos y los picos prematuros dejan de ser una sensación y pasan a ser algo que podés señalar.",
       },
     },
     transition: {
@@ -396,6 +449,18 @@ const siteCopy: SiteCopySchema = {
         },
       },
       {
+        // Mixed In Key made 1-10 mean *per-track* energy, and that reading is
+        // deeply embedded. Our 1-10 scores the whole set, so say it outright.
+        q: {
+          en: "Is the 1–10 score per track or for the whole set?",
+          es: "¿El score de 1 a 10 es por track o de todo el set?",
+        },
+        a: {
+          en: "For the whole set. Mixed In Key’s familiar 1–10 rates each individual track’s energy; ours rates how well the set is put together — its energy flow, its arc, the size of the jumps between tracks. A set full of 9-energy bangers can still score 4 out of 10, because playing nine peaks in a row isn’t a journey. Per-track energy is shown separately, next to each track.",
+          es: "De todo el set. El 1 a 10 conocido de Mixed In Key califica la energía de cada track por separado; el nuestro califica qué tan bien está armado el set: su flujo de energía, su arco, el tamaño de los saltos entre temas. Un set lleno de bombas de energía 9 puede sacar 4 de 10, porque tocar nueve picos seguidos no es un viaje. La energía por track se muestra aparte, al lado de cada uno.",
+        },
+      },
+      {
         q: {
           en: "Which DJ software does EnergyCurve support?",
           es: "¿Con qué software de DJ funciona EnergyCurve?",
@@ -466,6 +531,405 @@ const siteCopy: SiteCopySchema = {
         },
       },
     ],
+  },
+  pricing: {
+    navLabel: { en: "Pricing", es: "Precios" },
+    eyebrow: { en: "Plans", es: "Planes" },
+    title: {
+      en: "Simple pricing, and a free tier that stays free",
+      es: "Precios simples, y un plan gratis que sigue siendo gratis",
+    },
+    subtitle: {
+      en: "EnergyCurve is free to use right now. PRO and PRO+ are in development — the prices below are final, and everything marked “Soon” is on the roadmap, not something you can buy yet.",
+      es: "EnergyCurve es gratis ahora mismo. PRO y PRO+ están en desarrollo — los precios de acá abajo son los definitivos, y todo lo marcado como “Pronto” está en el roadmap, no es algo que ya puedas comprar.",
+    },
+    teaserTitle: {
+      en: "Start free — and the export back to your DJ software is free too",
+      es: "Empezá gratis — y el export de vuelta a tu software de DJ también es gratis",
+    },
+    teaserBody: {
+      en: "The analysis, the energy curve, the fixes, and native export to Rekordbox, Traktor, and M3U8 all live on the free tier, permanently. PRO and PRO+ lift the limits and add real audio analysis — both are in development, and the prices are already public.",
+      es: "El análisis, la curva de energía, los arreglos y el export nativo a Rekordbox, Traktor y M3U8 están todos en el plan gratis, para siempre. PRO y PRO+ suben los límites y agregan análisis de audio real — están en desarrollo y los precios ya son públicos.",
+    },
+    teaserCta: { en: "See all plans", es: "Ver todos los planes" },
+    liveBadge: { en: "Available now", es: "Disponible ahora" },
+    soonBadge: { en: "Soon", es: "Pronto" },
+    recommendedBadge: { en: "Recommended", es: "Recomendado" },
+    included: { en: "Included", es: "Incluido" },
+    notIncluded: { en: "Not included", es: "No incluido" },
+    perMonth: { en: "/month", es: "/mes" },
+    annualPrefix: { en: "or", es: "o" },
+    plans: [
+      {
+        id: "free",
+        name: { en: "Free", es: "Gratis" },
+        price: { en: "US$0", es: "u$s0" },
+        annual: null,
+        tagline: {
+          en: "See your set’s curve and feel the gap. No card, no trial clock.",
+          es: "Mirá la curva de tu set y sentí la diferencia. Sin tarjeta y sin reloj de prueba.",
+        },
+        highlights: [
+          { text: { en: "3 active playlists", es: "3 playlists activas" } },
+          {
+            text: {
+              en: "Import from every format, including your audio files",
+              es: "Import de todos los formatos, incluidos tus archivos de audio",
+            },
+          },
+          {
+            text: {
+              en: "Full analysis: 1–10 score, energy curve, issue markers",
+              es: "Análisis completo: score de 1 a 10, curva de energía y marcadores",
+            },
+          },
+          {
+            text: {
+              en: "3 applied fixes per month",
+              es: "3 arreglos aplicados por mes",
+            },
+          },
+          {
+            // Native export stays free, permanently. It is the thing that makes
+            // the tool usable at all, and paywalling it would break the loop.
+            text: {
+              en: "Export to Rekordbox, Traktor, M3U8, CSV, and TXT — all of it, free",
+              es: "Export a Rekordbox, Traktor, M3U8, CSV y TXT — todo, gratis",
+            },
+          },
+        ],
+        live: true,
+        cta: { en: "Start free", es: "Empezar gratis" },
+        ctaHref: "/signup?returnTo=%2Fdashboard",
+      },
+      {
+        id: "pro",
+        name: { en: "PRO", es: "PRO" },
+        price: { en: "US$9.99", es: "u$s9,99" },
+        annual: { en: "US$99 / year", es: "u$s99 / año" },
+        tagline: {
+          en: "For the DJ who plays regularly and preps every set.",
+          es: "Para el DJ que toca seguido y prepara cada set.",
+        },
+        highlights: [
+          {
+            text: {
+              en: "Unlimited playlists, unlimited fixes, unlimited custom genres",
+              es: "Playlists, arreglos y géneros propios ilimitados",
+            },
+          },
+          {
+            text: {
+              en: "3 AI orderings per month",
+              es: "3 ordenamientos con IA por mes",
+            },
+          },
+          {
+            text: {
+              en: "Real audio analysis in your browser — BPM, key, and energy for untagged files",
+              es: "Análisis de audio real en tu navegador — BPM, tonalidad y energía para archivos sin tags",
+            },
+            soon: true,
+          },
+          {
+            text: {
+              en: "Slot-aware planning and named curve shapes — warm-up, peak time, after-hours",
+              es: "Planificación por horario de slot y curvas con nombre — warm-up, peak time, after-hours",
+            },
+            soon: true,
+          },
+          {
+            text: {
+              en: "Planned vs played, set version history, and a printable set sheet",
+              es: "Planificado vs. tocado, historial de versiones y set sheet imprimible",
+            },
+            soon: true,
+          },
+        ],
+        live: false,
+        recommended: true,
+        cta: { en: "Tell me when it’s ready", es: "Avisame cuando esté" },
+        ctaHref: "/#contact",
+      },
+      {
+        id: "proPlus",
+        name: { en: "PRO+", es: "PRO+" },
+        price: { en: "US$19.99", es: "u$s19,99" },
+        annual: { en: "US$199 / year", es: "u$s199 / año" },
+        tagline: {
+          en: "For the working professional: the booth, the whole library, no limits.",
+          es: "Para el profesional: la cabina, la librería completa y sin límites.",
+        },
+        highlights: [
+          { text: { en: "Everything in PRO", es: "Todo lo de PRO" } },
+          {
+            text: {
+              en: "Unlimited AI ordering",
+              es: "Ordenamiento con IA ilimitado",
+            },
+          },
+          {
+            text: {
+              en: "B2B and B3B sets: invite other DJs to build one set together",
+              es: "Sets B2B y B3B: invitá a otros DJs a armar un set juntos",
+            },
+            soon: true,
+          },
+          {
+            text: {
+              en: "Residency mode: never repeat what you played there last time",
+              es: "Modo residencia: no repitas lo que tocaste la última vez",
+            },
+            soon: true,
+          },
+          {
+            text: {
+              en: "Gig Mode: offline performance view for the booth",
+              es: "Gig Mode: vista de performance offline para la cabina",
+            },
+            soon: true,
+          },
+          {
+            text: {
+              en: "Global track library, priority support, and early access",
+              es: "Librería global de tracks, soporte prioritario y acceso anticipado",
+            },
+          },
+        ],
+        live: false,
+        cta: { en: "Tell me when it’s ready", es: "Avisame cuando esté" },
+        ctaHref: "/#contact",
+      },
+    ],
+    matrixTitle: {
+      en: "What’s in each plan",
+      es: "Qué incluye cada plan",
+    },
+    matrixLegend: {
+      en: "“Soon” means it’s being built and isn’t available on any plan yet — including the paid ones.",
+      es: "“Pronto” significa que se está construyendo y todavía no está disponible en ningún plan, ni en los pagos.",
+    },
+    columnCapability: { en: "Capability", es: "Función" },
+    rows: [
+      {
+        capability: { en: "Active playlists", es: "Playlists activas" },
+        free: { en: "3", es: "3" },
+        pro: { en: "Unlimited", es: "Ilimitadas" },
+        proPlus: { en: "Unlimited", es: "Ilimitadas" },
+      },
+      {
+        capability: {
+          en: "Import (Rekordbox, Traktor, M3U8, TXT, audio files)",
+          es: "Import (Rekordbox, Traktor, M3U8, TXT, archivos de audio)",
+        },
+        free: "yes",
+        pro: "yes",
+        proPlus: "yes",
+      },
+      {
+        capability: {
+          en: "Analysis: score, energy curve, issue markers",
+          es: "Análisis: score, curva de energía, marcadores",
+        },
+        free: "yes",
+        pro: "yes",
+        proPlus: "yes",
+      },
+      {
+        capability: { en: "Applied fixes", es: "Arreglos aplicados" },
+        free: { en: "3 / month", es: "3 / mes" },
+        pro: { en: "Unlimited", es: "Ilimitados" },
+        proPlus: { en: "Unlimited", es: "Ilimitados" },
+      },
+      {
+        capability: {
+          en: "Heuristic reordering (no AI)",
+          es: "Reordenamiento heurístico (sin IA)",
+        },
+        free: "yes",
+        pro: "yes",
+        proPlus: "yes",
+      },
+      {
+        capability: { en: "AI ordering (Claude)", es: "Ordenamiento con IA (Claude)" },
+        free: { en: "1 / month", es: "1 / mes" },
+        pro: { en: "3 / month", es: "3 / mes" },
+        proPlus: { en: "Unlimited", es: "Ilimitado" },
+      },
+      {
+        capability: { en: "Export to CSV and TXT", es: "Export a CSV y TXT" },
+        free: "yes",
+        pro: "yes",
+        proPlus: "yes",
+      },
+      {
+        // Free forever: exporting back to the booth is the whole point of the
+        // tool, so it is never a paid upgrade.
+        capability: {
+          en: "Native export (Rekordbox XML, Traktor NML, M3U8)",
+          es: "Export nativo (XML de Rekordbox, NML de Traktor, M3U8)",
+        },
+        free: "yes",
+        pro: "yes",
+        proPlus: "yes",
+      },
+      {
+        capability: {
+          en: "Custom genres and set contexts",
+          es: "Géneros y contextos de set propios",
+        },
+        free: { en: "2", es: "2" },
+        pro: { en: "Unlimited", es: "Ilimitados" },
+        proPlus: { en: "Unlimited", es: "Ilimitados" },
+      },
+      {
+        capability: {
+          en: "Search and organization",
+          es: "Búsqueda y organización",
+        },
+        free: "yes",
+        pro: "yes",
+        proPlus: "yes",
+      },
+      {
+        capability: {
+          en: "Real audio analysis in the browser",
+          es: "Análisis de audio real en el navegador",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Energy Model v3 (multi-feature)",
+          es: "Energy Model v3 (multi-feature)",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: { en: "Set version history", es: "Historial de versiones del set" },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Slot-aware planning (map the curve to clock time)",
+          es: "Planificación por horario de slot (curva mapeada al reloj)",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Named target curve shapes (warm-up, peak time, after-hours…)",
+          es: "Curvas objetivo con nombre (warm-up, peak time, after-hours…)",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Save your own curve templates",
+          es: "Guardar tus propias plantillas de curva",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Planned vs played comparison",
+          es: "Comparación entre planificado y tocado",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Printable PDF set sheet",
+          es: "Set sheet imprimible en PDF",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Residency mode (don’t repeat recent sets at a venue)",
+          es: "Modo residencia (no repetir sets recientes en un club)",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Collaborative B2B / B3B sets with other EnergyCurve users",
+          es: "Sets B2B / B3B colaborativos con otros usuarios de EnergyCurve",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Gig Mode (offline performance view)",
+          es: "Gig Mode (vista de performance offline)",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Global track library and insights",
+          es: "Librería global de tracks e insights",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Per-transition suggestions",
+          es: "Transiciones sugeridas track a track",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "soon",
+      },
+      {
+        capability: { en: "Support", es: "Soporte" },
+        free: { en: "Community", es: "Comunidad" },
+        pro: { en: "Standard", es: "Estándar" },
+        proPlus: { en: "Priority + early access", es: "Prioritario + acceso anticipado" },
+      },
+    ],
+    billingTitle: {
+      en: "Who charges the card",
+      es: "Quién cobra la tarjeta",
+    },
+    billingBody: {
+      en: "EnergyCurve is part of the StageLink suite and is operated by StageLink LLC. When paid plans launch, the charge is processed under that name, so your card statement, invoices, and receipts will read “StageLink LLC” — not “EnergyCurve”. Same company. We’d rather you read it here than wonder about it later.",
+      es: "EnergyCurve es parte de la suite StageLink y está operado por StageLink LLC. Cuando lancemos los planes pagos, el cargo se procesa bajo ese nombre, así que tu resumen de tarjeta, las facturas y los recibos van a decir “StageLink LLC”, no “EnergyCurve”. Es la misma empresa. Preferimos que lo leas acá antes que te queden dudas después.",
+    },
+    questionsTitle: {
+      en: "Still deciding?",
+      es: "¿Todavía lo estás pensando?",
+    },
+    questionsBody: {
+      en: "The free tier has no time limit, so the honest answer is: analyze a real set and see whether the fixes make sense to you. If something’s unclear, the FAQ covers the usual questions and a human answers the rest.",
+      es: "El plan gratis no tiene límite de tiempo, así que la respuesta honesta es: analizá un set real y mirá si los arreglos te cierran. Si algo no queda claro, el FAQ cubre las preguntas habituales y una persona responde el resto.",
+    },
+    questionsCta: { en: "Read the FAQ", es: "Leer el FAQ" },
+    backHome: { en: "Back to home", es: "Volver al inicio" },
   },
   contact: {
     title: { en: "Get in touch", es: "Contacto" },
@@ -637,6 +1101,22 @@ const siteCopy: SiteCopySchema = {
   },
 }
 
+/** Resolved shape of a plan-matrix cell: a token the table renders as an
+ *  icon/badge, or plain text for quotas. */
+export type ResolvedPlanCell =
+  | { kind: "yes" }
+  | { kind: "no" }
+  | { kind: "soon" }
+  | { kind: "text"; text: string }
+
+function resolvePlanCell(cell: PlanCell, locale: SiteLocale): ResolvedPlanCell {
+  if (cell === "yes" || cell === "no" || cell === "soon") {
+    return { kind: cell }
+  }
+
+  return { kind: "text", text: cell[locale] }
+}
+
 export function getSiteCopy(locale: SiteLocale = "en") {
   return {
     nav: {
@@ -737,6 +1217,52 @@ export function getSiteCopy(locale: SiteLocale = "en") {
         question: item.q[locale],
         answer: item.a[locale],
       })),
+    },
+    pricing: {
+      navLabel: siteCopy.pricing.navLabel[locale],
+      eyebrow: siteCopy.pricing.eyebrow[locale],
+      title: siteCopy.pricing.title[locale],
+      subtitle: siteCopy.pricing.subtitle[locale],
+      teaserTitle: siteCopy.pricing.teaserTitle[locale],
+      teaserBody: siteCopy.pricing.teaserBody[locale],
+      teaserCta: siteCopy.pricing.teaserCta[locale],
+      liveBadge: siteCopy.pricing.liveBadge[locale],
+      soonBadge: siteCopy.pricing.soonBadge[locale],
+      recommendedBadge: siteCopy.pricing.recommendedBadge[locale],
+      included: siteCopy.pricing.included[locale],
+      notIncluded: siteCopy.pricing.notIncluded[locale],
+      perMonth: siteCopy.pricing.perMonth[locale],
+      annualPrefix: siteCopy.pricing.annualPrefix[locale],
+      plans: siteCopy.pricing.plans.map((plan) => ({
+        id: plan.id,
+        name: plan.name[locale],
+        price: plan.price[locale],
+        annual: plan.annual ? plan.annual[locale] : null,
+        tagline: plan.tagline[locale],
+        highlights: plan.highlights.map((entry) => ({
+          text: entry.text[locale],
+          soon: entry.soon ?? false,
+        })),
+        live: plan.live,
+        recommended: plan.recommended ?? false,
+        cta: plan.cta[locale],
+        ctaHref: plan.ctaHref,
+      })),
+      matrixTitle: siteCopy.pricing.matrixTitle[locale],
+      matrixLegend: siteCopy.pricing.matrixLegend[locale],
+      columnCapability: siteCopy.pricing.columnCapability[locale],
+      rows: siteCopy.pricing.rows.map((row) => ({
+        capability: row.capability[locale],
+        free: resolvePlanCell(row.free, locale),
+        pro: resolvePlanCell(row.pro, locale),
+        proPlus: resolvePlanCell(row.proPlus, locale),
+      })),
+      billingTitle: siteCopy.pricing.billingTitle[locale],
+      billingBody: siteCopy.pricing.billingBody[locale],
+      questionsTitle: siteCopy.pricing.questionsTitle[locale],
+      questionsBody: siteCopy.pricing.questionsBody[locale],
+      questionsCta: siteCopy.pricing.questionsCta[locale],
+      backHome: siteCopy.pricing.backHome[locale],
     },
     contact: {
       title: siteCopy.contact.title[locale],

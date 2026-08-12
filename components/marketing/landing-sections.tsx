@@ -10,6 +10,7 @@ import {
   Sparkles,
   Waves,
 } from "lucide-react"
+import Link from "next/link"
 
 import {
   AmbientGlow,
@@ -358,6 +359,81 @@ export function SuiteSection({ copy }: { copy: ResolvedSiteCopy }) {
   )
 }
 
+export function PricingTeaserSection({ copy }: { copy: ResolvedSiteCopy }) {
+  return (
+    <SectionReveal delay={85}>
+      <SectionContainer
+        id="pricing"
+        className="space-y-6 bg-[linear-gradient(180deg,rgba(12,9,23,0.98),rgba(12,9,23,0.98)),radial-gradient(circle_at_18%_14%,rgba(162,77,224,0.14),transparent_28%)]"
+      >
+        <div className="space-y-3">
+          <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+            {copy.pricing.eyebrow}
+          </p>
+          <h2 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
+            {copy.pricing.teaserTitle}
+          </h2>
+          <p className="max-w-3xl text-base leading-7 text-white/62">
+            {copy.pricing.teaserBody}
+          </p>
+        </div>
+
+        <div className="grid gap-3 pt-3 sm:grid-cols-3">
+          {copy.pricing.plans.map((plan) => (
+            <Link
+              key={plan.id}
+              href="/pricing"
+              className={cn(
+                "relative rounded-2xl border p-5 transition hover:-translate-y-1",
+                plan.recommended
+                  ? "border-[#A24DE0]/50 bg-[linear-gradient(165deg,rgba(162,77,224,0.18),rgba(20,16,31,0.9))] shadow-[0_16px_40px_rgba(120,60,220,0.2)] hover:border-[#A24DE0]/70"
+                  : "border-white/10 bg-white/[0.03] hover:border-white/20"
+              )}
+            >
+              {plan.recommended ? (
+                <span className="ec-gradient-bg absolute -top-2.5 left-5 rounded-full px-2.5 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-white">
+                  {copy.pricing.recommendedBadge}
+                </span>
+              ) : null}
+
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-heading text-base font-semibold text-white">
+                  {plan.name}
+                </span>
+                <span
+                  className={cn(
+                    "text-[0.62rem] font-medium uppercase tracking-[0.12em]",
+                    plan.live ? "text-[#7DF0C4]" : "text-[#F5C15E]"
+                  )}
+                >
+                  {plan.live ? copy.pricing.liveBadge : copy.pricing.soonBadge}
+                </span>
+              </div>
+
+              <p className="mt-3 font-heading text-2xl font-semibold tracking-tight text-white">
+                {plan.price}
+                {plan.annual ? (
+                  <span className="ml-1 text-sm font-normal text-white/46">
+                    {copy.pricing.perMonth}
+                  </span>
+                ) : null}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-white/58">{plan.tagline}</p>
+            </Link>
+          ))}
+        </div>
+
+        <CTAButton href="/pricing">
+          <>
+            {copy.pricing.teaserCta}
+            <ArrowRight className="size-4" />
+          </>
+        </CTAButton>
+      </SectionContainer>
+    </SectionReveal>
+  )
+}
+
 export function FaqSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={90}>
@@ -565,7 +641,10 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
           />
           <FooterColumn
             heading={copy.footer.resources}
-            links={[{ href: "/install", label: copy.install.footerLink }]}
+            links={[
+              { href: "/pricing", label: copy.pricing.navLabel },
+              { href: "/install", label: copy.install.footerLink },
+            ]}
           />
           <FooterColumn
             heading={copy.footer.legal}

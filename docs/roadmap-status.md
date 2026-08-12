@@ -240,3 +240,39 @@ Energy Model v3, FREE/PRO/PRO+ plans at $5.99/$11.99).
 - **H3 (later)**: server-side batch analysis (if demanded) · title-lookup
   enrichment API (PRO+) · Beatport/Lexicon partnerships · public set curves
   (growth loop).
+
+## Content, SEO & AEO — closed 12 Aug 2026
+
+Shipped in PRs #82 and #83:
+
+- Landing copy rewritten around what the product actually does, with the
+  vocabulary DJs really search ("energy flow", "energy arc", named set shapes).
+  Removed the "upload a mix" promise, which was never true.
+- StageLink LLC transparency: dedicated suite section, FAQ entry, footer line,
+  transactional-email footer, and the operating entity named in both the terms
+  and the privacy policy. Tests pin all of it in EN and ES.
+- SEO: keyword-bearing metadata + `metadataBase`, `robots.ts`, `sitemap.ts`,
+  a generated Open Graph image, and a schema.org graph (Organization with
+  `parentOrganization: StageLink LLC`, SoftwareApplication with the price
+  points, FAQPage generated from the rendered copy).
+- AEO: 8-question FAQ in native `<details>` so answers ship in the HTML even
+  collapsed. Baseline measured in `seo-aeo-baseline-2026-08.md` — 0 of 10
+  target queries, domain not yet indexed. Re-measure ~Sep 2026.
+- `/pricing` published: FREE / PRO $9.99 / PRO+ $19.99, PRO marked recommended,
+  roadmap capabilities rendered as "Soon" rather than check marks.
+
+Still open in this area: blog seed content (needs blog infrastructure, which
+this repo doesn't have), and the Search Console property itself (code support
+shipped via `GOOGLE_SITE_VERIFICATION`; claiming the domain needs the account).
+
+## v3 — approved capability set (12 Aug 2026)
+
+Seven capabilities, tiered in `product-strategy-v2.md`:
+
+- **PRO**: slot-aware planning (curve mapped to wall-clock time) · planned vs
+  played comparison · named target curve shapes · printable PDF set sheet.
+- **PRO+**: save your own curve templates · residency mode (don't repeat recent
+  sets at a venue) · collaborative B2B/B3B sets with other EnergyCurve users.
+
+Native export (Rekordbox XML, Traktor NML, M3U8) is **free forever** — a
+deliberate exception to the "engine depth is PRO" rule; see the strategy doc.

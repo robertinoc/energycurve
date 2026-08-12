@@ -16,6 +16,7 @@ import {
   FooterSection,
   HeroSection,
   HowItWorksSection,
+  PricingTeaserSection,
   StorySection,
   SuiteSection,
 } from "@/components/marketing/landing-sections"
@@ -25,7 +26,7 @@ import { getSiteCopy, SiteLocale } from "@/lib/content/site-copy"
 import { isStandaloneDisplayMode } from "@/lib/pwa"
 
 const STORAGE_KEY = "energycurve:locale"
-const SECTION_IDS = ["features", "how-it-works", "story", "faq", "contact"]
+const SECTION_IDS = ["features", "how-it-works", "story", "pricing", "faq", "contact"]
 
 export function LandingPage() {
   const [locale, setLocale] = useState<SiteLocale>(() => {
@@ -103,6 +104,7 @@ export function LandingPage() {
     { href: "#how-it-works", label: copy.nav.how },
     { href: "#story", label: copy.nav.story },
     { href: "#faq", label: copy.nav.faq },
+    { href: "#pricing", label: copy.pricing.navLabel },
     { href: "#contact", label: copy.nav.contact },
   ]
 
@@ -151,6 +153,7 @@ export function LandingPage() {
         <DifferentiationSection copy={copy} />
         <StorySection copy={copy} />
         <SuiteSection copy={copy} />
+        <PricingTeaserSection copy={copy} />
         <FaqSection copy={copy} />
         <ContactSection copy={copy} />
         <FinalCTASection copy={copy} signupHref={signupHref} />

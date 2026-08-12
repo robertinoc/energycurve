@@ -48,6 +48,11 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  // Set GOOGLE_SITE_VERIFICATION in the environment to claim the domain in
+  // Search Console; the tag is omitted entirely when the variable is unset.
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
   icons: {
     icon: [
       {
