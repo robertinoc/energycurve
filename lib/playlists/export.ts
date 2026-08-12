@@ -58,9 +58,32 @@ export function defaultExportFormat(importSource: string | null): ExportFormat {
       return importSource
     case "text":
       return "txt"
+    case "files":
+      // Imported from the user's own files, so we only ever knew a filename or a
+      // folder-relative path — never the absolute path Rekordbox and Traktor
+      // need. M3U8 is the one format that can still resolve those, by sitting
+      // next to the music and referencing it relatively.
+      return "m3u8"
     default:
       return "csv"
   }
+}
+
+/**
+ * True when native DJ-software exports will produce a playlist whose tracks show
+ * up as missing.
+ *
+ * Audio-file imports carry a bare filename (or a folder-relative path) because
+ * the browser never exposes the absolute one. The Traktor writer therefore has
+ * to synthesise a placeholder volume, and Traktor can't resolve it — the
+ * playlist loads with every entry greyed out. Worth saying before the download,
+ * not after.
+ */
+export function nativeExportWillMissTracks(
+  importSource: string | null,
+  format: ExportFormat
+): boolean {
+  return importSource === "files" && (format === "rekordbox" || format === "traktor")
 }
 
 /**

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   availableExportFormats,
+  nativeExportWillMissTracks,
   defaultExportFormat,
   exportFilename,
   serializePlaylist,
@@ -67,6 +68,9 @@ describe("format selection", () => {
     expect(defaultExportFormat("traktor")).toBe("traktor")
     expect(defaultExportFormat("m3u8")).toBe("m3u8")
     expect(defaultExportFormat("text")).toBe("txt")
+    // Audio-file imports only ever knew a filename, so M3U8 — the one format
+    // that resolves relative paths — is the sensible default.
+    expect(defaultExportFormat("files")).toBe("m3u8")
     expect(defaultExportFormat(null)).toBe("csv")
 
     expect(availableExportFormats("rekordbox")).toEqual([
@@ -77,6 +81,7 @@ describe("format selection", () => {
     ])
     expect(availableExportFormats("text")).toEqual(["txt", "csv", "m3u8"])
     expect(availableExportFormats("m3u8")).toEqual(["m3u8", "csv", "txt"])
+    expect(availableExportFormats("files")).toEqual(["m3u8", "csv", "txt"])
     expect(availableExportFormats(null)).toEqual(["csv", "txt", "m3u8"])
   })
 
@@ -372,5 +377,30 @@ describe("Traktor export round-trips through the parser", () => {
       durationSeconds: 317,
       sourceUri: "Macintosh HD/:Users/:dj/:Music/:peak.mp3",
     })
+  })
+})
+
+describe("warning about native exports from local files", () => {
+  it("flags Rekordbox and Traktor for file-sourced playlists", () => {
+    // We only have a filename, so the writer synthesises a placeholder volume
+    // and the DJ software opens the playlist with every entry greyed out.
+    expect(nativeExportWillMissTracks("files", "rekordbox")).toBe(true)
+    expect(nativeExportWillMissTracks("files", "traktor")).toBe(true)
+  })
+
+  it("leaves the formats that actually work alone", () => {
+    // M3U8 resolves relative paths when saved beside the music; CSV and TXT
+    // aren't pointing at files at all.
+    for (const format of ["m3u8", "csv", "txt"] as const) {
+      expect(nativeExportWillMissTracks("files", format)).toBe(false)
+    }
+  })
+
+  it("does not warn when the paths came from the DJ software itself", () => {
+    // A Rekordbox or Traktor import carries real absolute locations.
+    expect(nativeExportWillMissTracks("rekordbox", "rekordbox")).toBe(false)
+    expect(nativeExportWillMissTracks("traktor", "traktor")).toBe(false)
+    expect(nativeExportWillMissTracks("m3u8", "traktor")).toBe(false)
+    expect(nativeExportWillMissTracks(null, "rekordbox")).toBe(false)
   })
 })
