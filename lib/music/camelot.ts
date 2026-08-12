@@ -118,6 +118,41 @@ export function musicalKeyValueToOpenKey(value: number): string | null {
   return value < 12 ? OPEN_KEY_MAJOR[note] : OPEN_KEY_MINOR[note]
 }
 
+/**
+ * Inverse of musicalKeyValueToOpenKey, derived from the SAME tables so the
+ * round-trip is exact by construction. Traktor's Key column reads the numeric
+ * MUSICAL_KEY VALUE — a text-only `INFO KEY` renders as an empty Key column,
+ * which is why exported NMLs showed no keys in Traktor.
+ */
+const TRAKTOR_VALUE_BY_CAMELOT: Record<string, number> = (() => {
+  const map: Record<string, number> = {}
+
+  NOTE_BY_INDEX.forEach((note, index) => {
+    const major = toCamelot(OPEN_KEY_MAJOR[note])
+    const minor = toCamelot(OPEN_KEY_MINOR[note])
+
+    if (major) {
+      map[major] = index
+    }
+
+    if (minor) {
+      map[minor] = index + 12
+    }
+  })
+
+  return map
+})()
+
+/** Any key notation (Camelot "8A", Open Key "11m", musical "Am") → Traktor's
+ * numeric MUSICAL_KEY VALUE (0–23), or null when unmappable. */
+export function musicalKeyToTraktorValue(
+  key: string | null | undefined
+): number | null {
+  const camelot = toCamelot(key)
+
+  return camelot ? (TRAKTOR_VALUE_BY_CAMELOT[camelot] ?? null) : null
+}
+
 export interface CamelotPosition {
   /** 1–12 wheel position. */
   num: number

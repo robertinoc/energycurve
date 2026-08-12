@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import { isCamelot, toCamelot } from "@/lib/music/camelot"
+import { isCamelot, toCamelot,
+  musicalKeyToTraktorValue,
+} from "@/lib/music/camelot"
 
 describe("toCamelot", () => {
   it("maps minor keys to the A ring", () => {
@@ -81,5 +83,34 @@ describe("isCamelot", () => {
     expect(isCamelot("Am")).toBe(false)
     expect(isCamelot("13A")).toBe(false)
     expect(isCamelot("0B")).toBe(false)
+  })
+})
+
+describe("musicalKeyToTraktorValue", () => {
+  it("round-trips every Traktor numeric value through Open Key text", async () => {
+    const { musicalKeyValueToOpenKey } = await import("@/lib/music/camelot")
+
+    for (let value = 0; value <= 23; value += 1) {
+      const openKey = musicalKeyValueToOpenKey(value)
+      expect(openKey).not.toBeNull()
+      expect(musicalKeyToTraktorValue(openKey)).toBe(value)
+    }
+  })
+
+  it("maps Camelot and musical notations to the same value", () => {
+    // 9A = E minor = index 4 + 12.
+    expect(musicalKeyToTraktorValue("9A")).toBe(16)
+    expect(musicalKeyToTraktorValue("Em")).toBe(16)
+    // 8B = C major = index 0.
+    expect(musicalKeyToTraktorValue("8B")).toBe(0)
+    expect(musicalKeyToTraktorValue("C")).toBe(0)
+    // Open Key "11m" = G minor = index 7 + 12.
+    expect(musicalKeyToTraktorValue("11m")).toBe(19)
+  })
+
+  it("returns null for unmappable keys", () => {
+    expect(musicalKeyToTraktorValue(null)).toBeNull()
+    expect(musicalKeyToTraktorValue("")).toBeNull()
+    expect(musicalKeyToTraktorValue("not-a-key")).toBeNull()
   })
 })

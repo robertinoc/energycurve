@@ -304,6 +304,29 @@ describe("Traktor export key consistency", () => {
   })
 })
 
+describe("Traktor numeric MUSICAL_KEY emission", () => {
+  it("emits the numeric MUSICAL_KEY so Traktor's Key column shows the key", () => {
+    // Traktor's Key column reads MUSICAL_KEY VALUE (0-23), not the INFO KEY
+    // text — without it, exported keys were invisible in Traktor.
+    const nml = serializePlaylist("traktor", samplePlaylist())
+
+    // Track 1 musicalKey "9A" = E minor = 16; track 2 "8A" = A minor = 21.
+    expect(nml).toContain('<MUSICAL_KEY VALUE="16"/>')
+    expect(nml).toContain('<MUSICAL_KEY VALUE="21"/>')
+  })
+
+  it("omits MUSICAL_KEY when the key is missing or unmappable", () => {
+    const nml = serializePlaylist(
+      "traktor",
+      samplePlaylist({
+        tracks: [makeTrack({ musicalKey: null }), makeTrack({ musicalKey: "??" })],
+      })
+    )
+
+    expect(nml).not.toContain("MUSICAL_KEY")
+  })
+})
+
 describe("Traktor export round-trips through the parser", () => {
   it("preserves order, metadata, energy, key, genre, duration, and location key", () => {
     const playlist = samplePlaylist({

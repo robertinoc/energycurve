@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { CircleCheck, Loader2, Sparkles } from "lucide-react"
 
 import { reorderTracksAction } from "@/app/dashboard/playlists/actions"
+import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
+import type { ExportPlaylist } from "@/lib/playlists/export"
 import { FixMapCurve, type FixMarkerDatum } from "@/components/analysis/fix-map-curve"
 import { FixPanel, type FixStatus } from "@/components/analysis/fix-panel"
 import {
@@ -110,6 +112,15 @@ export interface WorkbenchTrack {
   id: string
   artist: string
   name: string
+  /** Rich fields carried through so the CURRENT derived order is exportable
+   * from this screen (same mapping the detail page uses). */
+  bpm: number | null
+  energyScore: number | null
+  sourceUri: string | null
+  musicalKey: string | null
+  genre: string | null
+  comment: string | null
+  durationSeconds: number | null
 }
 
 /** Localized, already-interpolated copy per fix id (from the engine's
@@ -123,6 +134,8 @@ export interface FixRecommendationCopy {
 
 export interface AnalysisWorkbenchProps {
   playlistId: string
+  playlistName: string
+  importSource: string | null
   /** Tracks in the ORIGINAL saved order. */
   tracks: WorkbenchTrack[]
   /** Energies resolved for the original order (index-aligned). */
@@ -146,6 +159,8 @@ export interface AnalysisWorkbenchProps {
  */
 export function AnalysisWorkbench({
   playlistId,
+  playlistName,
+  importSource,
   tracks,
   energies,
   fixes,
@@ -386,6 +401,31 @@ export function AnalysisWorkbench({
         originalPosition: originalPositionById.get(id) ?? 0,
       })),
     [order, tracksById, energiesById, originalPositionById]
+  )
+
+  // The CURRENT derived order (fixes + smart order), exportable as-is —
+  // positions renumbered 1..N, same field mapping as the detail page.
+  const exportPlaylist: ExportPlaylist = useMemo(
+    () => ({
+      name: playlistName,
+      importSource,
+      tracks: order
+        .map((id) => tracksById.get(id))
+        .filter((track): track is WorkbenchTrack => Boolean(track))
+        .map((track, index) => ({
+          position: index + 1,
+          artist: track.artist,
+          name: track.name,
+          bpm: track.bpm,
+          energyScore: track.energyScore,
+          sourceUri: track.sourceUri,
+          musicalKey: track.musicalKey,
+          genre: track.genre,
+          comment: track.comment,
+          durationSeconds: track.durationSeconds,
+        })),
+    }),
+    [order, tracksById, playlistName, importSource]
   )
 
   const movedCount = tracklistRows.filter(
@@ -690,6 +730,9 @@ export function AnalysisWorkbench({
         smartStatus={smartStatus}
         onSmartOrder={smartOrderRequest}
         onReset={resetOrder}
+        exportSlot={
+          <PlaylistExportButton playlist={exportPlaylist} locale={locale} />
+        }
         locale={locale}
       />
 
