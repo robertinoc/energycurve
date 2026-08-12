@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { getSiteCopy, supportedLocales } from "@/lib/content/site-copy"
 import { getLegalCopy } from "@/lib/content/legal-copy"
+import { buildBrandedEmail } from "@/lib/email/build-email-html"
 import {
   buildLandingStructuredData,
   OPERATING_COMPANY,
@@ -145,4 +146,20 @@ describe("landing copy accuracy", () => {
       expect(claims).not.toContain("subí un mix")
     }
   )
+})
+
+describe("transactional email identifies the operator", () => {
+  it("names StageLink LLC in both the HTML and text footers", () => {
+    const { html, text } = buildBrandedEmail({
+      preview: "Reset your EnergyCurve password",
+      heading: "Reset your password",
+      paragraphs: ["Click the button below."],
+      button: { label: "Reset", url: "https://energycurve.app/reset-password" },
+    })
+
+    // A recipient who later sees "StageLink LLC" on a statement should have
+    // met the name here first.
+    expect(html).toContain("StageLink LLC")
+    expect(text).toContain("StageLink LLC")
+  })
 })

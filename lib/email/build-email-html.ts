@@ -6,6 +6,14 @@
  * Inline styles only (email clients strip <style>/external CSS).
  */
 
+/**
+ * Every transactional email identifies the operating company. A recipient who
+ * later sees "StageLink LLC" on a card statement should already have seen the
+ * name here — and mail from a company that names itself is treated better by
+ * spam filters than mail that doesn't.
+ */
+const EMAIL_OPERATOR_LINE = "Part of the StageLink suite · operated by StageLink LLC"
+
 const BRAND = {
   bg: "#08050F",
   card: "#14101F",
@@ -87,6 +95,7 @@ export function buildBrandedEmail(options: BrandedEmailOptions): {
             </tr>
           </table>
           <p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${BRAND.muted};">EnergyCurve · energycurve.app</p>
+          <p style="margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${BRAND.muted};">${EMAIL_OPERATOR_LINE}</p>
         </td>
       </tr>
     </table>
@@ -104,7 +113,7 @@ export function buildBrandedEmail(options: BrandedEmailOptions): {
   if (options.footnote) {
     textParts.push("", options.footnote)
   }
-  textParts.push("", "EnergyCurve · energycurve.app")
+  textParts.push("", "EnergyCurve · energycurve.app", EMAIL_OPERATOR_LINE)
 
   return { html, text: textParts.join("\n") }
 }
