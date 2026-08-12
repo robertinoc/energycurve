@@ -10,6 +10,7 @@ interface SiteCopySchema {
     features: LocalizedLabel
     how: LocalizedLabel
     story: LocalizedLabel
+    faq: LocalizedLabel
     contact: LocalizedLabel
     cta: LocalizedLabel
   }
@@ -78,6 +79,20 @@ interface SiteCopySchema {
     title: LocalizedLabel
     body: LocalizedLabel
   }
+  suite: {
+    eyebrow: LocalizedLabel
+    title: LocalizedLabel
+    body: LocalizedLabel
+    billingTitle: LocalizedLabel
+    billingBody: LocalizedLabel
+    link: LocalizedLabel
+  }
+  faq: {
+    eyebrow: LocalizedLabel
+    title: LocalizedLabel
+    intro: LocalizedLabel
+    items: { q: LocalizedLabel; a: LocalizedLabel }[]
+  }
   contact: {
     title: LocalizedLabel
     desc: LocalizedLabel
@@ -106,6 +121,7 @@ interface SiteCopySchema {
     description: LocalizedLabel
     madeIn: LocalizedLabel
     family: LocalizedLabel
+    billing: LocalizedLabel
     resources: LocalizedLabel
     legal: LocalizedLabel
     privacy: LocalizedLabel
@@ -152,21 +168,22 @@ const siteCopy: SiteCopySchema = {
     features: { en: "Features", es: "Características" },
     how: { en: "How it Works", es: "Cómo funciona" },
     story: { en: "Story", es: "Historia" },
+    faq: { en: "FAQ", es: "Preguntas" },
     contact: { en: "Contact", es: "Contacto" },
     cta: { en: "Create your account", es: "Creá tu cuenta" },
   },
   hero: {
     title: {
-      en: "Design better performances with better energy",
-      es: "Diseñá mejores performances con mejor energía",
+      en: "Analyze your DJ set’s energy curve — and fix the order before you play",
+      es: "Analizá la curva de energía de tu set — y arreglá el orden antes de tocar",
     },
     subtitle: {
-      en: "EnergyCurve analyzes your DJ mixes, track transitions, and performance flow so you can see how energy rises, drops, and moves across a set.",
-      es: "EnergyCurve analiza tus mixes de DJ, las transiciones entre tracks y el flujo de la performance para que puedas ver cómo la energía sube, cae y se mueve a lo largo del set.",
+      en: "Import your playlist from Rekordbox, Traktor, or your own audio files. EnergyCurve scores the set from 1 to 10, maps its energy curve, and shows exactly which tracks to move — then exports the fixed order back to your DJ software.",
+      es: "Importá tu playlist desde Rekordbox, Traktor o tus propios archivos de audio. EnergyCurve puntúa el set de 1 a 10, dibuja su curva de energía y te muestra exactamente qué tracks mover — y después exporta el orden corregido de vuelta a tu software de DJ.",
     },
     support: {
-      en: "Upload a mix or playlist and get an instant visual read of peaks, drops, transition quality, and overall set momentum.",
-      es: "Subí un mix o playlist y obtené una lectura visual inmediata de picos, caídas, calidad de transición y momentum general del set.",
+      en: "Your audio never leaves your computer: tags and files are read locally in your browser. Free to start — no plugin, no install.",
+      es: "Tu audio nunca sale de tu computadora: los tags y los archivos se leen localmente en tu navegador. Empezás gratis — sin plugin ni instalación.",
     },
     audienceLine: {
       en: "Built for DJs, producers, and performers who want to design better performances, not just manage tracks.",
@@ -206,8 +223,8 @@ const siteCopy: SiteCopySchema = {
       es: "Entendé qué está haciendo realmente tu set",
     },
     intro: {
-      en: "Analyze your DJ sets and uncover the energy flow, transition quality, and structure behind your strongest mixes.",
-      es: "Analizá tus sets de DJ y descubrí el flujo de energía, la calidad de las transiciones y la estructura detrás de tus mejores mixes.",
+      en: "EnergyCurve reads BPM, musical key, and energy for every track, then analyzes the set as a whole: where momentum builds, where it stalls, and which moves fix it.",
+      es: "EnergyCurve lee el BPM, la tonalidad y la energía de cada track, y después analiza el set completo: dónde crece el momentum, dónde se estanca y qué movimientos lo arreglan.",
     },
     energy: {
       title: {
@@ -221,12 +238,12 @@ const siteCopy: SiteCopySchema = {
     },
     transition: {
       title: {
-        en: "Understand your transitions",
-        es: "Entendé tus transiciones",
+        en: "Check harmony and transitions",
+        es: "Revisá armonía y transiciones",
       },
       desc: {
-        en: "See where transitions feel smooth, abrupt, or disconnected and improve the flow between tracks.",
-        es: "Detectá dónde las transiciones se sienten fluidas, abruptas o desconectadas y mejorá el flujo entre tracks.",
+        en: "Camelot key compatibility plus energy jumps between consecutive tracks, so you catch clashing keys and abrupt drops before the dancefloor does.",
+        es: "Compatibilidad de tonalidades en Camelot más los saltos de energía entre tracks consecutivos: detectás tonalidades que chocan y caídas bruscas antes de que las note la pista.",
       },
     },
     track: {
@@ -241,46 +258,49 @@ const siteCopy: SiteCopySchema = {
     },
     compare: {
       title: {
-        en: "Compare your best sets",
-        es: "Compará tus mejores sets",
+        en: "Fix it in one click",
+        es: "Arreglalo en un clic",
       },
       desc: {
-        en: "Compare your strongest performances, find recurring patterns, and repeat what actually works on the dancefloor.",
-        es: "Compará tus performances más fuertes, encontrá patrones repetibles y repetí lo que realmente funciona en la pista.",
+        en: "Every issue comes with a concrete move — “send track 7 to position 3” — and shows the score before and after. Apply it, undo it, or let AI reorder the whole set.",
+        es: "Cada problema viene con un movimiento concreto — “mandá el track 7 a la posición 3” — y te muestra el score antes y después. Lo aplicás, lo deshacés, o dejás que la IA reordene todo el set.",
       },
     },
     design: {
       title: {
-        en: "Design your sets with intention",
-        es: "Diseñá tus sets con intención",
+        en: "Export straight back to the booth",
+        es: "Exportá directo a la cabina",
       },
       desc: {
-        en: "Move from improvisation to control by shaping energy progression before you play.",
-        es: "Pasá de improvisar a tener control diseñando la progresión de energía antes de tocar.",
+        en: "Send the fixed order back as Rekordbox XML, Traktor NML, M3U8, TXT, or CSV — BPM, key, and energy included, ready to load for the gig.",
+        es: "Devolvé el orden corregido como XML de Rekordbox, NML de Traktor, M3U8, TXT o CSV — con BPM, tonalidad y energía incluidos, listo para cargar en la fecha.",
       },
     },
   },
   how: {
     title: {
-      en: "From mix to insight in minutes",
-      es: "De tu mix a insights en minutos",
+      en: "From playlist to a better set order in minutes",
+      es: "De tu playlist a un mejor orden de set en minutos",
     },
     step1: {
-      title: { en: "Upload your set", es: "Subí tu set" },
-      desc: { en: "Import your mix or playlist", es: "Importá tu mix o playlist" },
+      title: { en: "Import your playlist", es: "Importá tu playlist" },
+      desc: {
+        en: "Rekordbox XML, Traktor NML, M3U8, a plain tracklist, or your audio files — read locally",
+        es: "XML de Rekordbox, NML de Traktor, M3U8, una tracklist pegada o tus archivos de audio — leídos localmente",
+      },
     },
     step2: {
-      title: { en: "Analyze automatically", es: "Análisis automático" },
+      title: { en: "Get the score and the curve", es: "Recibí el score y la curva" },
       desc: {
-        en: "EnergyCurve processes structure, transitions, and energy flow",
-        es: "EnergyCurve analiza estructura, transiciones y energía",
+        en: "A 1–10 set score, the energy curve, and every issue marked where it happens",
+        es: "Un score del set de 1 a 10, la curva de energía y cada problema marcado donde ocurre",
       },
     },
     step3: {
-      title: { en: "Explore insights", es: "Explorá insights" },
+      title: { en: "Fix it and export", es: "Arreglalo y exportá" },
       desc: {
-        en: "Visualize and understand what’s really happening in your set",
-        es: "Visualizá y entendé qué pasa en tu set",
+        en: "Apply the suggested moves, watch the score climb, export the new order",
+        es: "Aplicá los movimientos sugeridos, mirá subir el score y exportá el orden nuevo",
       },
     },
     cta: {
@@ -322,21 +342,130 @@ const siteCopy: SiteCopySchema = {
         en: "EnergyCurve is the tool I wanted when I was trying to understand not just what I played, but how the room actually felt because of it.",
         es: "EnergyCurve es la herramienta que me hubiera gustado tener cuando intentaba entender no sólo qué estaba tocando, sino cómo se sentía realmente la pista por eso.",
       },
-      {
-        en: "EnergyCurve is part of the StageLink family — the home for artists’ tools. Where StageLink serves performers of every kind, EnergyCurve is the sibling built for one craft: the DJ.",
-        es: "EnergyCurve es parte de la familia StageLink — la casa de las herramientas para artistas. Donde StageLink acompaña a artistas de todo tipo, EnergyCurve es el hermano hecho para un oficio: el del DJ.",
-      },
     ],
   },
   diff: {
     title: {
-      en: "Not a DJ software. A performance intelligence layer.",
-      es: "No es software de DJ. Es inteligencia de performance.",
+      en: "It doesn’t replace your DJ software. It reads what your set is doing.",
+      es: "No reemplaza tu software de DJ. Lee qué está haciendo tu set.",
     },
     body: {
-      en: "Your DJ software helps you manage and perform tracks. EnergyCurve helps you understand what your set is doing — where momentum builds, where transitions lose impact, and why some performances land harder than others.",
-      es: "Tu software de DJ te ayuda a gestionar y ejecutar tracks. EnergyCurve te ayuda a entender qué está haciendo tu set: dónde crece el momentum, dónde las transiciones pierden impacto y por qué algunas performances pegan más que otras.",
+      en: "Mixed In Key tells you what each track is. Rekordbox and Traktor store and play them. EnergyCurve is the only one that analyzes the set as a whole — where momentum builds, where transitions lose impact, and why some nights land harder than others — and hands you the moves that fix it.",
+      es: "Mixed In Key te dice qué es cada track. Rekordbox y Traktor los guardan y los reproducen. EnergyCurve es el único que analiza el set completo — dónde crece el momentum, dónde las transiciones pierden impacto y por qué algunas noches pegan más que otras — y te da los movimientos que lo arreglan.",
     },
+  },
+  suite: {
+    eyebrow: { en: "Part of the StageLink suite", es: "Parte de la suite StageLink" },
+    title: {
+      en: "EnergyCurve is part of the StageLink suite",
+      es: "EnergyCurve es parte de la suite StageLink",
+    },
+    body: {
+      en: "StageLink builds tools for artists. EnergyCurve is the one built for a single craft — the DJ. Same team, same standards, same roadmap: what we learn from performers everywhere comes back into the booth.",
+      es: "StageLink construye herramientas para artistas. EnergyCurve es la que está hecha para un oficio en particular: el del DJ. Mismo equipo, mismos estándares, mismo roadmap: lo que aprendemos de artistas de todo tipo vuelve a la cabina.",
+    },
+    billingTitle: {
+      en: "One thing to expect at checkout",
+      es: "Algo que vas a ver al pagar",
+    },
+    billingBody: {
+      en: "EnergyCurve is operated by StageLink LLC. When paid plans launch, your card statement and receipts will read “StageLink LLC” — not “EnergyCurve”. Same company, nothing to worry about; we’d rather tell you here than surprise you at checkout.",
+      es: "EnergyCurve es operado por StageLink LLC. Cuando lancemos los planes pagos, en tu resumen de tarjeta y en los recibos vas a ver “StageLink LLC”, no “EnergyCurve”. Es la misma empresa, no hay nada de qué preocuparse: preferimos decirlo acá antes que sorprenderte al momento de pagar.",
+    },
+    link: { en: "Visit StageLink", es: "Conocé StageLink" },
+  },
+  faq: {
+    eyebrow: { en: "Questions", es: "Preguntas" },
+    title: {
+      en: "Frequently asked questions",
+      es: "Preguntas frecuentes",
+    },
+    intro: {
+      en: "Short, straight answers. Anything missing, write to us — a human replies.",
+      es: "Respuestas cortas y directas. Si falta algo, escribinos — responde una persona.",
+    },
+    items: [
+      {
+        q: {
+          en: "What does EnergyCurve actually do?",
+          es: "¿Qué hace EnergyCurve exactamente?",
+        },
+        a: {
+          en: "EnergyCurve analyzes the order of a DJ set. It imports your playlist, resolves each track’s BPM, musical key, and energy, scores the whole set from 1 to 10, draws its energy curve, and lists the specific track moves that would improve it. You apply the moves and export the corrected order back to your DJ software.",
+          es: "EnergyCurve analiza el orden de un set de DJ. Importa tu playlist, resuelve el BPM, la tonalidad y la energía de cada track, puntúa el set completo de 1 a 10, dibuja su curva de energía y lista los movimientos concretos de tracks que lo mejorarían. Vos aplicás los movimientos y exportás el orden corregido de vuelta a tu software de DJ.",
+        },
+      },
+      {
+        q: {
+          en: "Which DJ software does EnergyCurve support?",
+          es: "¿Con qué software de DJ funciona EnergyCurve?",
+        },
+        a: {
+          en: "Import and export both work with Rekordbox (XML), Traktor (NML), M3U8 playlists, Rekordbox text exports, and CSV. You can also drop in your audio files directly, or paste a plain tracklist. Serato support is on the roadmap.",
+          es: "El import y el export funcionan con Rekordbox (XML), Traktor (NML), playlists M3U8, exports de texto de Rekordbox y CSV. También podés soltar directamente tus archivos de audio o pegar una tracklist en texto. El soporte de Serato está en el roadmap.",
+        },
+      },
+      {
+        q: {
+          en: "Do I have to upload my music?",
+          es: "¿Tengo que subir mi música?",
+        },
+        a: {
+          en: "No. When you pick audio files, EnergyCurve reads their tags in your browser and only the resulting text data (artist, title, BPM, key, energy) is sent to the server. The audio itself never leaves your computer.",
+          es: "No. Cuando elegís archivos de audio, EnergyCurve lee sus tags en tu navegador y sólo se envían al servidor los datos de texto resultantes (artista, título, BPM, tonalidad, energía). El audio nunca sale de tu computadora.",
+        },
+      },
+      {
+        q: {
+          en: "What if my tracks have no BPM or key tags?",
+          es: "¿Y si mis tracks no tienen tags de BPM o tonalidad?",
+        },
+        a: {
+          en: "EnergyCurve degrades gracefully: it uses your manual value first, then the tag, then a genre-anchored estimate from BPM, and finally a position-based estimate. Every value shows which source it came from, so you always know what’s measured and what’s inferred. You can also type any value in by hand.",
+          es: "EnergyCurve degrada con elegancia: usa primero tu valor manual, después el tag, después una estimación por BPM anclada al género y por último una estimación por posición. Cada valor muestra de qué fuente viene, así siempre sabés qué está medido y qué inferido. También podés escribir cualquier valor a mano.",
+        },
+      },
+      {
+        q: {
+          en: "How much does EnergyCurve cost?",
+          es: "¿Cuánto cuesta EnergyCurve?",
+        },
+        a: {
+          en: "It’s free to use today, and there will always be a free tier. Paid plans — PRO at US$9.99/month and PRO+ at US$19.99/month, with roughly two months free on annual — are in development and will unlock real audio analysis, unlimited fixes, and unlimited AI ordering.",
+          es: "Hoy es gratis, y siempre va a haber un plan gratuito. Los planes pagos — PRO a u$s9,99/mes y PRO+ a u$s19,99/mes, con unos dos meses gratis en el anual — están en desarrollo y van a habilitar análisis de audio real, arreglos ilimitados y ordenamiento con IA ilimitado.",
+        },
+      },
+      {
+        q: {
+          en: "Why does my receipt say StageLink LLC?",
+          es: "¿Por qué mi recibo dice StageLink LLC?",
+        },
+        a: {
+          en: "Because EnergyCurve is part of the StageLink suite and is operated by StageLink LLC, the company behind it. Payments are processed under that name, so “StageLink LLC” is what appears on your card statement and receipts. It’s the same company that builds EnergyCurve.",
+          es: "Porque EnergyCurve es parte de la suite StageLink y está operado por StageLink LLC, la empresa detrás del producto. Los pagos se procesan bajo ese nombre, así que “StageLink LLC” es lo que aparece en tu resumen de tarjeta y en los recibos. Es la misma empresa que construye EnergyCurve.",
+        },
+      },
+      {
+        q: {
+          en: "Is EnergyCurve a replacement for Rekordbox or Mixed In Key?",
+          es: "¿EnergyCurve reemplaza a Rekordbox o a Mixed In Key?",
+        },
+        a: {
+          en: "No, it sits between them. Mixed In Key tells you what each track is; Rekordbox stores and plays them. EnergyCurve is the only one that analyzes the set as a whole — its narrative arc — and tells you what to change. It works alongside whatever you already use.",
+          es: "No, se ubica en el medio. Mixed In Key te dice qué es cada track; Rekordbox los guarda y los reproduce. EnergyCurve es el único que analiza el set como un todo — su arco narrativo — y te dice qué cambiar. Funciona junto a lo que ya uses.",
+        },
+      },
+      {
+        q: {
+          en: "Which genres does it work with?",
+          es: "¿Con qué géneros funciona?",
+        },
+        a: {
+          en: "All of them. Genre sets the expected BPM and energy band — techno, house, drum & bass, and more are built in — and you can create your own genre and set context (opening, main time, closing) if the presets don’t match what you play.",
+          es: "Con todos. El género define la banda esperada de BPM y energía — techno, house, drum & bass y más vienen incluidos — y podés crear tu propio género y contexto de set (apertura, main time, cierre) si los presets no coinciden con lo que tocás.",
+        },
+      },
+    ],
   },
   contact: {
     title: { en: "Get in touch", es: "Contacto" },
@@ -387,8 +516,12 @@ const siteCopy: SiteCopySchema = {
       es: "Hecho en Argentina — para DJs de todo el mundo.",
     },
     family: {
-      en: "Part of the StageLink family — built for artists, now for DJs.",
-      es: "Parte de la familia StageLink — para artistas, y ahora para DJs.",
+      en: "Part of the StageLink suite — tools for artists, this one for DJs.",
+      es: "Parte de la suite StageLink — herramientas para artistas, ésta para DJs.",
+    },
+    billing: {
+      en: "Operated by StageLink LLC. Payments and receipts appear as “StageLink LLC”.",
+      es: "Operado por StageLink LLC. Los pagos y recibos aparecen como “StageLink LLC”.",
     },
     resources: { en: "Resources", es: "Recursos" },
     legal: { en: "Legal", es: "Legal" },
@@ -510,6 +643,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       features: siteCopy.nav.features[locale],
       how: siteCopy.nav.how[locale],
       story: siteCopy.nav.story[locale],
+      faq: siteCopy.nav.faq[locale],
       contact: siteCopy.nav.contact[locale],
       cta: siteCopy.nav.cta[locale],
     },
@@ -587,6 +721,23 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       title: siteCopy.diff.title[locale],
       body: siteCopy.diff.body[locale],
     },
+    suite: {
+      eyebrow: siteCopy.suite.eyebrow[locale],
+      title: siteCopy.suite.title[locale],
+      body: siteCopy.suite.body[locale],
+      billingTitle: siteCopy.suite.billingTitle[locale],
+      billingBody: siteCopy.suite.billingBody[locale],
+      link: siteCopy.suite.link[locale],
+    },
+    faq: {
+      eyebrow: siteCopy.faq.eyebrow[locale],
+      title: siteCopy.faq.title[locale],
+      intro: siteCopy.faq.intro[locale],
+      items: siteCopy.faq.items.map((item) => ({
+        question: item.q[locale],
+        answer: item.a[locale],
+      })),
+    },
     contact: {
       title: siteCopy.contact.title[locale],
       description: siteCopy.contact.desc[locale],
@@ -616,6 +767,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       description: siteCopy.footer.description[locale],
       madeIn: siteCopy.footer.madeIn[locale],
       family: siteCopy.footer.family[locale],
+      billing: siteCopy.footer.billing[locale],
       resources: siteCopy.footer.resources[locale],
       legal: siteCopy.footer.legal[locale],
       privacy: siteCopy.footer.privacy[locale],

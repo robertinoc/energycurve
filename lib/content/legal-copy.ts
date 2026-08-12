@@ -22,6 +22,9 @@ export interface LegalDoc {
 }
 
 const CONTACT_EMAIL = "hello@energycurve.app"
+/** EnergyCurve ships under the StageLink umbrella; this is the name that
+ *  appears on invoices and card statements, so it belongs in the legal copy. */
+const OPERATOR = "StageLink LLC"
 const UPDATED = { en: "Last updated: July 2026", es: "Última actualización: julio 2026" }
 
 const en: Record<LegalDocId, LegalDoc> = {
@@ -29,7 +32,7 @@ const en: Record<LegalDocId, LegalDoc> = {
     title: "Privacy Policy",
     updated: UPDATED.en,
     intro:
-      "This policy explains what data EnergyCurve collects, why, and the choices you have. EnergyCurve is a tool for DJs to analyze the energy of their sets.",
+      `This policy explains what data EnergyCurve collects, why, and the choices you have. EnergyCurve is a tool for DJs to analyze the energy of their sets, operated by ${OPERATOR} as part of the StageLink suite.`,
     sections: [
       {
         heading: "What we collect",
@@ -75,8 +78,15 @@ const en: Record<LegalDocId, LegalDoc> = {
     title: "Terms of Service",
     updated: UPDATED.en,
     intro:
-      "These terms govern your use of EnergyCurve. By creating an account or using the app, you agree to them.",
+      `These terms govern your use of EnergyCurve, a product operated by ${OPERATOR}. By creating an account or using the app, you agree to them.`,
     sections: [
+      {
+        heading: "Who operates EnergyCurve",
+        body: [
+          `EnergyCurve is part of the StageLink suite and is operated by ${OPERATOR}, the company responsible for the service and for this agreement.`,
+          `If and when you purchase a paid plan, the charge is processed by ${OPERATOR}, so "${OPERATOR}" is the name that appears on your card statement, invoices, and receipts — not "EnergyCurve".`,
+        ],
+      },
       {
         heading: "The service",
         body: [
@@ -152,7 +162,7 @@ const es: Record<LegalDocId, LegalDoc> = {
     title: "Política de Privacidad",
     updated: UPDATED.es,
     intro:
-      "Esta política explica qué datos recopila EnergyCurve, por qué, y qué opciones tenés. EnergyCurve es una herramienta para que los DJs analicen la energía de sus sets.",
+      `Esta política explica qué datos recopila EnergyCurve, por qué, y qué opciones tenés. EnergyCurve es una herramienta para que los DJs analicen la energía de sus sets, operada por ${OPERATOR} como parte de la suite StageLink.`,
     sections: [
       {
         heading: "Qué recopilamos",
@@ -198,8 +208,15 @@ const es: Record<LegalDocId, LegalDoc> = {
     title: "Términos del Servicio",
     updated: UPDATED.es,
     intro:
-      "Estos términos regulan tu uso de EnergyCurve. Al crear una cuenta o usar la app, los aceptás.",
+      `Estos términos regulan tu uso de EnergyCurve, un producto operado por ${OPERATOR}. Al crear una cuenta o usar la app, los aceptás.`,
     sections: [
+      {
+        heading: "Quién opera EnergyCurve",
+        body: [
+          `EnergyCurve es parte de la suite StageLink y está operado por ${OPERATOR}, la empresa responsable del servicio y de este acuerdo.`,
+          `Si en algún momento contratás un plan pago, el cobro lo procesa ${OPERATOR}, así que "${OPERATOR}" es el nombre que vas a ver en tu resumen de tarjeta, facturas y recibos — no "EnergyCurve".`,
+        ],
+      },
       {
         heading: "El servicio",
         body: [

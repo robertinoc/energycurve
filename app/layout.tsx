@@ -3,6 +3,7 @@ import { Manrope, Space_Grotesk, Space_Mono } from "next/font/google"
 
 import { AnalyticsTracker } from "@/components/analytics/analytics-tracker"
 import { AuthProvider } from "@/components/providers/auth-provider"
+import { OPERATING_COMPANY, SEO_KEYWORDS, SITE_URL } from "@/lib/seo"
 import "./globals.css"
 
 const manrope = Manrope({
@@ -24,12 +25,29 @@ const spaceMono = Space_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "EnergyCurve",
+    default: "EnergyCurve — DJ Set Energy Analysis & Track Order",
     template: "%s | EnergyCurve",
   },
   description:
-    "EnergyCurve is a performance intelligence layer for DJs, producers, and performers shaping better sets through energy-aware insights.",
+    "Analyze your DJ set's energy curve, score it 1–10, and get the exact track moves that fix it. Imports Rekordbox, Traktor, M3U8, and your own audio files — exports the corrected order back.",
+  keywords: SEO_KEYWORDS,
+  applicationName: "EnergyCurve",
+  category: "music",
+  // The company on the receipt, stated in the metadata too.
+  publisher: OPERATING_COMPANY.name,
+  creator: OPERATING_COMPANY.name,
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       {

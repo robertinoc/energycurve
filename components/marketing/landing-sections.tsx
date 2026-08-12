@@ -1,4 +1,15 @@
-import { ArrowRight, BarChart3, GitBranch, LineChart, Mail, Sparkles, Waves } from "lucide-react"
+import {
+  ArrowRight,
+  BarChart3,
+  ChevronDown,
+  CreditCard,
+  GitBranch,
+  Layers,
+  LineChart,
+  Mail,
+  Sparkles,
+  Waves,
+} from "lucide-react"
 
 import {
   AmbientGlow,
@@ -292,6 +303,103 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
   )
 }
 
+export function SuiteSection({ copy }: { copy: ResolvedSiteCopy }) {
+  return (
+    <SectionReveal delay={80}>
+      <SectionContainer
+        id="suite"
+        className="bg-[linear-gradient(150deg,rgba(162,77,224,0.12),rgba(76,110,245,0.08),rgba(34,211,238,0.06))]"
+      >
+        <AmbientGlow
+          tone="violet"
+          className="ambient-drift-slow left-[-6rem] top-[-4rem] h-[18rem] w-[18rem] opacity-40"
+        />
+
+        <div className="grid gap-8 lg:grid-cols-[1.25fr_1fr] lg:items-start">
+          <div>
+            <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+              {copy.suite.eyebrow}
+            </p>
+            <h2 className="mt-3 flex items-center gap-3 text-3xl font-heading font-semibold text-white sm:text-4xl">
+              <Layers aria-hidden className="size-7 shrink-0 text-white/50" />
+              {copy.suite.title}
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-white/68">
+              {copy.suite.body}
+            </p>
+            <a
+              href="https://stagelink.art"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-white/78 underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
+            >
+              {copy.suite.link}
+              <ArrowRight aria-hidden className="size-4" />
+            </a>
+          </div>
+
+          {/* Billing transparency: say it before Stripe does. */}
+          <div className="rounded-3xl border border-white/12 bg-black/24 p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5">
+                <CreditCard aria-hidden className="size-5 text-white/66" />
+              </div>
+              <h3 className="text-base font-heading font-semibold text-white">
+                {copy.suite.billingTitle}
+              </h3>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-white/64">
+              {copy.suite.billingBody}
+            </p>
+          </div>
+        </div>
+      </SectionContainer>
+    </SectionReveal>
+  )
+}
+
+export function FaqSection({ copy }: { copy: ResolvedSiteCopy }) {
+  return (
+    <SectionReveal delay={90}>
+      <SectionContainer
+        id="faq"
+        className="space-y-5 bg-[linear-gradient(180deg,rgba(12,9,23,0.98),rgba(12,9,23,0.98)),radial-gradient(circle_at_88%_12%,rgba(162,77,224,0.12),transparent_26%)]"
+      >
+        <div className="space-y-3">
+          <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+            {copy.faq.eyebrow}
+          </p>
+          <h2 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
+            {copy.faq.title}
+          </h2>
+          <p className="max-w-3xl text-base leading-7 text-white/62">{copy.faq.intro}</p>
+        </div>
+
+        {/* Native <details> so every answer ships in the HTML even while
+            collapsed — crawlers and answer engines read it without running JS. */}
+        <div className="divide-y divide-white/8 border-t border-white/8">
+          {copy.faq.items.map((item) => (
+            <details key={item.question} className="group py-4">
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-left">
+                <h3 className="text-base font-heading font-medium text-white/88 transition group-hover:text-white sm:text-lg">
+                  {item.question}
+                </h3>
+                <ChevronDown
+                  aria-hidden
+                  className="mt-1 size-5 shrink-0 text-white/40 transition group-open:rotate-180"
+                />
+              </summary>
+              <p className="mt-3 max-w-3xl pr-9 text-sm leading-7 text-white/62">
+                {item.answer}
+              </p>
+            </details>
+          ))}
+        </div>
+      </SectionContainer>
+    </SectionReveal>
+  )
+}
+
 export function ContactSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
     <SectionReveal delay={250}>
@@ -440,6 +548,7 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
               </span>
             ))}
           </p>
+          <p className="text-xs leading-5 text-white/40">{copy.footer.billing}</p>
         </div>
 
         {/* Link columns */}
@@ -450,6 +559,7 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
               { href: "#features", label: copy.nav.features },
               { href: "#how-it-works", label: copy.nav.how },
               { href: "#story", label: copy.nav.story },
+              { href: "#faq", label: copy.nav.faq },
               { href: "#contact", label: copy.nav.contact },
             ]}
           />

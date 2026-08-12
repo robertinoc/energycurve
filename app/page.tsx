@@ -1,45 +1,35 @@
 import type { Metadata } from "next"
 
 import { LandingPage } from "@/components/marketing/landing-page"
+import { buildLandingStructuredData, SITE_URL } from "@/lib/seo"
+
+const TITLE = "EnergyCurve — DJ Set Energy Analysis & Track Order"
+const DESCRIPTION =
+  "Analyze your DJ set's energy curve, score it 1–10, and get the exact track moves that fix it. Imports Rekordbox, Traktor, M3U8, and your own audio files — exports the corrected order back."
 
 export const metadata: Metadata = {
-  title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
-  description:
-    "EnergyCurve helps DJs analyze set energy, transition quality, and performance flow to design better mixes and more intentional dancefloor momentum.",
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
-    description:
-      "Analyze DJ set energy, transition quality, and performance flow to design better mixes and shape momentum with more intention.",
-    url: "https://energycurve.app/",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: `${SITE_URL}/`,
     siteName: "EnergyCurve",
     type: "website",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "EnergyCurve | DJ Set Energy Analysis & Performance Intelligence",
-    description:
-      "Analyze DJ set energy, track transitions, and performance flow to build better performances.",
+    title: TITLE,
+    description: DESCRIPTION,
   },
 }
 
 export default function HomePage() {
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "EnergyCurve",
-    applicationCategory: "MusicApplication",
-    operatingSystem: "Web",
-    description:
-      "EnergyCurve helps DJs analyze set energy, transition quality, and performance flow to design better mixes and more intentional dancefloor momentum.",
-    url: "https://energycurve.app/",
-    audience: {
-      "@type": "Audience",
-      audienceType: "DJs, producers, and performers",
-    },
-  }
+  const structuredData = buildLandingStructuredData()
 
   return (
     <>
