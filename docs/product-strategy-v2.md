@@ -173,6 +173,28 @@ margin). FREE must deliver the "aha": see your set's curve, feel the gap.
 Heuristic (non-Claude) smart ordering remains available on every tier — the
 fallback path never paywalls basic reordering.
 
+### v3 capability set (approved 12 Aug 2026)
+
+Six capabilities approved in one pass, after removing native export from the
+paid tiers left PRO+ thin. Tier assignments follow the design rule above:
+planning depth and engine work is PRO; variable cost, multi-user, or
+whole-library workflow is PRO+.
+
+| # | Capability | Tier | Why it earns its tier |
+|---|---|---|---|
+| 1 | **Slot-aware planning** — say "I'm on 01:00–03:00" and the curve maps to wall-clock time, flagging a peak that lands too early for the slot | PRO | *The* warm-up DJ's pain ("I burned the floor before the headliner"), and nobody in the market does it. Cheap to build on the curve we already draw. |
+| 2 | **Planned vs played** — mark what you actually played, compare the planned curve against the real one | PRO | Closes the product loop (build → analyze → fix → export → play → **learn**) and is the strongest retention lever we have, because it brings the DJ back *after* the gig. Phaso does this from recordings; from a setlist it's cheaper and more actionable. |
+| 3 | **Named target curve shapes** — warm-up, peak time, after-hours, sunrise, festival; optimize toward *that* shape instead of a generic ideal | PRO | Near table stakes: SetFlow and Mixgraph both ship five named shapes, and these are words DJs already use (see the vocabulary notes in `seo-aeo-baseline-2026-08.md`). |
+| 4 | **Printable PDF set sheet** | PRO | Trivial to build, reads as unmistakably professional, and SetFlow already has it. |
+| 5 | **Save your own curve templates** | PRO+ | The base shapes cover most DJs; saving personal templates is a power-user workflow. |
+| 6 | **Residency mode** — "don't suggest anything I played at this venue in the last N gigs" | PRO+ | Needs the global library (already PRO+) plus played history, and it solves a real, specific pain for anyone holding a residency. |
+| 7 | **Collaborative B2B / B3B sets** — invite other EnergyCurve users to build one set together, alternating tracks while keeping harmony and energy coherent | PRO+ | Deliberately PRO+: it is genuinely complex (multi-user invitations, shared playlist state, conflict handling) and nobody in the market does it. Multi-user by definition, so it belongs at the top of the ladder. |
+
+**Sequencing note, not a pricing note:** PRO should not launch before Essentia.js
+audio analysis works. Without it, PRO is only "the limits are removed", which is
+hard to defend against SetFlow at £2.99–4.99/mo. With real audio analysis inside,
+the story carries itself.
+
 ### Pricing rationale
 
 - **$5.99 / $11.99** undercuts Lexicon ($9.99/$19.99) while staying serious;

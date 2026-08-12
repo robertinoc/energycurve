@@ -633,15 +633,15 @@ const siteCopy: SiteCopySchema = {
           },
           {
             text: {
-              en: "Energy Model v3: energy from the audio itself, not just BPM",
-              es: "Energy Model v3: energía desde el audio, no sólo desde el BPM",
+              en: "Slot-aware planning and named curve shapes — warm-up, peak time, after-hours",
+              es: "Planificación por horario de slot y curvas con nombre — warm-up, peak time, after-hours",
             },
             soon: true,
           },
           {
             text: {
-              en: "Set version history: compare original, curated, and AI order",
-              es: "Historial de versiones: compará el orden original, el curado y el de la IA",
+              en: "Planned vs played, set version history, and a printable set sheet",
+              es: "Planificado vs. tocado, historial de versiones y set sheet imprimible",
             },
             soon: true,
           },
@@ -670,6 +670,20 @@ const siteCopy: SiteCopySchema = {
           },
           {
             text: {
+              en: "B2B and B3B sets: invite other DJs to build one set together",
+              es: "Sets B2B y B3B: invitá a otros DJs a armar un set juntos",
+            },
+            soon: true,
+          },
+          {
+            text: {
+              en: "Residency mode: never repeat what you played there last time",
+              es: "Modo residencia: no repitas lo que tocaste la última vez",
+            },
+            soon: true,
+          },
+          {
+            text: {
               en: "Gig Mode: offline performance view for the booth",
               es: "Gig Mode: vista de performance offline para la cabina",
             },
@@ -677,15 +691,8 @@ const siteCopy: SiteCopySchema = {
           },
           {
             text: {
-              en: "Global track library with cross-set insights",
-              es: "Librería global de tracks con insights entre sets",
-            },
-            soon: true,
-          },
-          {
-            text: {
-              en: "Priority support and early access",
-              es: "Soporte prioritario y acceso anticipado",
+              en: "Global track library, priority support, and early access",
+              es: "Librería global de tracks, soporte prioritario y acceso anticipado",
             },
           },
         ],
@@ -806,6 +813,69 @@ const siteCopy: SiteCopySchema = {
         capability: { en: "Set version history", es: "Historial de versiones del set" },
         free: "no",
         pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Slot-aware planning (map the curve to clock time)",
+          es: "Planificación por horario de slot (curva mapeada al reloj)",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Named target curve shapes (warm-up, peak time, after-hours…)",
+          es: "Curvas objetivo con nombre (warm-up, peak time, after-hours…)",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Save your own curve templates",
+          es: "Guardar tus propias plantillas de curva",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Planned vs played comparison",
+          es: "Comparación entre planificado y tocado",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Printable PDF set sheet",
+          es: "Set sheet imprimible en PDF",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Residency mode (don’t repeat recent sets at a venue)",
+          es: "Modo residencia (no repetir sets recientes en un club)",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "soon",
+      },
+      {
+        capability: {
+          en: "Collaborative B2B / B3B sets with other EnergyCurve users",
+          es: "Sets B2B / B3B colaborativos con otros usuarios de EnergyCurve",
+        },
+        free: "no",
+        pro: "no",
         proPlus: "soon",
       },
       {
