@@ -388,6 +388,21 @@ export const DASHBOARD_COPY = {
     csvFile: { en: "CSV file", es: "Archivo CSV" },
     textFile: { en: "Text file", es: "Archivo de texto" },
     defaultTag: { en: "default", es: "por defecto" },
+    recommendedTag: { en: "recommended", es: "recomendado" },
+    /** Shown when the playlist came from local audio files. */
+    filesWarningTitle: {
+      en: "Rekordbox and Traktor won't find these tracks",
+      es: "Rekordbox y Traktor no van a encontrar estos tracks",
+    },
+    filesWarningBody: {
+      en: "This playlist came from files on your computer, so we only know their names — not where they live. Those two formats will open with every track missing. Use M3U8 and save it in the same folder as your music.",
+      es: "Esta playlist salió de archivos de tu computadora, así que sólo conocemos sus nombres — no dónde están. Esos dos formatos van a abrir con todos los tracks en missing. Usá M3U8 y guardalo en la misma carpeta que tu música.",
+    },
+    /** Hover/aria label on the affected rows; the block above explains why. */
+    willBeMissing: {
+      en: "Tracks will show as missing in this format",
+      es: "Los tracks van a aparecer como missing en este formato",
+    },
   },
 
   deleteButton: {
