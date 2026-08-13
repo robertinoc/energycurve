@@ -71,7 +71,24 @@ Two caveats found while setting this up:
 - This account is on the **redesigned-portal beta**. It accepts
   `features.subscription_update.products` but doesn't echo it back, so the
   plan restriction **cannot be verified from the API** — open the portal and
-  look at which plans are offered.
+  look at which plans are offered. Verified visually on 2026-08-13: only the two
+  EnergyCurve products are offered, so the restriction does apply.
+- The beta also **ignores `business_profile.headline`**. It's set on our
+  configuration and accepted by the API, but the portal renders only the
+  account's public business name. So an EnergyCurve subscriber sees a portal
+  headed "StageLink LLC", and the return link reads "Back to StageLink LLC"
+  while actually going to `energycurve.app/dashboard` (the label comes from the
+  account name, the destination from our per-session `return_url`). Neither is
+  fixable per-product on a shared account — which is why the disclosure lives on
+  the site instead.
+
+### Product descriptions are customer-facing
+
+The product `description` is what Stripe shows on the Checkout page and in the
+portal's plan picker — i.e. on the screen where someone enters a card. Keep it to
+what actually ships. As of 2026-08-13 PRO's description is accurate, but PRO+
+still promises collaborative B2B sets, residency mode and Gig Mode, none of
+which exist yet. **Fix before enabling live mode.**
 
 ## Model
 
