@@ -14,9 +14,64 @@ transactional-email footer, and in both the terms and the privacy policy — and
 `tests/seo.test.ts` fails if any of those drop the name. Don't "clean up" those
 mentions.
 
-Set the **statement descriptor** in the Stripe dashboard to something a DJ will
-recognise, e.g. `STAGELINK ENERGYCURVE` (Stripe allows 5–22 characters). This is
-the single highest-leverage thing for avoiding "what is this charge?" disputes.
+## The Stripe account is shared with StageLink
+
+This is the source of every non-obvious constraint below, so it's worth stating
+plainly: **one Stripe account (`acct_1TI9IK…`) sells both StageLink and
+EnergyCurve.** Several Stripe settings are account-wide, which means the obvious
+place to configure something is usually the wrong place — changing it there
+silently reconfigures the other product.
+
+### Statement descriptor: set it per product, not on the account
+
+The account descriptor is `STAGELINK LLC`, with prefix `STAGELINK`. Measured on
+a real test charge before any change:
+
+```
+ch_3U3zvs…  999 usd  calculated_statement_descriptor: "STAGELINK LLC"
+```
+
+So a DJ's statement said `STAGELINK LLC` and nothing more — exactly the charge
+people don't recognise and dispute. **Do not fix this in Settings → Business →
+Public details**: that field is account-wide and would relabel StageLink's
+charges too. Set it on the **product** instead, which only affects
+subscriptions for that product:
+
+```bash
+stripe post /v1/products/prod_… -d "statement_descriptor=ENERGYCURVE"
+```
+
+Both EnergyCurve products carry `ENERGYCURVE`. With the account prefix that
+should render as `STAGELINK* ENERGYCURVE` (22 chars, exactly Stripe's limit) —
+confirm on the next charge with `stripe charges list`, since the descriptor is
+only computed at charge time.
+
+### Customer Portal: use a dedicated configuration
+
+An account has exactly one **default** portal configuration, and
+`billingPortal.sessions.create` uses it whenever no `configuration` is passed.
+StageLink's portal call (`apps/api/src/modules/billing/billing.service.ts`)
+passes none, so configuring the dashboard's portal page for EnergyCurve would:
+
+- offer **EnergyCurve** plans to StageLink's subscribers as switch targets, and
+- replace the products StageLink's "switch to {plan}" deep link needs, which its
+  own code logs a fallback for.
+
+So EnergyCurve gets its own configuration, created by
+`scripts/create-portal-config.mjs` and pinned via
+`STRIPE_PORTAL_CONFIGURATION_ID`. `tests/billing.test.ts` fails if the route
+stops passing it, because the failure mode is silent.
+
+Two caveats found while setting this up:
+
+- Stripe makes the **first** configuration in a mode the default, and there's no
+  API field to opt out. In test mode ours became the default because none
+  existed. Harmless while every caller passes an explicit id, but check
+  `is_default` when creating the live one.
+- This account is on the **redesigned-portal beta**. It accepts
+  `features.subscription_update.products` but doesn't echo it back, so the
+  plan restriction **cannot be verified from the API** — open the portal and
+  look at which plans are offered.
 
 ## Model
 
@@ -69,9 +124,17 @@ granting nothing.
    - PRO: **US$9.99** / month, **US$99** / year
    - PRO+: **US$19.99** / month, **US$199** / year
 3. Copy the four price ids (`price_…`).
-4. Set the statement descriptor (see above).
-5. Enable the **customer portal** (Settings → Billing → Customer portal) and
-   allow plan changes and cancellation. `/api/billing/portal` depends on it.
+4. Set the **per-product** statement descriptor — not the account one. See
+   "The Stripe account is shared with StageLink" above.
+5. Create EnergyCurve's portal configuration and pin it:
+
+   ```bash
+   node scripts/create-portal-config.mjs
+   ```
+
+   Do **not** configure the dashboard's Customer portal page instead: that edits
+   the account default, which StageLink uses. Run the script once per mode (test
+   and live each need their own id).
 
 ### 2. Environment
 
@@ -82,11 +145,16 @@ STRIPE_PRICE_PRO_MONTHLY=price_…
 STRIPE_PRICE_PRO_YEARLY=price_…
 STRIPE_PRICE_PRO_PLUS_MONTHLY=price_…
 STRIPE_PRICE_PRO_PLUS_YEARLY=price_…
+STRIPE_PORTAL_CONFIGURATION_ID=bpc_…
 ```
 
 Billing stays off until `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, **and** at
 least one price id are present. A key with no prices can't sell anything, so it
 counts as unconfigured rather than half-working.
+
+`STRIPE_PORTAL_CONFIGURATION_ID` is **optional** to keep envs that don't sell
+working, but on this account it is effectively required — without it the portal
+falls back to the configuration StageLink shares. It's an id, not a secret.
 
 ### 3. Migration
 

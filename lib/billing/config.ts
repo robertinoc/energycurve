@@ -42,6 +42,18 @@ export interface BillingConfig {
   webhookSecret: string
   /** price id → what buying it grants. */
   prices: Record<string, { plan: Plan; interval: BillingInterval }>
+  /**
+   * Customer Portal configuration to open sessions with, or null to use the
+   * Stripe account's default.
+   *
+   * This matters because the Stripe account is shared with StageLink, and an
+   * account has exactly one *default* portal configuration. Without an explicit
+   * id, both products open the same portal — which would offer EnergyCurve
+   * plans to StageLink's subscribers and replace the products StageLink's
+   * plan-switch deep link depends on. Create ours with
+   * `scripts/create-portal-config.mjs`.
+   */
+  portalConfigurationId: string | null
 }
 
 let cached: BillingConfig | null = null
@@ -78,6 +90,10 @@ export function getBillingConfig(): BillingConfig | null {
     stripe: new Stripe(secretKey),
     webhookSecret,
     prices,
+    // Optional: a deployment without it still works, it just inherits the
+    // account default. Kept optional rather than required so envs that don't
+    // sell aren't forced to create a portal configuration.
+    portalConfigurationId: process.env.STRIPE_PORTAL_CONFIGURATION_ID || null,
   }
 
   return cached

@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { describe, expect, it } from "vitest"
 
 import {
@@ -262,5 +265,35 @@ describe("reading Stripe payload shapes", () => {
     expect(customerIdOf("")).toBeNull()
     expect(customerIdOf({})).toBeNull()
     expect(customerIdOf({ id: 7 })).toBeNull()
+  })
+})
+
+describe("portal configuration is pinned", () => {
+  // This Stripe account is shared with StageLink, and an account has exactly
+  // one *default* Customer Portal configuration. If the portal route stops
+  // passing `configuration`, EnergyCurve silently inherits StageLink's portal:
+  // subscribers would be offered the wrong products, and StageLink's
+  // plan-switch deep link breaks in the other direction. Nothing fails loudly
+  // when that happens, which is why it's asserted here rather than left to
+  // review.
+  const routeSource = readFileSync(
+    join(process.cwd(), "app/api/billing/portal/route.ts"),
+    "utf8"
+  )
+
+  it("passes an explicit configuration to billingPortal.sessions.create", () => {
+    expect(routeSource).toContain("portalConfigurationId")
+    expect(routeSource).toMatch(/configuration:\s*config\.portalConfigurationId/)
+  })
+
+  it("reads the id from the environment rather than hardcoding it", () => {
+    // Test and live mode need different ids, so a literal bpc_… in the source
+    // would be wrong in one of them.
+    const configSource = readFileSync(
+      join(process.cwd(), "lib/billing/config.ts"),
+      "utf8"
+    )
+    expect(configSource).toContain("STRIPE_PORTAL_CONFIGURATION_ID")
+    expect(routeSource).not.toMatch(/bpc_[A-Za-z0-9]/)
   })
 })
