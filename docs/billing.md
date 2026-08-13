@@ -120,6 +120,39 @@ become money bugs:
    the same event twice after a success. The event id is the primary key of
    `billing_events`, so the insert *is* the idempotency check.
 
+### Scheduled cancellation
+
+The portal cancels **at period end**, which means Stripe keeps
+`status = 'active'` for the rest of the paid period. So `plan` and `plan_status`
+don't move, and without extra state a cancelled subscriber is indistinguishable
+from an active one until the date arrives. A user who cancels, sees nothing
+change, and concludes it failed calls their bank next.
+
+`plan_cancel_at` and `plan_cancellation_feedback` (migration 0013) carry it.
+
+**Read `cancel_at`, not `cancel_at_period_end`.** Measured on a real
+cancellation on 2026-08-13 under API version 2026-07-29.dahlia:
+
+```
+status:               active
+cancel_at:            2026-09-13T14:48:35   ← the real signal
+cancel_at_period_end: false                 ← the obvious field, and it's wrong
+canceled_at:          1786650670
+cancellation_details: { feedback: "too_complex", reason: "cancellation_requested" }
+```
+
+`cancelAtOf()` reads `cancel_at` first and falls back to the legacy boolean for
+older API versions. `tests/billing.test.ts` pins both paths against that exact
+payload.
+
+Two behaviours worth keeping:
+
+- `canceledSubscription()` clears `cancelAt` — once it has actually ended there's
+  no future date, and a stale one renders "ends on «past date»" forever.
+- The **feedback survives** the subscription, and is written back to `null` when
+  someone clicks "don't cancel". It's the only churn signal Stripe gives us, and
+  a customer who changed their mind must stop counting as one who left.
+
 ### Entitlement vs purchased plan
 
 `profiles.plan` keeps the **purchased** plan even after a subscription lapses, so
@@ -173,10 +206,15 @@ counts as unconfigured rather than half-working.
 working, but on this account it is effectively required — without it the portal
 falls back to the configuration StageLink shares. It's an id, not a secret.
 
-### 3. Migration
+### 3. Migrations
 
-Apply `supabase/migrations/0012_billing.sql`. It adds the plan columns to
-`profiles` and creates `billing_events`.
+Apply `supabase/migrations/0012_billing.sql` (plan columns on `profiles` +
+`billing_events`) and `0013_subscription_cancellation.sql` (`plan_cancel_at`,
+`plan_cancellation_feedback`).
+
+**Order matters for production:** both must be applied *before* the Stripe keys
+reach the environment. With keys but no columns, checkout 500s on the first
+webhook write.
 
 ### 4. Webhook endpoint
 

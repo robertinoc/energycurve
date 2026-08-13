@@ -3,7 +3,9 @@ import type Stripe from "stripe"
 
 import { getBillingConfig } from "@/lib/billing/config"
 import {
+  cancelAtOf,
   canceledSubscription,
+  cancellationFeedbackOf,
   customerIdOf,
   isHandledEvent,
   periodEndOf,
@@ -151,7 +153,15 @@ export async function POST(request: Request) {
     if (event.type === "customer.subscription.deleted") {
       const current = await getProfileBilling(profileId)
       const purchased = isPlan(current.plan) ? current.plan : "free"
-      await applySubscription(profileId, canceledSubscription(purchased))
+      // Carry the reason across: the deleted event may not repeat it, and it's
+      // the only churn signal we ever get.
+      await applySubscription(
+        profileId,
+        canceledSubscription(
+          purchased,
+          cancellationFeedbackOf(subscription) ?? current.cancellationFeedback
+        )
+      )
       logInfo("billing.webhook.subscription_canceled", { profileId })
       return NextResponse.json({ received: true })
     }
@@ -162,6 +172,8 @@ export async function POST(request: Request) {
         status: subscription.status,
         priceIds: priceIdsOf(subscription),
         currentPeriodEnd: periodEndOf(subscription),
+        cancelAt: cancelAtOf(subscription),
+        cancellationFeedback: cancellationFeedbackOf(subscription),
       },
       config.prices
     )
