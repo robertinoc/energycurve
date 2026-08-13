@@ -18,6 +18,8 @@ export interface Database {
           plan: string
           plan_status: string | null
           plan_current_period_end: string | null
+          plan_cancel_at: string | null
+          plan_cancellation_feedback: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           created_at: string
@@ -31,6 +33,8 @@ export interface Database {
           plan?: string
           plan_status?: string | null
           plan_current_period_end?: string | null
+          plan_cancel_at?: string | null
+          plan_cancellation_feedback?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           created_at?: string
@@ -44,6 +48,8 @@ export interface Database {
           plan?: string
           plan_status?: string | null
           plan_current_period_end?: string | null
+          plan_cancel_at?: string | null
+          plan_cancellation_feedback?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           created_at?: string

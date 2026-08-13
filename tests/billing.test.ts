@@ -1,7 +1,12 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { describe, expect, it } from "vitest"
 
 import {
+  cancelAtOf,
   canceledSubscription,
+  cancellationFeedbackOf,
   customerIdOf,
   isHandledEvent,
   mapStripeStatus,
@@ -262,5 +267,120 @@ describe("reading Stripe payload shapes", () => {
     expect(customerIdOf("")).toBeNull()
     expect(customerIdOf({})).toBeNull()
     expect(customerIdOf({ id: 7 })).toBeNull()
+  })
+})
+
+describe("portal configuration is pinned", () => {
+  // This Stripe account is shared with StageLink, and an account has exactly
+  // one *default* Customer Portal configuration. If the portal route stops
+  // passing `configuration`, EnergyCurve silently inherits StageLink's portal:
+  // subscribers would be offered the wrong products, and StageLink's
+  // plan-switch deep link breaks in the other direction. Nothing fails loudly
+  // when that happens, which is why it's asserted here rather than left to
+  // review.
+  const routeSource = readFileSync(
+    join(process.cwd(), "app/api/billing/portal/route.ts"),
+    "utf8"
+  )
+
+  it("passes an explicit configuration to billingPortal.sessions.create", () => {
+    expect(routeSource).toContain("portalConfigurationId")
+    expect(routeSource).toMatch(/configuration:\s*config\.portalConfigurationId/)
+  })
+
+  it("reads the id from the environment rather than hardcoding it", () => {
+    // Test and live mode need different ids, so a literal bpc_… in the source
+    // would be wrong in one of them.
+    const configSource = readFileSync(
+      join(process.cwd(), "lib/billing/config.ts"),
+      "utf8"
+    )
+    expect(configSource).toContain("STRIPE_PORTAL_CONFIGURATION_ID")
+    expect(routeSource).not.toMatch(/bpc_[A-Za-z0-9]/)
+  })
+})
+
+describe("scheduled cancellation", () => {
+  // Fixture taken from a real cancellation through the portal on 2026-08-13,
+  // API version 2026-07-29.dahlia. Note what Stripe actually sent: `cancel_at`
+  // is set and `cancel_at_period_end` is **false**. Code that reads the boolean
+  // sees nothing and concludes the customer never cancelled.
+  const CANCEL_AT = Math.floor(Date.UTC(2026, 8, 13, 14, 48, 35) / 1000)
+
+  const realSubscription = {
+    items: { data: [{ price: { id: "price_pro_m" }, current_period_end: CANCEL_AT }] },
+    cancel_at: CANCEL_AT,
+    cancel_at_period_end: false,
+    cancellation_details: { feedback: "too_complex" },
+  }
+
+  it("reads cancel_at even though cancel_at_period_end is false", () => {
+    expect(cancelAtOf(realSubscription)).toBe(CANCEL_AT)
+  })
+
+  it("still honours the legacy boolean for older API versions", () => {
+    // There it means "at the end of the current period", so the effective date
+    // is that period's end.
+    expect(
+      cancelAtOf({
+        items: { data: [{ current_period_end: CANCEL_AT }] },
+        cancel_at_period_end: true,
+      })
+    ).toBe(CANCEL_AT)
+  })
+
+  it("reports no cancellation when neither field says so", () => {
+    expect(cancelAtOf({ items: { data: [{ current_period_end: CANCEL_AT }] } })).toBeNull()
+    expect(cancelAtOf({ cancel_at: 0, cancel_at_period_end: false })).toBeNull()
+  })
+
+  it("extracts the reason the customer picked", () => {
+    expect(cancellationFeedbackOf(realSubscription)).toBe("too_complex")
+    expect(cancellationFeedbackOf({})).toBeNull()
+    expect(cancellationFeedbackOf({ cancellation_details: { feedback: "" } })).toBeNull()
+    expect(cancellationFeedbackOf({ cancellation_details: null })).toBeNull()
+  })
+
+  it("keeps the subscription entitled until the date arrives", () => {
+    // The whole point: status stays active for the rest of the paid period, so
+    // access must not be revoked — only announced.
+    const resolved = resolveSubscription(
+      {
+        id: "sub_1",
+        status: "active",
+        priceIds: ["price_pro_m"],
+        currentPeriodEnd: CANCEL_AT,
+        cancelAt: cancelAtOf(realSubscription),
+        cancellationFeedback: cancellationFeedbackOf(realSubscription),
+      },
+      PRICES
+    )
+
+    expect(resolved.plan).toBe("pro")
+    expect(resolved.status).toBe("active")
+    expect(resolved.cancelAt?.toISOString()).toBe("2026-09-13T14:48:35.000Z")
+    expect(resolved.cancellationFeedback).toBe("too_complex")
+  })
+
+  it("clears the pending date once the subscription actually ends", () => {
+    // Otherwise the UI renders "ends on <date in the past>" forever.
+    const ended = canceledSubscription("pro", "too_complex")
+
+    expect(ended.status).toBe("canceled")
+    expect(ended.plan).toBe("pro")
+    expect(ended.cancelAt).toBeNull()
+    // The reason outlives the subscription — it's the only churn signal we get.
+    expect(ended.cancellationFeedback).toBe("too_complex")
+  })
+
+  it("resolves to no pending cancellation when Stripe reports none", () => {
+    const resolved = resolveSubscription(
+      { id: "sub_1", status: "active", priceIds: ["price_pro_m"], currentPeriodEnd: CANCEL_AT },
+      PRICES
+    )
+
+    // A customer who clicks "don't cancel" must stop looking like one who did.
+    expect(resolved.cancelAt).toBeNull()
+    expect(resolved.cancellationFeedback).toBeNull()
   })
 })

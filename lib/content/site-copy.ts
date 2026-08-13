@@ -1,3 +1,8 @@
+import type {
+  CapabilityKey,
+  NON_GATED_MATRIX_ROWS,
+} from "@/lib/product/capabilities"
+
 export const supportedLocales = ["en", "es"] as const
 
 export type SiteLocale = (typeof supportedLocales)[number]
@@ -134,6 +139,14 @@ interface SiteCopySchema {
     matrixLegend: LocalizedLabel
     columnCapability: LocalizedLabel
     rows: {
+      /**
+       * Joins this row to `lib/product/capabilities.ts`. Typed as the union of
+       * registry keys plus the rows that describe the offer without gating any
+       * code, so a new row can't be added without deciding which it is —
+       * `tests/capabilities.test.ts` then proves the tier here matches the tier
+       * the gate enforces.
+       */
+      key: CapabilityKey | (typeof NON_GATED_MATRIX_ROWS)[number]
       capability: LocalizedLabel
       free: PlanCell
       pro: PlanCell
@@ -712,12 +725,14 @@ const siteCopy: SiteCopySchema = {
     columnCapability: { en: "Capability", es: "Función" },
     rows: [
       {
+        key: "active_playlists",
         capability: { en: "Active playlists", es: "Playlists activas" },
         free: { en: "3", es: "3" },
         pro: { en: "Unlimited", es: "Ilimitadas" },
         proPlus: { en: "Unlimited", es: "Ilimitadas" },
       },
       {
+        key: "import_all_formats",
         capability: {
           en: "Import (Rekordbox, Traktor, M3U8, TXT, audio files)",
           es: "Import (Rekordbox, Traktor, M3U8, TXT, archivos de audio)",
@@ -727,6 +742,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "yes",
       },
       {
+        key: "analysis_core",
         capability: {
           en: "Analysis: score, energy curve, issue markers",
           es: "Análisis: score, curva de energía, marcadores",
@@ -736,12 +752,14 @@ const siteCopy: SiteCopySchema = {
         proPlus: "yes",
       },
       {
+        key: "applied_fixes",
         capability: { en: "Applied fixes", es: "Arreglos aplicados" },
         free: { en: "3 / month", es: "3 / mes" },
         pro: { en: "Unlimited", es: "Ilimitados" },
         proPlus: { en: "Unlimited", es: "Ilimitados" },
       },
       {
+        key: "heuristic_reordering",
         capability: {
           en: "Heuristic reordering (no AI)",
           es: "Reordenamiento heurístico (sin IA)",
@@ -751,12 +769,14 @@ const siteCopy: SiteCopySchema = {
         proPlus: "yes",
       },
       {
+        key: "ai_ordering",
         capability: { en: "AI ordering (Claude)", es: "Ordenamiento con IA (Claude)" },
         free: { en: "1 / month", es: "1 / mes" },
         pro: { en: "3 / month", es: "3 / mes" },
         proPlus: { en: "Unlimited", es: "Ilimitado" },
       },
       {
+        key: "export_csv_txt",
         capability: { en: "Export to CSV and TXT", es: "Export a CSV y TXT" },
         free: "yes",
         pro: "yes",
@@ -765,6 +785,7 @@ const siteCopy: SiteCopySchema = {
       {
         // Free forever: exporting back to the booth is the whole point of the
         // tool, so it is never a paid upgrade.
+        key: "native_export",
         capability: {
           en: "Native export (Rekordbox XML, Traktor NML, M3U8)",
           es: "Export nativo (XML de Rekordbox, NML de Traktor, M3U8)",
@@ -774,6 +795,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "yes",
       },
       {
+        key: "custom_taxonomies",
         capability: {
           en: "Custom genres and set contexts",
           es: "Géneros y contextos de set propios",
@@ -783,6 +805,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: { en: "Unlimited", es: "Ilimitados" },
       },
       {
+        key: "search_organization",
         capability: {
           en: "Search and organization",
           es: "Búsqueda y organización",
@@ -792,6 +815,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "yes",
       },
       {
+        key: "audio_analysis",
         capability: {
           en: "Real audio analysis in the browser",
           es: "Análisis de audio real en el navegador",
@@ -801,6 +825,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "energy_model_v3",
         capability: {
           en: "Energy Model v3 (multi-feature)",
           es: "Energy Model v3 (multi-feature)",
@@ -810,12 +835,14 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "version_history",
         capability: { en: "Set version history", es: "Historial de versiones del set" },
         free: "no",
         pro: "soon",
         proPlus: "soon",
       },
       {
+        key: "slot_aware_planning",
         capability: {
           en: "Slot-aware planning (map the curve to clock time)",
           es: "Planificación por horario de slot (curva mapeada al reloj)",
@@ -825,6 +852,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "named_curve_shapes",
         capability: {
           en: "Named target curve shapes (warm-up, peak time, after-hours…)",
           es: "Curvas objetivo con nombre (warm-up, peak time, after-hours…)",
@@ -834,6 +862,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "custom_curve_templates",
         capability: {
           en: "Save your own curve templates",
           es: "Guardar tus propias plantillas de curva",
@@ -843,6 +872,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "planned_vs_played",
         capability: {
           en: "Planned vs played comparison",
           es: "Comparación entre planificado y tocado",
@@ -852,6 +882,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "printable_set_sheet",
         capability: {
           en: "Printable PDF set sheet",
           es: "Set sheet imprimible en PDF",
@@ -861,6 +892,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "residency_mode",
         capability: {
           en: "Residency mode (don’t repeat recent sets at a venue)",
           es: "Modo residencia (no repetir sets recientes en un club)",
@@ -870,6 +902,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "b2b_sets",
         capability: {
           en: "Collaborative B2B / B3B sets with other EnergyCurve users",
           es: "Sets B2B / B3B colaborativos con otros usuarios de EnergyCurve",
@@ -879,6 +912,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "gig_mode",
         capability: {
           en: "Gig Mode (offline performance view)",
           es: "Gig Mode (vista de performance offline)",
@@ -888,6 +922,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "global_library",
         capability: {
           en: "Global track library and insights",
           es: "Librería global de tracks e insights",
@@ -897,6 +932,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "transition_suggestions",
         capability: {
           en: "Per-transition suggestions",
           es: "Transiciones sugeridas track a track",
@@ -906,6 +942,7 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "support",
         capability: { en: "Support", es: "Soporte" },
         free: { en: "Community", es: "Comunidad" },
         pro: { en: "Standard", es: "Estándar" },
@@ -1252,6 +1289,9 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       matrixLegend: siteCopy.pricing.matrixLegend[locale],
       columnCapability: siteCopy.pricing.columnCapability[locale],
       rows: siteCopy.pricing.rows.map((row) => ({
+        // Carried through so the table can key React children off something
+        // stable and, later, link a locked row to its upgrade CTA.
+        key: row.key,
         capability: row.capability[locale],
         free: resolvePlanCell(row.free, locale),
         pro: resolvePlanCell(row.pro, locale),

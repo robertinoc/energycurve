@@ -14,9 +14,81 @@ transactional-email footer, and in both the terms and the privacy policy — and
 `tests/seo.test.ts` fails if any of those drop the name. Don't "clean up" those
 mentions.
 
-Set the **statement descriptor** in the Stripe dashboard to something a DJ will
-recognise, e.g. `STAGELINK ENERGYCURVE` (Stripe allows 5–22 characters). This is
-the single highest-leverage thing for avoiding "what is this charge?" disputes.
+## The Stripe account is shared with StageLink
+
+This is the source of every non-obvious constraint below, so it's worth stating
+plainly: **one Stripe account (`acct_1TI9IK…`) sells both StageLink and
+EnergyCurve.** Several Stripe settings are account-wide, which means the obvious
+place to configure something is usually the wrong place — changing it there
+silently reconfigures the other product.
+
+### Statement descriptor: set it per product, not on the account
+
+The account descriptor is `STAGELINK LLC`, with prefix `STAGELINK`. Measured on
+a real test charge before any change:
+
+```
+ch_3U3zvs…  999 usd  calculated_statement_descriptor: "STAGELINK LLC"
+```
+
+So a DJ's statement said `STAGELINK LLC` and nothing more — exactly the charge
+people don't recognise and dispute. **Do not fix this in Settings → Business →
+Public details**: that field is account-wide and would relabel StageLink's
+charges too. Set it on the **product** instead, which only affects
+subscriptions for that product:
+
+```bash
+stripe post /v1/products/prod_… -d "statement_descriptor=ENERGYCURVE"
+```
+
+Both EnergyCurve products carry `ENERGYCURVE`. With the account prefix that
+should render as `STAGELINK* ENERGYCURVE` (22 chars, exactly Stripe's limit) —
+confirm on the next charge with `stripe charges list`, since the descriptor is
+only computed at charge time.
+
+### Customer Portal: use a dedicated configuration
+
+An account has exactly one **default** portal configuration, and
+`billingPortal.sessions.create` uses it whenever no `configuration` is passed.
+StageLink's portal call (`apps/api/src/modules/billing/billing.service.ts`)
+passes none, so configuring the dashboard's portal page for EnergyCurve would:
+
+- offer **EnergyCurve** plans to StageLink's subscribers as switch targets, and
+- replace the products StageLink's "switch to {plan}" deep link needs, which its
+  own code logs a fallback for.
+
+So EnergyCurve gets its own configuration, created by
+`scripts/create-portal-config.mjs` and pinned via
+`STRIPE_PORTAL_CONFIGURATION_ID`. `tests/billing.test.ts` fails if the route
+stops passing it, because the failure mode is silent.
+
+Two caveats found while setting this up:
+
+- Stripe makes the **first** configuration in a mode the default, and there's no
+  API field to opt out. In test mode ours became the default because none
+  existed. Harmless while every caller passes an explicit id, but check
+  `is_default` when creating the live one.
+- This account is on the **redesigned-portal beta**. It accepts
+  `features.subscription_update.products` but doesn't echo it back, so the
+  plan restriction **cannot be verified from the API** — open the portal and
+  look at which plans are offered. Verified visually on 2026-08-13: only the two
+  EnergyCurve products are offered, so the restriction does apply.
+- The beta also **ignores `business_profile.headline`**. It's set on our
+  configuration and accepted by the API, but the portal renders only the
+  account's public business name. So an EnergyCurve subscriber sees a portal
+  headed "StageLink LLC", and the return link reads "Back to StageLink LLC"
+  while actually going to `energycurve.app/dashboard` (the label comes from the
+  account name, the destination from our per-session `return_url`). Neither is
+  fixable per-product on a shared account — which is why the disclosure lives on
+  the site instead.
+
+### Product descriptions are customer-facing
+
+The product `description` is what Stripe shows on the Checkout page and in the
+portal's plan picker — i.e. on the screen where someone enters a card. Keep it to
+what actually ships. As of 2026-08-13 PRO's description is accurate, but PRO+
+still promises collaborative B2B sets, residency mode and Gig Mode, none of
+which exist yet. **Fix before enabling live mode.**
 
 ## Model
 
@@ -48,6 +120,39 @@ become money bugs:
    the same event twice after a success. The event id is the primary key of
    `billing_events`, so the insert *is* the idempotency check.
 
+### Scheduled cancellation
+
+The portal cancels **at period end**, which means Stripe keeps
+`status = 'active'` for the rest of the paid period. So `plan` and `plan_status`
+don't move, and without extra state a cancelled subscriber is indistinguishable
+from an active one until the date arrives. A user who cancels, sees nothing
+change, and concludes it failed calls their bank next.
+
+`plan_cancel_at` and `plan_cancellation_feedback` (migration 0013) carry it.
+
+**Read `cancel_at`, not `cancel_at_period_end`.** Measured on a real
+cancellation on 2026-08-13 under API version 2026-07-29.dahlia:
+
+```
+status:               active
+cancel_at:            2026-09-13T14:48:35   ← the real signal
+cancel_at_period_end: false                 ← the obvious field, and it's wrong
+canceled_at:          1786650670
+cancellation_details: { feedback: "too_complex", reason: "cancellation_requested" }
+```
+
+`cancelAtOf()` reads `cancel_at` first and falls back to the legacy boolean for
+older API versions. `tests/billing.test.ts` pins both paths against that exact
+payload.
+
+Two behaviours worth keeping:
+
+- `canceledSubscription()` clears `cancelAt` — once it has actually ended there's
+  no future date, and a stale one renders "ends on «past date»" forever.
+- The **feedback survives** the subscription, and is written back to `null` when
+  someone clicks "don't cancel". It's the only churn signal Stripe gives us, and
+  a customer who changed their mind must stop counting as one who left.
+
 ### Entitlement vs purchased plan
 
 `profiles.plan` keeps the **purchased** plan even after a subscription lapses, so
@@ -69,9 +174,17 @@ granting nothing.
    - PRO: **US$9.99** / month, **US$99** / year
    - PRO+: **US$19.99** / month, **US$199** / year
 3. Copy the four price ids (`price_…`).
-4. Set the statement descriptor (see above).
-5. Enable the **customer portal** (Settings → Billing → Customer portal) and
-   allow plan changes and cancellation. `/api/billing/portal` depends on it.
+4. Set the **per-product** statement descriptor — not the account one. See
+   "The Stripe account is shared with StageLink" above.
+5. Create EnergyCurve's portal configuration and pin it:
+
+   ```bash
+   node scripts/create-portal-config.mjs
+   ```
+
+   Do **not** configure the dashboard's Customer portal page instead: that edits
+   the account default, which StageLink uses. Run the script once per mode (test
+   and live each need their own id).
 
 ### 2. Environment
 
@@ -82,16 +195,26 @@ STRIPE_PRICE_PRO_MONTHLY=price_…
 STRIPE_PRICE_PRO_YEARLY=price_…
 STRIPE_PRICE_PRO_PLUS_MONTHLY=price_…
 STRIPE_PRICE_PRO_PLUS_YEARLY=price_…
+STRIPE_PORTAL_CONFIGURATION_ID=bpc_…
 ```
 
 Billing stays off until `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, **and** at
 least one price id are present. A key with no prices can't sell anything, so it
 counts as unconfigured rather than half-working.
 
-### 3. Migration
+`STRIPE_PORTAL_CONFIGURATION_ID` is **optional** to keep envs that don't sell
+working, but on this account it is effectively required — without it the portal
+falls back to the configuration StageLink shares. It's an id, not a secret.
 
-Apply `supabase/migrations/0012_billing.sql`. It adds the plan columns to
-`profiles` and creates `billing_events`.
+### 3. Migrations
+
+Apply `supabase/migrations/0012_billing.sql` (plan columns on `profiles` +
+`billing_events`) and `0013_subscription_cancellation.sql` (`plan_cancel_at`,
+`plan_cancellation_feedback`).
+
+**Order matters for production:** both must be applied *before* the Stripe keys
+reach the environment. With keys but no columns, checkout 500s on the first
+webhook write.
 
 ### 4. Webhook endpoint
 

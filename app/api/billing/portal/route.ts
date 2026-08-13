@@ -60,6 +60,13 @@ export async function POST(request: Request) {
     const session = await config.stripe.billingPortal.sessions.create({
       customer: billing.stripeCustomerId,
       return_url: `${origin}/dashboard`,
+      // Pin EnergyCurve's own portal configuration. Omitting this makes Stripe
+      // fall back to the account default, which this account shares with
+      // StageLink — see the note on `portalConfigurationId` in
+      // lib/billing/config.ts for what that breaks in both directions.
+      ...(config.portalConfigurationId
+        ? { configuration: config.portalConfigurationId }
+        : {}),
     })
 
     return NextResponse.json({ url: session.url })

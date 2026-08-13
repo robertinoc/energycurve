@@ -42,6 +42,14 @@ export interface ResolvedSubscription {
   status: PlanStatus
   currentPeriodEnd: Date | null
   stripeSubscriptionId: string | null
+  /**
+   * When access ends because the customer cancelled, or null when no
+   * cancellation is scheduled. Separate from `currentPeriodEnd`, which moves on
+   * every renewal — this one means "it stops here".
+   */
+  cancelAt: Date | null
+  /** Stripe's cancellation_details.feedback, the reason they picked. */
+  cancellationFeedback: string | null
 }
 
 export interface SubscriptionInput {
@@ -53,6 +61,9 @@ export interface SubscriptionInput {
   priceIds: readonly string[]
   /** Unix seconds, as Stripe sends it. */
   currentPeriodEnd?: number | null
+  /** Unix seconds. Set when a cancellation is scheduled. */
+  cancelAt?: number | null
+  cancellationFeedback?: string | null
 }
 
 /**
@@ -91,11 +102,19 @@ export function resolveSubscription(
         ? new Date(input.currentPeriodEnd * 1000)
         : null,
     stripeSubscriptionId: input.id ?? null,
+    cancelAt:
+      typeof input.cancelAt === "number" && input.cancelAt > 0
+        ? new Date(input.cancelAt * 1000)
+        : null,
+    cancellationFeedback: input.cancellationFeedback ?? null,
   }
 }
 
 /** The state to persist when a subscription is deleted outright. */
-export function canceledSubscription(plan: Plan): ResolvedSubscription {
+export function canceledSubscription(
+  plan: Plan,
+  feedback: string | null = null
+): ResolvedSubscription {
   return {
     // Keep the purchased plan so the UI can say "your PRO subscription ended"
     // instead of pretending the user was always free.
@@ -103,6 +122,12 @@ export function canceledSubscription(plan: Plan): ResolvedSubscription {
     status: "canceled",
     currentPeriodEnd: null,
     stripeSubscriptionId: null,
+    // It already ended; there is no longer a future date to warn about. Keeping
+    // a stale cancelAt here would render "ends on <past date>" forever.
+    cancelAt: null,
+    // Preserved by the caller when it has one: the reason outlives the
+    // subscription, and it's the only churn signal we get.
+    cancellationFeedback: feedback,
   }
 }
 
@@ -118,6 +143,10 @@ interface SubscriptionLike {
     }[]
   }
   current_period_end?: number | null
+  cancel_at?: number | null
+  /** Legacy: superseded by cancel_at, but still sent by older API versions. */
+  cancel_at_period_end?: boolean | null
+  cancellation_details?: { feedback?: string | null } | null
 }
 
 /** Price ids across a subscription's items. */
@@ -146,6 +175,34 @@ export function periodEndOf(subscription: SubscriptionLike): number | null {
 
   const legacy = subscription.current_period_end
   return typeof legacy === "number" && legacy > 0 ? legacy : null
+}
+
+/**
+ * When a scheduled cancellation takes effect, in Unix seconds.
+ *
+ * Measured against a real cancellation on API version 2026-07-29.dahlia: Stripe
+ * sets `cancel_at` and leaves `cancel_at_period_end` **false**, so reading the
+ * boolean finds nothing. The boolean is still honoured as a fallback for older
+ * API versions, where it means "cancel at the end of the current period" and the
+ * effective date is that period's end.
+ */
+export function cancelAtOf(subscription: SubscriptionLike): number | null {
+  const explicit = subscription.cancel_at
+  if (typeof explicit === "number" && explicit > 0) {
+    return explicit
+  }
+
+  return subscription.cancel_at_period_end === true
+    ? periodEndOf(subscription)
+    : null
+}
+
+/** The reason the customer gave when cancelling, if the portal collected one. */
+export function cancellationFeedbackOf(
+  subscription: SubscriptionLike
+): string | null {
+  const feedback = subscription.cancellation_details?.feedback
+  return typeof feedback === "string" && feedback.length > 0 ? feedback : null
 }
 
 /** Stripe fields hold either an id or an expanded object. Normalises to the id. */

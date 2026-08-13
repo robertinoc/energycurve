@@ -30,6 +30,10 @@ export interface ProfileBilling {
   entitledPlan: Plan
   currentPeriodEnd: Date | null
   stripeCustomerId: string | null
+  /** Set when a cancellation is scheduled: the date access actually ends. */
+  cancelAt: Date | null
+  /** Why they cancelled, as Stripe's portal recorded it. */
+  cancellationFeedback: string | null
 }
 
 /** Free-tier defaults, used for a missing profile or an unrecognised value. */
@@ -41,6 +45,8 @@ function freeBilling(stripeCustomerId: string | null = null): ProfileBilling {
     entitledPlan: "free",
     currentPeriodEnd: null,
     stripeCustomerId,
+    cancelAt: null,
+    cancellationFeedback: null,
   }
 }
 
@@ -52,7 +58,7 @@ export async function getProfileBilling(
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "plan, plan_status, plan_current_period_end, stripe_customer_id"
+      "plan, plan_status, plan_current_period_end, stripe_customer_id, plan_cancel_at, plan_cancellation_feedback"
     )
     .eq("id", profileId)
     .maybeSingle()
@@ -79,6 +85,8 @@ export async function getProfileBilling(
       ? new Date(data.plan_current_period_end)
       : null,
     stripeCustomerId: data.stripe_customer_id,
+    cancelAt: data.plan_cancel_at ? new Date(data.plan_cancel_at) : null,
+    cancellationFeedback: data.plan_cancellation_feedback ?? null,
   }
 }
 
@@ -132,6 +140,10 @@ export async function applySubscription(
       plan_current_period_end:
         subscription.currentPeriodEnd?.toISOString() ?? null,
       stripe_subscription_id: subscription.stripeSubscriptionId,
+      plan_cancel_at: subscription.cancelAt?.toISOString() ?? null,
+      // Written unconditionally, including back to null: a customer who clicks
+      // "don't cancel" must stop looking like a churn statistic.
+      plan_cancellation_feedback: subscription.cancellationFeedback,
     })
     .eq("id", profileId)
 
