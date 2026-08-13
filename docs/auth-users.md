@@ -64,18 +64,75 @@ EnergyCurve relies on WorkOS AuthKit for secure session handling:
 - `withAuth()` for server validation
 - proxy-level protection with `authkit()`
 
+## Password policy
+
+WorkOS owns the policy; the app mirrors it so the signup and reset forms can
+state the rules **before** the user types instead of rejecting them afterwards.
+
+Verified against the WorkOS environment behind this app on **13 Aug 2026**:
+
+| Rule | Value |
+| --- | --- |
+| Minimum length | **10** characters (`password_too_short`, `minimum_length: 10`) |
+| Guessability | zxcvbn-style check (`password_too_weak`, with suggestions) |
+| Breached-password rejection | **not observed** — see the caveat below |
+
+The mirror lives in [lib/auth/password-policy.ts](/lib/auth/password-policy.ts):
+`PASSWORD_MIN_LENGTH` (overridable with `NEXT_PUBLIC_PASSWORD_MIN_LENGTH`) plus
+a small heuristic for common passwords and obvious patterns. It only ever
+predicts a *rejection* — WorkOS stays the authority on acceptance, and the
+haveibeenpwned lookup cannot run client-side because that would mean sending
+the typed password somewhere.
+
+### Re-checking the policy
+
+The dashboard is the source of truth, but the API answers the same question
+without a login. Post a password that cannot pass — nothing is created:
+
+```bash
+curl -s -X POST https://api.workos.com/user_management/users \
+  -H "Authorization: Bearer $WORKOS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"policy-probe@example.com","password":"a"}'
+```
+
+The 400 body lists one entry per broken rule, each with its own `code` and the
+numbers behind it (`minimum_length`). If the minimum has moved, set
+`NEXT_PUBLIC_PASSWORD_MIN_LENGTH` to match.
+
+### Caveat: the breach check did not fire
+
+During that same verification, `correcthorsebatterystaple` — a passphrase with
+a very high haveibeenpwned count — was **accepted** (201) by this environment.
+So leaked-password rejection appears to be off here, even though WorkOS
+documents it as part of the default policy. Worth confirming in the dashboard
+under Authentication before production launch, since it is the rule that
+matters most. The app already handles the rejection if it is switched on:
+`password_pwned` maps to a `password_breached` message.
+
+> That probe left a real user (`policy-probe-aaa@example.com`) in the WorkOS
+> test environment. Delete it from the dashboard if it is still there.
+
 ## Error Handling
 
 The auth layer currently handles:
 
 - missing field errors
 - invalid credentials
+- duplicate email (including the `email_not_available` code WorkOS actually
+  returns, which previously fell through to a generic "sign up failed")
 - password mismatch
-- duplicate email
-- weak password
+- password policy rejections, kept **separate** rather than collapsed into one
+  "weak password" bucket: too short (quoting the real minimum), leaked in a
+  known breach, contains the email address, missing a character type, too
+  guessable, plus a fallback for reasons we do not recognise
 - config/setup failures
 - Google social-login startup failures
 - protected-route fallback when auth initialization fails
+
+Every password rejection names the specific problem and points at the reliable
+escape hatch — a passphrase of three or four unrelated words. Copy lives in
+[lib/content/auth-copy.ts](/lib/content/auth-copy.ts) in EN and ES.
 
 Structured server-side logs are emitted for:
 
@@ -103,7 +160,11 @@ The auth test suite currently covers critical workflow logic for:
 - route protection decisions
 - redirect behavior
 - callback URL derivation
-- login/signup error mapping
+- login/signup error mapping, including the structured WorkOS password-policy
+  payloads ([tests/password-auth-helpers.test.ts](/tests/password-auth-helpers.test.ts))
+- the mirrored password policy ([tests/password-policy.test.ts](/tests/password-policy.test.ts))
+- EN/ES auth copy, including a guard that no message names WorkOS at the user
+  ([tests/auth-copy.test.ts](/tests/auth-copy.test.ts))
 
 These tests are intentionally lightweight and do not yet replace full browser-level end-to-end auth coverage.
 

@@ -11,6 +11,7 @@ import {
   logWorkOSRuntimeError,
 } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
+import { getRequestLocale } from "@/lib/server-locale"
 
 type AuthPageParams = Promise<{
   error?: string | string[]
@@ -48,6 +49,7 @@ export default async function LoginPage({
   const loggedOut = Array.isArray(params.loggedOut)
     ? params.loggedOut[0]
     : params.loggedOut
+  const locale = await getRequestLocale()
 
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
 
@@ -79,6 +81,7 @@ export default async function LoginPage({
       errorCode={error}
       loggedOut={loggedOut === "1"}
       resetSuccess={reset === "1"}
+      locale={locale}
       action={loginWithPasswordAction}
     />
   )

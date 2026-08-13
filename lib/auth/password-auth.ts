@@ -8,9 +8,14 @@ import { redirect } from "next/navigation"
 import {
   buildCallbackUrlFromHeaders,
   extractEmailVerificationChallenge,
+  extractPasswordPolicyFailure,
   mapLoginError,
   mapSignupError,
 } from "@/lib/auth/password-auth-helpers"
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MIN_LENGTH_PARAM,
+} from "@/lib/auth/password-policy"
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { buildReturnToHref, getSafeReturnTo } from "@/lib/auth/return-to"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
@@ -208,6 +213,17 @@ export async function signupWithPasswordAction(formData: FormData) {
     )
   }
 
+  // Mirrored locally so the shortest failure answers immediately with the
+  // specific reason, instead of spending a WorkOS round trip to be told the
+  // same thing. WorkOS remains the authority on everything else.
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    logWarn("auth.signup_password_too_short", { email, returnTo })
+    redirect(
+      `${buildReturnToHref("/signup", returnTo)}&error=password_too_short` +
+        `&${PASSWORD_MIN_LENGTH_PARAM}=${PASSWORD_MIN_LENGTH}`
+    )
+  }
+
   const requestUrl = await getRequestContextUrl()
 
   if (!requestUrl) {
@@ -267,6 +283,9 @@ export async function signupWithPasswordAction(formData: FormData) {
     }
 
     const signupError = mapSignupError(error)
+    // When WorkOS reports its own minimum, carry it back so the form quotes
+    // the real number rather than our mirrored constant.
+    const reportedMinLength = extractPasswordPolicyFailure(error)?.minLength
     logWarn("auth.signup_failed", {
       ...(await getAuthTelemetryContext(email)),
       returnTo,
@@ -274,7 +293,10 @@ export async function signupWithPasswordAction(formData: FormData) {
     })
 
     redirect(
-      `${buildReturnToHref("/signup", returnTo)}&error=${signupError}`
+      `${buildReturnToHref("/signup", returnTo)}&error=${signupError}` +
+        (reportedMinLength
+          ? `&${PASSWORD_MIN_LENGTH_PARAM}=${reportedMinLength}`
+          : "")
     )
   }
 
