@@ -2,6 +2,7 @@ import { signOut } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
+import { AuthProvider } from "@/components/providers/auth-provider"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { requireBackstageSession } from "@/lib/backstage/guard"
 
@@ -35,9 +36,14 @@ export default async function BackstageLayout({
 }) {
   const session = await requireBackstageSession()
 
+  // AuthProvider mounts here rather than in the root layout — it needs a
+  // proxy.ts-matched route, and both /backstage/:path* and the backstage
+  // subdomain are matched.
   return (
-    <BackstageShell email={session.email} logoutAction={logoutAction}>
-      {children}
-    </BackstageShell>
+    <AuthProvider>
+      <BackstageShell email={session.email} logoutAction={logoutAction}>
+        {children}
+      </BackstageShell>
+    </AuthProvider>
   )
 }

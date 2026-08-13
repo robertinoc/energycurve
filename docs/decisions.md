@@ -121,7 +121,7 @@ Convert WorkOS initialization failures into guided setup states or safe redirect
 
 **Decision**
 
-Mount `AuthKitProvider` in the root layout even though the current app is mostly server-rendered.
+Mount `AuthKitProvider` even though the current app is mostly server-rendered.
 
 **Why**
 
@@ -132,7 +132,26 @@ Mount `AuthKitProvider` in the root layout even though the current app is mostly
 **Consequence**
 
 - Auth still remains mostly server-first in EnergyCurve.
-- The root layout now includes the provider so future WorkOS client hooks remain compatible.
+- The app layouts include the provider so future WorkOS client hooks remain compatible.
+
+**Amended (scope: app subtrees, not the root layout)**
+
+The provider mounts in the `/dashboard` and `/backstage` layouts, not in the root
+layout. On mount it calls the `getAuthAction` server action, which runs
+`withAuth()` — and `withAuth()` throws on any route that did not pass through
+`proxy.ts`. In the root layout that meant a 500 on a background POST for every
+public page (`/`, `/privacy`, `/terms`, `/install`, the password-reset flow…).
+The provider swallows the rejection client-side, so nothing looked broken.
+
+Widening `config.matcher` to cover `/` was the alternative and was rejected: the
+landing page is the highest-traffic route, AuthKit would add a session
+decrypt-and-refresh to every hit (~14ms of measured `proxy.ts` time on a warm
+local dev request, plus a WorkOS round-trip whenever the session needs
+refreshing), and no client component consumes the auth context outside the app
+subtrees. Public pages should reach the CDN with no per-request session work.
+
+Guarded by `tests/auth-provider-scope.test.ts`, which fails if the provider is
+mounted on a route `proxy.ts` does not match.
 
 ## 9. Use document navigation for hosted auth entry points
 

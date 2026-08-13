@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next"
 import { Manrope, Space_Grotesk, Space_Mono } from "next/font/google"
 
 import { AnalyticsTracker } from "@/components/analytics/analytics-tracker"
-import { AuthProvider } from "@/components/providers/auth-provider"
 import { OPERATING_COMPANY, SEO_KEYWORDS, SITE_URL } from "@/lib/seo"
 import "./globals.css"
 
@@ -85,7 +84,11 @@ export default function RootLayout({
       className={`${manrope.variable} ${spaceGrotesk.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground selection:bg-[#A24DE0]/30 selection:text-white">
-        <AuthProvider>{children}</AuthProvider>
+        {/*
+          No AuthProvider here on purpose: it mounts only under /dashboard and
+          /backstage. See components/providers/auth-provider.tsx.
+        */}
+        {children}
         <AnalyticsTracker />
       </body>
     </html>
