@@ -8,7 +8,7 @@ EnergyCurve is a Next.js App Router project for DJs. Create a playlist (manually
 - `shadcn/ui` configured with a minimal reusable UI base
 - WorkOS AuthKit wired for login, sign up, callback handling, logout, and session-aware route protection
 - App-controlled email/password auth plus optional Google sign-in via WorkOS social login
-- Official `AuthKitProvider` mounted in the root layout for App Router auth edge-case handling
+- Official `AuthKitProvider` mounted in the `/dashboard` and `/backstage` layouts (the routes `proxy.ts` matches) for App Router auth edge-case handling
 - Supabase Postgres integrated as the application data layer only
 - Server-only profile synchronization between WorkOS users and the `profiles` table
 - Protected `/dashboard` route with server-side access validation

@@ -40,7 +40,7 @@ flowchart TD
 - `components/dashboard/*` contains the interactive dashboard UI scaffolding used for the current product-direction preview
 - `components/marketing/*` contains the public landing page shell, navbar, section components, locale toggle, and contact form UI
 - `components/ui/*` contains the `shadcn/ui` base
-- `components/providers/auth-provider.tsx` mounts `AuthKitProvider` in the root layout to cover WorkOS auth edge cases in the App Router
+- `components/providers/auth-provider.tsx` wraps `AuthKitProvider`; it mounts in the `/dashboard` and `/backstage` layouts, never in the root layout, because it only works on routes `proxy.ts` matches
 
 ### `lib/`
 
@@ -99,7 +99,7 @@ flowchart TD
 ## Session Persistence
 
 - WorkOS AuthKit stores the authenticated session in an encrypted cookie.
-- `AuthKitProvider` is mounted in the root layout because WorkOS recommends it for Next.js auth edge cases.
+- `AuthKitProvider` is mounted in the `/dashboard` and `/backstage` layouts — the app subtrees `proxy.ts` matches. It calls `withAuth()` through a server action on mount, which throws on any unmatched route, so it must not sit in the root layout (see decision 8).
 - `proxy.ts` refreshes and forwards session context through AuthKit headers for matched routes.
 - Server components read the authenticated user via `withAuth()` only on routes covered by the proxy.
 - Logout uses WorkOS session termination and falls back to a safe redirect to `/` if logout initialization fails unexpectedly.

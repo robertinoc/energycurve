@@ -5,6 +5,7 @@ import {
   DashboardShell,
   type SidebarPlaylist,
 } from "@/components/dashboard/dashboard-shell"
+import { AuthProvider } from "@/components/providers/auth-provider"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
@@ -33,6 +34,9 @@ async function logoutAction() {
  * When we have an authenticated user, pages render inside the sidebar shell
  * (which also lists the user's playlists). Otherwise children render bare so the
  * page can run its own login redirect or setup state.
+ *
+ * This is also where the client-side `AuthProvider` mounts for the app: it must
+ * sit under a `proxy.ts`-matched route, and `/dashboard/:path*` is matched.
  */
 export default async function DashboardLayout({
   children,
@@ -76,21 +80,23 @@ export default async function DashboardLayout({
   }
 
   if (!user) {
-    return <>{children}</>
+    return <AuthProvider>{children}</AuthProvider>
   }
 
   const displayName = user.firstName?.trim() || user.email.split("@")[0]
   const locale = await getRequestLocale()
 
   return (
-    <DashboardShell
-      displayName={displayName}
-      email={user.email}
-      playlists={playlists}
-      locale={locale}
-      logoutAction={logoutAction}
-    >
-      {children}
-    </DashboardShell>
+    <AuthProvider>
+      <DashboardShell
+        displayName={displayName}
+        email={user.email}
+        playlists={playlists}
+        locale={locale}
+        logoutAction={logoutAction}
+      >
+        {children}
+      </DashboardShell>
+    </AuthProvider>
   )
 }
