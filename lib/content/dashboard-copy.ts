@@ -523,4 +523,78 @@ export const DASHBOARD_COPY = {
       es: "Ya tenés una con ese nombre.",
     },
   },
+  /**
+   * Plan state, shown on the dashboard. Every string here answers one question a
+   * paying customer asks: what am I on, until when, and what do I do about it.
+   */
+  billing: {
+    sectionLabel: { en: "Your plan", es: "Tu plan" },
+    planName: {
+      free: { en: "FREE", es: "FREE" },
+      pro: { en: "PRO", es: "PRO" },
+      pro_plus: { en: "PRO+", es: "PRO+" },
+    },
+
+    free: {
+      title: { en: "You're on FREE", es: "Estás en FREE" },
+      body: {
+        en: "3 playlists, 3 fixes a month, and one AI ordering. Native export is included — and always will be.",
+        es: "3 playlists, 3 arreglos por mes y un ordenamiento con IA. El export nativo está incluido, y va a seguir estándolo.",
+      },
+    },
+    active: {
+      title: { en: "{plan} is active", es: "{plan} está activo" },
+      body: { en: "Renews on {date}.", es: "Se renueva el {date}." },
+    },
+    ending: {
+      title: { en: "{plan} ends on {date}", es: "{plan} termina el {date}" },
+      body: {
+        en: "You keep everything until then, and you can reactivate any time before that date.",
+        es: "Conservás todo hasta esa fecha, y podés reactivarlo en cualquier momento antes.",
+      },
+    },
+    pastDue: {
+      title: { en: "Your payment didn't go through", es: "Tu pago no se procesó" },
+      body: {
+        en: "{plan} still works for now. Update your card so you don't lose it.",
+        es: "{plan} sigue funcionando por ahora. Actualizá tu tarjeta para no perderlo.",
+      },
+    },
+    ended: {
+      title: {
+        en: "Your {plan} subscription ended",
+        es: "Tu suscripción {plan} terminó",
+      },
+      body: {
+        en: "You're back on the free limits. Everything you made is still here.",
+        es: "Volviste a los límites del plan gratuito. Todo lo que hiciste sigue acá.",
+      },
+    },
+    incomplete: {
+      title: { en: "Your checkout wasn't finished", es: "No se completó tu pago" },
+      body: {
+        en: "Nothing was charged. You can start again whenever you want.",
+        es: "No se te cobró nada. Podés empezar de nuevo cuando quieras.",
+      },
+    },
+
+    seePlans: { en: "See plans", es: "Ver planes" },
+    manage: { en: "Manage subscription", es: "Gestionar suscripción" },
+    managing: { en: "Opening…", es: "Abriendo…" },
+    manageError: {
+      en: "Couldn't open the billing portal. Try again in a moment.",
+      es: "No se pudo abrir el portal de facturación. Probá de nuevo en un momento.",
+    },
+
+    checkoutSuccess: {
+      title: { en: "You're in — welcome to {plan}", es: "Listo — bienvenido a {plan}" },
+      // Names the billing entity at the exact moment the charge appears, which is
+      // when an unrecognised name on a statement turns into a dispute.
+      body: {
+        en: "Your payment went through. Receipts come from StageLink LLC, the company that operates EnergyCurve.",
+        es: "Tu pago se procesó. Los comprobantes llegan de StageLink LLC, la empresa que opera EnergyCurve.",
+      },
+      dismiss: { en: "Dismiss", es: "Cerrar" },
+    },
+  },
 } as const

@@ -5,6 +5,8 @@ import { Database, Pencil, Plus, TrendingUp } from "lucide-react"
 import { redirect } from "next/navigation"
 
 import { AnalyticsIdentify } from "@/components/analytics/analytics-tracker"
+import { CheckoutConfirmation } from "@/components/dashboard/checkout-confirmation"
+import { PlanCard } from "@/components/dashboard/plan-card"
 import { ScoreSparkline } from "@/components/analysis/score-sparkline"
 import { DeletePlaylistButton } from "@/components/playlists/delete-playlist-button"
 import { PlaylistImportUpload } from "@/components/playlists/playlist-import-upload"
@@ -16,14 +18,17 @@ import {
   getGenericWorkOSConfigurationIssue,
   logWorkOSRuntimeError,
 } from "@/lib/auth/workos-runtime"
+import { isBillingConfigured } from "@/lib/billing/config"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
 import { cn } from "@/lib/utils"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { pickGreeting } from "@/lib/content/greetings"
 import { formatTemplate } from "@/lib/content/analysis-copy"
+import { planNeedsAttention } from "@/lib/product/plan-summary"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { getRequestLocale } from "@/lib/server-locale"
+import { getProfileBilling } from "@/services/billing-service"
 import { getDashboardSnapshot } from "@/services/dashboard-service"
 import { listUserContexts, listUserGenres } from "@/services/taxonomy-service"
 
@@ -33,7 +38,12 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>
+}) {
+  const { checkout } = await searchParams
   const infrastructureStatus = getInfrastructureStatus()
 
   if (!infrastructureStatus.workosConfigured) {
@@ -104,6 +114,10 @@ export default async function DashboardPage() {
   // "page couldn't load" error instead of the app.
   let customContexts: Awaited<ReturnType<typeof listUserContexts>> = []
   let customGenres: Awaited<ReturnType<typeof listUserGenres>> = []
+  // Same reasoning as the taxonomy queries: the plan card is informative, so a
+  // billing read that fails must not take the dashboard down with it. Left null
+  // and the card simply doesn't render.
+  let billing: Awaited<ReturnType<typeof getProfileBilling>> | null = null
 
   if (profile) {
     try {
@@ -118,7 +132,28 @@ export default async function DashboardPage() {
           error instanceof Error ? error.message : "Unknown taxonomy error",
       })
     }
+
+    try {
+      billing = await getProfileBilling(profile.id)
+    } catch (error) {
+      logWarn("dashboard.billing_unavailable", {
+        profileId: profile.id,
+        reason:
+          error instanceof Error ? error.message : "Unknown billing error",
+      })
+    }
   }
+
+  // Position follows urgency: a failed payment belongs above the fold, a healthy
+  // subscription belongs at the bottom next to the rest of the account detail.
+  const planCard = billing ? (
+    <PlanCard
+      billing={billing}
+      locale={locale}
+      billingConfigured={isBillingConfigured()}
+    />
+  ) : null
+  const planNeedsAttentionNow = billing ? planNeedsAttention(billing) : false
 
   return (
     <>
@@ -134,6 +169,15 @@ export default async function DashboardPage() {
             </p>
           </div>
         </header>
+
+        {checkout === "success" && billing ? (
+          <CheckoutConfirmation
+            planLabel={DASHBOARD_COPY.billing.planName[billing.plan][locale]}
+            locale={locale}
+          />
+        ) : null}
+
+        {planNeedsAttentionNow ? planCard : null}
 
         {infrastructureMessage ? (
           <Alert className="border-white/10 bg-[#0C0917] text-white">
@@ -261,6 +305,8 @@ export default async function DashboardPage() {
             </ul>
           </section>
         ) : null}
+
+        {planNeedsAttentionNow ? null : planCard}
       </div>
     </>
   )
