@@ -76,81 +76,92 @@ Meyda's requestable-feature union but missing from `MeydaFeaturesObject`.
 
 ## Measurements
 
-8 real tracks from the user's library: 6 mp3 (3.5–10.6 MB) and 2 FLAC
-(27 MB, 39 MB), 219–529 s long, house/disco. Chrome on an M-series Mac, dev
-build. Frame 2048, hop 2048, mono.
+Two runs matter, and they disagree about speed for a reason worth recording.
 
-| | median | range |
+**The numbers below are from production, on the owner's own library** — 21 and 23
+techno/house tracks, 95 and 207 minutes of audio, Chrome on an M-series Mac.
+An earlier set of figures in this doc came from a **dev build** and was
+pessimistic by roughly 3×; production is what ships, so production wins.
+
+| | production (21 tracks) | dev build (8 tracks) |
 |---|---|---|
-| Decode (`decodeAudioData`) | 330 ms | 184–746 ms |
-| Tempo pass | 267 ms | 227–547 ms |
-| **Feature pass** | **6 100 ms** | **4 870–11 628 ms** |
-| Total per track | 6 700 ms | 5 539–12 958 ms |
-| Realtime factor | ~40× | 38–42× |
+| Median per track | **2.29 s** | 6.7 s |
+| Slowest 5% | 2.85 s | 12.9 s |
+| Realtime factor | **126×** | 40× |
+| Projected 40-track playlist | **1 m 32 s** | 4 m 38 s |
+| Worst interface freeze | **561 ms** | not measured |
 
-Heap after the batch settled at ~109 MB, peaking near 286 MB. The 39 MB FLAC
-decoded and analysed without incident, so file size is not the constraint —
-**duration is**, and only through frame count.
+Take the dev-build column as a floor on how bad it gets, not as the number to
+plan against.
 
-### The feature pass is 88% of the cost, and it's linear in frames
+### Speed: acceptable, with an obvious next step
 
-Two controlled experiments:
+1 m 32 s for a 40-track playlist is tolerable but not comfortable. The
+optimisation path is arithmetic rather than guesswork, because cost is exactly
+linear in frames analysed (measured — see the two controlled experiments below):
+analysing 3×30 s windows instead of whole tracks is ~3×, which puts a playlist
+around 30 seconds.
 
-- **Dropping `chroma`** (the feature that looked expensive): 4 870 ms → 4 532 ms.
+### The interface freeze is the real blocker
+
+**561 ms**, and in an earlier run **1.16 s**. Over 500 ms reads as broken.
+
+The framewise DSP already runs in a worker, so this isn't that: it's
+`decodeAudioData` plus the mono downmix, both of which happen on the main
+thread. Fixing it means decoding in chunks, or moving to a
+`MediaStreamTrackProcessor`-style pipeline, or simply accepting a visible
+"analysing…" state that blocks interaction honestly instead of freezing.
+
+This is the one finding that must be addressed before any of this ships, and it
+is only visible because the tab was in front — the first attempt at this
+measurement reported 0 ms from a background tab, which is indistinguishable from
+"never froze".
+
+### The cost is linear in frames
+
+Two controlled experiments, both on the dev build (the ratios hold regardless):
+
+- **Dropping `chroma`** — the feature that looked expensive: 4 870 ms → 4 532 ms.
   Only ~7%. Chroma is *not* the bottleneck.
-- **Doubling the hop to 4096** (half the frames): 4 870 ms → 2 463 ms and
+- **Doubling the hop to 4096** — half the frames: 4 870 ms → 2 463 ms and
   5 854 ms → 2 860 ms, with frame counts halving exactly (4 708 → 2 354).
-  Realtime factor 40× → 72×.
 
-So the cost is the per-frame FFT, and it scales linearly with the number of
-frames analysed. That makes the optimisation path arithmetic rather than
-speculative:
-
-| Lever | Expected gain | Cost |
-|---|---|---|
-| Analyse 3×30 s windows instead of the whole track | ~3× on a 4-minute track | Aggregate features only; loses time-varying detail |
-| Hop 4096 | 2× (measured) | Onset rate needs recalibrating — it's per frame |
-| Decode at 22.05 kHz | ~2× | Fine for these features; halves frequency resolution |
-
-Stacked, ~6 s/track becomes well under 1 s. **Nothing here requires a server.**
-
-Flux, entropy and the detected key barely moved between hop 2048 and 4096
-(entropy 0.4510 → 0.4518, same key, confidence 0.67 → 0.66), which is what you'd
-expect from track-level aggregates. The onset rate *did* move (1.84 → 1.00/s)
-because it's defined per frame — so that lever isn't free.
+So the per-frame FFT is the cost, and it scales linearly with how much audio you
+feed it. Flux, entropy and the detected key barely moved between hop sizes; the
+onset rate did, because it's defined per frame — so that particular lever needs
+the onset threshold recalibrated first.
 
 ### Accuracy against the files' own Mixed In Key tags
 
-**Tempo: 8/8 exact.** 119/119, 123/123, 120/120, 125.2/125, 124/124, 120/120,
-123/123, 126/126. Not "close" — exact, on every track. `web-audio-beat-detector`
-can be treated as production-ready for this catalogue.
+**Tempo: 19/19 exact.** On techno at 147–164 BPM, every tagged file matched.
+Combined with the earlier 8/8 on house and disco, `web-audio-beat-detector` can
+be treated as production-ready for this catalogue. This is the finding that
+justifies the whole feature: it closes the gap for wav/flac/aiff with no tags.
 
-**Key: 4/6 exact Camelot** (two tracks carried no key tag):
+**Key: 3/14 (21%).** Not shippable, and the sample is now large enough to say so
+with some confidence rather than as a smoke signal.
 
-| Detected | → Camelot | Tag | → Camelot | |
-|---|---|---|---|---|
-| Gm | 6A | 11m | 6A | match |
-| F#m | 11A | 4m | 11A | match |
-| Gm | 6A | 11m | 6A | match |
-| Am | 8A | 1m | 8A | match |
-| A# | 6B | 7m | 2A | miss |
-| C | 8B | 10m | 5A | miss |
+Where it fails is consistent and diagnosable: **major/minor confusion**. Across
+the run the detector repeatedly produced a plausible tonic with the wrong mode
+(`Dm` against a tag of `11m`, `C` against `12d`), and the key-confidence column
+sits mostly between 0.4 and 0.85 — high confidence in the wrong answer, which is
+exactly what a whole-track averaged chroma produces on bass-heavy dance music.
 
-**n=6 is far too small to call this an accuracy rate** — it's a smoke signal,
-not a validation. What it does tell us is *how* it fails: both misses picked the
-wrong **mode**, and one (C major vs C minor) got the tonic exactly right. Major/
-minor confusion is the textbook Krumhansl-Schmuckler weakness, and it's the
-tractable kind of wrong.
+Fixes, in rough order of effort:
 
-Known fixes, in rough order of effort: harmonic/percussive separation before
-chroma (bass-heavy dance mixes pollute the profile); per-segment key voting
-instead of one whole-track average; tuning correction; and swapping the K-K
-profiles for Temperley's or Shaath's, which were fitted on pop rather than
-classical.
+1. Harmonic/percussive separation before chroma — kicks and bass pollute the
+   pitch-class profile on precisely this genre.
+2. Per-segment key voting instead of one average over the whole track.
+3. Tuning correction.
+4. Swap the Krumhansl-Kessler profiles for Temperley's or Shaath's, which were
+   fitted on pop rather than classical.
+
+The harness is how we'll know whether any of that worked: re-run, and see if 21%
+moves.
 
 Useful side-effect: the tags in this library are **Open Key** notation
 (`7m`, `4d`), and the existing `toCamelot()` already converts them — so the
-accuracy harness works against a real corpus with no new parsing.
+accuracy comparison works against a real corpus with no new parsing.
 
 ## Architecture as built
 
@@ -189,10 +200,11 @@ probe never ticked. Re-measure with the tab visible before quoting it.
 3. **Key is the real risk.** It is not shippable at this accuracy, and it must
    not be advertised until validated on a corpus in the hundreds. Ship tempo and
    the v3 features first; keep key behind a "beta" label or hold it back.
-4. **Optimise before shipping.** ~6 s/track is too slow for a 40-track playlist
-   (4 minutes). Windowed sampling is the lever, and the linearity is measured, so
-   the gain is predictable.
-5. **No server-side batch needed.** H3's server analysis stays where it is —
+4. **Fix the main-thread freeze first.** 561 ms is the blocker, not speed.
+   Decoding and the downmix still run on the main thread.
+5. **Then optimise.** 1 m 32 s per playlist is tolerable, not good. Windowed
+   sampling is the lever and the linearity is measured, so ~30 s is predictable.
+6. **No server-side batch needed.** H3's server analysis stays where it is —
    optional, demand-driven. The privacy promise ("your audio never leaves your
    machine") holds as a real property of the design.
 
@@ -205,6 +217,8 @@ probe never ticked. Re-measure with the tab visible before quoting it.
 - `app/backstage/audio-spike/` — the measurement harness (backstage, noindex)
 - `tests/audio-analysis.test.ts` — 23 tests over the pure parts
 
-The harness is a measuring instrument, not a feature: point it at a folder and
-it reports per-track timings plus the tag comparison. It's how the corpus
-validation subtask should be run.
+The harness is a measuring instrument, **not a feature**, and the screen says so
+in as many words — it lives in backstage for the same reason Analytics does, and
+it gets deleted once the key-detection question is settled. It is kept for now
+because it's how we'll measure whether the key rework moved 21% to something
+shippable.

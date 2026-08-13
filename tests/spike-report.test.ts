@@ -109,14 +109,32 @@ describe("verdicts", () => {
     })
   })
 
-  it("judges speed by how long a real playlist would take", () => {
+  it("leads with what the run actually took, not an extrapolation", () => {
+    // Showing "a 40-track playlist" as the headline figure read as a miscount
+    // when only 21 files were picked. The measurement comes first; the
+    // projection is explained underneath.
+    const report = buildSpikeReport(
+      [track({ totalMs: 1_000 }), track({ totalMs: 3_000 })],
+      10
+    )
+
+    expect(report.speed.batchTotal.value).toBe("4.00s for 2 tracks")
+    expect(report.speed.batchTotal.meaning).toContain("40-track playlist")
+  })
+
+  it("says 'track' rather than 'tracks' for a single file", () => {
+    expect(buildSpikeReport([track({ totalMs: 500 })], 10).speed.batchTotal.value).toBe(
+      "500ms for 1 track"
+    )
+  })
+
+  it("still judges shippability by the projected playlist time", () => {
+    // 40 tracks × 1s = 40s (fine) vs 40 × 8s = 5m20s (nobody waits).
     const fast = buildSpikeReport([track({ totalMs: 1_000 })], 10)
     const slow = buildSpikeReport([track({ totalMs: 8_000 })], 10)
 
-    // 40 tracks × 1s = 40s (fine) vs 40 × 8s = 5m20s (nobody waits).
-    expect(fast.speed.playlistEstimate.verdict).toBe("good")
-    expect(fast.speed.playlistEstimate.value).toBe("40.00s")
-    expect(slow.speed.playlistEstimate.verdict).toBe("bad")
+    expect(fast.speed.batchTotal.verdict).toBe("good")
+    expect(slow.speed.batchTotal.verdict).toBe("bad")
     expect(
       slow.headlines.some((line) => line.text.includes("30-second windows"))
     ).toBe(true)
@@ -170,10 +188,10 @@ describe("verdicts", () => {
   it("gives every measure a plain-language meaning", () => {
     const report = buildSpikeReport([track()], 40)
     const measures = [
+      report.speed.batchTotal,
       report.speed.medianPerTrack,
       report.speed.p95PerTrack,
       report.speed.realtimeFactor,
-      report.speed.playlistEstimate,
       report.responsiveness.worstFreeze,
       report.accuracy.bpm,
       report.accuracy.key,

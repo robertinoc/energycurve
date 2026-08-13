@@ -145,11 +145,15 @@ export interface SpikeReport {
   longFiles: number
 
   speed: {
+    /**
+     * What this run actually took, for the files actually picked. Leads the
+     * section because it's a measurement — the 40-track figure below it is an
+     * extrapolation, and showing that first read as a miscount.
+     */
+    batchTotal: Measure
     medianPerTrack: Measure
     p95PerTrack: Measure
     realtimeFactor: Measure
-    /** The number that actually matters: how long a real playlist would take. */
-    playlistEstimate: Measure
   }
   responsiveness: {
     worstFreeze: Measure
@@ -201,6 +205,7 @@ export function buildSpikeReport(
   const totals = ok.map((row) => row.totalMs)
   const audioSeconds = ok.reduce((sum, row) => sum + row.durationSeconds, 0)
 
+  const batchMs = totals.reduce((sum, value) => sum + value, 0)
   const medianMs = median(totals)
   const realtime = median(ok.map((row) => row.realtimeFactor))
   const playlistMs = medianMs * REFERENCE_PLAYLIST_TRACKS
@@ -287,6 +292,15 @@ export function buildSpikeReport(
     longFiles: ok.filter((row) => row.durationSeconds >= LONG_TRACK_SECONDS).length,
 
     speed: {
+      batchTotal: {
+        value: `${formatDuration(batchMs)} for ${ok.length} track${
+          ok.length === 1 ? "" : "s"
+        }`,
+        verdict: speedVerdict,
+        meaning: `That works out to about ${formatDuration(
+          playlistMs
+        )} for a ${REFERENCE_PLAYLIST_TRACKS}-track playlist — the size we judge against, since that's a normal club set. Under a minute there is comfortable; over three and nobody waits.`,
+      },
       medianPerTrack: {
         value: formatDuration(medianMs),
         verdict: speedVerdict,
@@ -303,11 +317,6 @@ export function buildSpikeReport(
         verdict: "unknown",
         meaning:
           "Seconds of audio analysed per second of waiting. Higher is better; it's independent of track length.",
-      },
-      playlistEstimate: {
-        value: formatDuration(playlistMs),
-        verdict: speedVerdict,
-        meaning: `How long a ${REFERENCE_PLAYLIST_TRACKS}-track playlist would take. Under a minute is comfortable; over three and nobody waits.`,
       },
     },
 
