@@ -112,6 +112,11 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // MUST stay a static literal: Next parses this at compile time and cannot
+  // resolve an imported value (it fails the whole middleware, not just one
+  // route). `tests/protected-routes.test.ts` reads these entries back out of
+  // this file and checks that every handler calling withAuth() is covered —
+  // forgetting one throws at runtime and reads as a 500 rather than a 401.
   matcher: [
     "/dashboard/:path*",
     "/backstage/:path*",
@@ -120,6 +125,12 @@ export const config = {
     // request to have passed through the authkit middleware, or it throws
     // (500 for everyone, even logged-in users).
     "/api/playlists/:path*",
+    // Billing: checkout and the portal act for the signed-in user. Listed
+    // individually rather than as /api/billing/:path* on purpose — the webhook
+    // must NOT be matched, since Stripe posts without a session and
+    // authenticates by signature instead.
+    "/api/billing/checkout",
+    "/api/billing/portal",
     "/login",
     "/signup",
     // Backstage subdomain: every request must run through authkit because
