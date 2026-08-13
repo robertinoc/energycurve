@@ -2,9 +2,10 @@ import "server-only"
 
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import {
-  CUSTOM_TAXONOMY_LIMIT,
+  atTaxonomyLimit,
   validateCustomName,
 } from "@/lib/playlists/taxonomy-validation"
+import { quotaFor } from "@/lib/product/capabilities"
 import { logError, logInfo } from "@/lib/observability/logger"
 import {
   SET_CONTEXTS,
@@ -13,6 +14,7 @@ import {
   type SupportedGenre,
 } from "@/lib/product/strategy"
 import type { UserContext, UserGenre } from "@/types/domain"
+import { getProfileBilling } from "./billing-service"
 
 /**
  * User-defined contexts and genres ("behaves like" model). A custom entry is
@@ -24,7 +26,6 @@ export {
   CUSTOM_NAME_MIN_LENGTH,
   CUSTOM_NAME_MAX_LENGTH,
 } from "@/lib/playlists/taxonomy-validation"
-export { CUSTOM_TAXONOMY_LIMIT }
 
 export type TaxonomyValidationError =
   | "name_invalid"
@@ -66,9 +67,44 @@ export async function listUserGenres(profileId: string): Promise<UserGenre[]> {
   return data ?? []
 }
 
-interface CreateResult<T> {
-  entry?: T
-  validationError?: TaxonomyValidationError
+/**
+ * A discriminated union rather than all-optional fields, so the cap is
+ * *guaranteed* to be present on the one branch that needs to name a number.
+ * With an optional `limit` the caller has to invent a fallback, and "you've
+ * reached your limit of 0" is the kind of message that ships.
+ */
+export type CreateResult<T> =
+  | { entry: T; validationError?: undefined; limit?: undefined }
+  | {
+      entry?: undefined
+      validationError: Exclude<TaxonomyValidationError, "limit_reached">
+      limit?: undefined
+    }
+  | { entry?: undefined; validationError: "limit_reached"; limit: number }
+
+/**
+ * How many custom labels this profile may keep, and how many it already has.
+ *
+ * Counted across contexts **and** genres together, which is what
+ * `PLAN_LIMITS.customTaxonomies` documents and what the public matrix advertises
+ * as a single row. The previous code applied a flat 12 per kind regardless of
+ * plan — three ways adrift from the promise at once.
+ *
+ * Enforced here rather than in the actions so a future caller can't skip it.
+ */
+async function taxonomyUsage(
+  profileId: string
+): Promise<{ used: number; limit: number | null }> {
+  const [billing, contexts, genres] = await Promise.all([
+    getProfileBilling(profileId),
+    listUserContexts(profileId),
+    listUserGenres(profileId),
+  ])
+
+  return {
+    used: contexts.length + genres.length,
+    limit: quotaFor(billing.plan, billing.status, "custom_taxonomies"),
+  }
 }
 
 export async function createUserContext(
@@ -86,11 +122,13 @@ export async function createUserContext(
     return { validationError: "behaves_like_invalid" }
   }
 
-  const existing = await listUserContexts(profileId)
+  const usage = await taxonomyUsage(profileId)
 
-  if (existing.length >= CUSTOM_TAXONOMY_LIMIT) {
-    return { validationError: "limit_reached" }
+  if (atTaxonomyLimit(usage)) {
+    return { validationError: "limit_reached", limit: usage.limit as number }
   }
+
+  const existing = await listUserContexts(profileId)
 
   if (existing.some((e) => e.name.toLowerCase() === name.toLowerCase())) {
     return { validationError: "duplicate_name" }
@@ -131,11 +169,13 @@ export async function createUserGenre(
     return { validationError: "behaves_like_invalid" }
   }
 
-  const existing = await listUserGenres(profileId)
+  const usage = await taxonomyUsage(profileId)
 
-  if (existing.length >= CUSTOM_TAXONOMY_LIMIT) {
-    return { validationError: "limit_reached" }
+  if (atTaxonomyLimit(usage)) {
+    return { validationError: "limit_reached", limit: usage.limit as number }
   }
+
+  const existing = await listUserGenres(profileId)
 
   if (existing.some((e) => e.name.toLowerCase() === name.toLowerCase())) {
     return { validationError: "duplicate_name" }

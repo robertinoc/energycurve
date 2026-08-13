@@ -53,7 +53,6 @@ import {
 import {
   createUserContext,
   createUserGenre,
-  CUSTOM_TAXONOMY_LIMIT,
   deleteUserContext,
   deleteUserGenre,
   getUserContextById,
@@ -873,7 +872,7 @@ export async function createCustomTaxonomyAction(
       const message =
         result.validationError === "limit_reached"
           ? formatTemplate(TAXONOMY_COPY.limitReached[locale], {
-              max: CUSTOM_TAXONOMY_LIMIT,
+              max: result.limit,
             })
           : result.validationError === "duplicate_name"
             ? TAXONOMY_COPY.duplicateName[locale]
