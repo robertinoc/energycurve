@@ -246,10 +246,7 @@ export function AudioSpikePanel() {
                 : ""
             }`}
           >
-            <MeasureCard
-              label="A 40-track playlist"
-              measure={report.speed.playlistEstimate}
-            />
+            <MeasureCard label="This run took" measure={report.speed.batchTotal} />
             <MeasureCard
               label="Median per track"
               measure={report.speed.medianPerTrack}
