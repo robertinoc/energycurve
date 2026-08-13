@@ -97,10 +97,18 @@ describe("mapPasswordResetError", () => {
     )
   })
 
-  it("maps password policy failures", () => {
+  it("maps password policy failures to the specific reason", () => {
+    // "strength" with no more specific code is the umbrella rejection, so it
+    // resolves to the guessability message rather than the generic fallback.
     expect(
       mapPasswordResetError(new Error("Password does not meet strength"))
-    ).toBe("weak_password")
+    ).toBe("password_too_weak")
+  })
+
+  it("falls back to weak_password when no reason can be read", () => {
+    expect(mapPasswordResetError(new Error("password rejected"))).toBe(
+      "weak_password"
+    )
   })
 
   it("falls back to reset_failed", () => {

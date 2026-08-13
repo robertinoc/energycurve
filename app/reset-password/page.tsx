@@ -3,6 +3,7 @@ import Link from "next/link"
 import { LockKeyhole } from "lucide-react"
 import { redirect } from "next/navigation"
 
+import { PasswordPolicyField } from "@/components/auth/password-policy-field"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,7 +15,10 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { parsePasswordMinLength } from "@/lib/auth/password-policy"
 import { resetPasswordAction } from "@/lib/auth/password-reset"
+import { getAuthAlertCopy } from "@/lib/content/auth-copy"
+import { getRequestLocale } from "@/lib/server-locale"
 
 export const metadata: Metadata = {
   title: "Reset password",
@@ -22,50 +26,28 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-function getAlertCopy(errorCode?: string) {
-  switch (errorCode) {
-    case "missing_fields":
-      return {
-        title: "Missing required fields",
-        description: "Complete both password fields before continuing.",
-      }
-    case "password_mismatch":
-      return {
-        title: "Passwords do not match",
-        description: "Use the same password in both fields.",
-      }
-    case "weak_password":
-      return {
-        title: "Password needs another try",
-        description: "Choose a stronger password that meets the password policy.",
-      }
-    case "reset_invalid":
-      return {
-        title: "Reset link expired or invalid",
-        description: "Request a fresh link from the forgot-password page.",
-      }
-    case "reset_failed":
-      return {
-        title: "Reset failed",
-        description: "The password could not be updated. Try again shortly.",
-      }
-    default:
-      return undefined
-  }
-}
-
 export default async function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string; error?: string }>
+  searchParams: Promise<{
+    token?: string
+    error?: string
+    minLength?: string
+  }>
 }) {
-  const { token, error } = await searchParams
+  const { token, error, minLength } = await searchParams
 
   if (!token) {
     redirect("/forgot-password?error=missing_token")
   }
 
-  const alertCopy = getAlertCopy(error)
+  const locale = await getRequestLocale()
+  const passwordMinLength = parsePasswordMinLength(minLength)
+  const alertCopy = getAuthAlertCopy({
+    errorCode: error,
+    locale,
+    minLength: passwordMinLength,
+  })
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08050F] px-6 py-10 text-white">
@@ -96,19 +78,14 @@ export default async function ResetPasswordPage({
 
           <form action={resetPasswordAction} className="space-y-4">
             <input type="hidden" name="token" value={token} />
-            <div className="space-y-2">
-              <Label htmlFor="reset-password" className="text-white/72">
-                New password
-              </Label>
-              <Input
-                id="reset-password"
-                name="password"
-                type="password"
-                required
-                placeholder="Create a strong password"
-                className="border-white/12 text-white placeholder:text-white/32"
-              />
-            </div>
+            <PasswordPolicyField
+              id="reset-password"
+              name="password"
+              label="New password"
+              placeholder="Create a strong password"
+              locale={locale}
+              minLength={passwordMinLength}
+            />
             <div className="space-y-2">
               <Label htmlFor="reset-confirm" className="text-white/72">
                 Confirm new password

@@ -6,8 +6,13 @@ import { redirect } from "next/navigation"
 
 import {
   buildOriginFromHeaders,
+  extractPasswordPolicyFailure,
   mapPasswordResetError,
 } from "@/lib/auth/password-auth-helpers"
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MIN_LENGTH_PARAM,
+} from "@/lib/auth/password-policy"
 import { buildBrandedEmail } from "@/lib/email/build-email-html"
 import {
   isEmailDeliveryConfigured,
@@ -124,6 +129,16 @@ export async function resetPasswordAction(formData: FormData) {
     redirect(`${backToForm}&error=password_mismatch`)
   }
 
+  // Same local mirror as signup: answer the shortest failure without
+  // spending a round trip, and without burning the reset token.
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    logWarn("auth.password_reset_too_short", {})
+    redirect(
+      `${backToForm}&error=password_too_short` +
+        `&${PASSWORD_MIN_LENGTH_PARAM}=${PASSWORD_MIN_LENGTH}`
+    )
+  }
+
   try {
     await getWorkOS().userManagement.resetPassword({
       token,
@@ -133,8 +148,14 @@ export async function resetPasswordAction(formData: FormData) {
     logInfo("auth.password_reset_completed", {})
   } catch (error) {
     const resetError = mapPasswordResetError(error)
+    const reportedMinLength = extractPasswordPolicyFailure(error)?.minLength
     logWarn("auth.password_reset_failed", { resetError })
-    redirect(`${backToForm}&error=${resetError}`)
+    redirect(
+      `${backToForm}&error=${resetError}` +
+        (reportedMinLength
+          ? `&${PASSWORD_MIN_LENGTH_PARAM}=${reportedMinLength}`
+          : "")
+    )
   }
 
   redirect("/login?reset=1")

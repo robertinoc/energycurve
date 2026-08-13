@@ -2,11 +2,15 @@ import Link from "next/link"
 import { ArrowRight, LockKeyhole } from "lucide-react"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
+import { PasswordPolicyField } from "@/components/auth/password-policy-field"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { PASSWORD_MIN_LENGTH } from "@/lib/auth/password-policy"
+import { getAuthAlertCopy } from "@/lib/content/auth-copy"
+import type { SiteLocale } from "@/lib/content/site-copy"
 
 interface PasswordAuthPageProps {
   mode: "login" | "signup"
@@ -14,88 +18,14 @@ interface PasswordAuthPageProps {
   errorCode?: string
   loggedOut?: boolean
   resetSuccess?: boolean
+  locale: SiteLocale
+  /**
+   * Minimum length to quote in the copy. Defaults to the mirrored policy
+   * constant; a rejection that carried WorkOS's own number overrides it, so
+   * the message stays right even if the dashboard policy moves.
+   */
+  passwordMinLength?: number
   action: (formData: FormData) => Promise<void>
-}
-
-function getAlertCopy(
-  mode: "login" | "signup",
-  errorCode?: string,
-  loggedOut?: boolean,
-  resetSuccess?: boolean
-) {
-  if (resetSuccess) {
-    return {
-      title: "Password updated",
-      description: "Your new password is active. Sign in with it below.",
-    }
-  }
-
-  if (loggedOut) {
-    return {
-      title: "Signed out successfully",
-      description: "Your session has been closed. You can sign in again or create a new account.",
-    }
-  }
-
-  switch (errorCode) {
-    case "missing_fields":
-      return {
-        title: "Missing required fields",
-        description: "Complete all required fields before continuing.",
-      }
-    case "invalid_credentials":
-      return {
-        title: "Invalid credentials",
-        description: "The email or password did not match a valid WorkOS account.",
-      }
-    case "password_mismatch":
-      return {
-        title: "Passwords do not match",
-        description: "Use the same password in both fields before creating the account.",
-      }
-    case "email_taken":
-      return {
-        title: "Email already in use",
-        description: "That address already belongs to an account. Try logging in instead.",
-      }
-    case "weak_password":
-      return {
-        title: "Password needs another try",
-        description: "Choose a stronger password that meets your WorkOS password policy.",
-      }
-    case "account_suspended":
-      return {
-        title: "Account suspended",
-        description:
-          "This account has been suspended. Contact support if you believe this is a mistake.",
-      }
-    case "auth":
-      return {
-        title: "Authentication failed",
-        description: "WorkOS could not complete sign in with the submitted credentials.",
-      }
-    case "signup_failed":
-      return {
-        title: "Sign up failed",
-        description: "WorkOS could not create the account with the submitted credentials.",
-      }
-    case "config":
-      return {
-        title: "WorkOS configuration still needs attention",
-        description: "The current WorkOS values could not complete this request. Recheck the server configuration.",
-      }
-    case "social_config":
-      return {
-        title: "Google sign-in is not ready yet",
-        description: "WorkOS could not start the Google flow. Confirm that Google Social Login is enabled in WorkOS.",
-      }
-    default:
-      if (mode === "login") {
-        return undefined
-      }
-
-      return undefined
-  }
 }
 
 export function PasswordAuthPage({
@@ -104,10 +34,18 @@ export function PasswordAuthPage({
   errorCode,
   loggedOut = false,
   resetSuccess = false,
+  locale,
+  passwordMinLength = PASSWORD_MIN_LENGTH,
   action,
 }: PasswordAuthPageProps) {
   const isSignup = mode === "signup"
-  const alertCopy = getAlertCopy(mode, errorCode, loggedOut, resetSuccess)
+  const alertCopy = getAuthAlertCopy({
+    errorCode,
+    locale,
+    minLength: passwordMinLength,
+    loggedOut,
+    resetSuccess,
+  })
   const title = isSignup
     ? "Welcome to EnergyCurve"
     : "Welcome back to EnergyCurve"
@@ -210,30 +148,39 @@ export function PasswordAuthPage({
               />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor={`${mode}-password`} className="text-white/82">
-                  Password
-                </Label>
-                {!isSignup ? (
+            {isSignup ? (
+              <PasswordPolicyField
+                id="signup-password"
+                name="password"
+                label="Password"
+                placeholder="Create a strong password"
+                locale={locale}
+                minLength={passwordMinLength}
+              />
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="login-password" className="text-white/82">
+                    Password
+                  </Label>
                   <Link
                     href="/forgot-password"
                     className="text-xs text-white/48 underline-offset-4 transition hover:text-white hover:underline"
                   >
                     Forgot password?
                   </Link>
-                ) : null}
+                </div>
+                <Input
+                  id="login-password"
+                  name="password"
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  className="h-11 px-3.5"
+                  placeholder="Enter your password"
+                />
               </div>
-              <Input
-                id={`${mode}-password`}
-                name="password"
-                type="password"
-                required
-                autoComplete={isSignup ? "new-password" : "current-password"}
-                className="h-11 px-3.5"
-                placeholder={isSignup ? "Create a strong password" : "Enter your password"}
-              />
-            </div>
+            )}
 
             {isSignup ? (
               <div className="space-y-2">

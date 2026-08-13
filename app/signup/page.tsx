@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 
 import { PasswordAuthPage } from "@/components/auth/password-auth-page"
 import { SetupRequiredState } from "@/components/setup/setup-required-state"
+import { parsePasswordMinLength } from "@/lib/auth/password-policy"
 import { getSafeReturnTo } from "@/lib/auth/return-to"
 import { signupWithPasswordAction } from "@/lib/auth/password-auth"
 import {
@@ -11,10 +12,12 @@ import {
   logWorkOSRuntimeError,
 } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
+import { getRequestLocale } from "@/lib/server-locale"
 
 type AuthPageParams = Promise<{
   error?: string | string[]
   returnTo?: string | string[]
+  minLength?: string | string[]
 }>
 
 export const metadata: Metadata = {
@@ -43,6 +46,7 @@ export default async function SignupPage({
 
   const returnTo = getSafeReturnTo(params.returnTo)
   const error = Array.isArray(params.error) ? params.error[0] : params.error
+  const locale = await getRequestLocale()
 
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
 
@@ -70,6 +74,8 @@ export default async function SignupPage({
       mode="signup"
       returnTo={returnTo}
       errorCode={error}
+      locale={locale}
+      passwordMinLength={parsePasswordMinLength(params.minLength)}
       action={signupWithPasswordAction}
     />
   )
