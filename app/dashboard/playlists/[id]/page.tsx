@@ -102,6 +102,8 @@ export default async function PlaylistDetailPage({
               playlistId={playlist.id}
               name={playlist.name}
               description={playlist.description}
+              slotStartMinutes={playlist.slot_start_minutes}
+              slotEndMinutes={playlist.slot_end_minutes}
               locale={locale}
             />
             <div className="flex flex-wrap items-center gap-2">

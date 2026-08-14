@@ -265,6 +265,13 @@ export const DASHBOARD_COPY = {
       en: "Notes about this set — venue, vibe, what you're going for…",
       es: "Notas sobre este set — el lugar, la vibra, lo que buscás…",
     },
+    slotLabel: { en: "Your slot (optional)", es: "Tu horario (opcional)" },
+    slotStartLabel: { en: "From", es: "Desde" },
+    slotEndLabel: { en: "To", es: "Hasta" },
+    slotHint: {
+      en: "Venue time, no timezone. Sets that cross midnight are fine — 23:00 to 02:00 reads as three hours.",
+      es: "Hora del venue, sin zona horaria. Los sets que cruzan medianoche funcionan igual — 23:00 a 02:00 se leen como tres horas.",
+    },
     save: { en: "Save", es: "Guardar" },
     saving: { en: "Saving…", es: "Guardando…" },
     cancel: { en: "Cancel", es: "Cancelar" },

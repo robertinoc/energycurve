@@ -19,6 +19,9 @@ import {
   type ReorderSuggestion,
 } from "@/lib/engine/recommendations"
 import { logError, logInfo } from "@/lib/observability/logger"
+import { resolveSlot } from "@/lib/engine/slot"
+import { can } from "@/lib/product/capabilities"
+import { getProfileBilling } from "@/services/billing-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
 import type {
   PlaylistAnalysis,
@@ -80,6 +83,19 @@ export async function getPlaylistAnalysis(
     playlist.context,
     playlist.genre
   )
+  // Declaring a slot is free — it's just a fact about the gig, and recording it
+  // costs nothing. Reading the curve *against* it is the PRO capability, so an
+  // unentitled user's analysis is computed exactly as before rather than with a
+  // locked-looking placeholder.
+  const declaredSlot = resolveSlot(
+    playlist.slot_start_minutes,
+    playlist.slot_end_minutes
+  )
+  const billing = await getProfileBilling(profileId)
+  const slot = can(billing.plan, billing.status, "slot_aware_planning")
+    ? declaredSlot
+    : null
+
   const analysis = analyzePlaylist({
     curve: energies.map((entry) => entry.score),
     genre: playlist.genre,
@@ -88,6 +104,7 @@ export async function getPlaylistAnalysis(
       source: entry.source,
       bpm: entry.bpm,
     })),
+    slot,
   })
   const recommendations = buildRecommendations(analysis, locale)
   const reorder = suggestReorder(

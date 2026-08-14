@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { parseClock } from "@/lib/engine/slot"
+
 import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   ENERGY_SCORE_RANGE,
@@ -42,6 +44,8 @@ function getPlaylistValidationMessages(locale: SiteLocale) {
         formatInvalid: "Elegí un formato de línea válido.",
         audioTracksRequired: "No hay tracks para importar.",
         audioTracksTooMany: "Demasiados tracks en un solo import.",
+        slotIncomplete: "Completá la hora de inicio y la de fin, o dejá las dos vacías.",
+        slotEmpty: "La hora de fin tiene que ser distinta de la de inicio.",
       }
     : {
         nameRequired: "Please enter a playlist name.",
@@ -59,6 +63,8 @@ function getPlaylistValidationMessages(locale: SiteLocale) {
         formatInvalid: "Choose a valid line format.",
         audioTracksRequired: "There are no tracks to import.",
         audioTracksTooMany: "Too many tracks in a single import.",
+        slotIncomplete: "Fill in both the start and end time, or leave both empty.",
+        slotEmpty: "The end time has to differ from the start time.",
       }
 }
 
@@ -176,7 +182,20 @@ export function updatePlaylistDetailsSchema(locale: SiteLocale) {
     description: lenientText(PLAYLIST_DESCRIPTION_MAX_LENGTH).transform(
       (value) => value || null
     ),
+    // Wall-clock strings from two <input type="time">. Parsed here rather than in
+    // the action so "01:70" can never reach the database, and validated as a pair
+    // because half a slot says nothing.
+    slotStart: z.string().transform((value) => parseClock(value)).nullable(),
+    slotEnd: z.string().transform((value) => parseClock(value)).nullable(),
   })
+    .refine(
+      (value) => (value.slotStart === null) === (value.slotEnd === null),
+      { message: messages.slotIncomplete, path: ["slotEnd"] }
+    )
+    .refine((value) => value.slotStart !== value.slotEnd || value.slotStart === null, {
+      message: messages.slotEmpty,
+      path: ["slotEnd"],
+    })
 }
 
 export const AUDIO_IMPORT_MAX_TRACKS = 500

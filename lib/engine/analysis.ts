@@ -11,6 +11,7 @@ import {
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
+import { assessSlot } from "@/lib/engine/slot"
 import { buildTargetCurve, genreCurveCharacter } from "@/lib/engine/target-curve"
 import type {
   DetectedIssue,
@@ -756,9 +757,28 @@ export function analyzePlaylist({
   genre,
   context,
   trackMeta,
+  slot,
 }: PlaylistAnalysisInput): PlaylistAnalysis {
   const scored = scoreCurve(curve, genre, context, trackMeta)
   const issues = deriveIssues(scored, curve, genre, context)
+  const slotAssessment = slot ? assessSlot(curve, slot) : null
+
+  // Appended after the scored issues and carrying zero penalty: timing is a
+  // separate axis from curve quality, and the score must not move because a form
+  // field was filled in.
+  if (slotAssessment && slotAssessment.verdict !== "well_placed") {
+    issues.push({
+      type:
+        slotAssessment.verdict === "peak_too_early"
+          ? "peak_too_early_for_slot"
+          : "peak_too_late_for_slot",
+      severity: "info",
+      trackPositions: [slotAssessment.peakPosition],
+      penaltyApplied: 0,
+      penaltyCategory: null,
+    })
+  }
+
   const contextScores = scoreUnderAllContexts(curve, genre, trackMeta)
 
   const bestFitContext = SET_CONTEXTS.reduce((best, candidate) =>
@@ -775,5 +795,6 @@ export function analyzePlaylist({
     setScore: scored.breakdown.finalScore,
     contextScores,
     bestFitContext,
+    slot: slotAssessment,
   }
 }

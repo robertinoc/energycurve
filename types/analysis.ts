@@ -1,3 +1,4 @@
+import type { ResolvedSlot, SlotAssessment } from "@/lib/engine/slot"
 import type { PlaylistContext, SupportedGenre } from "@/lib/product/strategy"
 
 /**
@@ -39,6 +40,10 @@ export type IssueType =
   | "too_many_rests"
   | "set_too_short"
   | "set_too_long"
+  // Slot-aware timing. Informational by design: see the note on
+  // PlaylistAnalysis.slot for why these never cost score points.
+  | "peak_too_early_for_slot"
+  | "peak_too_late_for_slot"
 
 export type IssueSeverity = "penalty" | "info" | "positive"
 
@@ -88,6 +93,12 @@ export interface PlaylistAnalysisInput {
    * where BPM-only data cannot support them. Optional for backward compat.
    */
   trackMeta?: TrackEnergyMeta[]
+  /**
+   * The wall-clock slot the set is played in, when the DJ declared one. Absent
+   * for every set that hasn't, which is the default — the analysis works exactly
+   * as before without it.
+   */
+  slot?: ResolvedSlot | null
 }
 
 export interface PlaylistAnalysis {
@@ -102,4 +113,14 @@ export interface PlaylistAnalysis {
   /** Final score the same curve would get under each context (A9/B10). */
   contextScores: Record<PlaylistContext, number>
   bestFitContext: PlaylistContext
+  /**
+   * Where the peak lands on the clock, when a slot was declared.
+   *
+   * Deliberately **not** part of the score. The score measures the curve; timing
+   * is a separate axis, and folding it in would mean the same set scores
+   * differently depending on whether a field was filled — a set with no slot
+   * would outscore an identical one with a slot, which is perverse. So the two
+   * slot issues are informational and cost zero points.
+   */
+  slot: SlotAssessment | null
 }

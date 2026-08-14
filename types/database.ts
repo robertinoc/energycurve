@@ -131,6 +131,8 @@ export interface Database {
           genre: Database["public"]["Enums"]["playlist_genre"] | null
           context: Database["public"]["Enums"]["playlist_context"] | null
           import_source: string | null
+          slot_start_minutes: number | null
+          slot_end_minutes: number | null
           custom_context_id: string | null
           custom_genre_id: string | null
           created_at: string
@@ -144,6 +146,8 @@ export interface Database {
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
           import_source?: string | null
+          slot_start_minutes?: number | null
+          slot_end_minutes?: number | null
           custom_context_id?: string | null
           custom_genre_id?: string | null
           created_at?: string
@@ -157,6 +161,8 @@ export interface Database {
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
           import_source?: string | null
+          slot_start_minutes?: number | null
+          slot_end_minutes?: number | null
           custom_context_id?: string | null
           custom_genre_id?: string | null
           created_at?: string

@@ -346,6 +346,8 @@ export async function updatePlaylistDetailsAction(
   const parsed = updatePlaylistDetailsSchema(locale).safeParse({
     name: String(formData.get("name") ?? ""),
     description: String(formData.get("description") ?? ""),
+    slotStart: String(formData.get("slotStart") ?? ""),
+    slotEnd: String(formData.get("slotEnd") ?? ""),
   })
 
   if (!parsed.success) {
@@ -356,7 +358,15 @@ export async function updatePlaylistDetailsAction(
   }
 
   try {
-    await updatePlaylistDetails(profile.id, playlistId, parsed.data)
+    // Mapped explicitly rather than spread: the schema speaks the form's language
+    // (clock strings named slotStart) and the service speaks the column's
+    // (minutes named slotStartMinutes). Spreading would silently drop them.
+    await updatePlaylistDetails(profile.id, playlistId, {
+      name: parsed.data.name,
+      description: parsed.data.description,
+      slotStartMinutes: parsed.data.slotStart,
+      slotEndMinutes: parsed.data.slotEnd,
+    })
   } catch (error) {
     logError("playlist.update_details_action_failed", error, {
       profileId: profile.id,
