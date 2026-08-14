@@ -509,7 +509,7 @@ const siteCopy: SiteCopySchema = {
           es: "¿Cuánto cuesta EnergyCurve?",
         },
         a: {
-          en: "It’s free to use today, and there will always be a free tier. Paid plans — PRO at US$9.99/month and PRO+ at US$19.99/month, with roughly two months free on annual — are in development and will unlock real audio analysis, unlimited fixes, and unlimited AI ordering.",
+          en: "It’s free to use today, and there will always be a free tier. Paid plans — PRO at US$9.99/month and PRO+ at US$19.99/month, with roughly two months free on annual — are in development and will unlock real audio analysis, unlimited playlists, and unlimited AI ordering.",
           es: "Hoy es gratis, y siempre va a haber un plan gratuito. Los planes pagos — PRO a u$s9,99/mes y PRO+ a u$s19,99/mes, con unos dos meses gratis en el anual — están en desarrollo y van a habilitar análisis de audio real, arreglos ilimitados y ordenamiento con IA ilimitado.",
         },
       },
@@ -598,8 +598,8 @@ const siteCopy: SiteCopySchema = {
           },
           {
             text: {
-              en: "3 applied fixes per month",
-              es: "3 arreglos aplicados por mes",
+              en: "Unlimited applied fixes",
+              es: "Arreglos aplicados ilimitados",
             },
           },
           {
@@ -627,8 +627,8 @@ const siteCopy: SiteCopySchema = {
         highlights: [
           {
             text: {
-              en: "Unlimited playlists, unlimited fixes, unlimited custom genres",
-              es: "Playlists, arreglos y géneros propios ilimitados",
+              en: "Unlimited playlists and unlimited custom genres",
+              es: "Playlists y géneros propios ilimitados",
             },
           },
           {
@@ -754,9 +754,14 @@ const siteCopy: SiteCopySchema = {
       {
         key: "applied_fixes",
         capability: { en: "Applied fixes", es: "Arreglos aplicados" },
-        free: { en: "3 / month", es: "3 / mes" },
-        pro: { en: "Unlimited", es: "Ilimitados" },
-        proPlus: { en: "Unlimited", es: "Ilimitados" },
+        // Uncapped on every tier. Applying a fix is local, instant and
+        // reversible — there is no server boundary to meter, and a cap here made
+        // the free tier feel broken on the interaction that demonstrates the
+        // product. The differentiators are playlists, AI ordering and audio
+        // analysis.
+        free: "yes",
+        pro: "yes",
+        proPlus: "yes",
       },
       {
         key: "heuristic_reordering",

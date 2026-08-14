@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from "node:fs"
+import { join, relative } from "node:path"
+
 import { describe, expect, it } from "vitest"
 
 import { getSiteCopy, supportedLocales } from "@/lib/content/site-copy"
@@ -257,5 +260,77 @@ describe("registry shape", () => {
   it("still has unbuilt capabilities, and says so", () => {
     // If this ever empties out, the "soon" badges on /pricing are stale.
     expect(plannedCapabilities().length).toBeGreaterThan(0)
+  })
+})
+
+describe("counted capabilities are actually enforced", () => {
+  /**
+   * The gap the consistency test above cannot see.
+   *
+   * It proves the advertised number matches `PLAN_LIMITS` — not that anything
+   * reads it. "Applied fixes: 3 / month" satisfied it for months while nothing
+   * enforced the cap, because applying a fix never reaches the server. A quota we
+   * publish and don't apply is a promise we break, so declaring a numeric limit
+   * now requires code that mentions the capability.
+   */
+  const ROOTS = ["app", "services"]
+
+  function sourceFiles(dir: string): string[] {
+    const found: string[] = []
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        found.push(...sourceFiles(full))
+      } else if (/\.tsx?$/.test(entry.name)) {
+        found.push(full)
+      }
+    }
+    return found
+  }
+
+  const sources = ROOTS.flatMap((root) =>
+    sourceFiles(join(process.cwd(), root))
+  ).map((file) => ({
+    file: relative(process.cwd(), file),
+    text: readFileSync(file, "utf8"),
+  }))
+
+  it("finds source files to scan", () => {
+    // A path change that matched nothing would make the assertion below vacuous.
+    expect(sources.length).toBeGreaterThan(10)
+  })
+
+  it("requires a numeric limit to be referenced by code that could apply it", () => {
+    const numericLimited = (Object.keys(CAPABILITIES) as CapabilityKey[]).filter(
+      (key) => {
+        const spec = specFor(key)
+        return spec.limit && typeof PLAN_LIMITS.free[spec.limit] === "number"
+      }
+    )
+
+    expect(numericLimited.length).toBeGreaterThan(0)
+
+    const unenforced = numericLimited.filter(
+      (key) => !sources.some(({ text }) => text.includes(`"${key}"`))
+    )
+
+    expect(
+      unenforced,
+      "these declare a numeric cap that no code under app/ or services/ ever " +
+        "mentions, so /pricing advertises a limit nothing applies. Either enforce " +
+        "it, or drop the limit and make the matrix row uncapped."
+    ).toEqual([])
+  })
+
+  it("keeps applied fixes uncapped", () => {
+    // Explicit, so re-adding the cap has to come with a deliberate decision:
+    // applying a fix is React state plus localStorage and never reaches a server
+    // boundary, so a number here can be published but not honoured.
+    expect(specFor("applied_fixes").limit).toBeUndefined()
+    expect(() => quotaFor("free", null, "applied_fixes")).toThrow(/not a counted/)
+
+    const row = rows.find((entry) => entry.key === "applied_fixes")
+    expect(row?.free.kind).toBe("yes")
+    expect(Object.keys(PLAN_LIMITS.free)).not.toContain("fixesPerMonth")
   })
 })

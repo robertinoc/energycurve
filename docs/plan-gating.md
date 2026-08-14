@@ -118,37 +118,37 @@ actually spend:
 Both read and consume **fail open** on a database error. An uncounted use is
 cheaper than telling a paying customer they hit a limit they didn't.
 
-### `fixesPerMonth` can't be enforced as written
+### Applied fixes are uncapped, on purpose (decided 2026-08-14)
 
-`/pricing` advertises "Applied fixes — 3 / month" for FREE. There is no server
-boundary that corresponds to applying a fix: `applyFix` in
-`components/analysis/analysis-workbench.tsx` adds an id to React state and
-persists it to localStorage. Nothing reaches the server. The only server call in
-that flow is `reorderTracksAction`, when the user *saves* the resulting order —
-a bad proxy, since one save can carry ten applied fixes, and a manual drag-reorder
-carries none.
+`/pricing` used to advertise "Applied fixes — 3 / month" on FREE. Nothing enforced
+it, and nothing could: `applyFix` in `components/analysis/analysis-workbench.tsx`
+adds an id to React state and writes localStorage. It never reaches the server.
+The only server call in that flow is `reorderTracksAction`, when the user *saves*
+the resulting order — a bad proxy, since one save can carry ten applied fixes and
+a manual drag-reorder carries none.
 
-So the row is currently **advertised and unenforced**, and note that
-`tests/capabilities.test.ts` cannot catch this: it checks that the advertised
-number matches `PLAN_LIMITS`, not that anything reads it.
+The cap was removed rather than the feature. The matrix row now reads yes / yes /
+yes, `fixesPerMonth` is gone from `PlanLimits`, and `applied_fixes` stays in the
+registry with no `limit`.
 
-Three ways out, in the order they'd be worth taking:
+Two reasons, in order:
 
-1. **Drop the row.** Fixes are the value demo — the thing that convinces someone
-   the product works. Capping them makes FREE feel broken, and the real
-   differentiators are unlimited playlists, more AI orderings and (soon) audio
-   analysis. Requires editing `PLAN_LIMITS` and the public matrix together.
-2. **Redefine as saved reorders per month.** Enforceable at
-   `reorderTracksAction`, but it would also meter manual reordering, which isn't
-   what was sold.
-3. **Enforce client-side only.** Bypassable, and it makes an instant local
-   interaction feel punitive. Not recommended.
+1. **It's the value demo.** Applying a fix and watching the curve change is what
+   convinces someone the product works. Metering that makes the free tier feel
+   broken on the one interaction that has to feel generous.
+2. **It couldn't be honoured.** A published cap with no enforcement is a promise
+   we break, and the alternatives were worse: metering saved reorders would also
+   meter manual dragging, and a client-side cap is both bypassable and punitive
+   on an instant local interaction.
 
-This needs a product decision, not a refactor.
+The differentiators that remain are real and enforced: unlimited playlists,
+unlimited custom taxonomies, more AI orderings, and (soon) audio analysis.
 
-Gates belong in the **service**, not the action, so a new caller can't skip one.
-The service returns a typed validation result; the action turns it into localised
-copy.
+`tests/capabilities.test.ts` now guards the class rather than the instance: any
+capability declaring a **numeric** limit must be referenced by code under `app/`
+or `services/`. Declaring a cap nobody applies fails the build. The earlier
+consistency test couldn't catch this — it proves the advertised number matches
+`PLAN_LIMITS`, not that anything reads it.
 
 ## What is still missing for any of this to sell
 
