@@ -39,7 +39,22 @@ function loadEnvLocal() {
   } catch {
     // Fall through to process.env — CI and production pass real env vars.
   }
-  return { ...env, ...process.env }
+  // Empty strings are dropped rather than merged. `vercel env pull` returns
+  // variables marked Sensitive with no value, and an empty string in process.env
+  // would silently override a real one from .env.local — which reads as "the key
+  // is missing" when it isn't.
+  const fromProcess = Object.fromEntries(
+    Object.entries(process.env).filter(([, value]) => value !== undefined && value !== "")
+  )
+
+  return { ...env, ...fromProcess }
+}
+
+/** test vs live, from the key itself. Printed before anything is written. */
+function modeOf(secretKey) {
+  if (secretKey.startsWith("sk_live_") || secretKey.startsWith("rk_live_")) return "LIVE"
+  if (secretKey.startsWith("sk_test_") || secretKey.startsWith("rk_test_")) return "test"
+  return "unknown"
 }
 
 async function main() {
@@ -52,6 +67,11 @@ async function main() {
 
   const stripe = new Stripe(env.STRIPE_SECRET_KEY)
   const appUrl = env.NEXT_PUBLIC_APP_URL || "https://energycurve.app"
+
+  // Said out loud because the failure this guards against is writing to the wrong
+  // mode: the two catalogues are separate, and a test id with a live key (or the
+  // reverse) is easy to arrive at by mixing an .env file with a shell variable.
+  console.log(`mode: ${modeOf(env.STRIPE_SECRET_KEY)}  (from the secret key prefix)`)
 
   const priceIds = [
     env.STRIPE_PRICE_PRO_MONTHLY,
@@ -126,7 +146,23 @@ async function main() {
     },
   }
 
-  const existing = env.STRIPE_PORTAL_CONFIGURATION_ID
+  // An id set for one mode is meaningless in the other, and the ids give no hint
+  // which mode they belong to. So confirm it resolves before updating, and create
+  // instead of failing when it doesn't — that's the case of running against live
+  // with a test id still in .env.local.
+  let existing = env.STRIPE_PORTAL_CONFIGURATION_ID || null
+
+  if (existing) {
+    try {
+      await stripe.billingPortal.configurations.retrieve(existing)
+    } catch {
+      console.log(
+        `note: ${existing} does not exist in this mode — creating a new configuration`
+      )
+      existing = null
+    }
+  }
+
   const config = existing
     ? await stripe.billingPortal.configurations.update(existing, params)
     : await stripe.billingPortal.configurations.create(params)
