@@ -29,16 +29,24 @@ describe("pricing copy", () => {
   })
 
   it.each(supportedLocales)(
-    "only marks the free plan as buyable while billing is unbuilt (%s)",
+    "marks every plan buyable now that checkout ships (%s)",
     (locale) => {
       const { plans } = getSiteCopy(locale).pricing
 
-      // Until Stripe ships, a paid card must not look purchasable.
+      // This assertion used to be the opposite: only `free` could be live,
+      // because a paid card that looked purchasable when nothing could take money
+      // was the failure to guard against. Checkout now exists for both paid
+      // tiers, so the guard flips — and the availability test below keeps the
+      // schema.org offers honest about it either way.
       expect(plans.filter((plan) => plan.live).map((plan) => plan.id)).toEqual([
         "free",
+        "pro",
+        "proPlus",
       ])
       for (const plan of plans) {
         expect(plan.cta.trim()).not.toBe("")
+        // Still required even for the paid plans: the checkout button replaces the
+        // link, but a visitor without JS has to land somewhere sensible.
         expect(plan.ctaHref.startsWith("/")).toBe(true)
       }
     }
@@ -147,7 +155,12 @@ describe("pricing structured data", () => {
     })
   })
 
-  it("keeps paid tiers as PreOrder until checkout exists", () => {
+  it("advertises availability that matches what the page can actually sell", () => {
+    // These two moved together when checkout shipped, and they have to keep
+    // moving together: InStock on a plan whose button can't take money is a lie
+    // to search engines, and PreOrder on one that can undersells it. Derived from
+    // the copy's `live` flag rather than hardcoded, so flipping a plan back
+    // without updating the offer fails here.
     const graph = buildPricingStructuredData()["@graph"]
     const product = graph.find(
       (node) => (node as { "@type": string })["@type"] === "Product"
@@ -156,10 +169,55 @@ describe("pricing structured data", () => {
     const byName = Object.fromEntries(
       product.offers.offers.map((offer) => [offer.name, offer.availability])
     )
+    const plans = getSiteCopy("en").pricing.plans
 
-    expect(byName.Free).toBe("https://schema.org/InStock")
-    expect(byName.PRO).toBe("https://schema.org/PreOrder")
-    expect(byName["PRO+"]).toBe("https://schema.org/PreOrder")
+    for (const plan of plans) {
+      const expected = plan.live
+        ? "https://schema.org/InStock"
+        : "https://schema.org/PreOrder"
+
+      expect(
+        byName[plan.name],
+        `${plan.name}: live=${plan.live} on /pricing, availability says ` +
+          `${byName[plan.name]}`
+      ).toBe(expected)
+    }
+  })
+
+  it("has all three plans live, with a buyable CTA on the paid ones", () => {
+    const plans = getSiteCopy("en").pricing.plans
+
+    expect(plans).toHaveLength(3)
+    for (const plan of plans) {
+      expect(plan.live, `${plan.name} should be live`).toBe(true)
+    }
+
+    // A paid plan still saying "tell me when it's ready" while its button opens
+    // Stripe would be the worst of both readings.
+    for (const locale of supportedLocales) {
+      for (const plan of getSiteCopy(locale).pricing.plans) {
+        expect(plan.cta.toLowerCase()).not.toContain("tell me when")
+        expect(plan.cta.toLowerCase()).not.toContain("avisame cuando")
+      }
+    }
+  })
+
+  it("gives the interval switch copy in both locales", () => {
+    // The switch decides which price is charged, so a missing label would ship a
+    // control with no name on the page where money is taken.
+    for (const locale of supportedLocales) {
+      const copy = getSiteCopy(locale).pricing
+      for (const key of [
+        "intervalMonthly",
+        "intervalYearly",
+        "intervalYearlyNote",
+        "checkoutStarting",
+        "checkoutError",
+        "perYear",
+      ] as const) {
+        expect(copy[key], `${key}.${locale}`).toBeTruthy()
+      }
+    }
   })
 
   it("includes a breadcrumb back to the landing page", () => {

@@ -122,7 +122,13 @@ interface SiteCopySchema {
     included: LocalizedLabel
     notIncluded: LocalizedLabel
     perMonth: LocalizedLabel
+    perYear: LocalizedLabel
     annualPrefix: LocalizedLabel
+    intervalMonthly: LocalizedLabel
+    intervalYearly: LocalizedLabel
+    intervalYearlyNote: LocalizedLabel
+    checkoutStarting: LocalizedLabel
+    checkoutError: LocalizedLabel
     plans: {
       id: string
       name: LocalizedLabel
@@ -571,7 +577,17 @@ const siteCopy: SiteCopySchema = {
     included: { en: "Included", es: "Incluido" },
     notIncluded: { en: "Not included", es: "No incluido" },
     perMonth: { en: "/month", es: "/mes" },
+    perYear: { en: "/year", es: "/año" },
     annualPrefix: { en: "or", es: "o" },
+    intervalMonthly: { en: "Monthly", es: "Mensual" },
+    intervalYearly: { en: "Yearly", es: "Anual" },
+    // Concrete rather than "save 17%": two months is what a DJ can picture.
+    intervalYearlyNote: { en: "2 months free", es: "2 meses gratis" },
+    checkoutStarting: { en: "Taking you to checkout…", es: "Te llevamos al pago…" },
+    checkoutError: {
+      en: "Couldn't start checkout. Try again in a moment.",
+      es: "No se pudo iniciar el pago. Probá de nuevo en un momento.",
+    },
     plans: [
       {
         id: "free",
@@ -659,10 +675,12 @@ const siteCopy: SiteCopySchema = {
             soon: true,
           },
         ],
-        live: false,
+        live: true,
         recommended: true,
-        cta: { en: "Tell me when it’s ready", es: "Avisame cuando esté" },
-        ctaHref: "/#contact",
+        cta: { en: "Get PRO", es: "Quiero PRO" },
+        // Fallback for a visitor without JS: the checkout button replaces this,
+        // but a plain link has to land somewhere sensible rather than nowhere.
+        ctaHref: "/signup?returnTo=%2Fpricing",
       },
       {
         id: "proPlus",
@@ -709,9 +727,9 @@ const siteCopy: SiteCopySchema = {
             },
           },
         ],
-        live: false,
-        cta: { en: "Tell me when it’s ready", es: "Avisame cuando esté" },
-        ctaHref: "/#contact",
+        live: true,
+        cta: { en: "Get PRO+", es: "Quiero PRO+" },
+        ctaHref: "/signup?returnTo=%2Fpricing",
       },
     ],
     matrixTitle: {
@@ -1274,7 +1292,13 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       included: siteCopy.pricing.included[locale],
       notIncluded: siteCopy.pricing.notIncluded[locale],
       perMonth: siteCopy.pricing.perMonth[locale],
+      perYear: siteCopy.pricing.perYear[locale],
       annualPrefix: siteCopy.pricing.annualPrefix[locale],
+      intervalMonthly: siteCopy.pricing.intervalMonthly[locale],
+      intervalYearly: siteCopy.pricing.intervalYearly[locale],
+      intervalYearlyNote: siteCopy.pricing.intervalYearlyNote[locale],
+      checkoutStarting: siteCopy.pricing.checkoutStarting[locale],
+      checkoutError: siteCopy.pricing.checkoutError[locale],
       plans: siteCopy.pricing.plans.map((plan) => ({
         id: plan.id,
         name: plan.name[locale],
