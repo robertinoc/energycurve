@@ -418,6 +418,10 @@ export const DASHBOARD_COPY = {
 
   /** Messages returned by server actions (toasts / inline). */
   actions: {
+    playlistLimit: {
+      en: "You've reached {max} playlists on your plan. Delete one, or upgrade for unlimited.",
+      es: "Llegaste a {max} playlists en tu plan. Borrá una, o pasá a ilimitadas.",
+    },
     genericError: {
       en: "Something went wrong while saving. Please try again.",
       es: "Algo salió mal al guardar. Probá de nuevo.",

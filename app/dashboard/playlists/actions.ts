@@ -40,6 +40,7 @@ import {
 } from "@/lib/product/strategy"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import {
+  PlaylistLimitError,
   addTrack,
   createPlaylist,
   deletePlaylist,
@@ -189,6 +190,22 @@ async function resolveGenreChoice(
  * a tracklist, seeds it in the same submit. The pasted text is re-parsed
  * server-side (never trust the client preview), mirroring importTracklistAction.
  */
+/**
+ * Turns a plan-cap throw into copy, or null when the error is something else.
+ *
+ * The cap is enforced in `createPlaylist` so no creation path can skip it; each
+ * path still has to translate the refusal, and a shared helper keeps the three
+ * from drifting into three different messages.
+ */
+function playlistLimitMessage(
+  error: unknown,
+  locale: SiteLocale
+): string | null {
+  return error instanceof PlaylistLimitError
+    ? formatTemplate(ACTION_COPY.playlistLimit[locale], { max: error.limit })
+    : null
+}
+
 export async function createPlaylistWithTracksAction(
   _prevState: PlaylistActionState,
   formData: FormData
@@ -282,6 +299,11 @@ export async function createPlaylistWithTracksAction(
       )
     }
   } catch (error) {
+    const limited = playlistLimitMessage(error, locale)
+    if (limited) {
+      return failure(limited)
+    }
+
     logError("playlist.create_with_tracks_failed", error, {
       profileId: profile.id,
     })
@@ -636,6 +658,11 @@ export async function importPlaylistAction(
       }))
     )
   } catch (error) {
+    const limited = playlistLimitMessage(error, locale)
+    if (limited) {
+      return failure(limited)
+    }
+
     logError("playlist.import_failed", error, {
       profileId: profile.id,
       source: parsed.source,
@@ -766,6 +793,11 @@ export async function importAudioFilesAction(
       }))
     )
   } catch (error) {
+    const limited = playlistLimitMessage(error, locale)
+    if (limited) {
+      return { ok: false, message: limited }
+    }
+
     logError("playlist.audio_import_failed", error, {
       profileId: profile.id,
       trackCount: tracks.length,
