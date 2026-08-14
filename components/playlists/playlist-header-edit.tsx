@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import { CURVE_SHAPE_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
 import { formatClock } from "@/lib/engine/slot"
+import { CURVE_SHAPES, type CurveShape } from "@/lib/product/strategy"
 import { PLAYLIST_DESCRIPTION_MAX_LENGTH } from "@/lib/playlists/schemas"
 
 const COPY = DASHBOARD_COPY.playlistHeaderEdit
@@ -27,6 +28,7 @@ export function PlaylistHeaderEdit({
   description,
   slotStartMinutes,
   slotEndMinutes,
+  targetShape,
   locale,
 }: {
   playlistId: string
@@ -35,6 +37,8 @@ export function PlaylistHeaderEdit({
   /** Minutes from midnight, or null when the DJ hasn't declared a slot. */
   slotStartMinutes: number | null
   slotEndMinutes: number | null
+  /** Declared shape, or null when the target is derived from genre + context. */
+  targetShape: CurveShape | null
   locale: SiteLocale
 }) {
   const [editing, setEditing] = useState(false)
@@ -46,6 +50,7 @@ export function PlaylistHeaderEdit({
       description={description}
       slotStartMinutes={slotStartMinutes}
       slotEndMinutes={slotEndMinutes}
+      targetShape={targetShape}
       locale={locale}
       onClose={() => setEditing(false)}
     />
@@ -79,6 +84,7 @@ function HeaderEditForm({
   description,
   slotStartMinutes,
   slotEndMinutes,
+  targetShape,
   locale,
   onClose,
 }: {
@@ -87,9 +93,14 @@ function HeaderEditForm({
   description: string | null
   slotStartMinutes: number | null
   slotEndMinutes: number | null
+  targetShape: CurveShape | null
   locale: SiteLocale
   onClose: () => void
 }) {
+  // Mirrors the select so the promise line under it updates as the DJ browses,
+  // which is the point of showing a promise at all.
+  const [shape, setShape] = useState<CurveShape | null>(targetShape)
+
   const [state, formAction, isPending] = useActionState(
     async (
       prev: typeof initialPlaylistActionState,
@@ -139,6 +150,39 @@ function HeaderEditForm({
           placeholder={COPY.descriptionPlaceholder[locale]}
           className="border-white/12 text-sm text-white placeholder:text-white/28"
         />
+      </div>
+
+      {/*
+        A plain <select> rather than the grouped TaxonomySelect used for genre and
+        context: this list is fixed and short, there are no user-created entries,
+        and the promise text below carries the explanation a custom dropdown would
+        have to fit inside an option row.
+      */}
+      <div className="space-y-2">
+        <Label htmlFor="playlist-edit-shape" className="text-white/72">
+          {COPY.shapeLabel[locale]}
+        </Label>
+        <select
+          id="playlist-edit-shape"
+          name="targetShape"
+          defaultValue={targetShape ?? ""}
+          onChange={(event) =>
+            setShape((event.target.value as CurveShape) || null)
+          }
+          className="h-10 w-full rounded-lg border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-white/28"
+        >
+          <option value="">{COPY.shapeDerived[locale]}</option>
+          {CURVE_SHAPES.map((option) => (
+            <option key={option} value={option}>
+              {CURVE_SHAPE_COPY[option].label[locale]}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs leading-5 text-white/40">
+          {shape
+            ? CURVE_SHAPE_COPY[shape].promise[locale]
+            : COPY.shapeHint[locale]}
+        </p>
       </div>
 
       {/*

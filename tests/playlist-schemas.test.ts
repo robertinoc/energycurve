@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { CURVE_SHAPES } from "@/lib/product/strategy"
 import {
   createPlaylistSchema,
   createTrackInputSchema,
@@ -232,5 +233,37 @@ describe("updatePlaylistDetailsSchema — slot", () => {
     const result = schema.parse({ ...base, slotStart: "25:99", slotEnd: "" })
 
     expect(result.slotStart).toBeNull()
+  })
+})
+
+describe("updatePlaylistDetailsSchema — target shape", () => {
+  const schema = updatePlaylistDetailsSchema("en")
+  const base = { playlistId: crypto.randomUUID(), name: "Warm-up", description: "" }
+
+  it("accepts every shape the engine knows", () => {
+    for (const shape of CURVE_SHAPES) {
+      expect(schema.parse({ ...base, targetShape: shape }).targetShape).toBe(shape)
+    }
+  })
+
+  it("reads empty as the derived target", () => {
+    expect(schema.parse({ ...base, targetShape: "" }).targetShape).toBeNull()
+  })
+
+  it("drops an unrecognised shape instead of failing the save", () => {
+    // A junk value can only come from a hand-built POST, and it must not stop the
+    // user renaming their set.
+    expect(schema.parse({ ...base, targetShape: "peak_tim" }).targetShape).toBeNull()
+  })
+
+  it("leaves the stored value alone when the form didn't carry the field", () => {
+    // A browser holding the previous JS bundle submits without these inputs. The
+    // fields must come back undefined so the service skips them, rather than null
+    // — which would clear a shape and a slot the user never touched.
+    const result = schema.parse(base)
+
+    expect(result.targetShape).toBeUndefined()
+    expect(result.slotStart).toBeUndefined()
+    expect(result.slotEnd).toBeUndefined()
   })
 })

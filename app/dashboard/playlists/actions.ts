@@ -346,8 +346,18 @@ export async function updatePlaylistDetailsAction(
   const parsed = updatePlaylistDetailsSchema(locale).safeParse({
     name: String(formData.get("name") ?? ""),
     description: String(formData.get("description") ?? ""),
-    slotStart: String(formData.get("slotStart") ?? ""),
-    slotEnd: String(formData.get("slotEnd") ?? ""),
+    // `has`, not `get`: a field the submitted form never carried stays absent, so
+    // the schema and service leave the stored value untouched instead of clearing
+    // it. Coercing a missing field to "" would read as "the user cleared this".
+    ...(formData.has("slotStart")
+      ? { slotStart: String(formData.get("slotStart") ?? "") }
+      : {}),
+    ...(formData.has("slotEnd")
+      ? { slotEnd: String(formData.get("slotEnd") ?? "") }
+      : {}),
+    ...(formData.has("targetShape")
+      ? { targetShape: String(formData.get("targetShape") ?? "") }
+      : {}),
   })
 
   if (!parsed.success) {
@@ -366,6 +376,7 @@ export async function updatePlaylistDetailsAction(
       description: parsed.data.description,
       slotStartMinutes: parsed.data.slotStart,
       slotEndMinutes: parsed.data.slotEnd,
+      targetShape: parsed.data.targetShape,
     })
   } catch (error) {
     logError("playlist.update_details_action_failed", error, {

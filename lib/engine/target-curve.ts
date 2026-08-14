@@ -1,7 +1,9 @@
 import {
+  CURVE_SHAPE_ANCHORS,
   DEFAULT_GENRE_CURVE_CHARACTER,
   GENRE_CURVE_CHARACTER_V2,
   TARGET_CURVE_V2,
+  type CurveShape,
   type GenreCurveCharacter,
   type PlaylistContext,
   type SupportedGenre,
@@ -77,6 +79,33 @@ function targetEnergyAt(
 }
 
 /**
+ * Energy a named shape asks for at t ∈ [0, 1], interpolating between anchors.
+ *
+ * Clamped at both ends rather than extrapolated: a shape says nothing about what
+ * happens outside the set it describes, and inventing values there would be
+ * making up a promise the shape never made.
+ */
+function shapeEnergyAt(t: number, shape: CurveShape): number {
+  const anchors = CURVE_SHAPE_ANCHORS[shape]
+  const clamped = Math.min(Math.max(t, 0), 1)
+
+  for (let i = 1; i < anchors.length; i += 1) {
+    const [prevT, prevEnergy] = anchors[i - 1]
+    const [nextT, nextEnergy] = anchors[i]
+
+    if (clamped <= nextT) {
+      const span = nextT - prevT
+
+      return span === 0
+        ? nextEnergy
+        : lerp(prevEnergy, nextEnergy, (clamped - prevT) / span)
+    }
+  }
+
+  return anchors[anchors.length - 1][1]
+}
+
+/**
  * Samples the ideal curve at the set's actual track count, so comparing a set
  * against its target is length-invariant by construction (B2). A single-track
  * set samples the midpoint.
@@ -84,7 +113,14 @@ function targetEnergyAt(
 export function buildTargetCurve(
   trackCount: number,
   context: PlaylistContext,
-  genre: SupportedGenre
+  genre: SupportedGenre,
+  /**
+   * Explicit shape the DJ picked. When absent the target is derived from
+   * context + genre exactly as before, so every existing set keeps its score.
+   * When present it wins outright: the DJ telling us what they are playing is
+   * better information than our inference from two tags.
+   */
+  shape?: CurveShape | null
 ): number[] {
   if (trackCount <= 0) {
     return []
@@ -95,6 +131,8 @@ export function buildTargetCurve(
   return Array.from({ length: trackCount }, (_, index) => {
     const t = trackCount === 1 ? 0.5 : index / (trackCount - 1)
 
-    return roundToOneDecimal(targetEnergyAt(t, context, character))
+    return roundToOneDecimal(
+      shape ? shapeEnergyAt(t, shape) : targetEnergyAt(t, context, character)
+    )
   })
 }

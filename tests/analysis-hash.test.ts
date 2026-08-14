@@ -68,3 +68,24 @@ describe("computeAnalysisInputHash", () => {
     expect(hash).toMatch(/^[0-9a-f]{8}$/)
   })
 })
+
+describe("computeAnalysisInputHash — target shape", () => {
+  const base = { curve: [4, 6, 8], genre: "house", context: "main" }
+
+  it("changes when the declared shape changes", () => {
+    // The shape changes the score, so re-analyzing after switching it has to
+    // record a fresh history row instead of deduping against the old one.
+    expect(computeAnalysisInputHash(base)).not.toBe(
+      computeAnalysisInputHash({ ...base, targetShape: "after_hours" })
+    )
+    expect(
+      computeAnalysisInputHash({ ...base, targetShape: "after_hours" })
+    ).not.toBe(computeAnalysisInputHash({ ...base, targetShape: "landing" }))
+  })
+
+  it("treats an absent shape and an explicit null as the same input", () => {
+    expect(computeAnalysisInputHash(base)).toBe(
+      computeAnalysisInputHash({ ...base, targetShape: null })
+    )
+  })
+})

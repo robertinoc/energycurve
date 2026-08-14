@@ -13,12 +13,23 @@ export function computeAnalysisInputHash(input: {
   curve: number[]
   genre: string
   context: string
+  /**
+   * Declared target shape. Part of the hash because it changes the score: a DJ
+   * who switches from the derived target to `after_hours` and re-analyzes must
+   * get a fresh history row, not a dedupe against the old score.
+   *
+   * The wall-clock slot is deliberately NOT here. It carries zero penalty by
+   * design, so including it would mint history rows with identical scores —
+   * exactly the noise this dedupe exists to prevent.
+   */
+  targetShape?: string | null
   algorithmVersion?: number
 }): string {
   const canonical = JSON.stringify([
     input.curve,
     input.genre,
     input.context,
+    input.targetShape ?? null,
     input.algorithmVersion ?? CURRENT_ANALYSIS_ALGORITHM_VERSION,
   ])
   let hash = 0x811c9dc5

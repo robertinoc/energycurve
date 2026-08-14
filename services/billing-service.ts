@@ -4,6 +4,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import type { ResolvedSubscription } from "@/lib/billing/subscription-state"
 import {
   effectivePlan,
+  isComplimentaryProPlus,
   isPlan,
   isPlanStatus,
   limitsFor,
@@ -58,7 +59,7 @@ export async function getProfileBilling(
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "plan, plan_status, plan_current_period_end, stripe_customer_id, plan_cancel_at, plan_cancellation_feedback"
+      "email, plan, plan_status, plan_current_period_end, stripe_customer_id, plan_cancel_at, plan_cancellation_feedback"
     )
     .eq("id", profileId)
     .maybeSingle()
@@ -73,8 +74,24 @@ export async function getProfileBilling(
 
   // Defensive: the DB has a CHECK constraint, but a value we don't recognise
   // must degrade to free rather than throw on a page render.
-  const plan = isPlan(data.plan) ? data.plan : "free"
-  const status = isPlanStatus(data.plan_status) ? data.plan_status : null
+  const storedPlan = isPlan(data.plan) ? data.plan : "free"
+  const storedStatus = isPlanStatus(data.plan_status) ? data.plan_status : null
+
+  // A comped account reads as an active PRO+ subscription everywhere, so the
+  // gates it passes are the same code paths a paying PRO+ user goes through —
+  // testing a bypass would prove nothing about the real thing.
+  // Emails listed in COMP_PRO_PLUS_EMAILS get PRO+ without a subscription: the
+  // owner's own account, plus anything comped for a demo. Kept in the environment
+  // rather than in source so a comp can be revoked without a deploy of code, and
+  // so personal emails stay out of git history. Unset means nobody is comped.
+  // The list is matched against the profile row's email, which only WorkOS
+  // writes — it is not reachable from client input.
+  const comped = isComplimentaryProPlus(
+    data.email,
+    process.env.COMP_PRO_PLUS_EMAILS
+  )
+  const plan: Plan = comped ? "pro_plus" : storedPlan
+  const status: PlanStatus | null = comped ? "active" : storedStatus
 
   return {
     plan,
