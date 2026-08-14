@@ -86,7 +86,7 @@ export const CAPABILITIES = {
   },
   named_curve_shapes: { minPlan: "pro", status: "shipped" },
   planned_vs_played: { minPlan: "pro", status: "planned" },
-  printable_set_sheet: { minPlan: "pro", status: "planned" },
+  printable_set_sheet: { minPlan: "pro", status: "shipped" },
 
   // ── PRO+: professional workflow ───────────────────────────────────────────
   custom_curve_templates: { minPlan: "pro_plus", status: "planned" },

@@ -37,14 +37,22 @@ edit together.
 | | FREE | PRO | PRO+ |
 |---|---|---|---|
 | Active playlists | 3 | ∞ | ∞ |
-| Applied fixes | 3 / month | ∞ | ∞ |
+| Applied fixes | ∞ | ∞ | ∞ |
 | AI ordering (Claude) | 1 / month | 3 / month | ∞ |
 | Custom genres + set contexts | 2 (combined) | ∞ | ∞ |
 | Import, analysis, curve, score | ✓ | ✓ | ✓ |
 | Heuristic reordering | ✓ | ✓ | ✓ |
 | **Native export** (Rekordbox / Traktor / M3U8) | ✓ | ✓ | ✓ |
-| Real audio analysis, Energy Model v3, version history, slot-aware planning, curve shapes, planned-vs-played, PDF set sheet | ✗ | soon | soon |
+| **Slot-aware planning**, **named curve shapes**, **PDF set sheet** | ✗ | ✓ | ✓ |
+| Real audio analysis, Energy Model v3, version history, planned-vs-played | ✗ | soon | soon |
 | Curve templates, residency mode, B2B sets, Gig Mode, global library, per-transition suggestions | ✗ | ✗ | soon |
+
+**Applied fixes are uncapped on every tier.** A cap was advertised on /pricing
+and never enforced anywhere: applying a fix is local, instant and reversible, so
+there is no server boundary to meter. It also made the free tier feel broken on
+the exact interaction that demonstrates the product. `tests/capabilities.test.ts`
+asserts that any capability carrying a numeric limit is actually referenced by
+code — that test exists because of this row.
 
 **Native export is free forever, on every tier.** The loop is analyse → fix →
 get it back into the booth; paywalling the last step makes the first two

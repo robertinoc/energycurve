@@ -9,6 +9,7 @@ import {
   MINUTES_IN_DAY,
   parseClock,
   PEAK_WINDOW,
+  peakIndexOf,
   resolveSlot,
 } from "@/lib/engine/slot"
 
@@ -201,5 +202,32 @@ describe("parseClock", () => {
     for (const value of ["00:00", "01:20", "13:45", "23:59"]) {
       expect(formatClock(parseClock(value)!)).toBe(value)
     }
+  })
+})
+
+describe("peakIndexOf", () => {
+  it("finds the single maximum", () => {
+    expect(peakIndexOf([4, 5, 9, 6])).toBe(2)
+  })
+
+  it("takes the last maximum when the top is touched twice", () => {
+    // The shared rule. Both the set sheet and the analysis read this, so a DJ
+    // can't be told the peak is track 2 on paper and track 8 on screen.
+    expect(peakIndexOf([4, 10, 5, 6, 7, 8, 9, 10, 6])).toBe(7)
+  })
+
+  it("agrees with the position assessSlot reports", () => {
+    const curve = [4, 10, 5, 6, 7, 8, 9, 10, 6]
+    const assessment = assessSlot(curve, WARMUP)!
+
+    expect(assessment.peakPosition).toBe(peakIndexOf(curve) + 1)
+  })
+
+  it("returns -1 for an empty set rather than a misleading 0", () => {
+    expect(peakIndexOf([])).toBe(-1)
+  })
+
+  it("handles a flat set by naming its last track", () => {
+    expect(peakIndexOf([7, 7, 7, 7])).toBe(3)
   })
 })

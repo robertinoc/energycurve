@@ -1,7 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, AudioWaveform } from "lucide-react"
+import { ArrowLeft, AudioWaveform, Printer } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
@@ -22,9 +22,11 @@ import {
   parseCurveShape,
   type CurveShape,
 } from "@/lib/product/strategy"
+import { can } from "@/lib/product/capabilities"
 import { getRequestLocale } from "@/lib/server-locale"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
+import { getProfileBilling } from "@/services/billing-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
 
 export const metadata: Metadata = {
@@ -52,7 +54,10 @@ export default async function PlaylistDetailPage({
     lastName: user.lastName ?? null,
   })
 
-  const playlist = await getOwnedPlaylistWithTracks(profile.id, id)
+  const [playlist, billing] = await Promise.all([
+    getOwnedPlaylistWithTracks(profile.id, id),
+    getProfileBilling(profile.id),
+  ])
 
   if (!playlist) {
     notFound()
@@ -60,6 +65,11 @@ export default async function PlaylistDetailPage({
 
   const locale = await getRequestLocale()
   const copy = DASHBOARD_COPY.playlistDetail
+  const canPrintSetSheet = can(
+    billing.plan,
+    billing.status,
+    "printable_set_sheet"
+  )
 
   const exportPlaylist: ExportPlaylist = {
     name: playlist.name,
@@ -94,6 +104,30 @@ export default async function PlaylistDetailPage({
             </Link>
 
             <div className="flex items-center gap-2">
+              {/*
+                Shown to everyone, PRO or not. A feature nobody can see converts
+                nobody — an unentitled DJ lands on the page that explains it
+                instead of on the sheet, and the route enforces that itself.
+              */}
+              <Link
+                href={
+                  canPrintSetSheet
+                    ? `/dashboard/playlists/${playlist.id}/set-sheet`
+                    : "/pricing"
+                }
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "w-fit text-white/58 hover:text-white"
+                )}
+              >
+                <Printer className="size-4" />
+                {copy.setSheet[locale]}
+                {canPrintSetSheet ? null : (
+                  <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                    pro
+                  </span>
+                )}
+              </Link>
               <PlaylistExportButton playlist={exportPlaylist} locale={locale} />
               <Link
                 href={`/dashboard/playlists/${playlist.id}/analysis`}

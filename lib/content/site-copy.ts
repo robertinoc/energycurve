@@ -920,8 +920,8 @@ const siteCopy: SiteCopySchema = {
           es: "Set sheet imprimible en PDF",
         },
         free: "no",
-        pro: "soon",
-        proPlus: "soon",
+        pro: "yes",
+        proPlus: "yes",
       },
       {
         key: "residency_mode",

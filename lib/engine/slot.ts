@@ -141,6 +141,28 @@ export interface SlotAssessment {
  */
 export const PEAK_WINDOW = { from: 0.55, to: 0.9 } as const
 
+/**
+ * Index of the set's peak: the **last** maximum, not the first.
+ *
+ * When a set touches its top energy more than once, the floor peaks the last
+ * time. Shared rather than reimplemented per caller because the set sheet marks
+ * the peak track and the analysis talks about it — two different answers to
+ * "where is the peak" is a contradiction the DJ sees in one glance.
+ *
+ * Returns -1 for an empty set, so callers must handle it explicitly.
+ */
+export function peakIndexOf(curve: readonly number[]): number {
+  let peakIndex = -1
+
+  for (let index = 0; index < curve.length; index += 1) {
+    if (peakIndex === -1 || curve[index] >= curve[peakIndex]) {
+      peakIndex = index
+    }
+  }
+
+  return peakIndex
+}
+
 export function assessSlot(
   curve: readonly number[],
   slot: ResolvedSlot
@@ -149,14 +171,7 @@ export function assessSlot(
     return null
   }
 
-  // Last maximum, not the first: when a set touches its top energy more than
-  // once, the *last* time is when the floor actually peaks.
-  let peakIndex = 0
-  for (let index = 1; index < curve.length; index += 1) {
-    if (curve[index] >= curve[peakIndex]) {
-      peakIndex = index
-    }
-  }
+  const peakIndex = peakIndexOf(curve)
 
   const peakClockMinutes = clockAt(peakIndex, curve.length, slot)
   const peakProgress =
