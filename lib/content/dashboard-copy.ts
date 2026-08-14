@@ -177,6 +177,39 @@ export const DASHBOARD_COPY = {
   playlistDetail: {
     back: { en: "Playlists", es: "Playlists" },
     analyzeSet: { en: "Analyze set", es: "Analizar set" },
+    setSheet: { en: "Set sheet", es: "Hoja de set" },
+  },
+
+  setSheet: {
+    pageTitle: { en: "Set sheet", es: "Hoja de set" },
+    back: { en: "Back to set", es: "Volver al set" },
+    print: { en: "Print / Save as PDF", es: "Imprimir / Guardar como PDF" },
+    hint: {
+      en: "One page for the booth. Print it, or save it as a PDF from the same dialog — it reads the same on paper and on a phone.",
+      es: "Una página para la cabina. Imprimila, o guardala como PDF desde el mismo diálogo — se lee igual en papel que en el celular.",
+    },
+    tracks: { en: "tracks", es: "tracks" },
+    time: { en: "Time", es: "Hora" },
+    track: { en: "Track", es: "Track" },
+    key: { en: "Key", es: "Tono" },
+    energy: { en: "Energy", es: "Energía" },
+    notes: { en: "Notes", es: "Notas" },
+    setNotes: { en: "Set notes", es: "Notas del set" },
+    peak: { en: "Peak", es: "Pico" },
+    emptyTitle: { en: "Nothing to print yet", es: "Todavía no hay nada que imprimir" },
+    emptyBody: {
+      en: "Add tracks to this set and the sheet builds itself.",
+      es: "Agregá tracks a este set y la hoja se arma sola.",
+    },
+    lockedTitle: {
+      en: "The set sheet is a PRO feature",
+      es: "La hoja de set es una función PRO",
+    },
+    lockedBody: {
+      en: "PRO turns any set into a one-page sheet for the booth: the tracklist with BPM and key, the curve, and the clock time each track lands on.",
+      es: "PRO convierte cualquier set en una hoja de una página para la cabina: el tracklist con BPM y tono, la curva, y la hora a la que cae cada track.",
+    },
+    lockedCta: { en: "See plans", es: "Ver planes" },
   },
 
   workspace: {
