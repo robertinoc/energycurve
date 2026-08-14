@@ -661,9 +661,18 @@ const siteCopy: SiteCopySchema = {
             soon: true,
           },
           {
+            // Shipped. Split out of a bundled line that also promised named curve
+            // shapes: one of the two now exists, and a single "soon" badge over
+            // both would have undersold this one and oversold the other.
             text: {
-              en: "Slot-aware planning and named curve shapes — warm-up, peak time, after-hours",
-              es: "Planificación por horario de slot y curvas con nombre — warm-up, peak time, after-hours",
+              en: "Slot-aware planning — your curve mapped to the clock you actually play",
+              es: "Planificación por horario de slot — tu curva mapeada al reloj real en que tocás",
+            },
+          },
+          {
+            text: {
+              en: "Named curve shapes — warm-up, peak time, after-hours",
+              es: "Curvas con nombre — warm-up, peak time, after-hours",
             },
             soon: true,
           },
@@ -871,8 +880,8 @@ const siteCopy: SiteCopySchema = {
           es: "Planificación por horario de slot (curva mapeada al reloj)",
         },
         free: "no",
-        pro: "soon",
-        proPlus: "soon",
+        pro: "yes",
+        proPlus: "yes",
       },
       {
         key: "named_curve_shapes",

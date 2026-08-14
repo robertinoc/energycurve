@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { analyzePlaylist, computeSetScore } from "@/lib/engine/analysis"
+import { resolveSlot } from "@/lib/engine/slot"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
 import type { TrackEnergyMeta } from "@/types/analysis"
 
@@ -331,5 +332,63 @@ describe("analyzePlaylist — V2 scoring", () => {
     // ballpark as the actual points lost (rounding gives it slack).
     expect(attributed).toBeGreaterThan(0)
     expect(attributed).toBeLessThanOrEqual(lost + 1.5)
+  })
+})
+
+describe("analyzePlaylist — slot awareness", () => {
+  /** A curve with an early maximum: the warm-up failure this feature exists for. */
+  const EARLY_PEAK = [4, 10, 5, 5, 4, 4, 4, 4, 4, 4]
+
+  it("reports a mistimed peak as advice that costs the set nothing", () => {
+    // The whole point of severity "info" here: an identical set with no slot
+    // declared would otherwise outscore one that filled the field in, which
+    // punishes the user for giving us more information.
+    const withoutSlot = analyzePlaylist({
+      curve: EARLY_PEAK,
+      genre: "house",
+      context: "opening",
+    })
+    const withSlot = analyzePlaylist({
+      curve: EARLY_PEAK,
+      genre: "house",
+      context: "opening",
+      slot: resolveSlot(60, 180),
+    })
+
+    expect(withSlot.setScore).toBe(withoutSlot.setScore)
+
+    const timing = withSlot.issues.find(
+      (issue) => issue.type === "peak_too_early_for_slot"
+    )
+    expect(timing?.severity).toBe("info")
+    expect(timing?.penaltyApplied).toBe(0)
+    expect(timing?.trackPositions).toEqual([2])
+  })
+
+  it("says nothing about timing when the peak lands where it should", () => {
+    const analysis = analyzePlaylist({
+      curve: [4, 5, 5, 6, 6, 7, 8, 10, 8, 6],
+      genre: "house",
+      context: "main",
+      slot: resolveSlot(60, 180),
+    })
+
+    expect(
+      analysis.issues.filter((issue) => issue.type.endsWith("_for_slot"))
+    ).toEqual([])
+    expect(analysis.slot?.verdict).toBe("well_placed")
+  })
+
+  it("carries no slot assessment when the DJ never declared one", () => {
+    const analysis = analyzePlaylist({
+      curve: EARLY_PEAK,
+      genre: "house",
+      context: "opening",
+    })
+
+    expect(analysis.slot).toBeNull()
+    expect(
+      analysis.issues.some((issue) => issue.type.endsWith("_for_slot"))
+    ).toBe(false)
   })
 })

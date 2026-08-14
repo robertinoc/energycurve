@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
+import { formatClock } from "@/lib/engine/slot"
 import { PLAYLIST_DESCRIPTION_MAX_LENGTH } from "@/lib/playlists/schemas"
 
 const COPY = DASHBOARD_COPY.playlistHeaderEdit
@@ -24,11 +25,16 @@ export function PlaylistHeaderEdit({
   playlistId,
   name,
   description,
+  slotStartMinutes,
+  slotEndMinutes,
   locale,
 }: {
   playlistId: string
   name: string
   description: string | null
+  /** Minutes from midnight, or null when the DJ hasn't declared a slot. */
+  slotStartMinutes: number | null
+  slotEndMinutes: number | null
   locale: SiteLocale
 }) {
   const [editing, setEditing] = useState(false)
@@ -38,6 +44,8 @@ export function PlaylistHeaderEdit({
       playlistId={playlistId}
       name={name}
       description={description}
+      slotStartMinutes={slotStartMinutes}
+      slotEndMinutes={slotEndMinutes}
       locale={locale}
       onClose={() => setEditing(false)}
     />
@@ -69,12 +77,16 @@ function HeaderEditForm({
   playlistId,
   name,
   description,
+  slotStartMinutes,
+  slotEndMinutes,
   locale,
   onClose,
 }: {
   playlistId: string
   name: string
   description: string | null
+  slotStartMinutes: number | null
+  slotEndMinutes: number | null
   locale: SiteLocale
   onClose: () => void
 }) {
@@ -128,6 +140,50 @@ function HeaderEditForm({
           className="border-white/12 text-sm text-white placeholder:text-white/28"
         />
       </div>
+
+      {/*
+        Two <input type="time"> rather than a single free-text field: the browser
+        gives us the picker, the 24h/12h presentation the user already prefers,
+        and a value that is always "HH:MM" or empty — so parseClock on the server
+        is a guard, not the primary defence.
+      */}
+      <fieldset className="space-y-2">
+        <legend className="text-sm text-white/72">{COPY.slotLabel[locale]}</legend>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="playlist-edit-slot-start" className="text-xs text-white/56">
+              {COPY.slotStartLabel[locale]}
+            </Label>
+            <Input
+              id="playlist-edit-slot-start"
+              name="slotStart"
+              type="time"
+              defaultValue={
+                slotStartMinutes === null ? "" : formatClock(slotStartMinutes)
+              }
+              className="w-32 border-white/12 text-sm text-white"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="playlist-edit-slot-end" className="text-xs text-white/56">
+              {COPY.slotEndLabel[locale]}
+            </Label>
+            <Input
+              id="playlist-edit-slot-end"
+              name="slotEnd"
+              type="time"
+              defaultValue={
+                slotEndMinutes === null ? "" : formatClock(slotEndMinutes)
+              }
+              className="w-32 border-white/12 text-sm text-white"
+            />
+          </div>
+        </div>
+        <p className="text-xs leading-5 text-white/40">{COPY.slotHint[locale]}</p>
+        {state.fieldErrors?.slotEnd ? (
+          <p className="text-xs text-ec-error">{state.fieldErrors.slotEnd}</p>
+        ) : null}
+      </fieldset>
 
       <div className="flex items-center gap-2.5">
         <Button type="submit" size="sm" disabled={isPending}>

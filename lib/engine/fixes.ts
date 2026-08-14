@@ -399,6 +399,15 @@ function operationsForIssue(
     case "low_energy_confidence":
     case "good_breather":
       return []
+    // Advice-only by *choice*, not by limitation — moving the peak would in fact
+    // change when it lands. Slot timing stays a warning because the right answer
+    // is usually a judgement the DJ makes about their night (hold back, or accept
+    // an early peak because the room is already full), not a reorder we can pick
+    // for them. Revisit only with a reason, and don't mistake this for the group
+    // above.
+    case "peak_too_early_for_slot":
+    case "peak_too_late_for_slot":
+      return []
   }
 }
 

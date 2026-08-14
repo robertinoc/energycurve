@@ -233,7 +233,13 @@ export async function getOwnedPlaylistWithTracks(
 export async function updatePlaylistDetails(
   profileId: string,
   playlistId: string,
-  input: { name: string; description: string | null }
+  input: {
+    name: string
+    description: string | null
+    /** Minutes from midnight. Both or neither — the DB constraint enforces it too. */
+    slotStartMinutes?: number | null
+    slotEndMinutes?: number | null
+  }
 ): Promise<void> {
   const playlist = await getOwnedPlaylist(profileId, playlistId)
 
@@ -245,7 +251,19 @@ export async function updatePlaylistDetails(
 
   const { error } = await supabase
     .from("playlists")
-    .update({ name: input.name, description: input.description })
+    .update({
+      name: input.name,
+      description: input.description,
+      // Written whenever the keys are present, including back to null: clearing
+      // the slot has to be possible, so `undefined` (absent) and `null` (cleared)
+      // mean different things here.
+      ...(input.slotStartMinutes !== undefined
+        ? { slot_start_minutes: input.slotStartMinutes }
+        : {}),
+      ...(input.slotEndMinutes !== undefined
+        ? { slot_end_minutes: input.slotEndMinutes }
+        : {}),
+    })
     .eq("id", playlistId)
     .eq("user_id", profileId)
 

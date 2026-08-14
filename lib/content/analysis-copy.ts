@@ -177,6 +177,36 @@ export const ISSUE_COPY: Record<IssueType, IssueCopy> = {
       es: "Recortá primero el tramo medio — mantené intactos la rampa de apertura y el cierre.",
     },
   },
+  peak_too_early_for_slot: {
+    title: {
+      en: "Peak lands early for your slot",
+      es: "El pico cae temprano para tu franja",
+    },
+    body: {
+      // The numbers are what make this land: "early" is arguable, "01:24 with
+      // 1h36 still to play" is not.
+      en: "Your highest-energy track lands around {peakClock}, with {remaining} of your slot still to play.",
+      es: "Tu track de mayor energía cae alrededor de las {peakClock}, y todavía te queda {remaining} de franja por tocar.",
+    },
+    recommendation: {
+      en: "Hold the peak back, or accept it and plan a second build — the risk is a long stretch after the high point.",
+      es: "Guardate el pico para más adelante, o aceptalo y planificá una segunda subida — el riesgo es un tramo largo después del punto alto.",
+    },
+  },
+  peak_too_late_for_slot: {
+    title: {
+      en: "Peak lands with no room to land the set",
+      es: "El pico cae sin margen para cerrar",
+    },
+    body: {
+      en: "Your highest-energy track lands around {peakClock}, leaving only {remaining} before your slot ends.",
+      es: "Tu track de mayor energía cae alrededor de las {peakClock}, y sólo quedan {remaining} antes de que termine tu franja.",
+    },
+    recommendation: {
+      en: "Move the peak earlier so the closing stretch has somewhere to go.",
+      es: "Adelantá el pico para que el cierre tenga a dónde ir.",
+    },
+  },
   no_climax: {
     title: {
       en: "No climax",
@@ -515,6 +545,8 @@ export const MARKER_LABELS: Record<string, LocalizedLabel> = {
   low_energy_confidence: { en: "THIN DATA", es: "POCOS DATOS" },
   set_too_short: { en: "SHORT SET", es: "SET CORTO" },
   set_too_long: { en: "LONG SET", es: "SET LARGO" },
+  peak_too_early_for_slot: { en: "EARLY FOR SLOT", es: "TEMPRANO" },
+  peak_too_late_for_slot: { en: "LATE FOR SLOT", es: "TARDE" },
 }
 
 interface FixActionCopy {

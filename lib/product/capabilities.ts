@@ -79,7 +79,11 @@ export const CAPABILITIES = {
   audio_analysis: { minPlan: "pro", status: "planned", limit: "audioAnalysis" },
   energy_model_v3: { minPlan: "pro", status: "planned" },
   version_history: { minPlan: "pro", status: "planned", limit: "versionHistory" },
-  slot_aware_planning: { minPlan: "pro", status: "planned" },
+  slot_aware_planning: {
+    minPlan: "pro",
+    status: "shipped",
+    note: "Declaring the slot is free — it's a fact about the gig. Reading the curve against it is what PRO buys. Gated in services/analysis-service.ts.",
+  },
   named_curve_shapes: { minPlan: "pro", status: "planned" },
   planned_vs_played: { minPlan: "pro", status: "planned" },
   printable_set_sheet: { minPlan: "pro", status: "planned" },

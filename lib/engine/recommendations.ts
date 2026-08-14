@@ -12,6 +12,7 @@ import {
   REORDER_RATIONALE,
   REORDER_RATIONALE_HARMONIC,
 } from "@/lib/content/analysis-copy"
+import { formatClock, formatGap } from "@/lib/engine/slot"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   analyzePlaylist,
@@ -75,6 +76,13 @@ function buildTemplateParams(
     duration: analysis.curve.length * STANDARD_TRACK_DURATION_MINUTES,
     minDuration: SET_DURATION_GUIDELINE_MINUTES.min,
     maxDuration: SET_DURATION_GUIDELINE_MINUTES.max,
+    // Empty rather than absent when no slot was declared: the two slot issues are
+    // the only copy that reads these, and they can't be emitted without one — but
+    // a missing key would render the literal braces if that ever changed.
+    peakClock: analysis.slot ? formatClock(analysis.slot.peakClockMinutes) : "",
+    remaining: analysis.slot ? formatGap(analysis.slot.remainingMinutes) : "",
+    slotStart: analysis.slot ? formatClock(analysis.slot.slot.startMinutes) : "",
+    slotEnd: analysis.slot ? formatClock(analysis.slot.slot.endMinutes) : "",
   }
 }
 
