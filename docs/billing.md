@@ -90,6 +90,54 @@ what actually ships. As of 2026-08-13 PRO's description is accurate, but PRO+
 still promises collaborative B2B sets, residency mode and Gig Mode, none of
 which exist yet. **Fix before enabling live mode.**
 
+## Production status (2026-08-14)
+
+Stripe is **live-configured and verified**, and deliberately **not selling yet** —
+the paid cards on `/pricing` still say "Tell me when it's ready", and there are
+zero references to `/api/billing/checkout` in the served HTML.
+
+Verified in production:
+
+| | |
+|---|---|
+| Products | `EnergyCurve PRO` (`prod_V4FcyUkAyw7miA`), `EnergyCurve PRO+` (`prod_V4FeFb1FCUOM4v`) — both with `statement_descriptor=ENERGYCURVE` and `metadata.app=energycurve` |
+| Prices | 999 / 9900 / 1999 / 19900 cents; a mistaken 19999 is archived |
+| Env → Stripe mapping | Each of the four `STRIPE_PRICE_*` audited against the live API: right product, amount, interval, `livemode=true`, no id reused across two vars |
+| Migrations | 0012 + 0013 applied to `iwzkzybzadsmnwilcity`; 7 columns + `billing_events` confirmed |
+| Webhook | `we_1U4IwMEeN7BZpiyafczvNIm6`, enabled, livemode, exactly the 4 handled events |
+| Routes | webhook `400 Missing signature` (was 503 → proves keys loaded), checkout + portal `401 Not signed in` |
+
+Two things about this account worth knowing before touching it:
+
+- The live secret key is **per product**: EnergyCurve got its own `sk_live_`
+  rather than sharing StageLink's, which is 3 months old and in daily use.
+  Rolling one no longer breaks the other.
+- The webhook endpoint receives **`2026-03-25.dahlia`** while the SDK sends
+  `2026-07-29.dahlia`. Harmless because `periodEndOf()` and `cancelAtOf()` both
+  read the new shape first and fall back to the old one, and both paths are
+  tested — but it means the payload shape validated in test mode is *not* the one
+  production delivers. Check `plan_current_period_end` and `plan_cancel_at` on the
+  first real subscription.
+
+### Hard prerequisites before enabling the paid buttons
+
+Not needed for the integration to exist; needed before anyone can be charged.
+
+1. **PRO must unlock something.** Only the custom-taxonomy cap is enforced today,
+   so a subscriber gets what a free user gets. See `docs/plan-gating.md`.
+2. **The portal must work in live.** There is currently **no** portal
+   configuration in live mode, and `STRIPE_PORTAL_CONFIGURATION_ID` is
+   deliberately unset — so `/api/billing/portal` fails rather than opening
+   StageLink's shared default and showing an EnergyCurve portal to a StageLink
+   subscriber. Taking money with no self-serve way to cancel generates
+   chargebacks and, in several jurisdictions, isn't legal.
+
+   Resolving it requires a StageLink change, and the order matters: **StageLink
+   pins its own `configuration` first, then EnergyCurve's is created.** Creating
+   ours first would make it the account default (Stripe gives that to the first
+   configuration in a mode, with no way to opt out), and StageLink passes no
+   `configuration` — so its one real paying subscriber would land in our portal.
+
 ## Model
 
 ```
