@@ -3,16 +3,27 @@
 import Link from "next/link"
 import { Check, Clock, CreditCard, Minus } from "lucide-react"
 
+import { CheckoutButton } from "@/components/marketing/checkout-button"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import {
   getSiteCopy,
   type ResolvedPlanCell,
   type SiteLocale,
 } from "@/lib/content/site-copy"
+import { useState } from "react"
+
 import { useIsClient } from "@/lib/use-is-client"
 import { cn } from "@/lib/utils"
 
 const STORAGE_KEY = "energycurve:locale"
+
+/** Copy-side plan id → the key `/api/billing/checkout` expects. */
+const CHECKOUT_PLAN: Record<string, "pro" | "pro_plus"> = {
+  pro: "pro",
+  proPlus: "pro_plus",
+}
+
+type BillingInterval = "monthly" | "yearly"
 
 interface CellLabels {
   soon: string
@@ -65,6 +76,8 @@ export function PricingPage() {
   const locale: SiteLocale =
     isClient && window.localStorage.getItem(STORAGE_KEY) === "es" ? "es" : "en"
 
+  const [interval, setInterval] = useState<BillingInterval>("monthly")
+
   const copy = getSiteCopy(locale).pricing
   const cellLabels = {
     soon: copy.soonBadge,
@@ -94,6 +107,37 @@ export function PricingPage() {
         </header>
 
         {/* Plan cards */}
+        {/* Interval switch. Present because checkout needs an interval, and the
+            headline price follows it — a toggle that changes nothing visible
+            leaves people unsure what they are about to be charged. */}
+        <div
+          role="group"
+          aria-label={`${copy.intervalMonthly} / ${copy.intervalYearly}`}
+          className="flex w-fit items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1"
+        >
+          {(["monthly", "yearly"] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={interval === option}
+              onClick={() => setInterval(option)}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-sm font-medium transition",
+                interval === option
+                  ? "bg-white/12 text-white"
+                  : "text-white/58 hover:text-white/82"
+              )}
+            >
+              {option === "monthly" ? copy.intervalMonthly : copy.intervalYearly}
+              {option === "yearly" ? (
+                <span className="ml-2 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#7DF0C4]">
+                  {copy.intervalYearlyNote}
+                </span>
+              ) : null}
+            </button>
+          ))}
+        </div>
+
         <div className="grid gap-4 pt-3 lg:grid-cols-3">
           {copy.plans.map((plan) => (
             <section
@@ -127,15 +171,18 @@ export function PricingPage() {
 
               <div className="mt-5 flex flex-wrap items-baseline gap-x-2">
                 <span className="font-heading text-4xl font-semibold tracking-tight">
-                  {plan.price}
+                  {interval === "yearly" && plan.annual ? plan.annual : plan.price}
                 </span>
-                {plan.annual ? (
+                {plan.annual && interval === "monthly" ? (
                   <span className="text-sm text-white/50">{copy.perMonth}</span>
                 ) : null}
               </div>
               {plan.annual ? (
                 <p className="mt-1.5 text-sm text-white/50">
-                  {copy.annualPrefix} {plan.annual}
+                  {copy.annualPrefix}{" "}
+                  {interval === "monthly"
+                    ? plan.annual
+                    : `${plan.price}${copy.perMonth}`}
                 </p>
               ) : null}
 
@@ -170,17 +217,28 @@ export function PricingPage() {
                 ))}
               </ul>
 
-              <Link
-                href={plan.ctaHref}
-                className={cn(
-                  "mt-6 rounded-full px-6 py-3 text-center text-sm font-semibold transition",
-                  plan.live || plan.recommended
-                    ? "ec-gradient-bg text-white shadow-[0_8px_24px_rgba(120,60,220,0.35)] hover:opacity-95"
-                    : "border border-white/20 text-white/82 hover:border-white/40 hover:text-white"
-                )}
-              >
-                {plan.cta}
-              </Link>
+              {CHECKOUT_PLAN[plan.id] && plan.live ? (
+                <CheckoutButton
+                  plan={CHECKOUT_PLAN[plan.id]}
+                  interval={interval}
+                  label={plan.cta}
+                  startingLabel={copy.checkoutStarting}
+                  errorLabel={copy.checkoutError}
+                  emphasis={plan.recommended}
+                />
+              ) : (
+                <Link
+                  href={plan.ctaHref}
+                  className={cn(
+                    "mt-6 rounded-full px-6 py-3 text-center text-sm font-semibold transition",
+                    plan.live || plan.recommended
+                      ? "ec-gradient-bg text-white shadow-[0_8px_24px_rgba(120,60,220,0.35)] hover:opacity-95"
+                      : "border border-white/20 text-white/82 hover:border-white/40 hover:text-white"
+                  )}
+                >
+                  {plan.cta}
+                </Link>
+              )}
             </section>
           ))}
         </div>

@@ -35,8 +35,13 @@ export const SEO_KEYWORDS = [
 ]
 
 /**
- * The published price points. Paid tiers are PreOrder until Stripe is live —
- * flip to InStock in the same change that ships checkout, not before.
+ * The published price points.
+ *
+ * All three are InStock as of the change that shipped checkout: `/pricing` now
+ * opens a real Stripe Checkout session for PRO and PRO+, so telling search
+ * engines they can't be bought yet would be the inaccurate half of the pair.
+ * Availability and the buttons move together — a mismatch either way is a lie
+ * about whether money changes hands.
  */
 const PLAN_OFFERS = [
   {
@@ -51,14 +56,14 @@ const PLAN_OFFERS = [
     name: "PRO",
     price: "9.99",
     priceCurrency: "USD",
-    availability: "https://schema.org/PreOrder",
+    availability: "https://schema.org/InStock",
   },
   {
     "@type": "Offer",
     name: "PRO+",
     price: "19.99",
     priceCurrency: "USD",
-    availability: "https://schema.org/PreOrder",
+    availability: "https://schema.org/InStock",
   },
 ] as const
 
