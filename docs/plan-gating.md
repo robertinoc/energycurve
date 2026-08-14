@@ -43,8 +43,8 @@ edit together.
 | Import, analysis, curve, score | ✓ | ✓ | ✓ |
 | Heuristic reordering | ✓ | ✓ | ✓ |
 | **Native export** (Rekordbox / Traktor / M3U8) | ✓ | ✓ | ✓ |
-| **Slot-aware planning**, **named curve shapes**, **PDF set sheet** | ✗ | ✓ | ✓ |
-| Real audio analysis, Energy Model v3, version history, planned-vs-played | ✗ | soon | soon |
+| **Slot-aware planning**, **named curve shapes**, **PDF set sheet**, **order history** | ✗ | ✓ | ✓ |
+| Real audio analysis, Energy Model v3, planned-vs-played | ✗ | soon | soon |
 | Curve templates, residency mode, B2B sets, Gig Mode, global library, per-transition suggestions | ✗ | ✗ | soon |
 
 **Applied fixes are uncapped on every tier.** A cap was advertised on /pricing

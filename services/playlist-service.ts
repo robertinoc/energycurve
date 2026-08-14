@@ -3,6 +3,7 @@ import "server-only"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { finalPositions, isValidReorder } from "@/lib/tracklist/reorder"
+import { captureVersion } from "@/services/version-service"
 import type { CurveShape } from "@/lib/product/strategy"
 import type {
   Playlist,
@@ -621,6 +622,12 @@ export async function reorderTracks(
   if (!isValidReorder(current.map((track) => track.id), orderedTrackIds)) {
     throw new Error("Track order does not match the playlist.")
   }
+
+  // Captured *before* the write, with the tracks as they still are, so the version
+  // describes the order being replaced. Awaited rather than fired off: after the
+  // update the previous order is gone and there is nothing left to snapshot.
+  // captureVersion never throws, so this can't cost the user their reorder.
+  await captureVersion(playlistId, current, playlist.genre, playlist.context)
 
   const supabase = getSupabaseAdminClient()
 

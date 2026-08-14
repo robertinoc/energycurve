@@ -174,6 +174,37 @@ export const DASHBOARD_COPY = {
     },
   },
 
+  versions: {
+    title: { en: "Order history", es: "Historial de órdenes" },
+    intro: {
+      en: "Every time you save a new order, the previous one is kept here. Nothing you try is lost.",
+      es: "Cada vez que guardás un orden nuevo, el anterior queda acá. Nada de lo que probás se pierde.",
+    },
+    emptyBody: {
+      en: "Nothing here yet. The first order you save will keep the one it replaced.",
+      es: "Todavía no hay nada. El primer orden que guardes va a conservar al que reemplaza.",
+    },
+    kindImported: { en: "As imported", es: "Como se importó" },
+    kindCurated: { en: "Curated", es: "Curado" },
+    kindAi: { en: "AI order", es: "Orden de la IA" },
+    kindPlayed: { en: "As played", es: "Como se tocó" },
+    current: { en: "Current order", es: "Orden actual" },
+    best: { en: "Best score", es: "Mejor puntaje" },
+    noScore: { en: "not scored", es: "sin puntaje" },
+    restore: { en: "Restore", es: "Restaurar" },
+    restoring: { en: "Restoring…", es: "Restaurando…" },
+    trackCount: { en: "{count} tracks", es: "{count} tracks" },
+    lockedTitle: {
+      en: "Order history is a PRO feature",
+      es: "El historial de órdenes es una función PRO",
+    },
+    lockedBody: {
+      en: "We're already keeping every order you save. PRO lets you look back at them, compare what each one scored, and restore any of them.",
+      es: "Ya estamos guardando cada orden que salvás. PRO te deja mirarlos, comparar cuánto puntuó cada uno y restaurar el que quieras.",
+    },
+    lockedCta: { en: "See plans", es: "Ver planes" },
+  },
+
   playlistDetail: {
     back: { en: "Playlists", es: "Playlists" },
     analyzeSet: { en: "Analyze set", es: "Analizar set" },
@@ -522,6 +553,10 @@ export const DASHBOARD_COPY = {
     genericError: {
       en: "Something went wrong while saving. Please try again.",
       es: "Algo salió mal al guardar. Probá de nuevo.",
+    },
+    versionStale: {
+      en: "This version is from before you added a track, so restoring it would leave that track out. Reorder by hand instead.",
+      es: "Esta versión es de antes de que agregaras un track, así que restaurarla lo dejaría afuera. Reordená a mano.",
     },
     rateLimited: {
       en: "Too many changes in a short time. Wait a moment and try again.",

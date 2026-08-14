@@ -870,8 +870,8 @@ const siteCopy: SiteCopySchema = {
         key: "version_history",
         capability: { en: "Set version history", es: "Historial de versiones del set" },
         free: "no",
-        pro: "soon",
-        proPlus: "soon",
+        pro: "yes",
+        proPlus: "yes",
       },
       {
         key: "slot_aware_planning",

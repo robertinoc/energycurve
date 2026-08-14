@@ -122,6 +122,40 @@ export interface Database {
           },
         ]
       }
+      playlist_versions: {
+        Row: {
+          id: string
+          playlist_id: string
+          kind: string
+          tracks: Json
+          set_score: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          playlist_id: string
+          kind: string
+          tracks: Json
+          set_score?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          playlist_id?: string
+          kind?: string
+          tracks?: Json
+          set_score?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_versions_playlist_id_fkey"
+            columns: ["playlist_id"]
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playlists: {
         Row: {
           id: string

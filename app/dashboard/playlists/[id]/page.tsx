@@ -8,6 +8,10 @@ import { PlaylistExportButton } from "@/components/playlists/playlist-export-but
 import { PlaylistHeaderEdit } from "@/components/playlists/playlist-header-edit"
 import { PlaylistStatsPills } from "@/components/playlists/playlist-stats-pills"
 import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
+import {
+  VersionHistory,
+  type VersionSummary,
+} from "@/components/playlists/version-history"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { buildReturnToHref } from "@/lib/auth/return-to"
@@ -22,11 +26,13 @@ import {
   parseCurveShape,
   type CurveShape,
 } from "@/lib/product/strategy"
+import { sameOrder, snapshotOf } from "@/lib/playlists/versions"
 import { can } from "@/lib/product/capabilities"
 import { getRequestLocale } from "@/lib/server-locale"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { getProfileBilling } from "@/services/billing-service"
+import { listVersions } from "@/services/version-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
 
 export const metadata: Metadata = {
@@ -70,6 +76,20 @@ export default async function PlaylistDetailPage({
     billing.status,
     "printable_set_sheet"
   )
+  const canReadHistory = can(billing.plan, billing.status, "version_history")
+
+  // Not queried at all when the reader can't see it. Versions are still being
+  // *recorded* for them — the history is waiting the day they upgrade.
+  const versions = canReadHistory ? await listVersions(playlist.id) : []
+  const currentOrder = snapshotOf(playlist.tracks)
+  const versionSummaries: VersionSummary[] = versions.map((version) => ({
+    id: version.id,
+    kind: version.kind,
+    trackCount: version.tracks.length,
+    setScore: version.setScore,
+    createdAt: version.createdAt,
+    isCurrent: sameOrder(version.tracks, currentOrder),
+  }))
 
   const exportPlaylist: ExportPlaylist = {
     name: playlist.name,
@@ -182,6 +202,13 @@ export default async function PlaylistDetailPage({
             </div>
           </div>
         </header>
+
+        <VersionHistory
+          playlistId={playlist.id}
+          versions={versionSummaries}
+          entitled={canReadHistory}
+          locale={locale}
+        />
 
         <PlaylistWorkspace
           key={playlist.tracks.map((t) => `${t.id}:${t.position}`).join("|")}
