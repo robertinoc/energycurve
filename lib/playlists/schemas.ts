@@ -5,6 +5,7 @@ import { parseClock } from "@/lib/engine/slot"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   ENERGY_SCORE_RANGE,
+  parseCurveShape,
   SET_CONTEXTS,
   SUPPORTED_GENRES,
 } from "@/lib/product/strategy"
@@ -185,17 +186,43 @@ export function updatePlaylistDetailsSchema(locale: SiteLocale) {
     // Wall-clock strings from two <input type="time">. Parsed here rather than in
     // the action so "01:70" can never reach the database, and validated as a pair
     // because half a slot says nothing.
-    slotStart: z.string().transform((value) => parseClock(value)).nullable(),
-    slotEnd: z.string().transform((value) => parseClock(value)).nullable(),
+    //
+    // Optional, and absent means "leave the stored value alone" — not "clear it".
+    // A user whose browser still holds the previous JS bundle submits a form
+    // without these fields, and a required field would quietly wipe a slot they
+    // never touched.
+    slotStart: z
+      .string()
+      .transform((value) => parseClock(value))
+      .nullable()
+      .optional(),
+    slotEnd: z
+      .string()
+      .transform((value) => parseClock(value))
+      .nullable()
+      .optional(),
+    // Empty means "derive the target from context and genre" — the default, not
+    // an error. Anything unrecognised also lands on null rather than failing:
+    // a junk shape value shouldn't block a rename.
+    targetShape: z
+      .string()
+      .transform((value) => parseCurveShape(value))
+      .nullable()
+      .optional(),
   })
     .refine(
-      (value) => (value.slotStart === null) === (value.slotEnd === null),
+      (value) =>
+        (value.slotStart === undefined && value.slotEnd === undefined) ||
+        (value.slotStart === null) === (value.slotEnd === null),
       { message: messages.slotIncomplete, path: ["slotEnd"] }
     )
-    .refine((value) => value.slotStart !== value.slotEnd || value.slotStart === null, {
-      message: messages.slotEmpty,
-      path: ["slotEnd"],
-    })
+    .refine(
+      (value) =>
+        value.slotStart === undefined ||
+        value.slotStart === null ||
+        value.slotStart !== value.slotEnd,
+      { message: messages.slotEmpty, path: ["slotEnd"] }
+    )
 }
 
 export const AUDIO_IMPORT_MAX_TRACKS = 500

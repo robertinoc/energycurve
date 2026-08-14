@@ -133,6 +133,7 @@ export interface Database {
           import_source: string | null
           slot_start_minutes: number | null
           slot_end_minutes: number | null
+          target_shape: string | null
           custom_context_id: string | null
           custom_genre_id: string | null
           created_at: string
@@ -148,6 +149,7 @@ export interface Database {
           import_source?: string | null
           slot_start_minutes?: number | null
           slot_end_minutes?: number | null
+          target_shape?: string | null
           custom_context_id?: string | null
           custom_genre_id?: string | null
           created_at?: string
@@ -163,6 +165,7 @@ export interface Database {
           import_source?: string | null
           slot_start_minutes?: number | null
           slot_end_minutes?: number | null
+          target_shape?: string | null
           custom_context_id?: string | null
           custom_genre_id?: string | null
           created_at?: string

@@ -15,6 +15,7 @@ import { buildTargetCurve } from "@/lib/engine/target-curve"
 import {
   type PlaylistContext,
   type SupportedGenre,
+  type CurveShape,
 } from "@/lib/product/strategy"
 import type { Track } from "@/types/domain"
 
@@ -22,6 +23,12 @@ interface PlaylistWorkspaceProps {
   playlistId: string
   genre: SupportedGenre | null
   context: PlaylistContext | null
+  /**
+   * Declared shape. The live curve overlay has to honour it, otherwise the
+   * workspace draws a climbing target while the analysis scores the set against
+   * a plateau — the same set shown two contradictory ideals.
+   */
+  targetShape: CurveShape | null
   tracks: Track[]
   locale: SiteLocale
 }
@@ -34,6 +41,7 @@ export function PlaylistWorkspace({
   playlistId,
   genre,
   context,
+  targetShape,
   tracks,
   locale,
 }: PlaylistWorkspaceProps) {
@@ -65,8 +73,11 @@ export function PlaylistWorkspace({
   const scores = useMemo(() => energies.map((e) => e.score), [energies])
 
   const target = useMemo(
-    () => (genre && context ? buildTargetCurve(order.length, context, genre) : null),
-    [genre, context, order.length]
+    () =>
+      genre && context
+        ? buildTargetCurve(order.length, context, genre, targetShape)
+        : null,
+    [genre, context, targetShape, order.length]
   )
 
   function handleReorder(next: Track[]) {

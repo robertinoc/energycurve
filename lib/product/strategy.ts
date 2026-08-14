@@ -407,6 +407,86 @@ export const TARGET_CURVE_V2 = {
   },
 } as const
 
+/**
+ * Named target-curve shapes the DJ can pick explicitly.
+ *
+ * Until now the target curve was *derived* from context + genre and the DJ never
+ * saw it, let alone chose it. That works for the three ordinary cases and fails
+ * for the ones a booking actually throws at you: an after-hours set whose whole
+ * craft is a long hypnotic plateau, or a closing set that is supposed to come
+ * down rather than end on the peak. Both score badly against a derived target
+ * that assumes every set climbs.
+ *
+ * Anchors instead of formulas: each shape is a handful of (progress, energy)
+ * points, linearly interpolated. A DJ can be shown the shape and argue with it,
+ * which is the whole product principle — explainable over magical. Adding a
+ * shape is adding a line here, not a branch in the sampler.
+ */
+export const CURVE_SHAPES = [
+  "warm_up",
+  "peak_time",
+  "after_hours",
+  "journey",
+  "landing",
+] as const
+export type CurveShape = (typeof CURVE_SHAPES)[number]
+
+/**
+ * Narrows a value coming from the database or a form into a shape the engine can
+ * index with. The column is `text` with a CHECK, not a PG enum, so the boundary
+ * is where a bad value has to die — indexing the anchor table with an unknown
+ * key would hand the scorer an undefined target instead of an error.
+ */
+export function parseCurveShape(value: unknown): CurveShape | null {
+  return typeof value === "string" && (CURVE_SHAPES as readonly string[]).includes(value)
+    ? (value as CurveShape)
+    : null
+}
+
+export const CURVE_SHAPE_ANCHORS: Record<
+  CurveShape,
+  readonly (readonly [number, number])[]
+> = {
+  /** Hands the floor over warm, never peaks. The ceiling is the promise. */
+  warm_up: [
+    [0, 3],
+    [0.5, 4.8],
+    [1, 6.5],
+  ],
+  /** Already busy at track one, tops out early, then holds. */
+  peak_time: [
+    [0, 7],
+    [0.55, 9.5],
+    [1, 9.5],
+  ],
+  /**
+   * A long plateau on purpose. The flat stretch is exempt from the monotony
+   * penalty for free, because that rule already forgives a set that rides a
+   * flat target — declaring the shape is what makes the target flat.
+   */
+  after_hours: [
+    [0, 7],
+    [0.2, 8.5],
+    [0.85, 8.5],
+    [1, 8],
+  ],
+  /** Two acts: build, deliberate mid-set breath, bigger second build. */
+  journey: [
+    [0, 5.5],
+    [0.4, 8],
+    [0.55, 6.5],
+    [0.9, 9.5],
+    [1, 9],
+  ],
+  /** Peaks early and comes down on purpose, so descending is correct. */
+  landing: [
+    [0, 7.5],
+    [0.3, 9],
+    [0.7, 7],
+    [1, 5.5],
+  ],
+}
+
 /** Curve-shape sub-score rules (B3). */
 export const SHAPE_FIT_RULES_V2 = {
   /** Deviations from the target within this band are free (waves are craft). */

@@ -1,5 +1,9 @@
 import type { ResolvedSlot, SlotAssessment } from "@/lib/engine/slot"
-import type { PlaylistContext, SupportedGenre } from "@/lib/product/strategy"
+import type {
+  CurveShape,
+  PlaylistContext,
+  SupportedGenre,
+} from "@/lib/product/strategy"
 
 /**
  * Where a track's resolved energy came from. "bpm_loudness" = BPM anchor
@@ -99,6 +103,11 @@ export interface PlaylistAnalysisInput {
    * as before without it.
    */
   slot?: ResolvedSlot | null
+  /**
+   * Named shape the DJ is aiming at. Absent (the default) keeps the target
+   * derived from context + genre, so no existing set's score moves.
+   */
+  targetShape?: CurveShape | null
 }
 
 export interface PlaylistAnalysis {
@@ -111,6 +120,8 @@ export interface PlaylistAnalysis {
   breakdown: SetScoreBreakdown
   setScore: number
   /** Final score the same curve would get under each context (A9/B10). */
+  /** The shape the set was actually scored against, null when derived. */
+  targetShape: CurveShape | null
   contextScores: Record<PlaylistContext, number>
   bestFitContext: PlaylistContext
   /**

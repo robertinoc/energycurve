@@ -2,6 +2,7 @@ import {
   REORDER_HARMONY_V4,
   REORDER_MIN_IMPROVEMENT_V2,
   STANDARD_TRACK_DURATION_MINUTES,
+  type CurveShape,
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
@@ -127,14 +128,20 @@ export function suggestReorder(
   genre: SupportedGenre,
   context: PlaylistContext,
   originalScore: number,
-  locale: SiteLocale
+  locale: SiteLocale,
+  /**
+   * Declared shape, forwarded to the optimizer. Omitting it would suggest an
+   * order optimized against the derived target — i.e. advice that undoes the
+   * shape the DJ just declared.
+   */
+  targetShape: CurveShape | null = null
 ): ReorderSuggestion | null {
   if (energies.length < 2) {
     return null
   }
 
   const useHarmony = harmonyApplies(energies)
-  const optimized = optimizeOrder(energies, genre, context)
+  const optimized = optimizeOrder(energies, genre, context, targetShape)
   const energyImprovement = optimized.score - originalScore
 
   const harmonyBefore = assessHarmony(energies.map((entry) => entry.camelot))

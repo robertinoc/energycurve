@@ -890,8 +890,8 @@ const siteCopy: SiteCopySchema = {
           es: "Curvas objetivo con nombre (warm-up, peak time, after-hours…)",
         },
         free: "no",
-        pro: "soon",
-        proPlus: "soon",
+        pro: "yes",
+        proPlus: "yes",
       },
       {
         key: "custom_curve_templates",

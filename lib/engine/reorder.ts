@@ -2,6 +2,7 @@ import {
   REORDER_HARMONY_V4,
   type PlaylistContext,
   type SupportedGenre,
+  type CurveShape,
 } from "@/lib/product/strategy"
 import { computeSetScore } from "@/lib/engine/analysis"
 import { assessHarmony, keyCoverage } from "@/lib/engine/harmony"
@@ -38,7 +39,8 @@ function energyScoreOf(
   energies: ResolvedTrackEnergy[],
   order: number[],
   genre: SupportedGenre,
-  context: PlaylistContext
+  context: PlaylistContext,
+  shape: CurveShape | null
 ): number {
   // Per-track provenance travels with the permutation so the confidence
   // rules (B13) shape the optimizer's objective exactly like the analysis.
@@ -49,7 +51,8 @@ function energyScoreOf(
     order.map((index) => ({
       source: energies[index].source,
       bpm: energies[index].bpm,
-    }))
+    })),
+    shape
   )
 }
 
@@ -70,9 +73,10 @@ function objectiveOf(
   order: number[],
   genre: SupportedGenre,
   context: PlaylistContext,
+  shape: CurveShape | null,
   useHarmony: boolean
 ): number {
-  const energy = energyScoreOf(energies, order, genre, context)
+  const energy = energyScoreOf(energies, order, genre, context, shape)
 
   if (!useHarmony) {
     return energy
@@ -88,6 +92,7 @@ function exactBestOrder(
   energies: ResolvedTrackEnergy[],
   genre: SupportedGenre,
   context: PlaylistContext,
+  shape: CurveShape | null,
   useHarmony: boolean
 ): number[] {
   const n = energies.length
@@ -101,7 +106,14 @@ function exactBestOrder(
   const current = [...indexes]
 
   const consider = (candidate: number[]) => {
-    const objective = objectiveOf(energies, candidate, genre, context, useHarmony)
+    const objective = objectiveOf(
+      energies,
+      candidate,
+      genre,
+      context,
+      shape,
+      useHarmony
+    )
 
     if (objective > bestObjective) {
       bestObjective = objective
@@ -137,9 +149,10 @@ function exactBestOrder(
 function greedySeed(
   energies: ResolvedTrackEnergy[],
   genre: SupportedGenre,
-  context: PlaylistContext
+  context: PlaylistContext,
+  shape: CurveShape | null
 ): number[] {
-  const target = buildTargetCurve(energies.length, context, genre)
+  const target = buildTargetCurve(energies.length, context, genre, shape)
   const slotsByEnergy = target
     .map((energy, slot) => ({ energy, slot }))
     .sort((a, b) => a.energy - b.energy || a.slot - b.slot)
@@ -189,10 +202,11 @@ function twoOpt(
   energies: ResolvedTrackEnergy[],
   genre: SupportedGenre,
   context: PlaylistContext,
+  shape: CurveShape | null,
   useHarmony: boolean
 ): { order: number[]; objective: number } {
   const order = [...seed]
-  let objective = objectiveOf(energies, order, genre, context, useHarmony)
+  let objective = objectiveOf(energies, order, genre, context, shape, useHarmony)
 
   // Best-improvement pairwise swaps until a full pass finds nothing better.
   // Deterministic: fixed scan order, strict improvement required.
@@ -203,7 +217,14 @@ function twoOpt(
     for (let a = 0; a < order.length - 1; a += 1) {
       for (let b = a + 1; b < order.length; b += 1) {
         ;[order[a], order[b]] = [order[b], order[a]]
-        const candidate = objectiveOf(energies, order, genre, context, useHarmony)
+        const candidate = objectiveOf(
+          energies,
+          order,
+          genre,
+          context,
+          shape,
+          useHarmony
+        )
         ;[order[a], order[b]] = [order[b], order[a]]
 
         const gain = candidate - objective
@@ -231,19 +252,20 @@ function localSearchBestOrder(
   energies: ResolvedTrackEnergy[],
   genre: SupportedGenre,
   context: PlaylistContext,
+  shape: CurveShape | null,
   useHarmony: boolean
 ): number[] {
   // Two seeds, two hill climbs, best objective wins (B20): the energy seed
   // protects the curve; the harmonic seed protects the Camelot chains that
   // pairwise swaps alone can't assemble from scratch.
   const seeds = useHarmony
-    ? [greedySeed(energies, genre, context), harmonicSeed(energies)]
-    : [greedySeed(energies, genre, context)]
+    ? [greedySeed(energies, genre, context, shape), harmonicSeed(energies)]
+    : [greedySeed(energies, genre, context, shape)]
 
   let best: { order: number[]; objective: number } | null = null
 
   for (const seed of seeds) {
-    const result = twoOpt(seed, energies, genre, context, useHarmony)
+    const result = twoOpt(seed, energies, genre, context, shape, useHarmony)
 
     if (!best || result.objective > best.objective) {
       best = result
@@ -262,18 +284,24 @@ function localSearchBestOrder(
 export function optimizeOrder(
   energies: ResolvedTrackEnergy[],
   genre: SupportedGenre,
-  context: PlaylistContext
+  context: PlaylistContext,
+  /**
+   * The declared shape, so a suggested order aims at what the DJ said they are
+   * playing. Without this the optimizer would optimize against the derived
+   * target and actively fight a declared after-hours or landing set.
+   */
+  shape: CurveShape | null = null
 ): OptimizedOrder {
   const useHarmony = harmonyApplies(energies)
 
   const order =
     energies.length <= EXACT_SEARCH_MAX_TRACKS
-      ? exactBestOrder(energies, genre, context, useHarmony)
-      : localSearchBestOrder(energies, genre, context, useHarmony)
+      ? exactBestOrder(energies, genre, context, shape, useHarmony)
+      : localSearchBestOrder(energies, genre, context, shape, useHarmony)
 
   return {
     order,
-    score: energyScoreOf(energies, order, genre, context),
+    score: energyScoreOf(energies, order, genre, context, shape),
     harmonicRatio: harmonicRatioOf(energies, order),
   }
 }

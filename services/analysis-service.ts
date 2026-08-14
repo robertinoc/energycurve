@@ -3,7 +3,10 @@ import "server-only"
 import { after } from "next/server"
 
 import { computeAnalysisInputHash } from "@/lib/analytics/analysis-hash"
-import { CURRENT_ANALYSIS_ALGORITHM_VERSION } from "@/lib/product/strategy"
+import {
+  CURRENT_ANALYSIS_ALGORITHM_VERSION,
+  parseCurveShape,
+} from "@/lib/product/strategy"
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
@@ -96,6 +99,13 @@ export async function getPlaylistAnalysis(
     ? declaredSlot
     : null
 
+  // Same split as the slot: picking a shape is free and stays on the record, but
+  // scoring against it is the PRO capability. An unentitled set falls back to the
+  // derived target and scores exactly as it did before.
+  const targetShape = can(billing.plan, billing.status, "named_curve_shapes")
+    ? parseCurveShape(playlist.target_shape)
+    : null
+
   const analysis = analyzePlaylist({
     curve: energies.map((entry) => entry.score),
     genre: playlist.genre,
@@ -105,6 +115,7 @@ export async function getPlaylistAnalysis(
       bpm: entry.bpm,
     })),
     slot,
+    targetShape,
   })
   const recommendations = buildRecommendations(analysis, locale)
   const reorder = suggestReorder(
@@ -112,7 +123,8 @@ export async function getPlaylistAnalysis(
     playlist.genre,
     playlist.context,
     analysis.setScore,
-    locale
+    locale,
+    targetShape
   )
 
   logInfo("playlist.analyzed", {
@@ -170,6 +182,7 @@ async function recordAnalysisSnapshot(
       curve: analysis.curve,
       genre: analysis.genre,
       context: analysis.context,
+      targetShape: analysis.targetShape,
       algorithmVersion: CURRENT_ANALYSIS_ALGORITHM_VERSION,
     })
 

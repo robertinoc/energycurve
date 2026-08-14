@@ -1,4 +1,4 @@
-import type { PlaylistContext } from "@/lib/product/strategy"
+import type { CurveShape, PlaylistContext } from "@/lib/product/strategy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
 /**
@@ -21,6 +21,54 @@ export const CONTEXT_COPY: Record<PlaylistContext, LocalizedLabel> = {
   opening: { en: "Opening", es: "Opening" },
   main: { en: "Main time", es: "Main time" },
   closing: { en: "Closing", es: "Closing" },
+}
+
+/**
+ * Names and one-line promises for the target-curve shapes.
+ *
+ * The description matters as much as the name: "after-hours" tells a DJ nothing
+ * about what the scorer will now expect of them, while "starts high and holds a
+ * long plateau" is a claim they can agree or disagree with before committing.
+ */
+export const CURVE_SHAPE_COPY: Record<
+  CurveShape,
+  { label: LocalizedLabel; promise: LocalizedLabel }
+> = {
+  warm_up: {
+    label: { en: "Warm-up", es: "Warm-up" },
+    promise: {
+      en: "Builds slowly and hands over warm, without ever peaking.",
+      es: "Sube despacio y entrega la pista caliente, sin llegar nunca al pico.",
+    },
+  },
+  peak_time: {
+    label: { en: "Peak time", es: "Peak time" },
+    promise: {
+      en: "Busy from track one, tops out early and holds there.",
+      es: "Arranca fuerte, llega al techo temprano y se mantiene.",
+    },
+  },
+  after_hours: {
+    label: { en: "After-hours", es: "After-hours" },
+    promise: {
+      en: "A long hypnotic plateau — staying flat is the craft, not a flaw.",
+      es: "Una meseta hipnótica larga — mantenerse plano es el oficio, no un error.",
+    },
+  },
+  journey: {
+    label: { en: "Journey", es: "Journey" },
+    promise: {
+      en: "Two acts: a build, a deliberate mid-set breath, then a bigger build.",
+      es: "Dos actos: una subida, un respiro deliberado a mitad de set, y otra subida más grande.",
+    },
+  },
+  landing: {
+    label: { en: "Landing", es: "Landing" },
+    promise: {
+      en: "Peaks early and comes down on purpose, so ending lower is correct.",
+      es: "Pica temprano y baja a propósito, así que terminar abajo es lo correcto.",
+    },
+  },
 }
 
 export const DASHBOARD_COPY = {
@@ -271,6 +319,15 @@ export const DASHBOARD_COPY = {
     slotHint: {
       en: "Venue time, no timezone. Sets that cross midnight are fine — 23:00 to 02:00 reads as three hours.",
       es: "Hora del venue, sin zona horaria. Los sets que cruzan medianoche funcionan igual — 23:00 a 02:00 se leen como tres horas.",
+    },
+    shapeLabel: { en: "Target curve", es: "Curva objetivo" },
+    shapeDerived: {
+      en: "Automatic — from genre and set context",
+      es: "Automática — según género y contexto del set",
+    },
+    shapeHint: {
+      en: "Pick a shape when the set isn't an ordinary climb. Your analysis is then scored against what you said you're playing.",
+      es: "Elegí una forma cuando el set no es una subida común. El análisis se mide contra lo que dijiste que vas a tocar.",
     },
     save: { en: "Save", es: "Guardar" },
     saving: { en: "Saving…", es: "Guardando…" },

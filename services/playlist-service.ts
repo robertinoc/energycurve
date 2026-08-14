@@ -3,6 +3,7 @@ import "server-only"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { finalPositions, isValidReorder } from "@/lib/tracklist/reorder"
+import type { CurveShape } from "@/lib/product/strategy"
 import type {
   Playlist,
   PlaylistContext,
@@ -239,6 +240,8 @@ export async function updatePlaylistDetails(
     /** Minutes from midnight. Both or neither — the DB constraint enforces it too. */
     slotStartMinutes?: number | null
     slotEndMinutes?: number | null
+    /** Null clears it back to the derived target; absent leaves it untouched. */
+    targetShape?: CurveShape | null
   }
 ): Promise<void> {
   const playlist = await getOwnedPlaylist(profileId, playlistId)
@@ -262,6 +265,9 @@ export async function updatePlaylistDetails(
         : {}),
       ...(input.slotEndMinutes !== undefined
         ? { slot_end_minutes: input.slotEndMinutes }
+        : {}),
+      ...(input.targetShape !== undefined
+        ? { target_shape: input.targetShape }
         : {}),
     })
     .eq("id", playlistId)

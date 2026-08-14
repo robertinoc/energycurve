@@ -244,6 +244,7 @@ STRIPE_PRICE_PRO_YEARLY=price_…
 STRIPE_PRICE_PRO_PLUS_MONTHLY=price_…
 STRIPE_PRICE_PRO_PLUS_YEARLY=price_…
 STRIPE_PORTAL_CONFIGURATION_ID=bpc_…
+COMP_PRO_PLUS_EMAILS=owner@example.com,demo@example.com
 ```
 
 Billing stays off until `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, **and** at
@@ -253,6 +254,16 @@ counts as unconfigured rather than half-working.
 `STRIPE_PORTAL_CONFIGURATION_ID` is **optional** to keep envs that don't sell
 working, but on this account it is effectively required — without it the portal
 falls back to the configuration StageLink shares. It's an id, not a secret.
+
+`COMP_PRO_PLUS_EMAILS` grants PRO+ to listed emails without a Stripe
+subscription — the owner's own account, plus anything comped for a demo. It is
+read at request time in `getProfileBilling`, so a comped user goes through the
+same gate code a paying PRO+ user does; testing a bypass instead would prove
+nothing about the real product. It only ever **grants**: a live subscription is
+never downgraded by an entry here, and the list is matched against the email on
+the profile row, which only WorkOS writes — it is not reachable from client
+input. Kept in the environment rather than in source so a comp can be added or
+revoked without a code change, and so personal emails stay out of git history.
 
 ### 3. Migrations
 

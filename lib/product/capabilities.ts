@@ -84,7 +84,7 @@ export const CAPABILITIES = {
     status: "shipped",
     note: "Declaring the slot is free — it's a fact about the gig. Reading the curve against it is what PRO buys. Gated in services/analysis-service.ts.",
   },
-  named_curve_shapes: { minPlan: "pro", status: "planned" },
+  named_curve_shapes: { minPlan: "pro", status: "shipped" },
   planned_vs_played: { minPlan: "pro", status: "planned" },
   printable_set_sheet: { minPlan: "pro", status: "planned" },
 

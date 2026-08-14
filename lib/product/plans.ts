@@ -144,3 +144,27 @@ export function planAtLeast(plan: Plan, required: Plan): boolean {
 export function withinLimit(used: number, limit: number | null): boolean {
   return limit === null || used < limit
 }
+
+/**
+ * Whether an email is on the complimentary PRO+ list.
+ *
+ * Pure and separately tested because it *grants* a paid plan: the risk isn't that
+ * it fails to match, it's that it matches too much. Exact, case-insensitive
+ * comparison on trimmed entries — never a substring or domain check, which would
+ * hand PRO+ to anyone who could register a lookalike address.
+ */
+export function isComplimentaryProPlus(
+  email: string | null | undefined,
+  rawList: string | undefined
+): boolean {
+  if (!email || !rawList) {
+    return false
+  }
+
+  const allowed = rawList
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean)
+
+  return allowed.includes(email.trim().toLowerCase())
+}

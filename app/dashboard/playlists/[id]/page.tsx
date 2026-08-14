@@ -11,9 +11,17 @@ import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { buildReturnToHref } from "@/lib/auth/return-to"
-import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import {
+  CONTEXT_COPY,
+  CURVE_SHAPE_COPY,
+  DASHBOARD_COPY,
+} from "@/lib/content/dashboard-copy"
 import type { ExportPlaylist } from "@/lib/playlists/export"
-import { GENRE_LABELS } from "@/lib/product/strategy"
+import {
+  GENRE_LABELS,
+  parseCurveShape,
+  type CurveShape,
+} from "@/lib/product/strategy"
 import { getRequestLocale } from "@/lib/server-locale"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -104,6 +112,7 @@ export default async function PlaylistDetailPage({
               description={playlist.description}
               slotStartMinutes={playlist.slot_start_minutes}
               slotEndMinutes={playlist.slot_end_minutes}
+              targetShape={parseCurveShape(playlist.target_shape)}
               locale={locale}
             />
             <div className="flex flex-wrap items-center gap-2">
@@ -121,6 +130,15 @@ export default async function PlaylistDetailPage({
                     playlist.context}
                 </Badge>
               ) : null}
+              {parseCurveShape(playlist.target_shape) ? (
+                <Badge>
+                  {
+                    CURVE_SHAPE_COPY[
+                      parseCurveShape(playlist.target_shape) as CurveShape
+                    ].label[locale]
+                  }
+                </Badge>
+              ) : null}
               <PlaylistStatsPills
                 tracks={playlist.tracks}
                 genre={playlist.genre}
@@ -136,6 +154,7 @@ export default async function PlaylistDetailPage({
           playlistId={playlist.id}
           genre={playlist.genre}
           context={playlist.context}
+          targetShape={parseCurveShape(playlist.target_shape)}
           tracks={playlist.tracks}
           locale={locale}
         />
