@@ -9,6 +9,40 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      feature_usage: {
+        Row: {
+          id: string
+          profile_id: string
+          capability: string
+          period_start: string
+          used: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          capability: string
+          period_start: string
+          used?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          capability?: string
+          period_start?: string
+          used?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_usage_profile_id_fkey"
+            columns: ["profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           id: string
@@ -323,7 +357,18 @@ export interface Database {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      /** Atomic "increment only while under the limit" — see migration 0014. */
+      consume_feature_quota: {
+        Args: {
+          p_profile_id: string
+          p_capability: string
+          p_period_start: string
+          p_limit: number
+        }
+        Returns: number
+      }
+    }
     Enums: {
       playlist_context: "opening" | "main" | "closing"
       playlist_genre:

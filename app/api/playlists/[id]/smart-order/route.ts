@@ -10,7 +10,10 @@ import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { GENRE_LABELS } from "@/lib/product/strategy"
+import { quotaFor } from "@/lib/product/capabilities"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
+import { getProfileBilling } from "@/services/billing-service"
+import { consumeQuota, readQuota } from "@/services/usage-service"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 
 export const dynamic = "force-dynamic"
@@ -271,7 +274,32 @@ export async function POST(
   const cached = cache.get(key)
 
   if (cached) {
+    // Deliberately before the quota gate: a cache hit makes no Claude call, so
+    // charging for it would meter our infrastructure rather than our cost — and
+    // would make someone's monthly allowance depend on when we last deployed,
+    // since the cache is per-process and resets.
     return NextResponse.json(cached)
+  }
+
+  // The only quota that maps to real money per use. Read before calling Claude
+  // so an over-limit user is refused instead of billed-for-and-refused.
+  const billing = await getProfileBilling(profile.id)
+  const aiLimit = quotaFor(billing.plan, billing.status, "ai_ordering")
+  const quota = await readQuota(profile.id, "ai_ordering", aiLimit)
+
+  if (!quota.allowed) {
+    return NextResponse.json(
+      {
+        error: "quota_exceeded",
+        capability: "ai_ordering",
+        used: quota.used,
+        limit: quota.limit,
+        // What unlocks more, so the client can name the right plan rather than
+        // hardcoding one that may move.
+        upgradeTo: "pro_plus",
+      },
+      { status: 402 }
+    )
   }
 
   // Ideal curve from the same engine that scores the set.
@@ -309,11 +337,19 @@ export async function POST(
     result = heuristicOrder(tracks)
   }
 
+  // Charged on the Claude path only. A fallback to the local heuristic still
+  // returns a usable order, but it cost nothing and shouldn't spend an allowance
+  // the user would rather keep for a real one.
+  if (result.source === "claude") {
+    await consumeQuota(profile.id, "ai_ordering", aiLimit)
+  }
+
   logInfo("smart_order.completed", {
     profileId: profile.id,
     playlistId: playlist.id,
     source: result.source,
     trackCount: tracks.length,
+    quotaCharged: result.source === "claude",
   })
 
   if (cache.size >= CACHE_MAX_ENTRIES) {

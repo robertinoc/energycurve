@@ -13,6 +13,9 @@ import type {
   Track,
   TrackWriteInput,
 } from "@/types/domain"
+import { quotaFor } from "@/lib/product/capabilities"
+import { quotaState } from "@/lib/product/usage"
+import { getProfileBilling } from "./billing-service"
 
 const MOVE_TEMP_POSITION_OFFSET = 100000
 
@@ -51,10 +54,58 @@ function flattenTaxonomyNames<T extends PlaylistNameJoins>(
   }
 }
 
+/**
+ * Thrown instead of creating a playlist past the plan's cap.
+ *
+ * A typed error rather than a union return so the three creation paths can't
+ * silently ignore it: `createPlaylist` is the single choke point every one of
+ * them goes through, and a new caller gets the limit for free.
+ */
+export class PlaylistLimitError extends Error {
+  constructor(
+    readonly used: number,
+    readonly limit: number
+  ) {
+    super(`Playlist limit reached (${used}/${limit})`)
+    this.name = "PlaylistLimitError"
+  }
+}
+
+/** How many playlists this profile currently keeps. */
+export async function countPlaylists(profileId: string): Promise<number> {
+  const supabase = getSupabaseAdminClient()
+
+  const { count, error } = await supabase
+    .from("playlists")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", profileId)
+
+  if (error) {
+    logError("playlist.count_failed", error, { profileId })
+    // Fail open: a count that didn't load must not block a paying customer.
+    return 0
+  }
+
+  return count ?? 0
+}
+
 export async function createPlaylist(
   profileId: string,
   input: PlaylistCreateData
 ): Promise<Playlist> {
+  const billing = await getProfileBilling(profileId)
+  const limit = quotaFor(billing.plan, billing.status, "active_playlists")
+
+  if (limit !== null) {
+    const used = await countPlaylists(profileId)
+    if (!quotaState(used, limit).allowed) {
+      // Blocks creation and nothing else. Everything already saved stays visible
+      // and editable, including for someone who ends up over the cap after a
+      // downgrade — their playlists are their work, not leverage.
+      throw new PlaylistLimitError(used, limit)
+    }
+  }
+
   const supabase = getSupabaseAdminClient()
 
   const { data, error } = await supabase
