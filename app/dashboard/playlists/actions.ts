@@ -41,7 +41,12 @@ import {
 import { can } from "@/lib/product/capabilities"
 import { restorableOrder } from "@/lib/playlists/versions"
 import { getProfileBilling } from "@/services/billing-service"
-import { getVersion } from "@/services/version-service"
+import {
+  captureVersion,
+  compareWithCurrent,
+  getVersion,
+  type VersionComparison,
+} from "@/services/version-service"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import {
   PlaylistLimitError,
@@ -841,6 +846,94 @@ export async function importAudioFilesAction(
   revalidatePath("/dashboard/playlists")
   revalidatePath("/dashboard")
   return { ok: true, playlistId }
+}
+
+/**
+ * Records the order the set is in right now as "what I actually played".
+ *
+ * Recorded even when the order is identical to the last version, unlike an
+ * ordinary capture: playing exactly what you planned is the common case, and it
+ * is precisely the fact worth writing down.
+ */
+export async function markAsPlayedAction(
+  playlistId: string
+): Promise<ReorderResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message ?? undefined }
+  }
+
+  const billing = await getProfileBilling(profile.id)
+
+  if (!can(billing.plan, billing.status, "planned_vs_played")) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  const playlist = await getOwnedPlaylistWithTracks(profile.id, playlistId)
+
+  if (!playlist || playlist.tracks.length === 0) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  await captureVersion(
+    playlistId,
+    playlist.tracks,
+    playlist.genre,
+    playlist.context,
+    "played"
+  )
+
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+
+  return { ok: true }
+}
+
+export interface CompareResult {
+  ok: boolean
+  message?: string
+  comparison?: VersionComparison
+}
+
+/**
+ * Compares a stored version against the order the set is in now.
+ *
+ * Fetched on demand rather than computed for every version when the page renders:
+ * a playlist keeps up to twenty versions and a reader opens at most one or two.
+ */
+export async function compareVersionAction(
+  playlistId: string,
+  versionId: string
+): Promise<CompareResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+  const billing = await getProfileBilling(profile.id)
+
+  if (!can(billing.plan, billing.status, "version_history")) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  const playlist = await getOwnedPlaylistWithTracks(profile.id, playlistId)
+
+  if (!playlist) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  const comparison = await compareWithCurrent(
+    playlistId,
+    versionId,
+    playlist.tracks,
+    playlist.genre,
+    playlist.context
+  )
+
+  if (!comparison) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  return { ok: true, comparison }
 }
 
 /**

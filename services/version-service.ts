@@ -3,6 +3,7 @@ import "server-only"
 import { computeSetScore } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { logError, logInfo } from "@/lib/observability/logger"
+import { diffVersions, scoreDelta, type VersionDiff } from "@/lib/playlists/version-diff"
 import {
   isVersionKind,
   parseSnapshot,
@@ -63,19 +64,31 @@ function scoreOf(
   tracks: readonly Track[],
   genre: SupportedGenre | null,
   context: PlaylistContext | null
-): number | null {
+): { score: number | null; resolved: Map<string, number> } {
   if (!genre || !context || tracks.length === 0) {
-    return null
+    return { score: null, resolved: new Map() }
   }
 
   const energies = resolveTrackEnergies([...tracks], context, genre)
+  const resolved = new Map<string, number>()
 
-  return computeSetScore(
-    energies.map((entry) => entry.score),
-    genre,
-    context,
-    energies.map((entry) => ({ source: entry.source, bpm: entry.bpm }))
-  )
+  energies.forEach((entry, index) => {
+    const trackId = entry.trackId ?? tracks[index]?.id
+
+    if (trackId) {
+      resolved.set(trackId, entry.score)
+    }
+  })
+
+  return {
+    score: computeSetScore(
+      energies.map((entry) => entry.score),
+      genre,
+      context,
+      energies.map((entry) => ({ source: entry.source, bpm: entry.bpm }))
+    ),
+    resolved,
+  }
 }
 
 /** Newest first. Empty for a playlist nothing has reordered yet. */
@@ -187,31 +200,25 @@ export async function captureVersion(
       return
     }
 
-    const snapshot = snapshotOf(tracks)
+    const { score, resolved } = scoreOf(tracks, genre, context)
+    const snapshot = snapshotOf(tracks, resolved)
     const existing = await listVersions(playlistId)
 
     if (existing.length === 0) {
       // Nothing recorded yet, so this order *is* the original.
-      await insertVersion(
-        playlistId,
-        "imported",
-        snapshot,
-        scoreOf(tracks, genre, context)
-      )
+      await insertVersion(playlistId, "imported", snapshot, score)
       logInfo("versions.captured", { playlistId, kind: "imported" })
       return
     }
 
-    if (sameOrder(existing[0].tracks, snapshot)) {
+    // An identical order is normally nothing to record — except when the *kind*
+    // is new. "This is what I played" is information even when the order didn't
+    // change, and it's the common case: the DJ played exactly what they planned.
+    if (kind !== "played" && sameOrder(existing[0].tracks, snapshot)) {
       return
     }
 
-    const recorded = await insertVersion(
-      playlistId,
-      kind,
-      snapshot,
-      scoreOf(tracks, genre, context)
-    )
+    const recorded = await insertVersion(playlistId, kind, snapshot, score)
 
     if (recorded) {
       await prune(playlistId)
@@ -243,4 +250,45 @@ export async function getVersion(
   }
 
   return toVersion(data)
+}
+
+export interface VersionComparison {
+  diff: VersionDiff
+  /** The version's score, as recorded when it was captured. */
+  scoreBefore: number | null
+  /** The current order's score, computed now. */
+  scoreAfter: number | null
+  delta: number | null
+}
+
+/**
+ * Compares a stored version against the order the playlist is in right now.
+ *
+ * The stored side keeps its recorded score; the live side is scored fresh. Those
+ * two numbers can come from different engine versions, which is the honest
+ * trade: rescoring the old snapshot would answer "what would that order be worth
+ * today", and the question actually asked is "what was it worth then".
+ */
+export async function compareWithCurrent(
+  playlistId: string,
+  versionId: string,
+  tracks: readonly Track[],
+  genre: SupportedGenre | null,
+  context: PlaylistContext | null
+): Promise<VersionComparison | null> {
+  const version = await getVersion(playlistId, versionId)
+
+  if (!version) {
+    return null
+  }
+
+  const { score, resolved } = scoreOf(tracks, genre, context)
+  const current = snapshotOf(tracks, resolved)
+
+  return {
+    diff: diffVersions(version.tracks, current),
+    scoreBefore: version.setScore,
+    scoreAfter: score,
+    delta: scoreDelta(version.setScore, score),
+  }
 }

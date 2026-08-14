@@ -203,6 +203,34 @@ export const DASHBOARD_COPY = {
       es: "Ya estamos guardando cada orden que salvás. PRO te deja mirarlos, comparar cuánto puntuó cada uno y restaurar el que quieras.",
     },
     lockedCta: { en: "See plans", es: "Ver planes" },
+    markPlayed: { en: "This is what I played", es: "Esto es lo que toqué" },
+    markingPlayed: { en: "Saving…", es: "Guardando…" },
+    compare: { en: "Compare with now", es: "Comparar con ahora" },
+    comparing: { en: "Comparing…", es: "Comparando…" },
+    hide: { en: "Hide", es: "Ocultar" },
+    diffIdentical: {
+      en: "Identical — you played exactly this order.",
+      es: "Idéntico — tocaste exactamente este orden.",
+    },
+    diffMoved: { en: "Moved", es: "Se movieron" },
+    diffSkipped: { en: "Never played", es: "No se tocaron" },
+    diffAdded: { en: "Played unplanned", es: "Se tocaron sin plan" },
+    diffUnchanged: {
+      en: "{count} stayed in place",
+      es: "{count} se quedaron en su lugar",
+    },
+    diffScore: { en: "Score", es: "Puntaje" },
+    diffScoreUnknown: {
+      en: "One of these orders was never scored, so there is nothing to compare.",
+      es: "Uno de estos órdenes nunca se puntuó, así que no hay nada que comparar.",
+    },
+    diffCurveMissing: {
+      en: "This version predates per-track energy capture, so only the score can be compared.",
+      es: "Esta versión es anterior a que guardáramos la energía por track, así que solo se puede comparar el puntaje.",
+    },
+    diffMovedBy: { en: "{from} → {to}", es: "{from} → {to}" },
+    curveBefore: { en: "then", es: "entonces" },
+    curveAfter: { en: "now", es: "ahora" },
   },
 
   playlistDetail: {

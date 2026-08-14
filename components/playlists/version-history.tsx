@@ -2,14 +2,20 @@
 
 import { useState, useTransition } from "react"
 import Link from "next/link"
-import { History, RotateCcw } from "lucide-react"
+import { CheckCircle2, GitCompare, History, RotateCcw } from "lucide-react"
 
-import { restoreVersionAction } from "@/app/dashboard/playlists/actions"
+import {
+  compareVersionAction,
+  markAsPlayedAction,
+  restoreVersionAction,
+} from "@/app/dashboard/playlists/actions"
+import { VersionComparisonView } from "@/components/playlists/version-comparison"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import type { VersionKind } from "@/lib/playlists/versions"
+import type { VersionComparison } from "@/services/version-service"
 import { cn } from "@/lib/utils"
 
 const COPY = DASHBOARD_COPY.versions
@@ -36,12 +42,15 @@ export function VersionHistory({
   playlistId,
   versions,
   entitled,
+  canMarkPlayed,
   locale,
 }: {
   playlistId: string
   versions: VersionSummary[]
   /** PRO gate. Versions are recorded for everyone; reading them is paid. */
   entitled: boolean
+  /** Separate capability: planned-vs-played, which the mark button belongs to. */
+  canMarkPlayed: boolean
   locale: SiteLocale
 }) {
   if (!entitled) {
@@ -79,7 +88,14 @@ export function VersionHistory({
 
   return (
     <Section locale={locale}>
-      <p className="text-xs leading-5 text-white/40">{COPY.intro[locale]}</p>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <p className="max-w-lg text-xs leading-5 text-white/40">
+          {COPY.intro[locale]}
+        </p>
+        {canMarkPlayed ? (
+          <MarkPlayedButton playlistId={playlistId} locale={locale} />
+        ) : null}
+      </div>
       <ul className="mt-4 divide-y divide-white/8">
         {versions.map((version) => (
           <VersionRow
@@ -107,7 +123,27 @@ function VersionRow({
   locale: SiteLocale
 }) {
   const [pending, startTransition] = useTransition()
+  const [comparing, startComparing] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [comparison, setComparison] = useState<VersionComparison | null>(null)
+
+  function toggleCompare() {
+    if (comparison) {
+      setComparison(null)
+      return
+    }
+
+    setError(null)
+    startComparing(async () => {
+      const result = await compareVersionAction(playlistId, version.id)
+
+      if (result.ok && result.comparison) {
+        setComparison(result.comparison)
+      } else {
+        setError(result.message ?? DASHBOARD_COPY.actions.genericError[locale])
+      }
+    })
+  }
 
   function restore() {
     setError(null)
@@ -122,7 +158,8 @@ function VersionRow({
   }
 
   return (
-    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+    <li className="py-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-white">
@@ -158,19 +195,84 @@ function VersionRow({
       </div>
 
       {version.isCurrent ? null : (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={pending}
-          onClick={restore}
-          className="text-white/58 hover:text-white"
-        >
-          <RotateCcw className="size-3.5" />
-          {pending ? COPY.restoring[locale] : COPY.restore[locale]}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={comparing}
+            onClick={toggleCompare}
+            className="text-white/58 hover:text-white"
+          >
+            <GitCompare className="size-3.5" />
+            {comparing
+              ? COPY.comparing[locale]
+              : comparison
+                ? COPY.hide[locale]
+                : COPY.compare[locale]}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={pending}
+            onClick={restore}
+            className="text-white/58 hover:text-white"
+          >
+            <RotateCcw className="size-3.5" />
+            {pending ? COPY.restoring[locale] : COPY.restore[locale]}
+          </Button>
+        </div>
       )}
+      </div>
+
+      {comparison ? (
+        <VersionComparisonView comparison={comparison} locale={locale} />
+      ) : null}
     </li>
+  )
+}
+
+function MarkPlayedButton({
+  playlistId,
+  locale,
+}: {
+  playlistId: string
+  locale: SiteLocale
+}) {
+  const [pending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  return (
+    <div className="text-right">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        disabled={pending}
+        onClick={() => {
+          setError(null)
+          startTransition(async () => {
+            const result = await markAsPlayedAction(playlistId)
+
+            if (!result.ok) {
+              setError(
+                result.message ?? DASHBOARD_COPY.actions.genericError[locale]
+              )
+            }
+          })
+        }}
+        className="text-white/58 hover:text-white"
+      >
+        <CheckCircle2 className="size-3.5" />
+        {pending ? COPY.markingPlayed[locale] : COPY.markPlayed[locale]}
+      </Button>
+      {error ? (
+        <p role="alert" className="mt-1 text-xs text-ec-error">
+          {error}
+        </p>
+      ) : null}
+    </div>
   )
 }
 
