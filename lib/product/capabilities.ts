@@ -49,7 +49,11 @@ export const CAPABILITIES = {
   },
   import_all_formats: { minPlan: "free", status: "shipped" },
   analysis_core: { minPlan: "free", status: "shipped" },
-  applied_fixes: { minPlan: "free", status: "shipped", limit: "fixesPerMonth" },
+  applied_fixes: {
+    minPlan: "free",
+    status: "shipped",
+    note: "Uncapped on every tier: applying a fix is local, instant and reversible, so there is no server boundary to meter. See docs/plan-gating.md.",
+  },
   heuristic_reordering: { minPlan: "free", status: "shipped" },
   ai_ordering: {
     minPlan: "free",

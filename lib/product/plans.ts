@@ -37,8 +37,6 @@ const ENTITLED_STATUSES: readonly PlanStatus[] = ["active", "trialing"]
 export interface PlanLimits {
   /** Playlists a user may keep. `null` = unlimited. */
   activePlaylists: number | null
-  /** Fixes applied per calendar month. `null` = unlimited. */
-  fixesPerMonth: number | null
   /** Claude-backed smart orderings per calendar month. `null` = unlimited. */
   aiOrderingsPerMonth: number | null
   /** Custom genres + set contexts combined. `null` = unlimited. */
@@ -55,15 +53,19 @@ export interface PlanLimits {
 }
 
 /**
- * Limits per tier. Deliberately *not* including native export: Rekordbox XML,
- * Traktor NML, and M3U8 export are free on every tier, permanently. Exporting
- * the fixed order back to the booth is what makes the analysis actionable, so
- * paywalling it breaks the product loop. Do not add it here.
+ * Limits per tier.
+ *
+ * Two things deliberately absent. **Native export** — Rekordbox XML, Traktor NML and M3U8 — is free on
+ * every tier, permanently: exporting the fixed order back to the booth is what
+ * makes the analysis actionable, so paywalling it breaks the product loop.
+ * **Applied fixes** are uncapped for the same family of reason plus a practical
+ * one: applying a fix is local, instant and reversible, with no server boundary
+ * to meter. A cap that can't be enforced is a promise we'd be breaking.
+ * Do not add either here.
  */
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   free: {
     activePlaylists: 3,
-    fixesPerMonth: 3,
     aiOrderingsPerMonth: 1,
     customTaxonomies: 2,
     audioAnalysis: false,
@@ -72,7 +74,6 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
   pro: {
     activePlaylists: null,
-    fixesPerMonth: null,
     aiOrderingsPerMonth: 3,
     customTaxonomies: null,
     audioAnalysis: true,
@@ -81,7 +82,6 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
   pro_plus: {
     activePlaylists: null,
-    fixesPerMonth: null,
     aiOrderingsPerMonth: null,
     customTaxonomies: null,
     audioAnalysis: true,

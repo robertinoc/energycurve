@@ -57,9 +57,10 @@ describe("plan ladder", () => {
   })
 
   it("loosens every quota as the tier rises", () => {
+    // Applied fixes deliberately absent: uncapped on every tier, because
+    // applying one is local and instant with no server boundary to meter.
     const quotas = [
       "activePlaylists",
-      "fixesPerMonth",
       "aiOrderingsPerMonth",
       "customTaxonomies",
     ] as const
