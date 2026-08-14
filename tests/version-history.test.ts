@@ -30,6 +30,7 @@ const render = (props: Partial<Parameters<typeof VersionHistory>[0]> = {}) =>
       playlistId: "p1",
       versions: [version()],
       entitled: true,
+      canMarkPlayed: true,
       locale: "en",
       ...props,
     })

@@ -14,7 +14,18 @@ export interface VersionTrack {
   artist: string
   name: string
   bpm: number | null
+  /** The DJ's manual override, when they set one. Usually null. */
   energyScore: number | null
+  /**
+   * The energy the engine actually resolved for this track at capture time.
+   *
+   * Stored because `energyScore` alone can't rebuild the curve — it's null for
+   * every track whose energy came from BPM, which is most of them. Without this a
+   * comparison between two versions could only say "the score changed", never
+   * *where* the shape went wrong. Null on versions captured before this field
+   * existed, so any reader has to degrade rather than assume.
+   */
+  resolvedEnergy?: number | null
 }
 
 export interface PlaylistVersion {
@@ -92,7 +103,9 @@ export function snapshotOf(
     name: string
     bpm: number | null
     energy_score: number | null
-  }[]
+  }[],
+  /** Resolved energy per track id, when the caller has already computed it. */
+  resolved?: ReadonlyMap<string, number>
 ): VersionTrack[] {
   return [...tracks]
     .sort((a, b) => a.position - b.position)
@@ -106,6 +119,7 @@ export function snapshotOf(
       name: track.name,
       bpm: track.bpm,
       energyScore: track.energy_score,
+      resolvedEnergy: resolved?.get(track.id) ?? null,
     }))
 }
 
@@ -145,6 +159,8 @@ export function parseSnapshot(value: unknown): VersionTrack[] {
         bpm: typeof record.bpm === "number" ? record.bpm : null,
         energyScore:
           typeof record.energyScore === "number" ? record.energyScore : null,
+        resolvedEnergy:
+          typeof record.resolvedEnergy === "number" ? record.resolvedEnergy : null,
       },
     ]
   })

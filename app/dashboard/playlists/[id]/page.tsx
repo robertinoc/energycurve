@@ -207,6 +207,7 @@ export default async function PlaylistDetailPage({
           playlistId={playlist.id}
           versions={versionSummaries}
           entitled={canReadHistory}
+          canMarkPlayed={can(billing.plan, billing.status, "planned_vs_played")}
           locale={locale}
         />
 

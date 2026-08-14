@@ -910,8 +910,8 @@ const siteCopy: SiteCopySchema = {
           es: "Comparación entre planificado y tocado",
         },
         free: "no",
-        pro: "soon",
-        proPlus: "soon",
+        pro: "yes",
+        proPlus: "yes",
       },
       {
         key: "printable_set_sheet",
