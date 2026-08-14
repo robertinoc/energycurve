@@ -38,12 +38,17 @@ import {
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
+import { can } from "@/lib/product/capabilities"
+import { restorableOrder } from "@/lib/playlists/versions"
+import { getProfileBilling } from "@/services/billing-service"
+import { getVersion } from "@/services/version-service"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import {
   PlaylistLimitError,
   addTrack,
   createPlaylist,
   deletePlaylist,
+  getOwnedPlaylistWithTracks,
   moveTrack,
   removeTrack,
   reorderTracks,
@@ -836,6 +841,71 @@ export async function importAudioFilesAction(
   revalidatePath("/dashboard/playlists")
   revalidatePath("/dashboard")
   return { ok: true, playlistId }
+}
+
+/**
+ * Puts the playlist back into a previous order.
+ *
+ * Goes through `reorderTracks`, which captures the order being replaced first, so
+ * restoring is itself undoable — the DJ can always come back. That's also why this
+ * is safe to offer at all.
+ */
+export async function restoreVersionAction(
+  playlistId: string,
+  versionId: string
+): Promise<ReorderResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message ?? undefined }
+  }
+
+  const billing = await getProfileBilling(profile.id)
+
+  if (!can(billing.plan, billing.status, "version_history")) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  const playlist = await getOwnedPlaylistWithTracks(profile.id, playlistId)
+
+  if (!playlist) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  const version = await getVersion(playlistId, versionId)
+
+  if (!version) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  const order = restorableOrder(
+    version.tracks,
+    playlist.tracks.map((track) => track.id)
+  )
+
+  // Null means the set has gained a track this version says nothing about, so
+  // applying it would drop that track out of the playlist. Told plainly rather
+  // than silently doing something destructive.
+  if (!order) {
+    return { ok: false, message: ACTION_COPY.versionStale[locale] }
+  }
+
+  try {
+    await reorderTracks(profile.id, playlistId, order)
+  } catch (error) {
+    logError("playlist.restore_version_failed", error, {
+      profileId: profile.id,
+      playlistId,
+      versionId,
+    })
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+
+  return { ok: true }
 }
 
 export interface ReorderResult {

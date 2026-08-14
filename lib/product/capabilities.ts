@@ -78,7 +78,7 @@ export const CAPABILITIES = {
   // ── PRO: the engine gets better ───────────────────────────────────────────
   audio_analysis: { minPlan: "pro", status: "planned", limit: "audioAnalysis" },
   energy_model_v3: { minPlan: "pro", status: "planned" },
-  version_history: { minPlan: "pro", status: "planned", limit: "versionHistory" },
+  version_history: { minPlan: "pro", status: "shipped", limit: "versionHistory" },
   slot_aware_planning: {
     minPlan: "pro",
     status: "shipped",
