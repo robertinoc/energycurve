@@ -8,6 +8,7 @@ import {
   percentile,
   spectralEntropy,
   spectralFlux,
+  downmixToMono,
 } from "@/lib/audio/spectral-features"
 import { toCamelot } from "@/lib/music/camelot"
 
@@ -203,5 +204,60 @@ describe("spectral flux", () => {
     expect(spectralFlux([], [])).toBe(0)
     expect(spectralFlux([1, 2, 3], [1])).toBeCloseTo(0, 10)
     expect(Number.isFinite(spectralFlux([Number.NaN, 5], [1, 1]))).toBe(true)
+  })
+})
+
+describe("downmixToMono", () => {
+  it("averages two channels", () => {
+    const left = new Float32Array([1, 0, 0.5])
+    const right = new Float32Array([0, 1, 0.5])
+
+    expect(Array.from(downmixToMono([left, right]))).toEqual([0.5, 0.5, 0.5])
+  })
+
+  it("returns a single channel untouched", () => {
+    const only = new Float32Array([0.25, 0.5])
+
+    expect(downmixToMono([only])).toBe(only)
+    expect(Array.from(only)).toEqual([0.25, 0.5])
+  })
+
+  it("averages more than two channels", () => {
+    const result = downmixToMono([
+      new Float32Array([3]),
+      new Float32Array([0]),
+      new Float32Array([0]),
+    ])
+
+    expect(result[0]).toBeCloseTo(1)
+  })
+
+  it("mutates the first channel, which is the documented contract", () => {
+    // The worker owns these arrays by transfer, so writing through them is
+    // deliberate — allocating a second 50 MB buffer to avoid a mutation nobody
+    // can observe would cost more than the analysis. Pinned so a future
+    // "cleanup" that starts copying is a visible decision, not a silent one.
+    const left = new Float32Array([1, 1])
+    const right = new Float32Array([0, 0])
+
+    const result = downmixToMono([left, right])
+
+    expect(result).toBe(left)
+    expect(Array.from(left)).toEqual([0.5, 0.5])
+  })
+
+  it("survives a short channel instead of reading past its end", () => {
+    // Every channel of an AudioBuffer is the same length, but a caller isn't
+    // the spec, and NaN here would poison every downstream feature.
+    const result = downmixToMono([
+      new Float32Array([1, 1, 1]),
+      new Float32Array([1]),
+    ])
+
+    expect(Array.from(result).every(Number.isFinite)).toBe(true)
+  })
+
+  it("handles no channels at all", () => {
+    expect(downmixToMono([])).toHaveLength(0)
   })
 })

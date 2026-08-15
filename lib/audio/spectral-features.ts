@@ -182,3 +182,44 @@ export function averageChroma(frames: readonly (readonly number[])[]): number[] 
 
   return totals.map((total) => total / counted)
 }
+
+/**
+ * Averages channels into one mono buffer, **mutating the first array in place**.
+ *
+ * In place because the caller is the audio worker and the arrays arrived by
+ * transfer: nobody else can observe them, and allocating a second 50 MB buffer
+ * to avoid a mutation nobody can see would be the more expensive mistake.
+ * Calling this with arrays you still hold a reference to will corrupt them.
+ *
+ * Mono costs nothing in accuracy for the features here and halves the frame
+ * loop. This is also the work that used to run on the main thread and froze the
+ * interface for half a second — see docs/spike-browser-audio-analysis.md.
+ */
+export function downmixToMono(channels: readonly Float32Array[]): Float32Array {
+  if (channels.length === 0) {
+    return new Float32Array(0)
+  }
+
+  const mono = channels[0]
+
+  if (channels.length === 1) {
+    return mono
+  }
+
+  for (let channel = 1; channel < channels.length; channel += 1) {
+    const data = channels[channel]
+    // Shorter channels would read undefined past their end; the spec says every
+    // channel of an AudioBuffer has the same length, but a caller isn't the spec.
+    const shared = Math.min(mono.length, data.length)
+
+    for (let i = 0; i < shared; i += 1) {
+      mono[i] += data[i]
+    }
+  }
+
+  for (let i = 0; i < mono.length; i += 1) {
+    mono[i] /= channels.length
+  }
+
+  return mono
+}

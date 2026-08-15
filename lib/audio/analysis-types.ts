@@ -33,7 +33,16 @@ export interface AudioFeatures {
 
 export interface WorkerRequest {
   id: string
-  samples: Float32Array
+  /**
+   * One Float32Array per channel, transferred.
+   *
+   * The downmix to mono used to happen on the main thread, and that — not
+   * `decodeAudioData` — was the interface freeze the spike measured at 561 ms: a
+   * five-minute stereo track is ~26 million accumulate iterations plus 13
+   * million divides, in JavaScript, between two paints. Copying each channel is
+   * a memcpy the engine does at native speed; the arithmetic belongs here.
+   */
+  channels: Float32Array[]
   sampleRate: number
 }
 

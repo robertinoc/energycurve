@@ -109,8 +109,12 @@ describe("pricing copy", () => {
   // Roadmap-only capabilities, named precisely enough not to collide with the
   // import row (which legitimately mentions "audio files").
   const UNBUILT: Record<string, string[]> = {
-    en: ["real audio analysis", "energy model v3", "gig mode"],
-    es: ["análisis de audio real", "energy model v3", "gig mode"],
+    // "real audio analysis" used to sit here and no longer does: tempo detection
+    // ships. Key detection took its place rather than the row simply leaving,
+    // because that is the half still unbuilt (21% against tagged files) and it
+    // is the half a DJ assumes when they read "audio analysis".
+    en: ["musical key read", "energy model v3", "gig mode"],
+    es: ["tonalidad leída", "energy model v3", "gig mode"],
   }
 
   it.each(supportedLocales)(

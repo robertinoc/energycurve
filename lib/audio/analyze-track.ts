@@ -20,31 +20,19 @@ import type {
   WorkerResponse,
 } from "./analysis-types"
 
-/** Analysis is mono — downmixing halves the frame loop for no accuracy cost
- *  on the features we use. */
-function toMono(buffer: AudioBuffer): Float32Array {
-  const channels = buffer.numberOfChannels
-
-  if (channels === 1) {
-    // Copy: the worker takes ownership of the transferred buffer.
-    return Float32Array.from(buffer.getChannelData(0))
-  }
-
-  const length = buffer.length
-  const mono = new Float32Array(length)
-
-  for (let channel = 0; channel < channels; channel += 1) {
-    const data = buffer.getChannelData(channel)
-    for (let i = 0; i < length; i += 1) {
-      mono[i] += data[i]
-    }
-  }
-
-  for (let i = 0; i < length; i += 1) {
-    mono[i] /= channels
-  }
-
-  return mono
+/**
+ * Copies each channel out of the AudioBuffer so it can be transferred.
+ *
+ * `getChannelData` hands back a view the AudioBuffer still owns, so it can't be
+ * transferred as-is. `slice()` is a memcpy the engine runs at native speed —
+ * milliseconds for a five-minute track — as opposed to the tens of millions of
+ * JavaScript iterations the downmix used to cost right here, on the thread that
+ * paints.
+ */
+function copyChannels(buffer: AudioBuffer): Float32Array[] {
+  return Array.from({ length: buffer.numberOfChannels }, (_, channel) =>
+    buffer.getChannelData(channel).slice()
+  )
 }
 
 /**
@@ -100,7 +88,7 @@ export function disposeAudioWorker(): void {
 }
 
 function extractFeatures(
-  samples: Float32Array,
+  channels: Float32Array[],
   sampleRate: number
 ): Promise<{ features: AudioFeatures; analyzeMs: number }> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -108,9 +96,13 @@ function extractFeatures(
 
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject })
-    const request: WorkerRequest = { id, samples, sampleRate }
-    // Transfer rather than clone: a 5-minute track is ~50 MB of Float32.
-    active.postMessage(request, [samples.buffer])
+    const request: WorkerRequest = { id, channels, sampleRate }
+    // Transferred rather than cloned: a 5-minute stereo track is ~100 MB of
+    // Float32, and cloning it would cost more than the analysis.
+    active.postMessage(
+      request,
+      channels.map((channel) => channel.buffer)
+    )
   })
 }
 
@@ -181,8 +173,11 @@ export async function analyzeAudioFile(
     }
     base.bpmMs = performance.now() - bpmStart
 
-    const samples = toMono(buffer)
-    const { features, analyzeMs } = await extractFeatures(samples, buffer.sampleRate)
+    const channels = copyChannels(buffer)
+    const { features, analyzeMs } = await extractFeatures(
+      channels,
+      buffer.sampleRate
+    )
     base.featuresMs = analyzeMs
     base.features = features
 
