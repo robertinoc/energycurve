@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { FolderOpen, Music4, TriangleAlert } from "lucide-react"
+import { AudioLines, FolderOpen, Music4, TriangleAlert } from "lucide-react"
 
 import { importAudioFilesAction } from "@/app/dashboard/playlists/actions"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -45,10 +46,18 @@ function loadMusicMetadata() {
 interface ParsedRow {
   id: string
   fileName: string
+  /**
+   * The handle itself, kept so the audio can be analysed after the tags are
+   * read. Holding a File costs nothing — it's a reference to bytes on disk, not
+   * the bytes — and the audio still never leaves the machine.
+   */
+  file: File
   track: ImportedTrack
   /** Tag parse failed — artist/title derived from the filename. */
   fromFilename: boolean
   included: boolean
+  /** BPM this row got from analysing the audio rather than from a tag. */
+  analyzedBpm: number | null
 }
 
 interface SelectionNotes {
@@ -63,10 +72,13 @@ export function AudioFilesImport({
   locale,
   customContexts,
   customGenres,
+  canAnalyzeAudio,
 }: {
   locale: SiteLocale
   customContexts: UserContext[]
   customGenres: UserGenre[]
+  /** PRO gate for reading BPM out of the audio itself. */
+  canAnalyzeAudio: boolean
 }) {
   const router = useRouter()
   const filesInputRef = useRef<HTMLInputElement>(null)
@@ -93,9 +105,87 @@ export function AudioFilesImport({
 
   useEffect(() => {
     const probe = document.createElement("input")
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSupportsFolder("webkitdirectory" in probe)
   }, [])
+
+  const [analysis, setAnalysis] = useState<{
+    running: boolean
+    done: number
+    total: number
+    failed: number
+  } | null>(null)
+  // Read inside the loop rather than through state: a cancel has to be seen by
+  // an iteration already in flight, and a state update wouldn't be visible to it.
+  const cancelAnalysis = useRef(false)
+
+  /**
+   * Reads the real BPM out of the audio, for the tracks whose tags don't carry
+   * one.
+   *
+   * Only those: a file that already declares its tempo has nothing to gain from
+   * two seconds of DSP, and skipping them is what keeps a rekordbox-tagged
+   * folder instant. This is the whole point of the feature — wav/flac/aiff with
+   * no tags were previously energy-estimated from their position in the set.
+   */
+  async function analyzeMissingBpm() {
+    const targets = rows.filter(
+      (row) => row.included && row.track.bpm === null
+    )
+
+    if (targets.length === 0 || analysis?.running) {
+      return
+    }
+
+    cancelAnalysis.current = false
+    setAnalysis({ running: true, done: 0, total: targets.length, failed: 0 })
+
+    const { analyzeAudioFile, disposeAudioWorker } = await import(
+      "@/lib/audio/analyze-track"
+    )
+
+    let failed = 0
+
+    for (const [index, row] of targets.entries()) {
+      if (cancelAnalysis.current) {
+        break
+      }
+
+      const result = await analyzeAudioFile(row.file)
+
+      if (result.bpm === null) {
+        // Beat detection legitimately fails on ambient and beatless material.
+        // The row keeps whatever it had; it isn't an error worth a red banner.
+        failed += 1
+      } else {
+        const detected = Math.round(result.bpm)
+
+        setRows((current) =>
+          current.map((entry) =>
+            entry.id === row.id
+              ? {
+                  ...entry,
+                  analyzedBpm: detected,
+                  track: { ...entry.track, bpm: detected },
+                }
+              : entry
+          )
+        )
+      }
+
+      setAnalysis({
+        running: true,
+        done: index + 1,
+        total: targets.length,
+        failed,
+      })
+    }
+
+    // One worker is reused across the batch; nothing else needs it afterwards.
+    disposeAudioWorker()
+    setAnalysis((current) =>
+      current ? { ...current, running: false } : current
+    )
+  }
 
   async function handleFiles(fileList: FileList | File[]) {
     const all = Array.from(fileList)
@@ -129,6 +219,9 @@ export function AudioFilesImport({
     })
     setPhase("reading")
     setProgress({ done: 0, total: kept.length })
+    // Same reason as resetSelection: these are different files now.
+    setAnalysis(null)
+    cancelAnalysis.current = true
 
     const { parseBlob } = await loadMusicMetadata()
 
@@ -154,9 +247,11 @@ export function AudioFilesImport({
       parsed.push({
         id: `${index}-${file.name}`,
         fileName: file.name,
+        file,
         track: audioTagsToImportedTrack(file.name, relativePath, tags),
         fromFilename: tags === null,
         included: true,
+        analyzedBpm: null,
       })
       setProgress({ done: index + 1, total: kept.length })
     }
@@ -173,6 +268,9 @@ export function AudioFilesImport({
 
   function resetSelection() {
     setRows([])
+    // Otherwise a fresh folder inherits the previous batch's "12 of 12 analysed".
+    setAnalysis(null)
+    cancelAnalysis.current = true
     setNotes({ filtered: null, truncated: false, unreadable: 0 })
     setError(null)
     setPhase("idle")
@@ -351,6 +449,86 @@ export function AudioFilesImport({
                 total: includedRows.length,
               })}
             </p>
+          ) : null}
+
+          {missingBpm > 0 ? (
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3">
+              <h3 className="flex items-center gap-2 text-sm font-medium text-white">
+                <AudioLines className="size-4 text-white/40" />
+                {COPY.analyzeTitle[locale]}
+                {canAnalyzeAudio ? null : (
+                  <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                    pro
+                  </span>
+                )}
+              </h3>
+              <p className="mt-1.5 text-xs leading-5 text-white/48">
+                {canAnalyzeAudio
+                  ? formatTemplate(COPY.analyzeBody[locale], {
+                      count: missingBpm,
+                    })
+                  : COPY.analyzeLockedBody[locale]}
+              </p>
+
+              {!canAnalyzeAudio ? (
+                <Link
+                  href="/pricing"
+                  className={cn(buttonVariants({ size: "sm" }), "mt-3 w-fit")}
+                >
+                  {COPY.analyzeLockedCta[locale]}
+                </Link>
+              ) : analysis?.running ? (
+                <div className="mt-3 flex items-center gap-3">
+                  <span className="text-xs tabular-nums text-white/62">
+                    {formatTemplate(COPY.analyzeProgress[locale], {
+                      done: analysis.done,
+                      total: analysis.total,
+                    })}
+                  </span>
+                  <div className="h-1 flex-1 overflow-hidden rounded bg-white/10">
+                    <div
+                      className="h-full bg-ec-cyan transition-[width]"
+                      style={{
+                        width: `${(analysis.done / analysis.total) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      cancelAnalysis.current = true
+                    }}
+                  >
+                    {COPY.analyzeCancel[locale]}
+                  </Button>
+                </div>
+              ) : analysis ? (
+                <p className="mt-2 text-xs leading-5 text-white/56">
+                  {formatTemplate(COPY.analyzeDone[locale], {
+                    ok: analysis.done - analysis.failed,
+                    total: analysis.total,
+                  })}
+                  {analysis.failed > 0
+                    ? ` ${formatTemplate(COPY.analyzeFailed[locale], {
+                        count: analysis.failed,
+                      })}`
+                    : ""}
+                </p>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={analyzeMissingBpm}
+                  className="mt-3 w-fit"
+                >
+                  {formatTemplate(COPY.analyzeCta[locale], {
+                    count: missingBpm,
+                  })}
+                </Button>
+              )}
+            </div>
           ) : null}
 
           <div className="max-h-80 overflow-y-auto rounded-[16px] border border-ec-border bg-black/18">

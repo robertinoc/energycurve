@@ -76,7 +76,14 @@ export const CAPABILITIES = {
   search_organization: { minPlan: "free", status: "shipped" },
 
   // ── PRO: the engine gets better ───────────────────────────────────────────
-  audio_analysis: { minPlan: "pro", status: "planned", limit: "audioAnalysis" },
+  audio_analysis: { minPlan: "pro", status: "shipped", limit: "audioAnalysis" },
+  /**
+   * Split from audio_analysis rather than folded into it: tempo detection is
+   * production-ready (19/19 exact against tagged files) while key detection sits
+   * at 21%, and one capability covering both would let the pricing page promise
+   * the second on the strength of the first.
+   */
+  key_detection: { minPlan: "pro", status: "planned", limit: "audioAnalysis" },
   energy_model_v3: { minPlan: "pro", status: "planned" },
   version_history: { minPlan: "pro", status: "shipped", limit: "versionHistory" },
   slot_aware_planning: {

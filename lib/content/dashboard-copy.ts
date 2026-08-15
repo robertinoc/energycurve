@@ -446,6 +446,30 @@ export const DASHBOARD_COPY = {
   },
 
   audioImport: {
+    analyzeTitle: {
+      en: "Read the real BPM from the audio",
+      es: "Leer el BPM real del audio",
+    },
+    analyzeBody: {
+      en: "{count} of these tracks carry no BPM tag, so their energy is being guessed from position alone. Analysing the audio measures it. Takes a couple of seconds per track and happens on your machine — nothing is uploaded.",
+      es: "{count} de estos tracks no traen BPM en los tags, así que su energía se está adivinando solo por la posición. Analizar el audio la mide. Tarda un par de segundos por track y pasa en tu máquina — no se sube nada.",
+    },
+    analyzeCta: { en: "Analyse {count} tracks", es: "Analizar {count} tracks" },
+    analyzeProgress: { en: "{done} of {total}", es: "{done} de {total}" },
+    analyzeCancel: { en: "Stop", es: "Frenar" },
+    analyzeDone: {
+      en: "{ok} of {total} now have a measured BPM.",
+      es: "{ok} de {total} ya tienen BPM medido.",
+    },
+    analyzeFailed: {
+      en: "{count} had no detectable beat — ambient or beatless material.",
+      es: "{count} no tenían pulso detectable — material ambient o sin beat.",
+    },
+    analyzeLockedBody: {
+      en: "PRO reads the real BPM out of files that carry no tags — the wav, flac and aiff that today get their energy guessed from position alone.",
+      es: "PRO lee el BPM real de los archivos que no traen tags — los wav, flac y aiff a los que hoy se les adivina la energía solo por la posición.",
+    },
+    analyzeLockedCta: { en: "See plans", es: "Ver planes" },
     dropzoneMain: {
       en: "Drag your tracks here, or",
       es: "Arrastrá tus tracks acá, o",

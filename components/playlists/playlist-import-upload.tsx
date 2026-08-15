@@ -51,10 +51,13 @@ export function PlaylistImportUpload({
   locale,
   customContexts,
   customGenres,
+  canAnalyzeAudio,
 }: {
   locale: SiteLocale
   customContexts: UserContext[]
   customGenres: UserGenre[]
+  /** PRO gate, resolved on the server and threaded down to the audio tab. */
+  canAnalyzeAudio: boolean
 }) {
   const [state, formAction, isPending] = useActionState(
     importPlaylistAction,
@@ -135,6 +138,7 @@ export function PlaylistImportUpload({
               locale={locale}
               customContexts={customContexts}
               customGenres={customGenres}
+              canAnalyzeAudio={canAnalyzeAudio}
             />
           </div>
         ) : null}

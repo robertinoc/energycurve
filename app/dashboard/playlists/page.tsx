@@ -5,9 +5,11 @@ import { redirect } from "next/navigation"
 
 import { PlaylistImportUpload } from "@/components/playlists/playlist-import-upload"
 import { PlaylistsBrowser } from "@/components/playlists/playlists-browser"
+import { getProfileBilling } from "@/services/billing-service"
 import { EmptyState } from "@/components/ui/empty-state"
 import { buildReturnToHref } from "@/lib/auth/return-to"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import { can } from "@/lib/product/capabilities"
 import { getRequestLocale } from "@/lib/server-locale"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { listPlaylists } from "@/services/playlist-service"
@@ -33,12 +35,14 @@ export default async function PlaylistsPage() {
     lastName: user.lastName ?? null,
   })
 
-  const [playlists, customContexts, customGenres, locale] = await Promise.all([
-    listPlaylists(profile.id),
-    listUserContexts(profile.id),
-    listUserGenres(profile.id),
-    getRequestLocale(),
-  ])
+  const [playlists, customContexts, customGenres, locale, billing] =
+    await Promise.all([
+      listPlaylists(profile.id),
+      listUserContexts(profile.id),
+      listUserGenres(profile.id),
+      getRequestLocale(),
+      getProfileBilling(profile.id),
+    ])
   const copy = DASHBOARD_COPY.playlists
 
   return (
@@ -58,6 +62,7 @@ export default async function PlaylistsPage() {
           locale={locale}
           customContexts={customContexts}
           customGenres={customGenres}
+          canAnalyzeAudio={can(billing.plan, billing.status, "audio_analysis")}
         />
 
         {playlists.length === 0 ? (

@@ -19,6 +19,7 @@ import {
   logWorkOSRuntimeError,
 } from "@/lib/auth/workos-runtime"
 import { isBillingConfigured } from "@/lib/billing/config"
+import { can } from "@/lib/product/capabilities"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
 import { cn } from "@/lib/utils"
@@ -196,6 +197,14 @@ export default async function DashboardPage({
             locale={locale}
             customContexts={customContexts}
             customGenres={customGenres}
+            // A failed billing read degrades to "not entitled" rather than
+            // taking the dashboard down — the same fail-soft the page already
+            // chose for everything else it reads from billing.
+            canAnalyzeAudio={
+              billing
+                ? can(billing.plan, billing.status, "audio_analysis")
+                : false
+            }
           />
           <div className="flex flex-wrap items-center gap-2 text-sm text-white/56">
             <span>{copy.byHand[locale]}</span>

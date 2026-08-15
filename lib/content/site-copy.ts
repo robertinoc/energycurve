@@ -849,8 +849,23 @@ const siteCopy: SiteCopySchema = {
       {
         key: "audio_analysis",
         capability: {
-          en: "Real audio analysis in the browser",
-          es: "Análisis de audio real en el navegador",
+          // Names BPM specifically rather than "real audio analysis", which a DJ
+          // reads as BPM *and* key — the comparison being Mixed In Key. Key
+          // detection isn't shippable yet (21% against tagged files), so
+          // claiming it here would be the pricing page writing a cheque the
+          // product can't cash. Widen this line when key lands.
+          en: "Real BPM read from the audio, in your browser",
+          es: "BPM real leído del audio, en tu navegador",
+        },
+        free: "no",
+        pro: "yes",
+        proPlus: "yes",
+      },
+      {
+        key: "key_detection",
+        capability: {
+          en: "Musical key read from the audio",
+          es: "Tonalidad leída del audio",
         },
         free: "no",
         pro: "soon",

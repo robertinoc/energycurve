@@ -19,6 +19,7 @@ import {
 } from "./analysis-types"
 import {
   averageChroma,
+  downmixToMono,
   mean,
   onsetRate,
   percentile,
@@ -40,10 +41,12 @@ const FEATURES: MeydaAudioFeature[] = ["rms", "amplitudeSpectrum", "chroma"]
 type ExtractedFeatures = Partial<MeydaFeaturesObject>
 
 self.onmessage = (event: MessageEvent<WorkerRequest>) => {
-  const { id, samples, sampleRate } = event.data
+  const { id, channels, sampleRate } = event.data
   const startedAt = performance.now()
 
   try {
+    const samples = downmixToMono(channels)
+
     Meyda.sampleRate = sampleRate
 
     const rms: number[] = []
