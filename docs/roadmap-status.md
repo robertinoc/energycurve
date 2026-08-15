@@ -283,6 +283,13 @@ deliberate exception to the "engine depth is PRO" rule; see the strategy doc.
 server needed**, with two corrections to the plan.
 
 - **Essentia.js is out** — AGPL-3.0, unusable in a closed-source paid product.
+- **Direct USB export researched and declined** — writing the database is
+  solved, but a CDJ needs per-track ANLZ analysis files that only rekordbox
+  produces. See `docs/research-usb-export.md` for the narrower playlist-injection
+  idea that survived.
+- **Energy Model v3 specified, not fitted** — every feature it needs already
+  ships; the coefficients need a labelled run over a MIK-tagged library. Spec and
+  fitting procedure in `docs/energy-model-v3.md`.
   Replaced by MIT parts: `web-audio-beat-detector` (tempo), `meyda` (spectral
   features), and our own spectral flux, spectral entropy, and Krumhansl-Schmuckler
   key detection. Meyda's own `spectralFlux` extractor is broken (throws under ESM),
