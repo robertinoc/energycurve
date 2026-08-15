@@ -959,6 +959,16 @@ const siteCopy: SiteCopySchema = {
         proPlus: "soon",
       },
       {
+        key: "set_comparator",
+        capability: {
+          en: "Compare two sets — curves, harmony and repeated tracks",
+          es: "Comparar dos sets — curvas, armonía y tracks repetidos",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "yes",
+      },
+      {
         key: "gig_mode",
         capability: {
           en: "Gig Mode (offline performance view)",

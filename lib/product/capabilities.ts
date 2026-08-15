@@ -101,6 +101,11 @@ export const CAPABILITIES = {
   b2b_sets: { minPlan: "pro_plus", status: "planned" },
   gig_mode: { minPlan: "pro_plus", status: "planned", limit: "proWorkflow" },
   global_library: { minPlan: "pro_plus", status: "planned", limit: "proWorkflow" },
+  /**
+   * The first shipped capability behind `proWorkflow`, which until now was a
+   * limit nothing consulted — a switch with no lamp on it.
+   */
+  set_comparator: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
   transition_suggestions: {
     minPlan: "pro_plus",
     status: "planned",

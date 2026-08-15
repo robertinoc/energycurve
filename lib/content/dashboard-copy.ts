@@ -198,6 +198,44 @@ export const DASHBOARD_COPY = {
     currentBadge: { en: "You're here", es: "Estás acá" },
   },
 
+  compare: {
+    title: { en: "Compare two sets", es: "Comparar dos sets" },
+    back: { en: "Back to set", es: "Volver al set" },
+    pick: { en: "Compare with", es: "Comparar con" },
+    pickEmpty: {
+      en: "You need a second set to compare against.",
+      es: "Necesitás un segundo set para comparar.",
+    },
+    pickPrompt: {
+      en: "Pick a set to compare this one against.",
+      es: "Elegí contra qué set querés comparar este.",
+    },
+    scoreA: { en: "This set", es: "Este set" },
+    scoreB: { en: "The other one", es: "El otro" },
+    harmony: { en: "Harmonic transitions", es: "Transiciones armónicas" },
+    overlapTitle: { en: "Played in both", es: "Tocados en los dos" },
+    overlapNone: {
+      en: "Nothing repeats between these two. For a residency, that's the answer you want.",
+      es: "No se repite nada entre estos dos. Para una residencia, esa es la respuesta que querés.",
+    },
+    overlapRatio: {
+      en: "{percent}% of the shorter set repeats",
+      es: "Se repite el {percent}% del set más corto",
+    },
+    positions: { en: "#{a} here · #{b} there", es: "#{a} acá · #{b} allá" },
+    onlyA: { en: "Only in this set", es: "Solo en este set" },
+    onlyB: { en: "Only in the other", es: "Solo en el otro" },
+    lockedTitle: {
+      en: "Comparing sets is a PRO+ feature",
+      es: "Comparar sets es una función PRO+",
+    },
+    lockedBody: {
+      en: "PRO+ puts two sets side by side: both curves on one axis, how harmonic each one runs, and which records you played in both — the question every resident ends up asking.",
+      es: "PRO+ pone dos sets lado a lado: las dos curvas en un eje, qué tan armónico corre cada uno, y qué discos tocaste en los dos — la pregunta que todo residente termina haciéndose.",
+    },
+    lockedCta: { en: "See plans", es: "Ver planes" },
+  },
+
   versions: {
     title: { en: "Order history", es: "Historial de órdenes" },
     intro: {
