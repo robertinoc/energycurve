@@ -74,6 +74,18 @@ export function buildBrandedEmail(options: BrandedEmailOptions): {
 
   const html = `<!doctype html>
 <html lang="en">
+  <head>
+    <!--
+      The document has to declare its own encoding, not rely on the MIME header.
+      Resend does send charset=utf-8, and most clients honour it — but a client
+      that reads the document instead (older Outlook), or anyone forwarding or
+      saving the HTML, falls back to Latin-1 and every em dash and apostrophe in
+      the copy turns into mojibake. This was missing since the builder was
+      written; it affects every transactional email, not just new ones.
+    -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
   <body style="margin:0;padding:0;background:${BRAND.bg};">
     <span style="display:none;font-size:1px;color:${BRAND.bg};max-height:0;max-width:0;opacity:0;overflow:hidden;">${escapeHtml(options.preview)}</span>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.bg};padding:32px 16px;">

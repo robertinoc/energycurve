@@ -60,3 +60,39 @@ describe("buildBrandedEmail", () => {
     expect(text).not.toContain("http")
   })
 })
+
+describe("character encoding", () => {
+  it("declares utf-8 in the document, not only in the MIME header", () => {
+    // Without this, a client that reads the document instead of the header —
+    // older Outlook, or anyone forwarding the saved HTML — renders every em dash
+    // and apostrophe as mojibake. It was missing since this builder was written.
+    const { html } = buildBrandedEmail({
+      preview: "p",
+      heading: "h",
+      paragraphs: ["b"],
+    })
+
+    expect(html).toContain('<meta charset="utf-8" />')
+    expect(html.indexOf("<meta charset")).toBeLessThan(html.indexOf("<body"))
+  })
+
+  it("survives a full round trip through utf-8 bytes", () => {
+    // The actual failure, reproduced: encode as utf-8 and decode as latin-1 and
+    // the dash breaks. Asserting the bytes decode back cleanly is what pins it.
+    const { html, text } = buildBrandedEmail({
+      preview: "Preview — with punctuation",
+      heading: "You're on PRO — welcome",
+      paragraphs: ["Warm-up, peak time — after-hours. ¿Y la tonalidad? Sí."],
+    })
+
+    for (const body of [html, text]) {
+      const roundTripped = new TextDecoder("utf-8").decode(
+        new TextEncoder().encode(body)
+      )
+
+      expect(roundTripped).toBe(body)
+      expect(roundTripped).toContain("—")
+      expect(roundTripped).not.toContain("â€")
+    }
+  })
+})

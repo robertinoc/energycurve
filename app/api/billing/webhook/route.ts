@@ -26,6 +26,7 @@ import {
   findProfileIdByStripeCustomer,
   getProfileBilling,
 } from "@/services/billing-service"
+import { sendPurchaseConfirmation } from "@/services/purchase-email-service"
 import type { Json } from "@/types/database"
 
 export const dynamic = "force-dynamic"
@@ -207,6 +208,20 @@ export async function POST(request: Request) {
         previousPlan: previous.plan,
         status: resolved.status,
       })
+    }
+
+    // Only when someone becomes, or becomes more of, a paying customer. Not on
+    // renewals — Stripe sends its own receipts and a second monthly email from
+    // us would be the kind of noise people mute the sender over. Awaited rather
+    // than fired off because a serverless function can be frozen the moment it
+    // responds, which would drop the send; it can't throw, so it can't turn a
+    // mail problem into a Stripe retry of the subscription write.
+    if (transition === "subscription_started" || transition === "plan_upgraded") {
+      await sendPurchaseConfirmation(
+        profileId,
+        resolved.plan,
+        transition === "plan_upgraded"
+      )
     }
 
     logInfo("billing.webhook.subscription_applied", {
