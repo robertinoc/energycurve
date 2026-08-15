@@ -337,3 +337,64 @@ the response says `duplicate: true`.
 - **No dunning emails.** `invoice.payment_failed` isn't handled; Stripe's own
   dunning emails cover the basics until there's a reason to do better.
 - **No proration UI.** The customer portal handles plan changes.
+
+## Conversion and churn events
+
+Until this landed the billing webhook emitted **nothing**. The database knew
+who was on which plan, but not how they got there — and the difference between
+"on PRO" and "just bought PRO", "came back to PRO" or "stepped down from PRO+"
+is the whole of conversion analysis. Worse, that data is not recoverable: a
+funnel step nobody recorded on the day it happened cannot be reconstructed
+afterwards from state.
+
+All events are captured server-side through `captureServerEvent`, keyed by
+profile id (the same distinct id the browser SDK identifies with). No email or
+name is ever attached — PostHog gets an opaque id and the shape of the event.
+
+| Event | Fires when | Properties |
+|---|---|---|
+| `checkout_started` | A Stripe Checkout session is minted | `plan`, `interval`, `fromPlan` |
+| `subscription_started` | Free → paid, and the subscription is live | `plan`, `previousPlan`, `status` |
+| `plan_upgraded` | PRO → PRO+ | `plan`, `previousPlan`, `status` |
+| `plan_downgraded` | PRO+ → PRO, still paying | `plan`, `previousPlan`, `status` |
+| `subscription_ended` | Cancelled, or lapsed on a failed payment | `plan`, `reason` |
+| `plan_limit_reached` | A plan limit refuses an action | `capability`, `plan`, `used`, `limit` |
+
+Two things worth knowing about how these are derived:
+
+**The transition is classified, not the end state.** `classifyPlanTransition`
+in `lib/analytics/billing-events.ts` compares the plan *before* the write to the
+plan after it, and the new status outranks both: a subscription that lapses
+while the `plan` column still reads `pro` has **ended**, and reading the plan
+alone would file that as "nothing happened". The webhook therefore reads the
+previous billing row before calling `applySubscription`, because afterwards the
+previous plan is gone.
+
+**Renewals are dropped on purpose.** Stripe fires
+`customer.subscription.updated` for card replacements, metadata edits and every
+period rollover. Those classify as `plan_unchanged`, and
+`isReportableTransition` — a type predicate, so the compiler enforces it — keeps
+them out. Letting them through would bury the four events that mean something.
+
+### The dashboards these are for
+
+Each of these is one PostHog insight; the events were chosen so that no
+dashboard needs a property filter more complicated than the ones named here.
+
+1. **Purchase funnel** — Funnel over `checkout_started` → `subscription_started`.
+   The drop-off is abandonment on Stripe's own page, which is the one step our
+   database can say nothing about.
+2. **Monthly churn** — Trend of `subscription_ended`, broken down by `reason`
+   (Stripe's own cancellation feedback, carried through). Divide by active
+   subscribers for a rate.
+3. **Net movement** — Trends of `plan_upgraded` and `plan_downgraded` on one
+   chart. Upgrades outpacing downgrades is the tier split working; the reverse
+   means PRO+ is priced or scoped wrong.
+4. **What sells the plan** — Trend of `plan_limit_reached` broken down by
+   `capability`, and a funnel from it to `checkout_started`. This answers the
+   question the pricing matrix can only guess at: *which* wall actually makes
+   someone reach for a card. Expect it to disagree with intuition.
+
+AI cost per user is already covered by the `ai_usage` table (see
+"Adding a new AI feature"), not by these events — token counts belong with the
+call that spent them.

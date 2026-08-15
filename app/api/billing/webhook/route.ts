@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 import type Stripe from "stripe"
 
+import {
+  classifyPlanTransition,
+  isReportableTransition,
+} from "@/lib/analytics/billing-events"
+import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { getBillingConfig } from "@/lib/billing/config"
 import {
   cancelAtOf,
@@ -153,14 +158,20 @@ export async function POST(request: Request) {
     if (event.type === "customer.subscription.deleted") {
       const current = await getProfileBilling(profileId)
       const purchased = isPlan(current.plan) ? current.plan : "free"
+      const feedback =
+        cancellationFeedbackOf(subscription) ?? current.cancellationFeedback
+
+      // The only churn signal we ever get, and it arrives once. Captured before
+      // the write so a failure to persist still leaves the event recorded.
+      captureServerEvent(profileId, "subscription_ended", {
+        plan: purchased,
+        reason: feedback,
+      })
       // Carry the reason across: the deleted event may not repeat it, and it's
       // the only churn signal we ever get.
       await applySubscription(
         profileId,
-        canceledSubscription(
-          purchased,
-          cancellationFeedbackOf(subscription) ?? current.cancellationFeedback
-        )
+        canceledSubscription(purchased, feedback)
       )
       logInfo("billing.webhook.subscription_canceled", { profileId })
       return NextResponse.json({ received: true })
@@ -178,7 +189,25 @@ export async function POST(request: Request) {
       config.prices
     )
 
+    // Read before the write: after applySubscription the previous plan is gone,
+    // and without it "they're on PRO" can't be told apart from "they just bought
+    // PRO", "they came back", or "they stepped down from PRO+".
+    const previous = await getProfileBilling(profileId)
+    const transition = classifyPlanTransition(
+      isPlan(previous.plan) ? previous.plan : "free",
+      resolved.plan,
+      resolved.status
+    )
+
     await applySubscription(profileId, resolved)
+
+    if (isReportableTransition(transition)) {
+      captureServerEvent(profileId, transition, {
+        plan: resolved.plan,
+        previousPlan: previous.plan,
+        status: resolved.status,
+      })
+    }
 
     logInfo("billing.webhook.subscription_applied", {
       profileId,

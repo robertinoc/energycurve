@@ -15,6 +15,20 @@ export type AnalyticsEvent =
   | "playlist_created"
   | "analysis_started"
   | "analysis_completed"
+  // Billing funnel. `checkout_started` is emitted when the session is minted,
+  // so the gap between it and `subscription_started` is abandonment at Stripe —
+  // a number that can't be reconstructed from the database afterwards.
+  | "checkout_started"
+  | "subscription_started"
+  | "plan_upgraded"
+  | "plan_downgraded"
+  | "subscription_ended"
+  /**
+   * Someone ran into a plan limit. The single most useful conversion signal
+   * there is: it marks the moment the product told a free user "no", which is
+   * the only moment a paid plan is worth anything to them.
+   */
+  | "plan_limit_reached"
 
 type AnalyticsProperties = Record<
   string,

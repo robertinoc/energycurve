@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import { NextResponse } from "next/server"
 
+import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { CONTEXT_DISPLAY_NAMES } from "@/lib/content/analysis-copy"
 import { analyzePlaylist } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
@@ -288,6 +289,13 @@ export async function POST(
   const quota = await readQuota(profile.id, "ai_ordering", aiLimit)
 
   if (!quota.allowed) {
+    captureServerEvent(profile.id, "plan_limit_reached", {
+      capability: "ai_ordering",
+      plan: billing.plan,
+      used: quota.used,
+      limit: quota.limit,
+    })
+
     return NextResponse.json(
       {
         error: "quota_exceeded",
