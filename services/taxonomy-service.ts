@@ -1,4 +1,5 @@
 import "server-only"
+import { captureServerEvent } from "@/lib/analytics/posthog-server"
 
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import {
@@ -125,6 +126,12 @@ export async function createUserContext(
   const usage = await taxonomyUsage(profileId)
 
   if (atTaxonomyLimit(usage)) {
+    captureServerEvent(profileId, "plan_limit_reached", {
+      capability: "custom_taxonomies",
+      used: usage.used,
+      limit: usage.limit,
+    })
+
     return { validationError: "limit_reached", limit: usage.limit as number }
   }
 
@@ -172,6 +179,12 @@ export async function createUserGenre(
   const usage = await taxonomyUsage(profileId)
 
   if (atTaxonomyLimit(usage)) {
+    captureServerEvent(profileId, "plan_limit_reached", {
+      capability: "custom_taxonomies",
+      used: usage.used,
+      limit: usage.limit,
+    })
+
     return { validationError: "limit_reached", limit: usage.limit as number }
   }
 

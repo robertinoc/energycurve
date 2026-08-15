@@ -1,5 +1,6 @@
 import "server-only"
 
+import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { finalPositions, isValidReorder } from "@/lib/tracklist/reorder"
@@ -101,6 +102,16 @@ export async function createPlaylist(
   if (limit !== null) {
     const used = await countPlaylists(profileId)
     if (!quotaState(used, limit).allowed) {
+      // The moment the product says "no" to a free user, which is the only
+      // moment a paid plan is worth anything to them. Recorded here rather than
+      // in the UI so it fires wherever creation is attempted from.
+      captureServerEvent(profileId, "plan_limit_reached", {
+        capability: "active_playlists",
+        plan: billing.plan,
+        used,
+        limit,
+      })
+
       // Blocks creation and nothing else. Everything already saved stays visible
       // and editable, including for someone who ends up over the cap after a
       // downgrade — their playlists are their work, not leverage.

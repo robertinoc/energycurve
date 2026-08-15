@@ -1,6 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import { NextResponse } from "next/server"
 
+import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { getBillingConfig, priceIdFor } from "@/lib/billing/config"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { isPlan, type BillingInterval } from "@/lib/product/plans"
@@ -122,6 +123,16 @@ export async function POST(request: Request) {
       profileId: profile.id,
       plan,
       interval,
+    })
+
+    // The top of the funnel. The gap between this and `subscription_started` is
+    // abandonment at Stripe's page — a number nothing in our database can
+    // reconstruct after the fact, because an abandoned checkout leaves no trace
+    // on our side at all.
+    captureServerEvent(profile.id, "checkout_started", {
+      plan,
+      interval,
+      fromPlan: billing.plan,
     })
 
     return NextResponse.json({ url: session.url })
