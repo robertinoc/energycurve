@@ -242,6 +242,43 @@ export async function getOwnedPlaylistWithTracks(
   return { ...playlist, tracks: tracks ?? [] }
 }
 
+/**
+ * Loads a playlist **without an ownership check**, for the public curve page.
+ *
+ * Deliberately separate from `getOwnedPlaylistWithTracks` rather than a flag on
+ * it: an ownership check that can be switched off from a call site is one bad
+ * refactor away from being switched off everywhere. The only caller is the
+ * signed-link route, and the signature is what stands in for ownership there.
+ */
+export async function getPlaylistWithTracksById(
+  playlistId: string
+): Promise<PlaylistWithTracks | null> {
+  const supabase = getSupabaseAdminClient()
+
+  const { data: playlist, error } = await supabase
+    .from("playlists")
+    .select(PLAYLIST_WITH_NAMES_SELECT)
+    .eq("id", playlistId)
+    .maybeSingle()
+
+  if (error || !playlist) {
+    return null
+  }
+
+  const { data: tracks, error: tracksError } = await supabase
+    .from("tracks")
+    .select("*")
+    .eq("playlist_id", playlistId)
+    .order("position", { ascending: true })
+
+  if (tracksError) {
+    logError("playlist.public_tracks_load_failed", tracksError, { playlistId })
+    return null
+  }
+
+  return { ...(playlist as unknown as PlaylistWithTracks), tracks: tracks ?? [] }
+}
+
 /** Renames a playlist and sets its optional description (V3 feedback). */
 export async function updatePlaylistDetails(
   profileId: string,

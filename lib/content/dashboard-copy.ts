@@ -236,6 +236,30 @@ export const DASHBOARD_COPY = {
     lockedCta: { en: "See plans", es: "Ver planes" },
   },
 
+  share: {
+    button: { en: "Share the shape", es: "Compartir la forma" },
+    copied: { en: "Link copied", es: "Link copiado" },
+    hint: {
+      en: "A public page with the curve and the score. Your tracklist is not on it.",
+      es: "Una página pública con la curva y el puntaje. Tu tracklist no está ahí.",
+    },
+  },
+
+  publicCurve: {
+    eyebrow: { en: "The shape of a set", es: "La forma de un set" },
+    scoreLabel: { en: "Set score", es: "Puntaje del set" },
+    trackCount: { en: "{count} tracks", es: "{count} tracks" },
+    privacyNote: {
+      en: "The tracklist stays private — this page only shows the shape.",
+      es: "El tracklist queda privado — esta página solo muestra la forma.",
+    },
+    cta: { en: "Map your own set", es: "Mapeá tu propio set" },
+    tagline: {
+      en: "EnergyCurve reads the energy curve of a DJ set and tells you where it breaks.",
+      es: "EnergyCurve lee la curva de energía de un set y te dice dónde se rompe.",
+    },
+  },
+
   versions: {
     title: { en: "Order history", es: "Historial de órdenes" },
     intro: {

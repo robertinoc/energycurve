@@ -8,6 +8,7 @@ import { PlaylistExportButton } from "@/components/playlists/playlist-export-but
 import { PlaylistHeaderEdit } from "@/components/playlists/playlist-header-edit"
 import { PlaylistStatsPills } from "@/components/playlists/playlist-stats-pills"
 import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
+import { ShareCurveButton } from "@/components/playlists/share-curve-button"
 import {
   VersionHistory,
   type VersionSummary,
@@ -27,7 +28,9 @@ import {
   type CurveShape,
 } from "@/lib/product/strategy"
 import { sameOrder, snapshotOf } from "@/lib/playlists/versions"
+import { buildShareToken } from "@/lib/playlists/share-token"
 import { can } from "@/lib/product/capabilities"
+import { SITE_URL } from "@/lib/seo"
 import { getRequestLocale } from "@/lib/server-locale"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -78,6 +81,12 @@ export default async function PlaylistDetailPage({
   )
   const canReadHistory = can(billing.plan, billing.status, "version_history")
   const canCompareSets = can(billing.plan, billing.status, "set_comparator")
+
+  // Free on every plan on purpose: this is the only growth loop in the roadmap,
+  // and paywalling your own advertising is self-defeating. Null when no signing
+  // secret is configured, which hides the button rather than minting dead links.
+  const shareToken = buildShareToken(playlist.id)
+  const shareUrl = shareToken ? `${SITE_URL}/c/${shareToken}` : null
 
   // Not queried at all when the reader can't see it. Versions are still being
   // *recorded* for them — the history is waiting the day they upgrade.
@@ -168,6 +177,9 @@ export default async function PlaylistDetailPage({
                   </span>
                 )}
               </Link>
+              {shareUrl ? (
+                <ShareCurveButton url={shareUrl} locale={locale} />
+              ) : null}
               <PlaylistExportButton playlist={exportPlaylist} locale={locale} />
               <Link
                 href={`/dashboard/playlists/${playlist.id}/analysis`}
