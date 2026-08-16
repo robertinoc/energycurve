@@ -76,6 +76,7 @@ export const DASHBOARD_COPY = {
     workspace: { en: "Workspace", es: "Workspace" },
     home: { en: "Home", es: "Inicio" },
     playlists: { en: "Playlists", es: "Playlists" },
+    library: { en: "Library", es: "Librería" },
     logOut: { en: "Log out", es: "Cerrar sesión" },
     openMenu: { en: "Open menu", es: "Abrir menú" },
     closeMenu: { en: "Close menu", es: "Cerrar menú" },
@@ -870,5 +871,41 @@ export const DASHBOARD_COPY = {
       },
       dismiss: { en: "Dismiss", es: "Cerrar" },
     },
+  },
+  library: {
+    title: { en: "Your library", es: "Tu librería" },
+    subtitle: {
+      en: "Every record across your sets, collapsed into one list.",
+      es: "Todos tus discos cruzando tus sets, en una sola lista.",
+    },
+    records: { en: "records", es: "discos" },
+    repeated: { en: "in more than one set", es: "en más de un set" },
+    neverPlayed: { en: "never marked played", es: "nunca marcados como tocados" },
+    filterAll: { en: "All", es: "Todos" },
+    filterRepeated: { en: "Repeated", es: "Repetidos" },
+    filterNeverPlayed: { en: "Never played", es: "Nunca tocados" },
+    inSets: { en: "in {count} sets", es: "en {count} sets" },
+    inOneSet: { en: "in 1 set", es: "en 1 set" },
+    neverPlayedCaveat: {
+      en: "\"Never played\" only counts sets you marked as played — it doesn't know about nights you didn't record.",
+      es: "\"Nunca tocados\" cuenta solo los sets que marcaste como tocados — no sabe de las noches que no registraste.",
+    },
+    empty: {
+      en: "Import a set and your library builds itself.",
+      es: "Importá un set y tu librería se arma sola.",
+    },
+    emptyFiltered: {
+      en: "Nothing matches this filter.",
+      es: "Nada coincide con este filtro.",
+    },
+    lockedTitle: {
+      en: "Your library is a PRO+ feature",
+      es: "Tu librería es una función PRO+",
+    },
+    lockedBody: {
+      en: "PRO+ collapses every set you own into one list: what you lean on, what repeats across nights, and what you've never once played.",
+      es: "PRO+ junta todos tus sets en una sola lista: en qué te apoyás, qué se repite entre noches, y qué nunca tocaste ni una vez.",
+    },
+    lockedCta: { en: "See plans", es: "Ver planes" },
   },
 } as const

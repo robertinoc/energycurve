@@ -986,7 +986,7 @@ const siteCopy: SiteCopySchema = {
         },
         free: "no",
         pro: "no",
-        proPlus: "soon",
+        proPlus: "yes",
       },
       {
         key: "transition_suggestions",
