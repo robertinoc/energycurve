@@ -19,6 +19,7 @@
  */
 
 import { buildBrandedEmail } from "@/lib/email/build-email-html"
+import type { SiteLocale } from "@/lib/content/site-copy"
 import type { Plan } from "@/lib/product/plans"
 
 /**
@@ -28,19 +29,86 @@ import type { Plan } from "@/lib/product/plans"
  * nothing; "your set scored against the clock, so you know if your peak lands
  * before the headliner" is the reason they paid.
  */
-const PRO_HIGHLIGHTS = [
-  "Real BPM read out of your audio — the wav, flac and aiff files that carry no tags, measured instead of guessed.",
-  "Slot-aware planning: tell us you play 01:00 to 03:00 and the curve gets mapped to the clock, so an early peak is something you find out before the gig.",
-  "Named target curves — warm-up, peak time, after-hours, journey, landing — so a set is scored against the shape you're actually playing.",
-  "A printable set sheet for the booth, with the tracklist, the keys and the time each track lands.",
-  "Order history: every order you save is kept with what it scored, and you can restore any of them.",
-  "Planned versus played: mark what you actually played and see what moved, what you skipped, and what it did to the curve.",
-]
+const PRO_HIGHLIGHTS: Record<SiteLocale, string[]> = {
+  en: [
+    "Real BPM read out of your audio — the wav, flac and aiff files that carry no tags, measured instead of guessed.",
+    "Slot-aware planning: tell us you play 01:00 to 03:00 and the curve gets mapped to the clock, so an early peak is something you find out before the gig.",
+    "Named target curves — warm-up, peak time, after-hours, journey, landing — so a set is scored against the shape you're actually playing.",
+    "A printable set sheet for the booth, with the tracklist, the keys and the time each track lands.",
+    "Order history: every order you save is kept with what it scored, and you can restore any of them.",
+    "Planned versus played: mark what you actually played and see what moved, what you skipped, and what it did to the curve.",
+  ],
+  es: [
+    "BPM real leído de tu audio — los wav, flac y aiff que no traen tags, medidos en vez de adivinados.",
+    "Planificación por horario: decinos que tocás de 01:00 a 03:00 y la curva se mapea al reloj, así un pico temprano es algo que descubrís antes de la fecha y no durante.",
+    "Curvas objetivo con nombre — warm-up, peak time, after-hours, journey, landing — para que el set se mida contra la forma que realmente estás tocando.",
+    "Una hoja de set imprimible para la cabina, con el tracklist, los tonos y la hora a la que cae cada track.",
+    "Historial de órdenes: cada orden que guardás queda con lo que puntuó, y podés restaurar el que quieras.",
+    "Planificado contra tocado: marcás lo que tocaste de verdad y ves qué se movió, qué te salteaste, y qué le hizo eso a la curva.",
+  ],
+}
 
-const PRO_PLUS_HIGHLIGHTS = [
-  "Unlimited AI ordering, instead of a monthly allowance.",
-  "Everything in PRO, with no caps anywhere.",
-]
+const PRO_PLUS_HIGHLIGHTS: Record<SiteLocale, string[]> = {
+  en: [
+    "Unlimited AI ordering, instead of a monthly allowance.",
+    "Everything in PRO, with no caps anywhere.",
+  ],
+  es: [
+    "Ordenación con IA ilimitada, en vez de un cupo mensual.",
+    "Todo lo de PRO, sin topes en ningún lado.",
+  ],
+}
+
+/**
+ * Everything the email says, per language.
+ *
+ * The statement warning is translated rather than left in English on purpose:
+ * it is the sentence that prevents a chargeback, and a warning somebody has to
+ * translate for themselves is a warning that doesn't work.
+ */
+const STRINGS: Record<
+  SiteLocale,
+  {
+    preview: (plan: string) => string
+    headingNew: (plan: string) => string
+    headingUpgrade: (plan: string) => string
+    subjectNew: (plan: string) => string
+    subjectUpgrade: (plan: string) => string
+    statement: string
+    cancel: string
+    button: string
+    footnote: string
+  }
+> = {
+  en: {
+    preview: (plan) => `${plan} is active — and a heads-up about how the charge appears.`,
+    headingNew: (plan) => `You're on ${plan}. Here's what you just unlocked.`,
+    headingUpgrade: (plan) => `You're on ${plan}. Here's what that adds.`,
+    subjectNew: (plan) => `Welcome to EnergyCurve ${plan}`,
+    subjectUpgrade: (plan) => `You're on ${plan}`,
+    statement:
+      "One thing worth knowing before your statement arrives: the charge appears as STAGELINK LLC, not EnergyCurve. EnergyCurve is part of the StageLink suite, and StageLink LLC is the company that processes the payment. Nothing is wrong if that's the name you see.",
+    cancel:
+      "You can change or cancel your plan whenever you want, from your account — no email required, no retention call.",
+    button: "Open EnergyCurve",
+    footnote:
+      "Manage or cancel your plan any time from Account → Billing. Questions: just reply to this email.",
+  },
+  es: {
+    preview: (plan) => `${plan} está activo — y un aviso sobre cómo aparece el cargo.`,
+    headingNew: (plan) => `Ya estás en ${plan}. Esto es lo que acabás de desbloquear.`,
+    headingUpgrade: (plan) => `Ya estás en ${plan}. Esto es lo que suma.`,
+    subjectNew: (plan) => `Bienvenido a EnergyCurve ${plan}`,
+    subjectUpgrade: (plan) => `Ya estás en ${plan}`,
+    statement:
+      "Algo que conviene saber antes de que te llegue el resumen: el cargo aparece como STAGELINK LLC, no como EnergyCurve. EnergyCurve es parte de la suite StageLink, y StageLink LLC es la empresa que procesa el pago. No hay nada mal si ese es el nombre que ves.",
+    cancel:
+      "Podés cambiar o cancelar tu plan cuando quieras, desde tu cuenta — sin mandar un mail, sin llamada de retención.",
+    button: "Abrir EnergyCurve",
+    footnote:
+      "Gestioná o cancelá tu plan cuando quieras desde Cuenta → Facturación. ¿Dudas? Respondé este mail.",
+  },
+}
 
 export interface PurchaseEmailContent {
   subject: string
@@ -67,43 +135,34 @@ export function buildPurchaseEmail(options: {
   appUrl: string
   /** True when they moved up from a paid plan rather than starting one. */
   isUpgrade: boolean
+  /** Defaults to English, matching what the UI shows someone who never chose. */
+  locale?: SiteLocale
 }): PurchaseEmailContent | null {
   if (options.plan === "free") {
     return null
   }
 
+  const locale = options.locale ?? "en"
   const planName = PLAN_NAMES[options.plan]
   const highlights =
     options.plan === "pro_plus"
-      ? [...PRO_PLUS_HIGHLIGHTS, ...PRO_HIGHLIGHTS]
-      : PRO_HIGHLIGHTS
+      ? [...PRO_PLUS_HIGHLIGHTS[locale], ...PRO_HIGHLIGHTS[locale]]
+      : PRO_HIGHLIGHTS[locale]
 
-  const opening = options.isUpgrade
-    ? `You're on ${planName}. Here's what that adds.`
-    : `You're on ${planName}. Here's what you just unlocked.`
+  const t = STRINGS[locale]
 
   const { html, text } = buildBrandedEmail({
-    preview: `${planName} is active — and a heads-up about how the charge appears.`,
-    heading: opening,
-    paragraphs: [
-      ...highlights,
-      // Third person plural avoided: this is the sentence that prevents a
-      // chargeback, and it has to read as a direct warning, not as boilerplate.
-      "One thing worth knowing before your statement arrives: the charge appears as STAGELINK LLC, not EnergyCurve. EnergyCurve is part of the StageLink suite, and StageLink LLC is the company that processes the payment. Nothing is wrong if that's the name you see.",
-      "You can change or cancel your plan whenever you want, from your account — no email required, no retention call.",
-    ],
-    button: {
-      label: "Open EnergyCurve",
-      url: `${options.appUrl}/dashboard`,
-    },
-    footnote:
-      "Manage or cancel your plan any time from Account → Billing. Questions: just reply to this email.",
+    preview: t.preview(planName),
+    heading: options.isUpgrade ? t.headingUpgrade(planName) : t.headingNew(planName),
+    paragraphs: [...highlights, t.statement, t.cancel],
+    button: { label: t.button, url: `${options.appUrl}/dashboard` },
+    footnote: t.footnote,
   })
 
   return {
     subject: options.isUpgrade
-      ? `You're on ${planName}`
-      : `Welcome to EnergyCurve ${planName}`,
+      ? t.subjectUpgrade(planName)
+      : t.subjectNew(planName),
     html,
     text,
   }

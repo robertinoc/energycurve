@@ -376,6 +376,24 @@ period rollover. Those classify as `plan_unchanged`, and
 `isReportableTransition` — a type predicate, so the compiler enforces it — keeps
 them out. Letting them through would bury the four events that mean something.
 
+### Language
+
+Transactional emails are written in the language on `profiles.preferred_locale`,
+which is set when a signed-in user picks one from the language toggle. Null means
+they never chose, and resolves to English — the same thing the UI shows them, so
+the email matches the product they actually saw rather than a guess about who
+they are.
+
+The statement warning is translated, not left in English. It's the sentence that
+prevents a chargeback, and a warning somebody has to translate for themselves is
+a warning that doesn't work. "STAGELINK LLC" itself survives translation, because
+that is the string they will read on the statement.
+
+Password resets look the language up by email address instead, since whoever
+asks for one is by definition not signed in. An unknown address gets English —
+also the only safe answer, because behaving differently for known and unknown
+emails would turn the reset form into an account-existence probe.
+
 ### The dashboards these are for
 
 Each of these is one PostHog insight; the events were chosen so that no

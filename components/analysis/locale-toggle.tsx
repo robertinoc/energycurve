@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 
+import { rememberLocaleAction } from "@/app/dashboard/locale-actions"
 import { ANALYSIS_LOCALE_COOKIE } from "@/lib/analysis-locale"
 import { ANALYSIS_UI } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -32,6 +33,10 @@ export function LocaleToggle({ current }: LocaleToggleProps) {
 
     persistLocaleCookie(locale)
     startTransition(() => {
+      // Fire-and-forget: the cookie already changed the UI, and this only
+      // teaches the server which language to write emails in. A signed-out
+      // visitor's call returns without doing anything.
+      void rememberLocaleAction(locale)
       router.refresh()
     })
   }

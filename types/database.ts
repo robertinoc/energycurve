@@ -48,6 +48,7 @@ export interface Database {
           id: string
           workos_user_id: string
           email: string
+          preferred_locale: string | null
           suspended_at: string | null
           plan: string
           plan_status: string | null
@@ -63,6 +64,7 @@ export interface Database {
           id?: string
           workos_user_id: string
           email: string
+          preferred_locale?: string | null
           suspended_at?: string | null
           plan?: string
           plan_status?: string | null
@@ -78,6 +80,7 @@ export interface Database {
           id?: string
           workos_user_id?: string
           email?: string
+          preferred_locale?: string | null
           suspended_at?: string | null
           plan?: string
           plan_status?: string | null
