@@ -506,6 +506,16 @@ export const ANALYSIS_UI = {
     en: "Claude is testing orders against the ideal {context} curve and the Camelot wheel…",
     es: "Claude está probando órdenes contra la curva ideal de {context} y la rueda de Camelot…",
   },
+  /**
+   * Shown once the model starts committing track ids, which is the only part
+   * of the wait we can actually measure. Deliberately not a rotation of
+   * invented steps: everything before this point takes milliseconds, so
+   * "reading metadata…" would be describing work that finished long ago.
+   */
+  smartPlacingBanner: {
+    en: "Placing tracks: {placed} of {total}",
+    es: "Ubicando temas: {placed} de {total}",
+  },
   smartDoneBanner: {
     en: "New order ready: score goes from {from} to {to}. The shape now follows the {context} curve — and you can keep editing by hand.",
     es: "Orden nuevo listo: el score pasa de {from} a {to}. La forma ahora sigue la curva de {context} — y podés seguir editando a mano.",

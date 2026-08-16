@@ -22,6 +22,7 @@ import {
   formatTemplate,
 } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
+import { decodeSmartOrderEvents } from "@/lib/smart-order/stream"
 import {
   deriveOrder,
   potentialScore,
@@ -193,6 +194,12 @@ export function AnalysisWorkbench({
   )
   const [smartStatus, setSmartStatus] = useState<SmartOrderStatus>("idle")
   const [smartError, setSmartError] = useState(false)
+  // How much of the order Claude has actually committed to. Null until the
+  // first id lands, because "0 of 40" for several seconds reads as stuck.
+  const [smartProgress, setSmartProgress] = useState<{
+    placed: number
+    total: number
+  } | null>(null)
   const [hydrated, setHydrated] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [saveState, setSaveState] = useState<
@@ -443,6 +450,7 @@ export function AnalysisWorkbench({
 
     setSmartError(false)
     setSmartStatus("thinking")
+    setSmartProgress(null)
 
     try {
       const response = await fetch(
@@ -450,17 +458,41 @@ export function AnalysisWorkbench({
         { method: "POST" }
       )
 
-      if (!response.ok) {
+      if (!response.ok || !response.body) {
         throw new Error(`smart-order ${response.status}`)
       }
 
-      const payload = (await response.json()) as {
-        order?: unknown
-        source?: unknown
+      // NDJSON: progress events while Claude writes the order, then one
+      // terminal event. See lib/smart-order/stream.ts for the format.
+      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+      let buffer = ""
+      let ids: string[] = []
+      let source: "claude" | "fallback" = "claude"
+
+      for (;;) {
+        const { done, value } = await reader.read()
+
+        if (done) {
+          break
+        }
+
+        buffer += value
+        const decoded = decodeSmartOrderEvents(buffer)
+        buffer = decoded.rest
+
+        for (const event of decoded.events) {
+          if (event.type === "progress") {
+            setSmartProgress({ placed: event.placed, total: event.total })
+          } else if (event.type === "start") {
+            setSmartProgress({ placed: 0, total: event.total })
+          } else if (event.type === "done") {
+            ids = event.order
+            source = event.source
+          } else {
+            throw new Error("smart-order stream error")
+          }
+        }
       }
-      const ids = Array.isArray(payload.order)
-        ? payload.order.filter((id): id is string => typeof id === "string")
-        : []
 
       // Same strict validation as the server: exact same id set, no dupes.
       const valid =
@@ -472,7 +504,6 @@ export function AnalysisWorkbench({
         throw new Error("smart-order invalid payload")
       }
 
-      const source = payload.source === "fallback" ? "fallback" : "claude"
       setApplied(new Set())
       setSmartOrder(ids)
       setSmartSource(source)
@@ -480,6 +511,8 @@ export function AnalysisWorkbench({
     } catch {
       setSmartStatus(smartOrder ? (smartSource === "fallback" ? "fallback" : "done") : "idle")
       setSmartError(true)
+    } finally {
+      setSmartProgress(null)
     }
   }, [smartStatus, playlistId, originalIds.length, trackIdSet, smartOrder, smartSource])
 
@@ -693,11 +726,36 @@ export function AnalysisWorkbench({
 
       {/* Zone 4 banners: violet while Claude thinks, cyan with the result. */}
       {smartStatus === "thinking" ? (
-        <div className="flex items-center gap-3 rounded-xl border border-[#A24DE0]/35 bg-[#A24DE0]/[0.08] px-4 py-3 text-sm text-white/80">
-          <Loader2 className="size-4 shrink-0 animate-spin text-[#c084fc]" />
-          {formatTemplate(ANALYSIS_UI.smartThinkingBanner[locale], {
-            context: contextName,
-          })}
+        <div className="flex flex-col gap-2 rounded-xl border border-[#A24DE0]/35 bg-[#A24DE0]/[0.08] px-4 py-3 text-sm text-white/80">
+          <div className="flex items-center gap-3">
+            <Loader2 className="size-4 shrink-0 animate-spin text-[#c084fc]" />
+            {smartProgress && smartProgress.placed > 0
+              ? formatTemplate(ANALYSIS_UI.smartPlacingBanner[locale], {
+                  placed: String(smartProgress.placed),
+                  total: String(smartProgress.total),
+                })
+              : formatTemplate(ANALYSIS_UI.smartThinkingBanner[locale], {
+                  context: contextName,
+                })}
+          </div>
+          {smartProgress && smartProgress.placed > 0 ? (
+            <div
+              className="h-1 w-full overflow-hidden rounded-full bg-white/10"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={smartProgress.total}
+              aria-valuenow={smartProgress.placed}
+            >
+              <div
+                className="h-full rounded-full bg-[#c084fc] transition-[width] duration-300 ease-out"
+                style={{
+                  width: `${Math.round(
+                    (smartProgress.placed / smartProgress.total) * 100
+                  )}%`,
+                }}
+              />
+            </div>
+          ) : null}
         </div>
       ) : smartError ? (
         <div className="rounded-xl border border-ec-amber/35 bg-ec-amber/[0.06] px-4 py-3 text-sm text-white/80">
