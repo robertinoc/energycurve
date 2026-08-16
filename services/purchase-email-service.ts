@@ -1,5 +1,6 @@
 import "server-only"
 
+import { toSiteLocale } from "@/lib/analysis-locale"
 import { buildPurchaseEmail } from "@/lib/email/purchase-confirmation"
 import {
   isEmailDeliveryConfigured,
@@ -28,18 +29,25 @@ export async function sendPurchaseConfirmation(
       return
     }
 
-    const content = buildPurchaseEmail({ plan, appUrl: SITE_URL, isUpgrade })
+    const supabase = getSupabaseAdminClient()
+    // Address and language in one read: they live on the same row, and the
+    // language decides what gets written before the address decides where.
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("email, preferred_locale")
+      .eq("id", profileId)
+      .maybeSingle()
+
+    const content = buildPurchaseEmail({
+      plan,
+      appUrl: SITE_URL,
+      isUpgrade,
+      locale: toSiteLocale(data?.preferred_locale ?? undefined),
+    })
 
     if (!content) {
       return
     }
-
-    const supabase = getSupabaseAdminClient()
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("email")
-      .eq("id", profileId)
-      .maybeSingle()
 
     if (error || !data?.email) {
       logError(

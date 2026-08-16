@@ -14,6 +14,8 @@ import {
   PASSWORD_MIN_LENGTH_PARAM,
 } from "@/lib/auth/password-policy"
 import { buildBrandedEmail } from "@/lib/email/build-email-html"
+import type { SiteLocale } from "@/lib/content/site-copy"
+import { getLocaleByEmail } from "@/services/profile-service"
 import {
   isEmailDeliveryConfigured,
   sendTransactionalEmail,
@@ -29,16 +31,43 @@ function getFormValue(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : ""
 }
 
-function buildResetEmail(resetUrl: string) {
-  return buildBrandedEmail({
-    preview: "Reset your EnergyCurve password",
+const RESET_COPY: Record<
+  SiteLocale,
+  {
+    subject: string
+    heading: string
+    body: string
+    button: string
+    footnote: string
+  }
+> = {
+  en: {
+    subject: "Reset your EnergyCurve password",
     heading: "Reset your EnergyCurve password",
-    paragraphs: [
-      "Someone requested a password reset for your EnergyCurve account. Click the button below to choose a new password.",
-    ],
-    button: { label: "Reset password", url: resetUrl },
+    body: "Someone requested a password reset for your EnergyCurve account. Click the button below to choose a new password.",
+    button: "Reset password",
     footnote:
       "The link expires shortly. If you didn't request this, you can safely ignore this email — your password stays unchanged.",
+  },
+  es: {
+    subject: "Restablecé tu contraseña de EnergyCurve",
+    heading: "Restablecé tu contraseña de EnergyCurve",
+    body: "Alguien pidió restablecer la contraseña de tu cuenta de EnergyCurve. Tocá el botón de abajo para elegir una nueva.",
+    button: "Restablecer contraseña",
+    footnote:
+      "El link vence en poco tiempo. Si no fuiste vos, podés ignorar este mail tranquilo — tu contraseña queda como está.",
+  },
+}
+
+function buildResetEmail(resetUrl: string, locale: SiteLocale) {
+  const copy = RESET_COPY[locale]
+
+  return buildBrandedEmail({
+    preview: copy.subject,
+    heading: copy.heading,
+    paragraphs: [copy.body],
+    button: { label: copy.button, url: resetUrl },
+    footnote: copy.footnote,
   })
 }
 
@@ -88,11 +117,16 @@ export async function forgotPasswordAction(formData: FormData) {
     const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(
       reset.passwordResetToken
     )}`
-    const { text, html } = buildResetEmail(resetUrl)
+    // Looked up by address rather than by session: whoever asks for a reset is
+    // by definition not signed in. An unknown address yields English, which is
+    // also the only safe answer — behaving differently for known and unknown
+    // emails would turn this into an account-existence probe.
+    const locale = await getLocaleByEmail(email)
+    const { text, html } = buildResetEmail(resetUrl, locale)
 
     await sendTransactionalEmail({
       to: email,
-      subject: "Reset your EnergyCurve password",
+      subject: RESET_COPY[locale].subject,
       text,
       html,
     })

@@ -84,3 +84,68 @@ describe("buildPurchaseEmail", () => {
     }
   })
 })
+
+describe("buildPurchaseEmail — language", () => {
+  const es = (plan: "pro" | "pro_plus" = "pro", isUpgrade = false) =>
+    buildPurchaseEmail({
+      plan,
+      appUrl: "https://energycurve.app",
+      isUpgrade,
+      locale: "es",
+    })!
+
+  it("writes the whole email in Spanish when that's what they chose", () => {
+    const email = es()
+
+    expect(email.subject).toContain("Bienvenido")
+    expect(email.text).toContain("BPM real")
+    expect(email.text).toContain("hoja de set")
+    expect(email.text).not.toContain("Here's what")
+  })
+
+  it("translates the statement warning rather than leaving it in English", () => {
+    // This is the sentence that prevents a chargeback. A warning somebody has to
+    // translate for themselves is a warning that doesn't work — and the company
+    // name itself must survive translation, because it's what they'll read on
+    // the statement.
+    const email = es()
+
+    expect(email.text).toContain("STAGELINK LLC")
+    expect(email.text).toContain("resumen")
+  })
+
+  it("says how to cancel, in Spanish", () => {
+    expect(es().text.toLowerCase()).toContain("cancelar")
+  })
+
+  it("keeps the upgrade/new distinction in Spanish", () => {
+    expect(es("pro_plus", false).subject).toContain("Bienvenido")
+    expect(es("pro_plus", true).subject).not.toContain("Bienvenido")
+  })
+
+  it("defaults to English when no language was ever chosen", () => {
+    // Which is also what the UI shows them, so the email matches the product
+    // they actually saw rather than a guess about who they are.
+    const email = buildPurchaseEmail({
+      plan: "pro",
+      appUrl: "https://energycurve.app",
+      isUpgrade: false,
+    })!
+
+    expect(email.subject).toContain("Welcome")
+  })
+
+  it("renders no undefined in either language", () => {
+    for (const locale of ["en", "es"] as const) {
+      const email = buildPurchaseEmail({
+        plan: "pro_plus",
+        appUrl: "https://energycurve.app",
+        isUpgrade: true,
+        locale,
+      })!
+
+      expect(email.text, locale).not.toContain("undefined")
+      expect(email.html, locale).not.toContain("undefined")
+    }
+  })
+})
