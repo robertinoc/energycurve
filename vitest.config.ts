@@ -6,6 +6,14 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL(".", import.meta.url)),
+      // `import "server-only"` throws outside a React Server Component, which
+      // makes any module carrying it untestable. The guard is worth keeping —
+      // it's what stops a client component pulling a secret into the browser
+      // bundle — so it's neutralised here rather than removed from the modules
+      // that need it.
+      "server-only": fileURLToPath(
+        new URL("./tests/stubs/server-only.ts", import.meta.url)
+      ),
     },
   },
   test: {
