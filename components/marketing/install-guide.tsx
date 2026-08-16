@@ -2,11 +2,15 @@
 
 import Link from "next/link"
 
+import { useEffect } from "react"
+
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { getSiteCopy, type SiteLocale } from "@/lib/content/site-copy"
+import {
+  persistSiteLocale,
+  readStoredSiteLocale,
+} from "@/lib/content/site-locale"
 import { useIsClient } from "@/lib/use-is-client"
-
-const STORAGE_KEY = "energycurve:locale"
 
 function ChromeIcon() {
   return (
@@ -48,7 +52,12 @@ export function InstallGuide() {
   // always matches the first client render.
   const isClient = useIsClient()
   const locale: SiteLocale =
-    isClient && window.localStorage.getItem(STORAGE_KEY) === "es" ? "es" : "en"
+    isClient && readStoredSiteLocale() === "es" ? "es" : "en"
+
+  // Without this the page served Spanish copy under `lang="en"`.
+  useEffect(() => {
+    persistSiteLocale(locale)
+  }, [locale])
 
   const copy = getSiteCopy(locale).install
 

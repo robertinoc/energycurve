@@ -148,6 +148,51 @@ describe("landing copy accuracy", () => {
   )
 })
 
+describe("privacy policy names every processor we actually use", () => {
+  // A subprocessor that isn't listed is the kind of omission nobody notices
+  // until it matters. These two arrived with AI ordering and Stripe checkout.
+  it.each(supportedLocales)("names Anthropic and Stripe (%s)", (locale) => {
+    const privacy = getLegalCopy(locale, "privacy")
+    const allText = privacy.sections
+      .flatMap((section) => [section.heading, ...section.body])
+      .join(" ")
+
+    expect(allText).toContain("Anthropic")
+    expect(allText).toContain("Stripe")
+  })
+
+  it.each(supportedLocales)(
+    "states that audio never leaves the device (%s)",
+    (locale) => {
+      const privacy = getLegalCopy(locale, "privacy")
+      const allText = privacy.sections
+        .flatMap((section) => [section.heading, ...section.body])
+        .join(" ")
+        .toLowerCase()
+
+      // The product's loudest privacy claim belongs in the policy, not only
+      // in marketing copy.
+      expect(allText).toMatch(/never uploaded|nunca se suben/)
+    }
+  )
+})
+
+describe("pricing copy matches what can actually be bought", () => {
+  // schema.org availability, the plan badges and this copy have to move in the
+  // same change. They didn't: checkout shipped and the copy still said the
+  // paid plans couldn't be bought yet.
+  it.each(supportedLocales)(
+    "never claims paid plans are unbuyable while offers are InStock (%s)",
+    (locale) => {
+      const { pricing } = getSiteCopy(locale)
+      const surfaces = [pricing.subtitle, pricing.teaserBody].join(" ")
+
+      expect(surfaces).not.toMatch(/in development|en desarrollo/i)
+      expect(surfaces).not.toMatch(/can't buy|no es algo que ya puedas comprar/i)
+    }
+  )
+})
+
 describe("transactional email identifies the operator", () => {
   it("names StageLink LLC in both the HTML and text footers", () => {
     const { html, text } = buildBrandedEmail({

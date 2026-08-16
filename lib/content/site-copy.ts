@@ -515,8 +515,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿Cuánto cuesta EnergyCurve?",
         },
         a: {
-          en: "It’s free to use today, and there will always be a free tier. Paid plans — PRO at US$9.99/month and PRO+ at US$19.99/month, with roughly two months free on annual — are in development and will unlock real audio analysis, unlimited playlists, and unlimited AI ordering.",
-          es: "Hoy es gratis, y siempre va a haber un plan gratuito. Los planes pagos — PRO a u$s9,99/mes y PRO+ a u$s19,99/mes, con unos dos meses gratis en el anual — están en desarrollo y van a habilitar análisis de audio real, arreglos ilimitados y ordenamiento con IA ilimitado.",
+          en: "There is a free tier, and there always will be. Paid plans — PRO at US$9.99/month and PRO+ at US$19.99/month, with roughly two months free on annual — are available now and unlock real audio analysis, unlimited playlists, and unlimited AI ordering. Your card statement will read “StageLink LLC”.",
+          es: "Hay un plan gratuito, y siempre lo va a haber. Los planes pagos — PRO a u$s9,99/mes y PRO+ a u$s19,99/mes, con unos dos meses gratis en el anual — ya están disponibles y habilitan análisis de audio real, playlists ilimitadas y ordenamiento con IA ilimitado. En el resumen de tu tarjeta va a figurar “StageLink LLC”.",
         },
       },
       {
@@ -559,16 +559,16 @@ const siteCopy: SiteCopySchema = {
       es: "Precios simples, y un plan gratis que sigue siendo gratis",
     },
     subtitle: {
-      en: "EnergyCurve is free to use right now. PRO and PRO+ are in development — the prices below are final, and everything marked “Soon” is on the roadmap, not something you can buy yet.",
-      es: "EnergyCurve es gratis ahora mismo. PRO y PRO+ están en desarrollo — los precios de acá abajo son los definitivos, y todo lo marcado como “Pronto” está en el roadmap, no es algo que ya puedas comprar.",
+      en: "EnergyCurve is free to use, and the free tier stays free. PRO and PRO+ are available now — anything still marked “Soon” is on the roadmap and isn't included on any plan yet, paid ones included.",
+      es: "EnergyCurve es gratis, y el plan gratuito sigue siendo gratis. PRO y PRO+ ya están disponibles — lo que todavía dice “Pronto” está en el roadmap y no está incluido en ningún plan, ni siquiera en los pagos.",
     },
     teaserTitle: {
       en: "Start free — and the export back to your DJ software is free too",
       es: "Empezá gratis — y el export de vuelta a tu software de DJ también es gratis",
     },
     teaserBody: {
-      en: "The analysis, the energy curve, the fixes, and native export to Rekordbox, Traktor, and M3U8 all live on the free tier, permanently. PRO and PRO+ lift the limits and add real audio analysis — both are in development, and the prices are already public.",
-      es: "El análisis, la curva de energía, los arreglos y el export nativo a Rekordbox, Traktor y M3U8 están todos en el plan gratis, para siempre. PRO y PRO+ suben los límites y agregan análisis de audio real — están en desarrollo y los precios ya son públicos.",
+      en: "The analysis, the energy curve, the fixes, and native export to Rekordbox, Traktor, and M3U8 all live on the free tier, permanently. PRO and PRO+ lift the limits and add real audio analysis — both are available now.",
+      es: "El análisis, la curva de energía, los arreglos y el export nativo a Rekordbox, Traktor y M3U8 están todos en el plan gratis, para siempre. PRO y PRO+ suben los límites y agregan análisis de audio real — los dos ya están disponibles.",
     },
     teaserCta: { en: "See all plans", es: "Ver todos los planes" },
     liveBadge: { en: "Available now", es: "Disponible ahora" },

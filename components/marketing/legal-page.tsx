@@ -7,8 +7,10 @@ import { ArrowLeft } from "lucide-react"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { getLegalCopy, type LegalDocId } from "@/lib/content/legal-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
-
-const STORAGE_KEY = "energycurve:locale"
+import {
+  persistSiteLocale,
+  readStoredSiteLocale,
+} from "@/lib/content/site-locale"
 
 export function LegalPage({ doc }: { doc: LegalDocId }) {
   // Match the landing's locale mechanism (localStorage). Default EN on the server
@@ -16,10 +18,14 @@ export function LegalPage({ doc }: { doc: LegalDocId }) {
   const [locale, setLocale] = useState<SiteLocale>("en")
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLocale(stored === "es" ? "es" : "en")
+    setLocale(readStoredSiteLocale() ?? "en")
   }, [])
+
+  // Without this the page served Spanish copy under `lang="en"`.
+  useEffect(() => {
+    persistSiteLocale(locale)
+  }, [locale])
 
   const t = getLegalCopy(locale, doc)
   const backLabel = locale === "es" ? "Volver al inicio" : "Back to home"

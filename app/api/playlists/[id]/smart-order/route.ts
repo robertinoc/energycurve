@@ -12,6 +12,11 @@ import { logError, logInfo } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { quotaFor } from "@/lib/product/capabilities"
+import {
+  countPlacedIds,
+  encodeSmartOrderEvent,
+  type SmartOrderEvent,
+} from "@/lib/smart-order/stream"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
 import { getProfileBilling } from "@/services/billing-service"
 import { consumeQuota, readQuota } from "@/services/usage-service"
@@ -110,6 +115,22 @@ const RESPONSE_SCHEMA = {
   additionalProperties: false,
 } as const
 
+/** Headers that keep a chunked response from being buffered into one blob. */
+const NDJSON_HEADERS = {
+  "content-type": "application/x-ndjson; charset=utf-8",
+  // Vercel's cache and any intermediary proxy will happily buffer a response of
+  // unknown length, which would defeat the entire point of streaming this.
+  "cache-control": "no-store, no-transform",
+  "x-accel-buffering": "no",
+} as const
+
+/** A complete, already-known sequence of events. */
+function ndjson(events: SmartOrderEvent[]): Response {
+  return new Response(events.map(encodeSmartOrderEvent).join(""), {
+    headers: NDJSON_HEADERS,
+  })
+}
+
 async function claudeOrder(
   tracks: {
     id: string
@@ -121,7 +142,13 @@ async function claudeOrder(
   }[],
   genre: string,
   context: string,
-  targetCurve: number[]
+  targetCurve: number[],
+  /**
+   * Called as the model commits each track id. Advisory only — the answer is
+   * still validated in full below, so a run that reports 40/40 can still be
+   * discarded and fall back to the heuristic.
+   */
+  onPlaced?: (placed: number) => void
 ): Promise<Omit<SmartOrderResult, "source"> | null> {
   if (!process.env.ANTHROPIC_API_KEY) {
     return null
@@ -129,7 +156,7 @@ async function claudeOrder(
 
   const client = new Anthropic({ maxRetries: 1 })
 
-  const response = await client.messages.create(
+  const stream = client.messages.stream(
     {
       model: process.env.SMART_ORDER_MODEL || "claude-opus-5",
       max_tokens: 16000,
@@ -165,6 +192,25 @@ async function claudeOrder(
     },
     { timeout: 55_000 }
   )
+
+  if (onPlaced) {
+    let accumulated = ""
+    let lastPlaced = 0
+
+    stream.on("text", (delta) => {
+      accumulated += delta
+      const placed = countPlacedIds(accumulated)
+
+      // Monotonic by construction, but guard anyway: a bar that goes backwards
+      // reads as a bug even when the underlying count is right.
+      if (placed > lastPlaced) {
+        lastPlaced = placed
+        onPlaced(placed)
+      }
+    })
+  }
+
+  const response = await stream.finalMessage()
 
   if (response.stop_reason === "refusal") {
     return null
@@ -279,7 +325,12 @@ export async function POST(
     // charging for it would meter our infrastructure rather than our cost — and
     // would make someone's monthly allowance depend on when we last deployed,
     // since the cache is per-process and resets.
-    return NextResponse.json(cached)
+    //
+    // Still answered as a stream so the client has exactly one response shape
+    // to parse; it just arrives complete in a single event.
+    return ndjson([
+      { type: "done", order: cached.order, source: cached.source },
+    ])
   }
 
   // The only quota that maps to real money per use. Read before calling Claude
@@ -325,48 +376,67 @@ export async function POST(
     CONTEXT_DISPLAY_NAMES[playlist.context]?.en ?? playlist.context
   const genreName = GENRE_LABELS[playlist.genre] ?? playlist.genre
 
-  let result: SmartOrderResult
+  // Everything that can fail with a meaningful status code — auth, ownership,
+  // quota, the cache hit — has already answered above. Only now do we commit to
+  // a 200 with a body that arrives over time, because once the first byte is
+  // out the status code can no longer be changed.
+  const encoder = new TextEncoder()
+  const total = tracks.length
 
-  try {
-    const claude = await claudeOrder(
-      tracks,
-      genreName,
-      contextName,
-      analysis.targetCurve
-    )
-    result = claude
-      ? { ...claude, source: "claude" }
-      : heuristicOrder(tracks)
-  } catch (error) {
-    logError("smart_order.claude_failed", error, {
-      profileId: profile.id,
-      playlistId: playlist.id,
-    })
-    result = heuristicOrder(tracks)
-  }
+  const body = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (event: SmartOrderEvent) => {
+        controller.enqueue(encoder.encode(encodeSmartOrderEvent(event)))
+      }
 
-  // Charged on the Claude path only. A fallback to the local heuristic still
-  // returns a usable order, but it cost nothing and shouldn't spend an allowance
-  // the user would rather keep for a real one.
-  if (result.source === "claude") {
-    await consumeQuota(profile.id, "ai_ordering", aiLimit)
-  }
+      send({ type: "start", total })
 
-  logInfo("smart_order.completed", {
-    profileId: profile.id,
-    playlistId: playlist.id,
-    source: result.source,
-    trackCount: tracks.length,
-    quotaCharged: result.source === "claude",
+      let result: SmartOrderResult
+
+      try {
+        const claude = await claudeOrder(
+          tracks,
+          genreName,
+          contextName,
+          analysis.targetCurve,
+          (placed) => send({ type: "progress", placed, total })
+        )
+        result = claude ? { ...claude, source: "claude" } : heuristicOrder(tracks)
+      } catch (error) {
+        logError("smart_order.claude_failed", error, {
+          profileId: profile.id,
+          playlistId: playlist.id,
+        })
+        result = heuristicOrder(tracks)
+      }
+
+      // Charged on the Claude path only. A fallback to the local heuristic still
+      // returns a usable order, but it cost nothing and shouldn't spend an
+      // allowance the user would rather keep for a real one.
+      if (result.source === "claude") {
+        await consumeQuota(profile.id, "ai_ordering", aiLimit)
+      }
+
+      logInfo("smart_order.completed", {
+        profileId: profile.id,
+        playlistId: playlist.id,
+        source: result.source,
+        trackCount: total,
+        quotaCharged: result.source === "claude",
+      })
+
+      if (cache.size >= CACHE_MAX_ENTRIES) {
+        const oldest = cache.keys().next().value
+        if (oldest) {
+          cache.delete(oldest)
+        }
+      }
+      cache.set(key, result)
+
+      send({ type: "done", order: result.order, source: result.source })
+      controller.close()
+    },
   })
 
-  if (cache.size >= CACHE_MAX_ENTRIES) {
-    const oldest = cache.keys().next().value
-    if (oldest) {
-      cache.delete(oldest)
-    }
-  }
-  cache.set(key, result)
-
-  return NextResponse.json(result)
+  return new Response(body, { headers: NDJSON_HEADERS })
 }
