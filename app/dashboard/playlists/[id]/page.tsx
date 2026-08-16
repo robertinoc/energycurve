@@ -8,6 +8,7 @@ import { PlaylistExportButton } from "@/components/playlists/playlist-export-but
 import { PlaylistHeaderEdit } from "@/components/playlists/playlist-header-edit"
 import { PlaylistStatsPills } from "@/components/playlists/playlist-stats-pills"
 import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
+import { TransitionList } from "@/components/playlists/transition-list"
 import { ShareCurveButton } from "@/components/playlists/share-curve-button"
 import {
   VersionHistory,
@@ -29,6 +30,8 @@ import {
 } from "@/lib/product/strategy"
 import { sameOrder, snapshotOf } from "@/lib/playlists/versions"
 import { buildShareToken } from "@/lib/playlists/share-token"
+import { resolveTrackEnergies } from "@/lib/engine/energy-score"
+import { rateTransitions } from "@/lib/engine/transitions"
 import { can } from "@/lib/product/capabilities"
 import { SITE_URL } from "@/lib/seo"
 import { getRequestLocale } from "@/lib/server-locale"
@@ -80,6 +83,11 @@ export default async function PlaylistDetailPage({
     "printable_set_sheet"
   )
   const canReadHistory = can(billing.plan, billing.status, "version_history")
+  const canSeeTransitions = can(
+    billing.plan,
+    billing.status,
+    "transition_suggestions"
+  )
   const canCompareSets = can(billing.plan, billing.status, "set_comparator")
 
   // Free on every plan on purpose: this is the only growth loop in the roadmap,
@@ -242,6 +250,27 @@ export default async function PlaylistDetailPage({
           canMarkPlayed={can(billing.plan, billing.status, "planned_vs_played")}
           locale={locale}
         />
+
+        {canSeeTransitions && playlist.genre ? (
+          <TransitionList
+            transitions={rateTransitions(
+              resolveTrackEnergies(
+                playlist.tracks,
+                playlist.context,
+                playlist.genre
+              ).map((entry, index) => ({
+                id: playlist.tracks[index].id,
+                position: playlist.tracks[index].position,
+                artist: playlist.tracks[index].artist,
+                name: playlist.tracks[index].name,
+                camelot: entry.camelot,
+                energy: entry.score,
+              })),
+              playlist.genre
+            )}
+            locale={locale}
+          />
+        ) : null}
 
         <PlaylistWorkspace
           key={playlist.tracks.map((t) => `${t.id}:${t.position}`).join("|")}

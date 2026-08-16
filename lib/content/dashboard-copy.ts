@@ -513,6 +513,37 @@ export const DASHBOARD_COPY = {
     cancel: { en: "Cancel", es: "Cancelar" },
   },
 
+  transitions: {
+    title: { en: "The mixes", es: "Las mezclas" },
+    subtitle: {
+      en: "Every transition, judged on key and on how big the energy step is for this genre.",
+      es: "Cada transición, juzgada por tonalidad y por qué tan grande es el salto de energía para este género.",
+    },
+    allGood: {
+      en: "Every mix in this set works. Nothing to flag.",
+      es: "Todas las mezclas de este set funcionan. Nada que señalar.",
+    },
+    rough: { en: "Rough", es: "Áspera" },
+    workable: { en: "Workable", es: "Pasable" },
+    tierClash: { en: "keys clash", es: "las tonalidades chocan" },
+    tierBoost: { en: "energy-boost jump", es: "salto de energía" },
+    tierUnknown: { en: "no key on one side", es: "falta la tonalidad de un lado" },
+    bigStep: { en: "step of {delta}", es: "salto de {delta}" },
+    suggestion: {
+      en: "#{position} would fit better here",
+      es: "El #{position} encajaría mejor acá",
+    },
+    lockedTitle: {
+      en: "Per-transition advice is a PRO+ feature",
+      es: "El detalle por transición es una función PRO+",
+    },
+    lockedBody: {
+      en: "PRO+ judges every mix in the set on its own — the key relationship and whether the energy step is one your genre tolerates — and names a track you already have that would sit better.",
+      es: "PRO+ juzga cada mezcla del set por separado — la relación de tonalidades y si el salto de energía es de los que tu género tolera — y te dice qué track que ya tenés encajaría mejor.",
+    },
+    lockedCta: { en: "See plans", es: "Ver planes" },
+  },
+
   manualCreate: {
     name: { en: "Set name", es: "Nombre del set" },
     namePlaceholder: { en: "Friday warm-up", es: "Warm-up del viernes" },
