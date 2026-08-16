@@ -204,9 +204,21 @@ export function updatePlaylistDetailsSchema(locale: SiteLocale) {
     // Empty means "derive the target from context and genre" — the default, not
     // an error. Anything unrecognised also lands on null rather than failing:
     // a junk shape value shouldn't block a rename.
+    // One control, two destinations: the select emits either a built-in shape
+    // name or "template:<uuid>". Split here rather than in the action so the
+    // form only ever has one field to think about.
     targetShape: z
       .string()
-      .transform((value) => parseCurveShape(value))
+      .transform((value) =>
+        value.startsWith("template:") ? null : parseCurveShape(value)
+      )
+      .nullable()
+      .optional(),
+    targetTemplateId: z
+      .string()
+      .transform((value) =>
+        value.startsWith("template:") ? value.slice("template:".length) : null
+      )
       .nullable()
       .optional(),
   })

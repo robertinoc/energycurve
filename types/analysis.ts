@@ -108,6 +108,11 @@ export interface PlaylistAnalysisInput {
    * derived from context + genre, so no existing set's score moves.
    */
   targetShape?: CurveShape | null
+  /**
+   * Anchors from a saved template. Wins over `targetShape` — a DJ who saved
+   * their own shape and selected it is asking for theirs.
+   */
+  targetAnchors?: readonly (readonly [number, number])[] | null
 }
 
 export interface PlaylistAnalysis {

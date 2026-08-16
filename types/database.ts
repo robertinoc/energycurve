@@ -159,6 +159,37 @@ export interface Database {
           },
         ]
       }
+      curve_templates: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          anchors: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          anchors: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          anchors?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curve_templates_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playlists: {
         Row: {
           id: string
@@ -171,6 +202,7 @@ export interface Database {
           slot_start_minutes: number | null
           slot_end_minutes: number | null
           target_shape: string | null
+          target_template_id: string | null
           custom_context_id: string | null
           custom_genre_id: string | null
           created_at: string
@@ -187,6 +219,7 @@ export interface Database {
           slot_start_minutes?: number | null
           slot_end_minutes?: number | null
           target_shape?: string | null
+          target_template_id?: string | null
           custom_context_id?: string | null
           custom_genre_id?: string | null
           created_at?: string
@@ -203,6 +236,7 @@ export interface Database {
           slot_start_minutes?: number | null
           slot_end_minutes?: number | null
           target_shape?: string | null
+          target_template_id?: string | null
           custom_context_id?: string | null
           custom_genre_id?: string | null
           created_at?: string

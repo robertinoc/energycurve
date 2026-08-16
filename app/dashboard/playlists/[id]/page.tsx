@@ -9,6 +9,7 @@ import { PlaylistHeaderEdit } from "@/components/playlists/playlist-header-edit"
 import { PlaylistStatsPills } from "@/components/playlists/playlist-stats-pills"
 import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
 import { TransitionList } from "@/components/playlists/transition-list"
+import { SaveShapeButton } from "@/components/playlists/save-shape-button"
 import { ShareCurveButton } from "@/components/playlists/share-curve-button"
 import {
   VersionHistory,
@@ -38,6 +39,7 @@ import { getRequestLocale } from "@/lib/server-locale"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { getProfileBilling } from "@/services/billing-service"
+import { listCurveTemplates } from "@/services/curve-template-service"
 import { listVersions } from "@/services/version-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
 
@@ -87,6 +89,25 @@ export default async function PlaylistDetailPage({
     billing.plan,
     billing.status,
     "transition_suggestions"
+  )
+
+  // Only fetched for the plan that can use them; everyone else gets an empty
+  // list and a selector with just the built-ins.
+  const curveTemplates = can(
+    billing.plan,
+    billing.status,
+    "custom_curve_templates"
+  )
+    ? (await listCurveTemplates(profile.id)).map((template) => ({
+        id: template.id,
+        name: template.name,
+      }))
+    : []
+
+  const canSaveShapes = can(
+    billing.plan,
+    billing.status,
+    "custom_curve_templates"
   )
   const canCompareSets = can(billing.plan, billing.status, "set_comparator")
 
@@ -188,6 +209,9 @@ export default async function PlaylistDetailPage({
               {shareUrl ? (
                 <ShareCurveButton url={shareUrl} locale={locale} />
               ) : null}
+              {canSaveShapes ? (
+                <SaveShapeButton playlistId={playlist.id} locale={locale} />
+              ) : null}
               <PlaylistExportButton playlist={exportPlaylist} locale={locale} />
               <Link
                 href={`/dashboard/playlists/${playlist.id}/analysis`}
@@ -207,6 +231,8 @@ export default async function PlaylistDetailPage({
               slotStartMinutes={playlist.slot_start_minutes}
               slotEndMinutes={playlist.slot_end_minutes}
               targetShape={parseCurveShape(playlist.target_shape)}
+              targetTemplateId={playlist.target_template_id}
+              templates={curveTemplates}
               locale={locale}
             />
             <div className="flex flex-wrap items-center gap-2">
