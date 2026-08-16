@@ -10,12 +10,14 @@ import {
   type ResolvedPlanCell,
   type SiteLocale,
 } from "@/lib/content/site-copy"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
+import {
+  persistSiteLocale,
+  readStoredSiteLocale,
+} from "@/lib/content/site-locale"
 import { useIsClient } from "@/lib/use-is-client"
 import { cn } from "@/lib/utils"
-
-const STORAGE_KEY = "energycurve:locale"
 
 /** Copy-side plan id → the key `/api/billing/checkout` expects. */
 const CHECKOUT_PLAN: Record<string, "pro" | "pro_plus"> = {
@@ -74,9 +76,14 @@ export function PricingPage() {
   // always matches the first client render.
   const isClient = useIsClient()
   const locale: SiteLocale =
-    isClient && window.localStorage.getItem(STORAGE_KEY) === "es" ? "es" : "en"
+    isClient && readStoredSiteLocale() === "es" ? "es" : "en"
 
   const [interval, setInterval] = useState<BillingInterval>("monthly")
+
+  // Without this the page served Spanish copy under `lang="en"`.
+  useEffect(() => {
+    persistSiteLocale(locale)
+  }, [locale])
 
   const copy = getSiteCopy(locale).pricing
   const cellLabels = {

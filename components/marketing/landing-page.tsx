@@ -21,11 +21,13 @@ import {
   SuiteSection,
 } from "@/components/marketing/landing-sections"
 import { InstallBanner } from "@/components/marketing/install-banner"
-import { ANALYSIS_LOCALE_COOKIE } from "@/lib/analysis-locale"
 import { getSiteCopy, SiteLocale } from "@/lib/content/site-copy"
+import {
+  persistSiteLocale,
+  SITE_LOCALE_STORAGE_KEY,
+} from "@/lib/content/site-locale"
 import { isStandaloneDisplayMode } from "@/lib/pwa"
 
-const STORAGE_KEY = "energycurve:locale"
 const SECTION_IDS = ["features", "how-it-works", "story", "pricing", "faq", "contact"]
 
 export function LandingPage() {
@@ -34,18 +36,16 @@ export function LandingPage() {
       return "en"
     }
 
-    const storedLocale = window.localStorage.getItem(STORAGE_KEY)
+    const storedLocale = window.localStorage.getItem(SITE_LOCALE_STORAGE_KEY)
     return storedLocale === "es" ? "es" : "en"
   })
   const [activeSection, setActiveSection] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, locale)
-    // Mirror into the app cookie so the language chosen on the landing
-    // carries into the dashboard (which is server-rendered off the cookie).
-    document.cookie = `${ANALYSIS_LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`
-    document.documentElement.lang = locale
+    // Mirrors into localStorage, the app cookie (so the server-rendered
+    // dashboard agrees with the landing) and <html lang>.
+    persistSiteLocale(locale)
   }, [locale])
 
   useEffect(() => {

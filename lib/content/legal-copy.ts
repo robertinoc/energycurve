@@ -25,7 +25,14 @@ const CONTACT_EMAIL = "hello@energycurve.app"
 /** EnergyCurve ships under the StageLink umbrella; this is the name that
  *  appears on invoices and card statements, so it belongs in the legal copy. */
 const OPERATOR = "StageLink LLC"
-const UPDATED = { en: "Last updated: July 2026", es: "Última actualización: julio 2026" }
+/**
+ * Bump this in the same change that edits any document below. A policy that
+ * names new subprocessors under a stale date is worse than no date at all.
+ */
+const UPDATED = {
+  en: "Last updated: August 2026",
+  es: "Última actualización: agosto 2026",
+}
 
 const en: Record<LegalDocId, LegalDoc> = {
   privacy: {
@@ -51,9 +58,17 @@ const en: Record<LegalDocId, LegalDoc> = {
         ],
       },
       {
+        heading: "Your music stays on your computer",
+        body: [
+          "When you import audio files, EnergyCurve reads their tags and analyzes them in your browser. Only the resulting text data (artist, title, BPM, key, energy) is sent to our servers. Your audio files are never uploaded, stored, or transmitted.",
+        ],
+      },
+      {
         heading: "Who processes it",
         body: [
           "WorkOS (authentication), Supabase (database, EU region), PostHog (product analytics), Resend (transactional email), and Vercel (hosting). Each processes data only to provide their part of the service.",
+          "Anthropic, when you use AI-assisted set ordering. Only the track metadata described above is sent — never your audio. Anthropic does not train its models on this data.",
+          "Stripe, if you subscribe to a paid plan. Stripe handles the payment and stores the card details; we never see your full card number. The charge is processed by StageLink LLC.",
         ],
       },
       {
@@ -181,9 +196,17 @@ const es: Record<LegalDocId, LegalDoc> = {
         ],
       },
       {
+        heading: "Tu música se queda en tu computadora",
+        body: [
+          "Cuando importás archivos de audio, EnergyCurve lee sus tags y los analiza en tu navegador. A nuestros servidores sólo viajan los datos de texto resultantes (artista, título, BPM, tonalidad, energía). Tus archivos de audio nunca se suben, ni se guardan, ni se transmiten.",
+        ],
+      },
+      {
         heading: "Quién los procesa",
         body: [
           "WorkOS (autenticación), Supabase (base de datos, región UE), PostHog (analítica de producto), Resend (email transaccional) y Vercel (hosting). Cada uno procesa datos solo para brindar su parte del servicio.",
+          "Anthropic, cuando usás el ordenamiento de sets asistido por IA. Sólo se envía la metadata de los tracks descrita arriba — nunca tu audio. Anthropic no entrena sus modelos con estos datos.",
+          "Stripe, si contratás un plan pago. Stripe procesa el pago y guarda los datos de la tarjeta; nosotros nunca vemos el número completo. El cobro lo procesa StageLink LLC.",
         ],
       },
       {
