@@ -174,6 +174,30 @@ export const DASHBOARD_COPY = {
     },
   },
 
+  firstRun: {
+    title: { en: "Get your first set scored", es: "Conseguí el puntaje de tu primer set" },
+    subtitle: {
+      en: "Three steps. It disappears on its own once you've done them.",
+      es: "Tres pasos. Desaparece solo cuando los hiciste.",
+    },
+    importTitle: { en: "Bring your music in", es: "Traé tu música" },
+    importBody: {
+      en: "Drop a Rekordbox or Traktor export, a folder of audio files, or paste a tracklist. Your audio never leaves your machine.",
+      es: "Soltá un export de Rekordbox o Traktor, una carpeta de archivos, o pegá un tracklist. Tu audio nunca sale de tu máquina.",
+    },
+    analyzeTitle: { en: "See the shape of it", es: "Mirá qué forma tiene" },
+    analyzeBody: {
+      en: "The curve, a score out of ten, and the specific tracks that break it.",
+      es: "La curva, un puntaje sobre diez, y los tracks concretos que la rompen.",
+    },
+    improveTitle: { en: "Change something and run it again", es: "Cambiá algo y analizalo de nuevo" },
+    improveBody: {
+      en: "Apply a fix or reorder by hand, then re-analyse. Watching the score move is the whole point.",
+      es: "Aplicá un arreglo o reordená a mano, y volvé a analizar. Ver moverse el puntaje es todo el punto.",
+    },
+    currentBadge: { en: "You're here", es: "Estás acá" },
+  },
+
   versions: {
     title: { en: "Order history", es: "Historial de órdenes" },
     intro: {

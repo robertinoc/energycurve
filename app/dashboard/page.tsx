@@ -8,6 +8,7 @@ import { AnalyticsIdentify } from "@/components/analytics/analytics-tracker"
 import { CheckoutConfirmation } from "@/components/dashboard/checkout-confirmation"
 import { PlanCard } from "@/components/dashboard/plan-card"
 import { ScoreSparkline } from "@/components/analysis/score-sparkline"
+import { FirstRunGuide } from "@/components/dashboard/first-run-guide"
 import { DeletePlaylistButton } from "@/components/playlists/delete-playlist-button"
 import { PlaylistImportUpload } from "@/components/playlists/playlist-import-upload"
 import { SetupRequiredState } from "@/components/setup/setup-required-state"
@@ -20,6 +21,7 @@ import {
 } from "@/lib/auth/workos-runtime"
 import { isBillingConfigured } from "@/lib/billing/config"
 import { can } from "@/lib/product/capabilities"
+import { computeFirstRun } from "@/lib/product/first-run"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
 import { cn } from "@/lib/utils"
@@ -156,6 +158,12 @@ export default async function DashboardPage({
   ) : null
   const planNeedsAttentionNow = billing ? planNeedsAttention(billing) : false
 
+  // Derived from what the page already loaded — no extra query, no stored flag.
+  const firstRun = computeFirstRun({
+    playlistCount: snapshot?.playlistCount ?? 0,
+    scoreHistories: latestPlaylists.map((playlist) => playlist.scoreHistory),
+  })
+
   return (
     <>
       {profile ? <AnalyticsIdentify profileId={profile.id} /> : null}
@@ -189,6 +197,10 @@ export default async function DashboardPage({
             </AlertDescription>
           </Alert>
         ) : null}
+
+        {/* Above the import card on purpose: it names what the import is *for*,
+            and a new account has nothing else on this page to read. */}
+        <FirstRunGuide state={firstRun} locale={locale} />
 
         {/* Primary action: upload a playlist. New-from-scratch is the quieter,
             secondary path underneath. */}
