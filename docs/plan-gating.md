@@ -45,8 +45,8 @@ edit together.
 | **Native export** (Rekordbox / Traktor / M3U8) | ✓ | ✓ | ✓ |
 | **Slot-aware planning**, **named curve shapes**, **PDF set sheet**, **order history**, **planned vs played**, **real BPM from audio** | ✗ | ✓ | ✓ |
 | Key detection from audio, Energy Model v3 | ✗ | soon | soon |
-| **Set comparator** (two sets side by side), **global library** | ✗ | ✗ | ✓ |
-| Curve templates, residency mode, B2B sets, Gig Mode, per-transition suggestions | ✗ | ✗ | soon |
+| **Set comparator** (two sets side by side), **global library**, **per-transition advice** | ✗ | ✗ | ✓ |
+| Curve templates, residency mode, B2B sets, Gig Mode | ✗ | ✗ | soon |
 
 **Applied fixes are uncapped on every tier.** A cap was advertised on /pricing
 and never enforced anywhere: applying a fix is local, instant and reversible, so

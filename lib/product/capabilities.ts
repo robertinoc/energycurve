@@ -108,7 +108,7 @@ export const CAPABILITIES = {
   set_comparator: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
   transition_suggestions: {
     minPlan: "pro_plus",
-    status: "planned",
+    status: "shipped",
     limit: "proWorkflow",
   },
 } as const satisfies Record<string, CapabilitySpec>
