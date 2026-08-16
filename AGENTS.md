@@ -6,7 +6,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # EnergyCurve Notes
 
-- Current scope is the product MVP: playlist ingestion, the energy/analysis/recommendation engines, the results UI, and the DJ-familiar tracklist on the playlist detail page (dense track table + live set curve; see `docs/product-feature-03-dj-tracklist.md`). Implement engines strictly against the frozen constants in `lib/product/strategy.ts` — do not invent new scoring rules.
+- **The product is live and selling.** Stripe is in live mode, PRO and PRO+ are purchasable, and the paid tiers have real features behind them. Anything that changes scoring, gating or billing now changes what someone already paid for.
+- Core scope: playlist ingestion, the energy/analysis/recommendation engines, the results UI, and the DJ-familiar tracklist on the playlist detail page (dense track table + live set curve; see `docs/product-feature-03-dj-tracklist.md`). Implement engines strictly against the frozen constants in `lib/product/strategy.ts` — do not invent new scoring rules.
 - Local audio import (`docs/product-feature-04-local-audio-import.md`) parses tags client-side (`music-metadata`, lazy-loaded via dynamic `import()`); audio bytes never reach the server — only the parsed `ImportedTrack` JSON, validated by `createAudioImportSchema` (coerce-to-null stance for messy tags).
 - Data ownership is enforced in the service layer (`services/*-service.ts`): every playlist/track function takes a `profileId` and scopes queries by it. Never skip that check — RLS will not catch it (see decision 22 in `docs/decisions.md`).
 - Authentication must use WorkOS AuthKit. Do not introduce Supabase Auth.
@@ -58,6 +59,69 @@ either locale. Do not "clean up" those mentions.
   curve", and Mixed In Key's 1-10 means *per-track* energy while ours scores the
   *whole set* — the FAQ disambiguates this deliberately. Baseline and the full
   vocabulary notes: `docs/seo-aeo-baseline-2026-08.md`.
+
+## What is gated, and where to look
+
+`lib/product/capabilities.ts` is the registry: every capability, its minimum
+plan, whether it is `shipped` or `planned`, and which `PlanLimits` key backs it.
+`tests/capabilities.test.ts` asserts the registry and the public pricing matrix
+in `lib/content/site-copy.ts` agree, so a feature can't ship as included while
+the page says "soon", or the reverse.
+
+**Adding a gated feature means four things, not one**: a registry entry, a
+pricing row with the same `key`, a `can(...)` call at the real boundary (service
+or page, never only the UI), and a line in `docs/plan-gating.md`. Skipping the
+`can(...)` is the one that silently gives the feature away.
+
+Two rules that keep coming up and should not be re-litigated per feature:
+
+- **Native export is free forever, on every tier.** The loop is analyse → fix →
+  get it back into the booth; paywalling the last step makes the first two
+  pointless. A test enforces it.
+- **Recording is free; reading is paid.** Declaring a slot, picking a curve
+  shape and capturing version history all happen for everyone; the analysis that
+  reads them is PRO. A free user who upgrades finds their history already there
+  instead of starting empty.
+
+## Conventions that only show up once you've shipped a few of these
+
+- **Server-side is the boundary.** Hiding a button is presentation; a guessed
+  URL has to meet the same wall. Every gated page checks `can(...)` itself.
+- **Say what isn't known.** `null` for an unscored version, "no key on one side"
+  instead of a confident verdict, "never played *as far as we recorded*". A
+  number the product can't stand behind is worse than an absent one.
+- **Charts must not dramatise.** `curveDomain` crops a shared axis so a
+  difference is legible, but never below a 3-point span — auto-scaling alone
+  turns a 0.2 difference into a mountain range.
+- **Track identity across playlists goes through `trackKey`** (in
+  `lib/playlists/set-comparison.ts`). The set comparator and the global library
+  both use it, so "you play this in three sets" and "these two nights share
+  nothing" can never contradict each other.
+- **Transactional email language comes from `profiles.preferred_locale`**, not
+  from a request cookie. Null means "never chose" and resolves to English.
+
+## Verifying a change
+
+`npx tsc --noEmit` is the authority, and it is not optional even when the tests
+pass. Two ways that has bitten:
+
+- A syntax error anywhere (a bad merge resolution, a missing brace in a copy
+  file) makes suites fail to *load*. The summary line still reads "N passed" —
+  just a smaller N — so reading only the tail of the output looks green.
+- The dev server writes `.next/dev/types/`. A transient syntax error in there
+  makes `tsc` bail before it reaches semantic checks, and filtering those lines
+  out of the output hides that nothing else was checked. Stop the dev server, or
+  delete the directory, before trusting a clean run.
+
+## Parallel PRs
+
+Several feature branches open at once against the same files will conflict on
+merge, and the copy tables are where it always happens. Anchor a new block in
+`lib/content/dashboard-copy.ts` at a *different* existing key per branch rather
+than all at the same one — that alone reduced a four-way conflict to a
+one-line documentation clash.
+
+Rebase the branch and resolve; never open a PR whose base is another branch.
 
 ## Local test runs
 
