@@ -267,3 +267,42 @@ describe("updatePlaylistDetailsSchema — target shape", () => {
     expect(result.slotEnd).toBeUndefined()
   })
 })
+
+describe("updatePlaylistDetailsSchema — curve templates", () => {
+  const schema = updatePlaylistDetailsSchema("en")
+  const base = { playlistId: crypto.randomUUID(), name: "Warm-up", description: "" }
+  const templateId = "9f8b7c6d-1234-4a5b-8c9d-0e1f2a3b4c5d"
+
+  it("splits one select value into a shape or a template, never both", () => {
+    // The form has a single control; the two destinations are resolved here so
+    // a set can't end up aiming at a built-in and a saved shape at once.
+    const template = schema.parse({
+      ...base,
+      targetShape: `template:${templateId}`,
+      targetTemplateId: `template:${templateId}`,
+    })
+
+    expect(template.targetShape).toBeNull()
+    expect(template.targetTemplateId).toBe(templateId)
+
+    const builtIn = schema.parse({
+      ...base,
+      targetShape: "after_hours",
+      targetTemplateId: "after_hours",
+    })
+
+    expect(builtIn.targetShape).toBe("after_hours")
+    expect(builtIn.targetTemplateId).toBeNull()
+  })
+
+  it("clears both when the derived target is chosen", () => {
+    const result = schema.parse({
+      ...base,
+      targetShape: "",
+      targetTemplateId: "",
+    })
+
+    expect(result.targetShape).toBeNull()
+    expect(result.targetTemplateId).toBeNull()
+  })
+})

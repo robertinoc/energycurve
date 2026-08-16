@@ -23,6 +23,7 @@ import {
 } from "@/lib/engine/recommendations"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { resolveSlot } from "@/lib/engine/slot"
+import { getCurveTemplate } from "@/services/curve-template-service"
 import { can } from "@/lib/product/capabilities"
 import { getProfileBilling } from "@/services/billing-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
@@ -106,6 +107,14 @@ export async function getPlaylistAnalysis(
     ? parseCurveShape(playlist.target_shape)
     : null
 
+  // A saved template is the DJ's own shape, so it outranks a built-in name.
+  // Gated separately: named shapes are PRO, saving your own is PRO+.
+  const template =
+    playlist.target_template_id &&
+    can(billing.plan, billing.status, "custom_curve_templates")
+      ? await getCurveTemplate(profileId, playlist.target_template_id)
+      : null
+
   const analysis = analyzePlaylist({
     curve: energies.map((entry) => entry.score),
     genre: playlist.genre,
@@ -116,6 +125,7 @@ export async function getPlaylistAnalysis(
     })),
     slot,
     targetShape,
+    targetAnchors: template?.anchors ?? null,
   })
   const recommendations = buildRecommendations(analysis, locale)
   const reorder = suggestReorder(

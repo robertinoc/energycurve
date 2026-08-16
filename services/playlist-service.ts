@@ -291,6 +291,8 @@ export async function updatePlaylistDetails(
     slotEndMinutes?: number | null
     /** Null clears it back to the derived target; absent leaves it untouched. */
     targetShape?: CurveShape | null
+    /** Same contract. Set together with targetShape, since one control feeds both. */
+    targetTemplateId?: string | null
   }
 ): Promise<void> {
   const playlist = await getOwnedPlaylist(profileId, playlistId)
@@ -317,6 +319,9 @@ export async function updatePlaylistDetails(
         : {}),
       ...(input.targetShape !== undefined
         ? { target_shape: input.targetShape }
+        : {}),
+      ...(input.targetTemplateId !== undefined
+        ? { target_template_id: input.targetTemplateId }
         : {}),
     })
     .eq("id", playlistId)

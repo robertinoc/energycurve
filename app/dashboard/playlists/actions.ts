@@ -366,7 +366,10 @@ export async function updatePlaylistDetailsAction(
       ? { slotEnd: String(formData.get("slotEnd") ?? "") }
       : {}),
     ...(formData.has("targetShape")
-      ? { targetShape: String(formData.get("targetShape") ?? "") }
+      ? {
+          targetShape: String(formData.get("targetShape") ?? ""),
+          targetTemplateId: String(formData.get("targetShape") ?? ""),
+        }
       : {}),
   })
 
@@ -387,6 +390,7 @@ export async function updatePlaylistDetailsAction(
       slotStartMinutes: parsed.data.slotStart,
       slotEndMinutes: parsed.data.slotEnd,
       targetShape: parsed.data.targetShape,
+      targetTemplateId: parsed.data.targetTemplateId,
     })
   } catch (error) {
     logError("playlist.update_details_action_failed", error, {

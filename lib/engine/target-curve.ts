@@ -85,8 +85,10 @@ function targetEnergyAt(
  * happens outside the set it describes, and inventing values there would be
  * making up a promise the shape never made.
  */
-function shapeEnergyAt(t: number, shape: CurveShape): number {
-  const anchors = CURVE_SHAPE_ANCHORS[shape]
+function shapeEnergyAt(
+  t: number,
+  anchors: readonly (readonly [number, number])[]
+): number {
   const clamped = Math.min(Math.max(t, 0), 1)
 
   for (let i = 1; i < anchors.length; i += 1) {
@@ -120,7 +122,13 @@ export function buildTargetCurve(
    * When present it wins outright: the DJ telling us what they are playing is
    * better information than our inference from two tags.
    */
-  shape?: CurveShape | null
+  shape?: CurveShape | null,
+  /**
+   * A saved template's anchors. Wins over `shape` when both are given, because
+   * a DJ who saved their own shape and then picked it is asking for theirs —
+   * and the two can only both be set through a stale form.
+   */
+  customAnchors?: readonly (readonly [number, number])[] | null
 ): number[] {
   if (trackCount <= 0) {
     return []
@@ -131,8 +139,17 @@ export function buildTargetCurve(
   return Array.from({ length: trackCount }, (_, index) => {
     const t = trackCount === 1 ? 0.5 : index / (trackCount - 1)
 
+    const anchors =
+      customAnchors && customAnchors.length >= 2
+        ? customAnchors
+        : shape
+          ? CURVE_SHAPE_ANCHORS[shape]
+          : null
+
     return roundToOneDecimal(
-      shape ? shapeEnergyAt(t, shape) : targetEnergyAt(t, context, character)
+      anchors
+        ? shapeEnergyAt(t, anchors)
+        : targetEnergyAt(t, context, character)
     )
   })
 }

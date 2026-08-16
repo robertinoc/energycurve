@@ -563,6 +563,25 @@ export const DASHBOARD_COPY = {
     creating: { en: "Creating…", es: "Creando…" },
   },
 
+  curveTemplates: {
+    saveButton: { en: "Save this shape", es: "Guardar esta forma" },
+    saving: { en: "Saving…", es: "Guardando…" },
+    namePlaceholder: { en: "Name this shape", es: "Nombrá esta forma" },
+    save: { en: "Save", es: "Guardar" },
+    cancel: { en: "Cancel", es: "Cancelar" },
+    saved: { en: "Saved", es: "Guardada" },
+    hint: {
+      en: "Turns this set's curve into a target you can aim other sets at.",
+      es: "Convierte la curva de este set en un objetivo al que apuntar otros sets.",
+    },
+    yours: { en: "Your shapes", es: "Tus formas" },
+    builtIn: { en: "Built-in", es: "Predefinidas" },
+    lockedHint: {
+      en: "Saving your own shapes is a PRO+ feature.",
+      es: "Guardar tus propias formas es una función PRO+.",
+    },
+  },
+
   audioImport: {
     analyzeTitle: {
       en: "Read the real BPM from the audio",

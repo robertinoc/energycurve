@@ -96,7 +96,7 @@ export const CAPABILITIES = {
   printable_set_sheet: { minPlan: "pro", status: "shipped" },
 
   // ── PRO+: professional workflow ───────────────────────────────────────────
-  custom_curve_templates: { minPlan: "pro_plus", status: "planned" },
+  custom_curve_templates: { minPlan: "pro_plus", status: "shipped" },
   residency_mode: { minPlan: "pro_plus", status: "planned" },
   b2b_sets: { minPlan: "pro_plus", status: "planned" },
   gig_mode: { minPlan: "pro_plus", status: "planned", limit: "proWorkflow" },

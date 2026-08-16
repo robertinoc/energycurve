@@ -421,7 +421,14 @@ function scoreCurve(
   context: PlaylistContext,
   trackMeta?: TrackEnergyMeta[],
   targetShape: CurveShape | null = null,
-  target = buildTargetCurve(curve.length, context, genre, targetShape)
+  targetAnchors: readonly (readonly [number, number])[] | null = null,
+  target = buildTargetCurve(
+    curve.length,
+    context,
+    genre,
+    targetShape,
+    targetAnchors
+  )
 ): ScoredCurve {
   const meta = usableMeta(curve, trackMeta)
   const lowConfidence = isLowEnergyConfidence(curve, meta)
@@ -453,10 +460,11 @@ export function computeSetScore(
   genre: SupportedGenre,
   context: PlaylistContext,
   trackMeta?: TrackEnergyMeta[],
-  targetShape: CurveShape | null = null
+  targetShape: CurveShape | null = null,
+  targetAnchors: readonly (readonly [number, number])[] | null = null
 ): number {
-  return scoreCurve(curve, genre, context, trackMeta, targetShape).breakdown
-    .finalScore
+  return scoreCurve(curve, genre, context, trackMeta, targetShape, targetAnchors)
+    .breakdown.finalScore
 }
 
 function deriveDynamicsIssues(scored: ScoredCurve): DetectedIssue[] {
@@ -763,8 +771,16 @@ export function analyzePlaylist({
   trackMeta,
   slot,
   targetShape = null,
+  targetAnchors = null,
 }: PlaylistAnalysisInput): PlaylistAnalysis {
-  const scored = scoreCurve(curve, genre, context, trackMeta, targetShape)
+  const scored = scoreCurve(
+    curve,
+    genre,
+    context,
+    trackMeta,
+    targetShape,
+    targetAnchors
+  )
   const issues = deriveIssues(scored, curve, genre, context)
   const slotAssessment = slot ? assessSlot(curve, slot) : null
 

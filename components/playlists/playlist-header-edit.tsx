@@ -16,6 +16,7 @@ import { CURVE_SHAPES, type CurveShape } from "@/lib/product/strategy"
 import { PLAYLIST_DESCRIPTION_MAX_LENGTH } from "@/lib/playlists/schemas"
 
 const COPY = DASHBOARD_COPY.playlistHeaderEdit
+const TEMPLATE_COPY = DASHBOARD_COPY.curveTemplates
 
 /**
  * Detail-page title block: renders the playlist name (+ optional description)
@@ -29,6 +30,8 @@ export function PlaylistHeaderEdit({
   slotStartMinutes,
   slotEndMinutes,
   targetShape,
+  targetTemplateId,
+  templates,
   locale,
 }: {
   playlistId: string
@@ -39,6 +42,10 @@ export function PlaylistHeaderEdit({
   slotEndMinutes: number | null
   /** Declared shape, or null when the target is derived from genre + context. */
   targetShape: CurveShape | null
+  /** Id of the saved template this set aims at, when it aims at one. */
+  targetTemplateId: string | null
+  /** The user's saved shapes, offered alongside the built-in ones. */
+  templates: { id: string; name: string }[]
   locale: SiteLocale
 }) {
   const [editing, setEditing] = useState(false)
@@ -51,6 +58,8 @@ export function PlaylistHeaderEdit({
       slotStartMinutes={slotStartMinutes}
       slotEndMinutes={slotEndMinutes}
       targetShape={targetShape}
+      targetTemplateId={targetTemplateId}
+      templates={templates}
       locale={locale}
       onClose={() => setEditing(false)}
     />
@@ -85,6 +94,8 @@ function HeaderEditForm({
   slotStartMinutes,
   slotEndMinutes,
   targetShape,
+  targetTemplateId,
+  templates,
   locale,
   onClose,
 }: {
@@ -94,6 +105,8 @@ function HeaderEditForm({
   slotStartMinutes: number | null
   slotEndMinutes: number | null
   targetShape: CurveShape | null
+  targetTemplateId: string | null
+  templates: { id: string; name: string }[]
   locale: SiteLocale
   onClose: () => void
 }) {
@@ -165,18 +178,36 @@ function HeaderEditForm({
         <select
           id="playlist-edit-shape"
           name="targetShape"
-          defaultValue={targetShape ?? ""}
-          onChange={(event) =>
-            setShape((event.target.value as CurveShape) || null)
+          defaultValue={
+            targetTemplateId ? `template:${targetTemplateId}` : (targetShape ?? "")
           }
+          onChange={(event) => {
+            const value = event.target.value
+            // A saved shape has no canned promise to show — it's the DJ's own,
+            // and describing it back to them would be inventing a claim.
+            setShape(
+              value.startsWith("template:") ? null : (value as CurveShape) || null
+            )
+          }}
           className="h-10 w-full rounded-lg border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-white/28"
         >
           <option value="">{COPY.shapeDerived[locale]}</option>
-          {CURVE_SHAPES.map((option) => (
-            <option key={option} value={option}>
-              {CURVE_SHAPE_COPY[option].label[locale]}
-            </option>
-          ))}
+          <optgroup label={TEMPLATE_COPY.builtIn[locale]}>
+            {CURVE_SHAPES.map((option) => (
+              <option key={option} value={option}>
+                {CURVE_SHAPE_COPY[option].label[locale]}
+              </option>
+            ))}
+          </optgroup>
+          {templates.length > 0 ? (
+            <optgroup label={TEMPLATE_COPY.yours[locale]}>
+              {templates.map((template) => (
+                <option key={template.id} value={`template:${template.id}`}>
+                  {template.name}
+                </option>
+              ))}
+            </optgroup>
+          ) : null}
         </select>
         <p className="text-xs leading-5 text-white/40">
           {shape
