@@ -282,6 +282,15 @@ deliberate exception to the "engine depth is PRO" rule; see the strategy doc.
 `docs/spike-browser-audio-analysis.md`. Verdict: **browser-first is viable, no
 server needed**, with two corrections to the plan.
 
+- **Shipped and selling (14 Aug 2026).** PRO: real BPM from audio, slot-aware
+  planning, named curve shapes, printable set sheet, order history, planned vs
+  played. PRO+: set comparator, global library, per-transition advice, custom
+  curve shapes. Plus the first-run guide, shareable public curves, conversion
+  and churn events, and a bilingual purchase email.
+- **Still open and worth naming**: Gig Mode is the last task in the H2 epic;
+  Energy Model v3 is specified but unfitted and blocked on a labelled run over a
+  Mixed-In-Key-tagged library; key detection sits at 21% and stays dark until the
+  harness says otherwise.
 - **Essentia.js is out** — AGPL-3.0, unusable in a closed-source paid product.
 - **Direct USB export researched and declined** — writing the database is
   solved, but a CDJ needs per-track ANLZ analysis files that only rekordbox
