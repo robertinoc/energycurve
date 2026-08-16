@@ -1,7 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, AudioWaveform, Printer } from "lucide-react"
+import { ArrowLeft, AudioWaveform, GitCompare, Printer } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
@@ -77,6 +77,7 @@ export default async function PlaylistDetailPage({
     "printable_set_sheet"
   )
   const canReadHistory = can(billing.plan, billing.status, "version_history")
+  const canCompareSets = can(billing.plan, billing.status, "set_comparator")
 
   // Not queried at all when the reader can't see it. Versions are still being
   // *recorded* for them — the history is waiting the day they upgrade.
@@ -145,6 +146,25 @@ export default async function PlaylistDetailPage({
                 {canPrintSetSheet ? null : (
                   <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
                     pro
+                  </span>
+                )}
+              </Link>
+              <Link
+                href={
+                  canCompareSets
+                    ? `/dashboard/playlists/${playlist.id}/compare`
+                    : "/pricing"
+                }
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "w-fit text-white/58 hover:text-white"
+                )}
+              >
+                <GitCompare className="size-4" />
+                {DASHBOARD_COPY.compare.title[locale]}
+                {canCompareSets ? null : (
+                  <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                    pro+
                   </span>
                 )}
               </Link>
