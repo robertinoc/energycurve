@@ -100,7 +100,7 @@ export const CAPABILITIES = {
   residency_mode: { minPlan: "pro_plus", status: "planned" },
   b2b_sets: { minPlan: "pro_plus", status: "planned" },
   gig_mode: { minPlan: "pro_plus", status: "planned", limit: "proWorkflow" },
-  global_library: { minPlan: "pro_plus", status: "planned", limit: "proWorkflow" },
+  global_library: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
   /**
    * The first shipped capability behind `proWorkflow`, which until now was a
    * limit nothing consulted — a switch with no lamp on it.

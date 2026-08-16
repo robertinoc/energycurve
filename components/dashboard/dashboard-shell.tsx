@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, ListMusic, LogOut, Menu, X, type LucideIcon } from "lucide-react"
+import { Home, Library, ListMusic, LogOut, Menu, X, type LucideIcon } from "lucide-react"
 
 import { LocaleToggle } from "@/components/analysis/locale-toggle"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
@@ -29,6 +29,14 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/playlists",
     label: DASHBOARD_COPY.shell.playlists,
     icon: ListMusic,
+    match: "prefix",
+  },
+  {
+    // Shown to everyone, PRO+ or not: the page itself explains what it is and
+    // links to the plans. A feature nobody can see converts nobody.
+    href: "/dashboard/library",
+    label: DASHBOARD_COPY.shell.library,
+    icon: Library,
     match: "prefix",
   },
 ]
