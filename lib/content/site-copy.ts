@@ -441,8 +441,8 @@ const siteCopy: SiteCopySchema = {
       es: "Algo que vas a ver al pagar",
     },
     billingBody: {
-      en: "EnergyCurve is operated by StageLink LLC. When paid plans launch, your card statement and receipts will read “StageLink LLC” — not “EnergyCurve”. Same company, nothing to worry about; we’d rather tell you here than surprise you at checkout.",
-      es: "EnergyCurve es operado por StageLink LLC. Cuando lancemos los planes pagos, en tu resumen de tarjeta y en los recibos vas a ver “StageLink LLC”, no “EnergyCurve”. Es la misma empresa, no hay nada de qué preocuparse: preferimos decirlo acá antes que sorprenderte al momento de pagar.",
+      en: "EnergyCurve is operated by StageLink LLC. Your card statement and receipts read “StageLink LLC” — not “EnergyCurve”. Same company, nothing to worry about; we’d rather tell you here than surprise you at checkout.",
+      es: "EnergyCurve es operado por StageLink LLC. En tu resumen de tarjeta y en los recibos vas a ver “StageLink LLC”, no “EnergyCurve”. Es la misma empresa, no hay nada de qué preocuparse: preferimos decirlo acá antes que sorprenderte al momento de pagar.",
     },
     link: { en: "Visit StageLink", es: "Conocé StageLink" },
   },
@@ -1011,8 +1011,8 @@ const siteCopy: SiteCopySchema = {
       es: "Quién cobra la tarjeta",
     },
     billingBody: {
-      en: "EnergyCurve is part of the StageLink suite and is operated by StageLink LLC. When paid plans launch, the charge is processed under that name, so your card statement, invoices, and receipts will read “StageLink LLC” — not “EnergyCurve”. Same company. We’d rather you read it here than wonder about it later.",
-      es: "EnergyCurve es parte de la suite StageLink y está operado por StageLink LLC. Cuando lancemos los planes pagos, el cargo se procesa bajo ese nombre, así que tu resumen de tarjeta, las facturas y los recibos van a decir “StageLink LLC”, no “EnergyCurve”. Es la misma empresa. Preferimos que lo leas acá antes que te queden dudas después.",
+      en: "EnergyCurve is part of the StageLink suite and is operated by StageLink LLC. The charge is processed under that name, so your card statement, invoices, and receipts read “StageLink LLC” — not “EnergyCurve”. Same company. We’d rather you read it here than wonder about it later.",
+      es: "EnergyCurve es parte de la suite StageLink y está operado por StageLink LLC. El cargo se procesa bajo ese nombre, así que tu resumen de tarjeta, las facturas y los recibos van a decir “StageLink LLC”, no “EnergyCurve”. Es la misma empresa. Preferimos que lo leas acá antes que te queden dudas después.",
     },
     questionsTitle: {
       en: "Still deciding?",
