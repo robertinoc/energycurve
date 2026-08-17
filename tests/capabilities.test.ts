@@ -263,6 +263,35 @@ describe("registry shape", () => {
   })
 })
 
+/**
+ * One filesystem walk, shared by every check below that needs to know whether
+ * a capability key is mentioned anywhere real code could act on it. Walked
+ * once at module load rather than per-`describe`, so adding a second consumer
+ * (see "every non-free shipped capability is actually gated" below) doesn't
+ * double the cost of scanning app/ and services/.
+ */
+const SOURCE_ROOTS = ["app", "services"]
+
+function sourceFiles(dir: string): string[] {
+  const found: string[] = []
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      found.push(...sourceFiles(full))
+    } else if (/\.tsx?$/.test(entry.name)) {
+      found.push(full)
+    }
+  }
+  return found
+}
+
+const sources = SOURCE_ROOTS.flatMap((root) =>
+  sourceFiles(join(process.cwd(), root))
+).map((file) => ({
+  file: relative(process.cwd(), file),
+  text: readFileSync(file, "utf8"),
+}))
+
 describe("counted capabilities are actually enforced", () => {
   /**
    * The gap the consistency test above cannot see.
@@ -273,28 +302,6 @@ describe("counted capabilities are actually enforced", () => {
    * publish and don't apply is a promise we break, so declaring a numeric limit
    * now requires code that mentions the capability.
    */
-  const ROOTS = ["app", "services"]
-
-  function sourceFiles(dir: string): string[] {
-    const found: string[] = []
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        found.push(...sourceFiles(full))
-      } else if (/\.tsx?$/.test(entry.name)) {
-        found.push(full)
-      }
-    }
-    return found
-  }
-
-  const sources = ROOTS.flatMap((root) =>
-    sourceFiles(join(process.cwd(), root))
-  ).map((file) => ({
-    file: relative(process.cwd(), file),
-    text: readFileSync(file, "utf8"),
-  }))
-
   it("finds source files to scan", () => {
     // A path change that matched nothing would make the assertion below vacuous.
     expect(sources.length).toBeGreaterThan(10)
@@ -332,5 +339,42 @@ describe("counted capabilities are actually enforced", () => {
     const row = rows.find((entry) => entry.key === "applied_fixes")
     expect(row?.free.kind).toBe("yes")
     expect(Object.keys(PLAN_LIMITS.free)).not.toContain("fixesPerMonth")
+  })
+})
+
+describe("every non-free shipped capability is actually gated", () => {
+  /**
+   * The general case of the check above. That one only watches numeric caps;
+   * this watches the far more common shape — a `can(plan, status, "key")`
+   * call anywhere under app/ or services/ — because a shipped, paid capability
+   * that no code ever checks is a feature given away for free.
+   *
+   * This is exactly the bug class this week's set comparator, global library
+   * and transition suggestions all shared until someone noticed by hand that
+   * `proWorkflow` was "a switch with no lamp on it" (see the comment on
+   * `set_comparator` in capabilities.ts). This test is what makes that class
+   * of bug fail CI instead of waiting for a person to notice.
+   */
+  it("has a can(...) reference for every shipped capability above free", () => {
+    const gated = (Object.keys(CAPABILITIES) as CapabilityKey[]).filter(
+      (key) =>
+        CAPABILITIES[key].status === "shipped" &&
+        CAPABILITIES[key].minPlan !== "free"
+    )
+
+    // Guards against the filter above silently matching nothing — e.g. if
+    // every paid feature were ever marked "planned" at once.
+    expect(gated.length).toBeGreaterThan(0)
+
+    const ungated = gated.filter(
+      (key) => !sources.some(({ text }) => text.includes(`"${key}"`))
+    )
+
+    expect(
+      ungated,
+      "these are shipped, sold as PRO or PRO+, and never mentioned by a " +
+        "can(...) call under app/ or services/ — the feature is free for " +
+        "everyone regardless of plan."
+    ).toEqual([])
   })
 })
