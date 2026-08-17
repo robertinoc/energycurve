@@ -4,19 +4,29 @@ Estado de la ronda de pruebas manuales que arrancó el 16/08/2026. Este archivo
 existe para poder retomar el trabajo desde otra sesión o desde otra cuenta sin
 tener que reconstruir el contexto: **si estás retomando, leé esto primero.**
 
-Tracker de casos de prueba (89 filas + hallazgos):
-<https://docs.google.com/spreadsheets/d/1pXiGpKv5rEJAXZMzY0YXBpHqXsf_Ns_OpxYonw65liQ/edit>
+Hay **dos** trackers en Drive, y no son lo mismo. Los dos están compartidos con
+`robertino.calcaterra@migbirds.com` además de la cuenta personal:
+
+| Tracker | Qué cubre | Cuándo usarlo |
+| --- | --- | --- |
+| [Ronda de smoke tests](https://docs.google.com/spreadsheets/d/1pXiGpKv5rEJAXZMzY0YXBpHqXsf_Ns_OpxYonw65liQ/edit) (89 filas + hallazgos) | Esta ronda: superficie pública contra producción, más los hallazgos de abajo | Para cerrar lo que quedó abierto de esta ronda |
+| [Test manuales de toda la v2/v3](https://docs.google.com/spreadsheets/d/1TZUHL2gV0eLVs8EzpsGSroY-m-zJq6dqA5UIw9Y9Y_o/edit) (118 filas) | Plan completo de las features del 12 al 16/08, ordenado por dependencias, empezando por preparar el entorno y las tres cuentas | Para la ronda larga: auth, gating, audio, PRO, PRO+ |
+
+Se solapan en la parte pública. El de 118 filas es el que tiene el orden de
+ejecución pensado de punta a punta; el de 89 es el registro de lo ya corrido.
 
 ---
 
 ## Dónde quedó
 
-Base probada: `main` @ `871c325`, producción en <https://energycurve.app>.
+Base probada: `main` @ `871c325`, producción en <https://energycurve.app>. Ojo:
+`main` ya avanzó a `a5bf30b` con los arreglos de esta misma ronda, así que lo
+que sigue en producción depende de si ya se deployó ese merge.
 
 | Bloque | Estado |
 | --- | --- |
 | Superficie pública (SEO, legales, pricing, FAQ) | Probado — 12 filas |
-| Salud del repo (suite, typecheck, lint) | Verde — 764 tests en 64 archivos |
+| Salud del repo (suite, typecheck, lint) | Verde — 764 tests en 64 archivos en la rama de la ronda; **778 en 65 sobre `main` ya mergeado** (la diferencia viene del PR #115, no de esta ronda) |
 | Auth, ingesta, motor, resultados | **Sin probar** — necesita la app corriendo |
 | Audio real, historial, librería, v3 PRO | **Sin probar** — necesita archivos y cuenta PRO |
 | Monetización end-to-end | **Sin probar** — implica un pago real |
@@ -24,10 +34,12 @@ Base probada: `main` @ `871c325`, producción en <https://energycurve.app>.
 Lo que falta son ~60 filas y casi todas necesitan a un humano con la app
 levantada, archivos de audio propios y una cuenta de prueba.
 
-## Lo que se encontró y ya está arreglado (sin mergear)
+## Lo que se encontró y ya está arreglado (mergeado)
 
-Todo esto está escrito en el working tree, en la rama
-`energycurveapp/smoke-test-findings`, **sin commitear** (ver "Pendiente" abajo).
+Mergeado en `main` el 16/08/2026 por el
+[PR #116](https://github.com/robertinoc/energycurve/pull/116), commit `dc0c77f`.
+Los cuatro gates pasaron antes del push: `build`, `test` (764 en 64 archivos),
+`typecheck` y `lint`.
 
 1. **El idioma no se sincronizaba fuera de la landing.** El write path del
    locale estaba copiado en cuatro componentes y sólo la landing seteaba
@@ -67,7 +79,9 @@ nuevos en `tests/seo.test.ts`).
   especifica 3/mes; y marca la lectura de tonalidad como "Pronto" aunque la
   tarea figura DONE del 15/08.
 
-## Feature nueva en la misma rama
+## Feature nueva en la misma rama (mergeada)
+
+Commit `7087b3e`, en el mismo PR #116 pero separada de los arreglos de arriba.
 
 Progreso real del ordenamiento inteligente. El endpoint pasó de devolver JSON a
 streamear NDJSON (`lib/smart-order/stream.ts`) y la UI muestra una barra
@@ -76,18 +90,41 @@ comprometiendo. No hay mensajes rotativos inventados: todo lo demás del flujo
 tarda milisegundos, así que "leyendo metadata…" sería describir trabajo ya
 terminado.
 
+## Ya cerrado (no rehacer)
+
+- **Commitear y separar.** Hecho: dos commits (`dc0c77f` arreglos, `7087b3e`
+  feature) en el PR #116, ya mergeado. El `.git/index.lock` que trababa el
+  entorno estaba en el checkout principal, no en el worktree — era stale, sin
+  ningún proceso de git tomándolo.
+- **Correr `npm run build`.** Hecho, en la Mac: exit 0, compiló limpio. Era el
+  único gate sin verificar; ya no bloquea nada.
+
 ## Pendiente inmediato
 
-1. **Commitear y separar en dos PRs.** Quedó todo sin commitear porque el
-   entorno no pudo borrar `.git/index.lock`. En la Mac:
-   `rm -f .git/index.lock`, después commitear los archivos de fixes y los de la
-   feature por separado (la lista exacta está en el mensaje del chat).
-2. **Correr `npm run build` localmente.** No se pudo verificar en el sandbox
-   porque no llega a Google Fonts. `npm test`, `npm run typecheck` y
-   `npm run lint` sí corrieron y están verdes.
-3. **Re-correr los smoke tests públicos después del deploy**, para confirmar
-   las filas 91, 94, 95 y 98 del tracker contra producción.
-4. Recién ahí, seguir con el bloque de auth e ingesta, que destraba el resto.
+1. **Re-correr los smoke tests públicos después del deploy**, para confirmar
+   las filas 91, 94, 95 y 98 del tracker de la ronda contra producción.
+2. **Arrancar el tracker largo por el EPIC 0** (preparar entorno y las tres
+   cuentas FREE / PRO / PRO+). Sin esas cuentas, la mitad del resto no se puede
+   probar. Atajo: la PRO+ sale gratis agregando el mail a
+   `COMP_PRO_PLUS_EMAILS`; la PRO conviene sacarla comprando con tarjeta de
+   test de Stripe, así se valida el flujo de pago de paso.
+3. Después, el bloque de auth e ingesta, que destraba el resto.
+4. **Correr `RUN_THIS_IN_SUPABASE.sql`** (ver Ronda 2 más abajo) en dev y en
+   prod — bloquea plantillas de curva propias y el idioma de los mails hasta
+   que se haga.
+
+## Decisiones que siguen abiertas
+
+- **Routing por locale**, que es lo que destraba los dos hallazgos de SEO de
+  arriba (URL propia para español y JSON-LD en el idioma correcto). Es cambio
+  de arquitectura, no parche.
+- **Si los dos trackers se consolidan en uno solo.** Hoy conviven y se solapan
+  en la parte pública.
+
+Las discrepancias Asana-vs-publicado (arreglos ilimitados en FREE, tonalidad
+"Pronto") **ya no están abiertas** — la Ronda 2 las investigó y confirmó que
+son decisiones de producto ya tomadas; lo que hay que sincronizar es la
+descripción de las tareas en Asana, no el código. Ver esa sección.
 
 ---
 
@@ -182,3 +219,37 @@ Solo hay **una playlist real en dev**, sin slot, sin forma declarada, y
 el comparador de sets y la librería global nunca corrieron contra datos
 reales, ni siquiera una vez. Confirma lo que ya decía la ronda 1: ese bloque
 completo necesita a un humano con la app levantada y una cuenta de prueba.
+
+### Hallazgo adicional (mismo día): 3 tablas sin RLS, contra la convención propia
+
+Auditando por qué faltaban las migraciones 0018/0019, se revisó cada
+`create table` del historial contra la convención documentada en
+`docs/decisions.md` (decisión 22: "RLS enabled, zero policies — default-deny
+para `anon`/`authenticated`; la capa de servicio es el límite real"). Tres
+migraciones posteriores a esa decisión nunca la aplicaron:
+
+- `0012_billing.sql` → `billing_events`
+- `0017_playlist_versions.sql` → `playlist_versions`
+- `0019_curve_templates.sql` → `curve_templates`
+
+**Severidad real hoy: baja, no explotable.** Se verificó que este repo no
+tiene ninguna anon/publishable key de Supabase en ningún lugar del código —
+`lib/supabase/server.ts` es el único cliente, `server-only`, con la
+service-role key, que igual bypassea RLS. O sea que hoy nada fuera del
+propio servidor puede tocar Postgres. Pero es exactamente el escenario que la
+decisión 22 dice explícitamente que hay que blindar por si el día de mañana
+se agrega un cliente de navegador o una anon key (ya en el roadmap: verify
+features, etc.) — ese día, estas tres tablas serían la única excepción sin
+default-deny.
+
+**Arreglado**: nueva migración `0020_backfill_missing_rls.sql`, misma receta
+que el resto del schema (`enable row level security`, cero policies). Va en
+la misma rama/PR que el resto de esta ronda porque es trivial y de bajísimo
+riesgo — no requiere backfill de datos ni cambia ningún comportamiento actual
+de la app, solo cierra la puerta a futuro.
+
+Las tres migraciones pendientes (0018 + 0019 + 0020) están combinadas en un
+solo script listo para pegar en el SQL Editor de Supabase — buscar
+`RUN_THIS_IN_SUPABASE.sql` en el mensaje del PR #118, o concatenar los tres
+archivos de `supabase/migrations/`. Es idempotente: correrlo dos veces, o en
+un entorno donde una parte ya esté aplicada, no rompe nada.
