@@ -661,9 +661,10 @@ const siteCopy: SiteCopySchema = {
             soon: true,
           },
           {
-            // Shipped. Split out of a bundled line that also promised named curve
-            // shapes: one of the two now exists, and a single "soon" badge over
-            // both would have undersold this one and oversold the other.
+            // Shipped — matches version_history/named_curve_shapes/planned_vs_played/
+            // printable_set_sheet in lib/product/capabilities.ts, all status:"shipped"
+            // minPlan:"pro", and the comparison matrix below already listed them as
+            // included. These bullets were the last place still calling them "soon".
             text: {
               en: "Slot-aware planning — your curve mapped to the clock you actually play",
               es: "Planificación por horario de slot — tu curva mapeada al reloj real en que tocás",
@@ -674,14 +675,12 @@ const siteCopy: SiteCopySchema = {
               en: "Named curve shapes — warm-up, peak time, after-hours",
               es: "Curvas con nombre — warm-up, peak time, after-hours",
             },
-            soon: true,
           },
           {
             text: {
               en: "Planned vs played, set version history, and a printable set sheet",
               es: "Planificado vs. tocado, historial de versiones y set sheet imprimible",
             },
-            soon: true,
           },
         ],
         live: true,
