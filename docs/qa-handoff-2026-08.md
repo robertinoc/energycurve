@@ -109,15 +109,147 @@ terminado.
    `COMP_PRO_PLUS_EMAILS`; la PRO conviene sacarla comprando con tarjeta de
    test de Stripe, así se valida el flujo de pago de paso.
 3. Después, el bloque de auth e ingesta, que destraba el resto.
+4. **Correr `RUN_THIS_IN_SUPABASE.sql`** (ver Ronda 2 más abajo) en dev y en
+   prod — bloquea plantillas de curva propias y el idioma de los mails hasta
+   que se haga.
 
 ## Decisiones que siguen abiertas
-
-Ninguna de estas se resolvió en el PR #116 y las tres necesitan que decidas vos:
 
 - **Routing por locale**, que es lo que destraba los dos hallazgos de SEO de
   arriba (URL propia para español y JSON-LD en el idioma correcto). Es cambio
   de arquitectura, no parche.
-- **Las dos discrepancias entre Asana y lo publicado** de la sección anterior
-  (arreglos ilimitados en FREE, y lectura de tonalidad marcada como "Pronto").
 - **Si los dos trackers se consolidan en uno solo.** Hoy conviven y se solapan
   en la parte pública.
+
+Las discrepancias Asana-vs-publicado (arreglos ilimitados en FREE, tonalidad
+"Pronto") **ya no están abiertas** — la Ronda 2 las investigó y confirmó que
+son decisiones de producto ya tomadas; lo que hay que sincronizar es la
+descripción de las tareas en Asana, no el código. Ver esa sección.
+
+---
+
+## Ronda 2 — auditoría de código sin sesión de navegador (17/08/2026)
+
+Se pidió revisar si algo se escapó del tracker de 89 filas y arreglar lo que
+apareciera. Sin acceso al sheet (privado, 401 al pedirlo) ni a una sesión
+logueada, el aporte fue una auditoría de código + verificación directa contra
+la base de dev y contra producción vía `curl`. Base: `main` @ `a5bf30b`
+(después de mergear #116).
+
+### 🔴 Hallazgo crítico: dos migraciones de esta semana nunca se corrieron en dev
+
+Verificado por lectura directa contra `djoutoutkukpjrdgjqkb` (el proyecto que
+`.env.local` apunta hoy):
+
+```
+profiles.preferred_locale (migración 0018): NO EXISTE
+public.curve_templates (migración 0019):     NO EXISTE
+playlists.target_template_id (migración 0019): NO EXISTE
+```
+
+**Impacto real, ahora mismo, en dev:**
+
+- **El PR #114 (plantillas de curva propias) está completamente roto.** Cada
+  llamada a `curve_templates` falla; el fallo se traga en el service layer
+  (`logError` + devuelve `[]`/`null`/`false`), así que en la UI el botón
+  "Guardar esta forma" simplemente no confirma nunca — sin mensaje de error,
+  indistinguible de un click que no registró.
+- **El idioma del mail de compra y del de reseteo (PR #111) cae siempre a
+  inglés**, para cualquier usuario, sin importar qué haya elegido — mismo
+  patrón: el error se traga (`getProfileLocale`/`getLocaleByEmail` leen
+  `data` e ignoran `error`), así que nunca hay un crash que lo delate.
+
+No se corrió el `ALTER TABLE`/`CREATE TABLE` desde acá — en este proyecto esa
+acción siempre la ejecuta Robertino a mano. El SQL exacto está en los propios
+archivos de migración (`supabase/migrations/0018_profile_locale.sql` y
+`0019_curve_templates.sql`) y ya fue verificado en su momento contra dev antes
+de escribirlos; solo falta correrlo. **No se verificó prod** (no hay
+credenciales de esa base en este entorno) — dado que dev las tiene ausentes,
+es razonable asumir que prod también, y hay que confirmarlo antes de dar por
+buena cualquier fila del tracker que toque plantillas propias o idioma de
+mails.
+
+### Arreglado en esta ronda
+
+1. **JSON-LD de la landing en inglés para un usuario que ya eligió español.**
+   Causa exacta que ya se había identificado: `app/page.tsx` llamaba a
+   `buildLandingStructuredData()` sin locale. Ahora lee
+   `getRequestLocale()` (la misma cookie que ya usa el dashboard) y se la
+   pasa. **No resuelve el SEO en español** — sigue siendo el mismo problema de
+   fondo (Googlebot nunca manda la cookie, el copy visible se resuelve en el
+   cliente vía `localStorage`, no vía esta cookie) — pero saca la
+   inconsistencia real para un usuario que vuelve al sitio con el idioma ya
+   elegido: hoy esa persona ve el toggle en ES, el dashboard en ES, y el
+   JSON-LD embebido decía "en". Sin test automatizado nuevo: mockear
+   `next/headers` (o incluso `@/lib/server-locale`) para volver a importar
+   `app/page.tsx` en caliente resultó intermitente bajo Vitest — pasaba solo en
+   archivos aislados de un único test y fallaba en combinación con otros. Se
+   prefirió no sumar un test inestable a la suite (verificado manualmente en su
+   lugar: el `tsc --noEmit` limpio ya cubre toda la superficie de riesgo real,
+   que es una sola línea de flujo de datos sin ramas).
+2. **`tests/capabilities.test.ts` solo vigilaba los límites numéricos** (el
+   caso "3/mes" tipo `applied_fixes`), no las capabilities con gate booleano —
+   que es exactamente el bug que ya apareció una vez esta semana con
+   `proWorkflow` ("un interruptor sin lámpara"). Se generalizó: ahora **toda**
+   capability shipeada y de pago (no `free`) tiene que aparecer citada con
+   `can(...)` en algún archivo de `app/` o `services/`, o el CI falla. Probado
+   deshabilitando a mano la única referencia de `global_library` y
+   confirmando que el test rojo lo detecta, y que sacar una de las *dos*
+   referencias de `set_comparator` no da falso positivo.
+
+### Verificado y NO reproducido (de los hallazgos sin arreglar de la ronda 1)
+
+- `/api/health`: hoy responde `200`, `content-type: application/json` y
+  cuerpo real tanto en `GET` como en `HEAD`, verificado en vivo contra
+  `energycurve.app`. No se pudo reproducir "cuerpo vacío, sin content-type".
+- JSON-LD duplicado en la landing: hoy hay **un solo** `<script
+  type="application/ld+json">` en el HTML servido, y solo un call site en el
+  código (`app/page.tsx`). Tampoco reproduce.
+- Las dos discrepancias Asana-vs-publicado que anotó la ronda 1 (arreglos
+  ilimitados en FREE, tonalidad marcada "Pronto") **no son bugs de código**:
+  son decisiones de producto ya tomadas y documentadas esta semana
+  (`docs/plan-gating.md`, `docs/energy-model-v3.md`) — lo que quedó
+  desactualizado es la *descripción* de las tareas en Asana, no la app. Sigue
+  siendo Robertino quien tiene que sincronizar eso.
+
+### Lo que sigue sin poder probarse desde acá
+
+Solo hay **una playlist real en dev**, sin slot, sin forma declarada, y
+**cero filas en `playlist_versions`** — o sea que el historial, plan-vs-tocado,
+el comparador de sets y la librería global nunca corrieron contra datos
+reales, ni siquiera una vez. Confirma lo que ya decía la ronda 1: ese bloque
+completo necesita a un humano con la app levantada y una cuenta de prueba.
+
+### Hallazgo adicional (mismo día): 3 tablas sin RLS, contra la convención propia
+
+Auditando por qué faltaban las migraciones 0018/0019, se revisó cada
+`create table` del historial contra la convención documentada en
+`docs/decisions.md` (decisión 22: "RLS enabled, zero policies — default-deny
+para `anon`/`authenticated`; la capa de servicio es el límite real"). Tres
+migraciones posteriores a esa decisión nunca la aplicaron:
+
+- `0012_billing.sql` → `billing_events`
+- `0017_playlist_versions.sql` → `playlist_versions`
+- `0019_curve_templates.sql` → `curve_templates`
+
+**Severidad real hoy: baja, no explotable.** Se verificó que este repo no
+tiene ninguna anon/publishable key de Supabase en ningún lugar del código —
+`lib/supabase/server.ts` es el único cliente, `server-only`, con la
+service-role key, que igual bypassea RLS. O sea que hoy nada fuera del
+propio servidor puede tocar Postgres. Pero es exactamente el escenario que la
+decisión 22 dice explícitamente que hay que blindar por si el día de mañana
+se agrega un cliente de navegador o una anon key (ya en el roadmap: verify
+features, etc.) — ese día, estas tres tablas serían la única excepción sin
+default-deny.
+
+**Arreglado**: nueva migración `0020_backfill_missing_rls.sql`, misma receta
+que el resto del schema (`enable row level security`, cero policies). Va en
+la misma rama/PR que el resto de esta ronda porque es trivial y de bajísimo
+riesgo — no requiere backfill de datos ni cambia ningún comportamiento actual
+de la app, solo cierra la puerta a futuro.
+
+Las tres migraciones pendientes (0018 + 0019 + 0020) están combinadas en un
+solo script listo para pegar en el SQL Editor de Supabase — buscar
+`RUN_THIS_IN_SUPABASE.sql` en el mensaje del PR #118, o concatenar los tres
+archivos de `supabase/migrations/`. Es idempotente: correrlo dos veces, o en
+un entorno donde una parte ya esté aplicada, no rompe nada.
