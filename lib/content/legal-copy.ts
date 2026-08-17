@@ -99,7 +99,7 @@ const en: Record<LegalDocId, LegalDoc> = {
         heading: "Who operates EnergyCurve",
         body: [
           `EnergyCurve is part of the StageLink suite and is operated by ${OPERATOR}, the company responsible for the service and for this agreement.`,
-          `If and when you purchase a paid plan, the charge is processed by ${OPERATOR}, so "${OPERATOR}" is the name that appears on your card statement, invoices, and receipts — not "EnergyCurve".`,
+          `If you purchase a paid plan, the charge is processed by ${OPERATOR}, so "${OPERATOR}" is the name that appears on your card statement, invoices, and receipts — not "EnergyCurve".`,
         ],
       },
       {
@@ -237,7 +237,7 @@ const es: Record<LegalDocId, LegalDoc> = {
         heading: "Quién opera EnergyCurve",
         body: [
           `EnergyCurve es parte de la suite StageLink y está operado por ${OPERATOR}, la empresa responsable del servicio y de este acuerdo.`,
-          `Si en algún momento contratás un plan pago, el cobro lo procesa ${OPERATOR}, así que "${OPERATOR}" es el nombre que vas a ver en tu resumen de tarjeta, facturas y recibos — no "EnergyCurve".`,
+          `Si contratás un plan pago, el cobro lo procesa ${OPERATOR}, así que "${OPERATOR}" es el nombre que vas a ver en tu resumen de tarjeta, facturas y recibos — no "EnergyCurve".`,
         ],
       },
       {
