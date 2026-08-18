@@ -208,9 +208,12 @@ describe("can()", () => {
   })
 
   it("answers about entitlement, not about existence", () => {
-    // A PRO+ subscriber is entitled to Gig Mode; it just doesn't exist yet.
-    expect(can("pro_plus", "active", "gig_mode")).toBe(true)
-    expect(isAvailable("pro_plus", "active", "gig_mode")).toBe(false)
+    // A PRO+ subscriber is entitled to residency mode; it just doesn't exist
+    // yet. Gig Mode used to be the example here and had to move when it
+    // shipped — the pair only means anything while the capability is planned.
+    expect(CAPABILITIES.residency_mode.status).toBe("planned")
+    expect(can("pro_plus", "active", "residency_mode")).toBe(true)
+    expect(isAvailable("pro_plus", "active", "residency_mode")).toBe(false)
   })
 })
 
