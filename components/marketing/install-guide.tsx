@@ -2,15 +2,11 @@
 
 import Link from "next/link"
 
-import { useEffect } from "react"
-
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
+import { LanguageToggle } from "@/components/marketing/language-toggle"
+import { useSiteLocale } from "@/components/marketing/use-site-locale"
+import { localizedPath } from "@/lib/content/locale-routing"
 import { getSiteCopy, type SiteLocale } from "@/lib/content/site-copy"
-import {
-  persistSiteLocale,
-  readStoredSiteLocale,
-} from "@/lib/content/site-locale"
-import { useIsClient } from "@/lib/use-is-client"
 
 function ChromeIcon() {
   return (
@@ -47,17 +43,10 @@ function ShareIcon() {
   )
 }
 
-export function InstallGuide() {
-  // Resolve the stored locale only after hydration so SSR output ("en")
-  // always matches the first client render.
-  const isClient = useIsClient()
-  const locale: SiteLocale =
-    isClient && readStoredSiteLocale() === "es" ? "es" : "en"
-
-  // Without this the page served Spanish copy under `lang="en"`.
-  useEffect(() => {
-    persistSiteLocale(locale)
-  }, [locale])
+export function InstallGuide({ locale }: { locale: SiteLocale }) {
+  // Locale comes from the route (/install vs /es/install), so the served HTML is
+  // already in the right language.
+  const changeLocale = useSiteLocale("/install", locale)
 
   const copy = getSiteCopy(locale).install
 
@@ -73,9 +62,12 @@ export function InstallGuide() {
       </div>
 
       <div className="relative mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 pb-16 pt-12">
-        <Link href="/" className="w-fit">
-          <EnergyCurveLogo kind="horizontal" size="md" tone="light" />
-        </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link href={localizedPath("/", locale)} className="w-fit">
+            <EnergyCurveLogo kind="horizontal" size="md" tone="light" />
+          </Link>
+          <LanguageToggle locale={locale} onChange={changeLocale} />
+        </div>
 
         <div>
           <h1 className="font-heading text-3xl font-semibold leading-tight sm:text-4xl">
@@ -132,7 +124,7 @@ export function InstallGuide() {
             {copy.openApp}
           </Link>
           <Link
-            href="/"
+            href={localizedPath("/", locale)}
             className="rounded-full border border-white/20 px-6 py-3 text-center text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
           >
             {copy.backHome}

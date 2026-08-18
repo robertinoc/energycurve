@@ -3,11 +3,11 @@ import type { Metadata } from "next"
 import { PricingPage } from "@/components/marketing/pricing-page"
 import { buildPricingStructuredData, marketingMetadata } from "@/lib/seo"
 
-const LOCALE = "en" as const
+const LOCALE = "es" as const
 
 export const metadata: Metadata = marketingMetadata("/pricing", LOCALE)
 
-export default function Pricing() {
+export default function PricingEs() {
   const structuredData = buildPricingStructuredData({ locale: LOCALE })
 
   return (

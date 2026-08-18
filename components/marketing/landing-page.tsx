@@ -21,37 +21,29 @@ import {
   SuiteSection,
 } from "@/components/marketing/landing-sections"
 import { InstallBanner } from "@/components/marketing/install-banner"
+import { useSiteLocale } from "@/components/marketing/use-site-locale"
+import { LOCALE_PREFIX } from "@/lib/content/locale-routing"
 import { getSiteCopy, SiteLocale } from "@/lib/content/site-copy"
-import {
-  persistSiteLocale,
-  SITE_LOCALE_STORAGE_KEY,
-} from "@/lib/content/site-locale"
 import { isStandaloneDisplayMode } from "@/lib/pwa"
 
 const SECTION_IDS = ["features", "how-it-works", "story", "pricing", "faq", "contact"]
 
-export function LandingPage() {
-  const [locale, setLocale] = useState<SiteLocale>(() => {
-    if (typeof window === "undefined") {
-      return "en"
-    }
+/** Both addresses of the landing page — the installed app leaves either one. */
+const LANDING_PATHS = new Set(["/", LOCALE_PREFIX, `${LOCALE_PREFIX}/`])
 
-    const storedLocale = window.localStorage.getItem(SITE_LOCALE_STORAGE_KEY)
-    return storedLocale === "es" ? "es" : "en"
-  })
+export function LandingPage({ locale }: { locale: SiteLocale }) {
+  // The locale is a prop, not state read from localStorage: the server needs to
+  // render the right language for a crawler that has no storage at all. The
+  // toggle navigates between /  and /es instead of swapping copy in place — see
+  // useSiteLocale and lib/content/locale-routing.ts.
+  const changeLocale = useSiteLocale("/", locale)
   const [activeSection, setActiveSection] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    // Mirrors into localStorage, the app cookie (so the server-rendered
-    // dashboard agrees with the landing) and <html lang>.
-    persistSiteLocale(locale)
-  }, [locale])
-
-  useEffect(() => {
     // Installed-app launches should never sit on the marketing page: send
     // them to /login, which forwards logged-in users straight to /dashboard.
-    if (isStandaloneDisplayMode() && window.location.pathname === "/") {
+    if (isStandaloneDisplayMode() && LANDING_PATHS.has(window.location.pathname)) {
       window.location.replace("/login")
     }
   }, [])
@@ -142,7 +134,7 @@ export function LandingPage() {
           activeSection={activeSection}
           scrolled={scrolled}
           locale={locale}
-          onLocaleChange={setLocale}
+          onLocaleChange={changeLocale}
           ctaLabel={copy.nav.cta}
           loginLabel={copy.ui.login}
         />
@@ -160,7 +152,7 @@ export function LandingPage() {
         <FooterSection copy={copy} />
       </div>
 
-      <InstallBanner copy={copy.install} />
+      <InstallBanner copy={copy.install} locale={locale} />
     </main>
   )
 }

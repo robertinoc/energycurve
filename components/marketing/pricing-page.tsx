@@ -4,19 +4,17 @@ import Link from "next/link"
 import { Check, Clock, CreditCard, Minus } from "lucide-react"
 
 import { CheckoutButton } from "@/components/marketing/checkout-button"
+import { LanguageToggle } from "@/components/marketing/language-toggle"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import {
   getSiteCopy,
   type ResolvedPlanCell,
   type SiteLocale,
 } from "@/lib/content/site-copy"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
-import {
-  persistSiteLocale,
-  readStoredSiteLocale,
-} from "@/lib/content/site-locale"
-import { useIsClient } from "@/lib/use-is-client"
+import { useSiteLocale } from "@/components/marketing/use-site-locale"
+import { localizedPath } from "@/lib/content/locale-routing"
 import { cn } from "@/lib/utils"
 
 /** Copy-side plan id → the key `/api/billing/checkout` expects. */
@@ -71,19 +69,13 @@ function PlanCellValue({
   return <span className="text-white/78">{cell.text}</span>
 }
 
-export function PricingPage() {
-  // Resolve the stored locale only after hydration so the SSR output ("en")
-  // always matches the first client render.
-  const isClient = useIsClient()
-  const locale: SiteLocale =
-    isClient && readStoredSiteLocale() === "es" ? "es" : "en"
+export function PricingPage({ locale }: { locale: SiteLocale }) {
+  // The locale arrives from the route (/pricing vs /es/pricing) rather than from
+  // localStorage after hydration, so the HTML a crawler receives is already in
+  // the right language. See lib/content/locale-routing.ts.
+  const changeLocale = useSiteLocale("/pricing", locale)
 
   const [interval, setInterval] = useState<BillingInterval>("monthly")
-
-  // Without this the page served Spanish copy under `lang="en"`.
-  useEffect(() => {
-    persistSiteLocale(locale)
-  }, [locale])
 
   const copy = getSiteCopy(locale).pricing
   const cellLabels = {
@@ -99,9 +91,14 @@ export function PricingPage() {
       </div>
 
       <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 pb-16 pt-12">
-        <Link href="/" className="w-fit">
-          <EnergyCurveLogo kind="horizontal" size="md" tone="light" />
-        </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link href={localizedPath("/", locale)} className="w-fit">
+            <EnergyCurveLogo kind="horizontal" size="md" tone="light" />
+          </Link>
+          {/* Reachable from a shared /es link, where there is no landing page
+              above to have set the language. */}
+          <LanguageToggle locale={locale} onChange={changeLocale} />
+        </div>
 
         <header className="max-w-3xl">
           <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
@@ -324,13 +321,13 @@ export function PricingPage() {
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="/#faq"
+              href={`${localizedPath("/", locale)}#faq`}
               className="rounded-full border border-white/20 px-6 py-3 text-center text-sm font-semibold text-white/82 transition hover:border-white/40 hover:text-white"
             >
               {copy.questionsCta}
             </Link>
             <Link
-              href="/"
+              href={localizedPath("/", locale)}
               className="rounded-full border border-white/12 px-6 py-3 text-center text-sm font-semibold text-white/62 transition hover:border-white/30 hover:text-white"
             >
               {copy.backHome}

@@ -4,7 +4,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
-import type { ResolvedSiteCopy } from "@/lib/content/site-copy"
+import { localizedPath } from "@/lib/content/locale-routing"
+import type { ResolvedSiteCopy, SiteLocale } from "@/lib/content/site-copy"
 import { isStandaloneDisplayMode, type BeforeInstallPromptEvent } from "@/lib/pwa"
 import { useIsClient } from "@/lib/use-is-client"
 
@@ -18,8 +19,10 @@ const DISMISS_KEY = "energycurve:install-banner-dismissed"
  */
 export function InstallBanner({
   copy,
+  locale,
 }: {
   copy: ResolvedSiteCopy["install"]
+  locale: SiteLocale
 }) {
   // isClient flips to true right after hydration, so the SSR HTML (no banner)
   // always matches the first client render — no hydration mismatch.
@@ -94,7 +97,7 @@ export function InstallBanner({
             {copy.bannerCta}
           </button>
         ) : (
-          <Link href="/install" className={ctaClasses}>
+          <Link href={localizedPath("/install", locale)} className={ctaClasses}>
             {copy.bannerCta}
           </Link>
         )}

@@ -261,6 +261,39 @@ Shipped in PRs #82 and #83:
 - `/pricing` published: FREE / PRO $9.99 / PRO+ $19.99, PRO marked recommended,
   roadmap capabilities rendered as "Soon" rather than check marks.
 
+### Spanish got its own URLs — 17 Aug 2026
+
+The August smoke-test round's most expensive finding: the Spanish site had no
+address. Language was resolved on the client from `localStorage`, so the server
+answered every request in English and a full Spanish translation of every
+marketing page was unreachable to search engines and answer engines — the exact
+space `seo-aeo-baseline-2026-08.md` named as the most winnable.
+
+- **English stays at the root, Spanish lives under `/es`.** The existing English
+  URLs are the ones already linked and measured; moving them to `/en` would have
+  invalidated all of them for a cosmetic symmetry. `lib/content/locale-routing.ts`
+  owns the arithmetic, pure and shared by server and client.
+- **Six pages × two languages**, each with a **self-referencing canonical** plus
+  the `hreflang` pair and `x-default`. Canonicalising `/es/pricing` to `/pricing`
+  would have told Google the Spanish page was a duplicate not worth indexing,
+  which is the failure this change exists to undo.
+- Titles and descriptions are translated (`lib/content/page-metadata.ts`), the
+  JSON-LD follows the route's locale, `og:locale` is `es_LA` (the copy is
+  Rioplatense), and the sitemap lists all twelve URLs with their alternates.
+- **Internal links are localized**, so a visitor on `/es` who clicks "Precios"
+  stays in Spanish. The language toggle now navigates between the two URLs and
+  also exists on `/pricing`, `/install` and the legal pages, which previously
+  relied on the landing page having set the language first.
+- The stored preference is written **only when the visitor uses the toggle**.
+  `persistSiteLocale` also writes the app cookie the dashboard and transactional
+  emails read, so persisting whatever language the URL happened to be would have
+  silently switched a Spanish customer's receipts to English just by visiting the
+  homepage. Landing on a URL is not a choice.
+- All twelve routes still prerender as static: `<html lang>` is corrected on the
+  client instead of read from the request, because reading the request in the root
+  layout opts *every* page out of static rendering — a real per-request cost for
+  an attribute Google ignores when determining page language.
+
 Still open in this area: blog seed content (needs blog infrastructure, which
 this repo doesn't have), and the Search Console property itself (code support
 shipped via `GOOGLE_SITE_VERIFICATION`; claiming the domain needs the account).

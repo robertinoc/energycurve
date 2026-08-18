@@ -24,6 +24,7 @@ import { SectionReveal } from "@/components/marketing/section-reveal"
 import { EnergyCurveHeroVisual } from "@/components/marketing/energy-curve-hero-visual"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ResolvedSiteCopy } from "@/lib/content/site-copy"
+import { localizedPath } from "@/lib/content/locale-routing"
 import { cn } from "@/lib/utils"
 
 const featureIcons = [LineChart, GitBranch, Sparkles, BarChart3, Waves] as const
@@ -382,7 +383,7 @@ export function PricingTeaserSection({ copy }: { copy: ResolvedSiteCopy }) {
           {copy.pricing.plans.map((plan) => (
             <Link
               key={plan.id}
-              href="/pricing"
+              href={localizedPath("/pricing", copy.locale)}
               className={cn(
                 "relative rounded-2xl border p-5 transition hover:-translate-y-1",
                 plan.recommended
@@ -423,7 +424,7 @@ export function PricingTeaserSection({ copy }: { copy: ResolvedSiteCopy }) {
           ))}
         </div>
 
-        <CTAButton href="/pricing">
+        <CTAButton href={localizedPath("/pricing", copy.locale)}>
           <>
             {copy.pricing.teaserCta}
             <ArrowRight className="size-4" />
@@ -642,16 +643,31 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
           <FooterColumn
             heading={copy.footer.resources}
             links={[
-              { href: "/pricing", label: copy.pricing.navLabel },
-              { href: "/install", label: copy.install.footerLink },
+              {
+                href: localizedPath("/pricing", copy.locale),
+                label: copy.pricing.navLabel,
+              },
+              {
+                href: localizedPath("/install", copy.locale),
+                label: copy.install.footerLink,
+              },
             ]}
           />
           <FooterColumn
             heading={copy.footer.legal}
             links={[
-              { href: "/privacy", label: copy.footer.privacy },
-              { href: "/terms", label: copy.footer.terms },
-              { href: "/cookie-policy", label: copy.footer.cookies },
+              {
+                href: localizedPath("/privacy", copy.locale),
+                label: copy.footer.privacy,
+              },
+              {
+                href: localizedPath("/terms", copy.locale),
+                label: copy.footer.terms,
+              },
+              {
+                href: localizedPath("/cookie-policy", copy.locale),
+                label: copy.footer.cookies,
+              },
             ]}
           />
         </div>

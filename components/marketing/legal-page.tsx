@@ -1,31 +1,35 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
+import { LanguageToggle } from "@/components/marketing/language-toggle"
+import { useSiteLocale } from "@/components/marketing/use-site-locale"
 import { getLegalCopy, type LegalDocId } from "@/lib/content/legal-copy"
-import type { SiteLocale } from "@/lib/content/site-copy"
 import {
-  persistSiteLocale,
-  readStoredSiteLocale,
-} from "@/lib/content/site-locale"
+  localizedPath,
+  type LocalizedPath,
+} from "@/lib/content/locale-routing"
+import type { SiteLocale } from "@/lib/content/site-copy"
 
-export function LegalPage({ doc }: { doc: LegalDocId }) {
-  // Match the landing's locale mechanism (localStorage). Default EN on the server
-  // + first render, then sync from storage after mount to avoid hydration diffs.
-  const [locale, setLocale] = useState<SiteLocale>("en")
+/** Each legal document's own URL, so the language toggle stays on this page. */
+const DOC_PATHS: Record<LegalDocId, LocalizedPath> = {
+  privacy: "/privacy",
+  terms: "/terms",
+  cookies: "/cookie-policy",
+}
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLocale(readStoredSiteLocale() ?? "en")
-  }, [])
-
-  // Without this the page served Spanish copy under `lang="en"`.
-  useEffect(() => {
-    persistSiteLocale(locale)
-  }, [locale])
+export function LegalPage({
+  doc,
+  locale,
+}: {
+  doc: LegalDocId
+  locale: SiteLocale
+}) {
+  // Locale comes from the route, so the served HTML is already in the right
+  // language rather than being corrected after hydration.
+  const changeLocale = useSiteLocale(DOC_PATHS[doc], locale)
 
   const t = getLegalCopy(locale, doc)
   const backLabel = locale === "es" ? "Volver al inicio" : "Back to home"
@@ -34,16 +38,19 @@ export function LegalPage({ doc }: { doc: LegalDocId }) {
     <main className="min-h-screen bg-[#08050F] text-white">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-12 lg:px-8">
         <div className="flex items-center justify-between gap-4">
-          <Link href="/" aria-label="EnergyCurve home">
+          <Link href={localizedPath("/", locale)} aria-label="EnergyCurve home">
             <EnergyCurveLogo tone="light" size="sm" kind="horizontal" />
           </Link>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-white/60 transition hover:text-white"
-          >
-            <ArrowLeft className="size-3.5" />
-            {backLabel}
-          </Link>
+          <div className="flex items-center gap-3">
+            <LanguageToggle locale={locale} onChange={changeLocale} />
+            <Link
+              href={localizedPath("/", locale)}
+              className="inline-flex items-center gap-1.5 text-sm text-white/60 transition hover:text-white"
+            >
+              <ArrowLeft className="size-3.5" />
+              {backLabel}
+            </Link>
+          </div>
         </div>
 
         <header className="space-y-2">
@@ -70,13 +77,22 @@ export function LegalPage({ doc }: { doc: LegalDocId }) {
         </div>
 
         <nav className="flex flex-wrap gap-x-5 gap-y-2 border-t border-white/8 pt-6 text-sm text-white/48">
-          <Link href="/privacy" className="transition hover:text-white">
+          <Link
+            href={localizedPath("/privacy", locale)}
+            className="transition hover:text-white"
+          >
             {getLegalCopy(locale, "privacy").title}
           </Link>
-          <Link href="/terms" className="transition hover:text-white">
+          <Link
+            href={localizedPath("/terms", locale)}
+            className="transition hover:text-white"
+          >
             {getLegalCopy(locale, "terms").title}
           </Link>
-          <Link href="/cookie-policy" className="transition hover:text-white">
+          <Link
+            href={localizedPath("/cookie-policy", locale)}
+            className="transition hover:text-white"
+          >
             {getLegalCopy(locale, "cookies").title}
           </Link>
         </nav>

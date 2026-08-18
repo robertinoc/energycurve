@@ -3,11 +3,11 @@ import type { Metadata } from "next"
 import { LandingPage } from "@/components/marketing/landing-page"
 import { buildLandingStructuredData, marketingMetadata } from "@/lib/seo"
 
-const LOCALE = "en" as const
+const LOCALE = "es" as const
 
 export const metadata: Metadata = marketingMetadata("/", LOCALE)
 
-export default function HomePage() {
+export default function HomePageEs() {
   // The locale is fixed by the route, so the structured data, the metadata above
   // and the rendered copy are guaranteed to be the same language — the JSON-LD
   // used to default to English on a page that rendered in Spanish.
