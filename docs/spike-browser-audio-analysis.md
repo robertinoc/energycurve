@@ -183,6 +183,52 @@ Fixes, in rough order of effort:
 The harness is how we'll know whether any of that worked: re-run, and see if 21%
 moves.
 
+### What was done about it — 17 Aug 2026
+
+**Two of the four, and the harness that settles the rest. The 21% has not moved
+yet, because nothing here has been measured against a tagged library.**
+
+**#2 — per-window voting, shipped and on by default.** Each analysed window now
+detects its own key and the majority wins (`detectKeyByVote`). This fell out
+cheaply from the windowed sampling already in place: the windows exist, so they
+may as well vote. The reason it matters is less about accuracy than about honesty
+— the old confidence number was a Pearson correlation against one average of a
+whole track, and it read 0.4–0.85 *while getting the mode wrong*. Averaging five
+minutes flattens the tonal movement that would have exposed the disagreement.
+Three windows that each pick a different key report `agreement: 0.33` and cannot
+hide it. `keyAgreement` is now the column to read; `keyConfidence` stays for
+comparison with the old numbers.
+
+**#4 — both profile sets ship, selectable, default unchanged.** Krumhansl-Kessler
+(probe-tone ratings, classical material) and Temperley's Kostka-Payne profiles
+(note counts over a tonal corpus) are both in `KEY_PROFILES`, and the harness has
+a picker. Temperley is *reputed* to separate the modes more sharply, which is the
+axis we fail on — but that reputation is not a measurement on techno, so the
+default stays `krumhansl`, the set the 21% was measured with. Changing it silently
+would make the next run incomparable with the number above. **Run the folder twice,
+once per set, and the Key column answers the question.**
+
+One finding from writing the tests, recorded because it looks like a bug: in
+Temperley's **minor** profile the fifth (0.747) outweighs the tonic (0.712). That's
+real — a corpus counts notes, and minor-key music sounds the fifth slightly more
+often than the tonic. Krumhansl's peaks on the tonic in both modes because it
+measures perceived *fit* instead.
+
+**#1 and #3 were not done, deliberately.** Both need something we don't have:
+
+- *Harmonic/percussive separation* would require computing chroma ourselves from
+  the amplitude spectrum, because Meyda's `chroma` extractor folds the full
+  spectrum with no way to exclude the bass. That's a real piece of DSP, and it is
+  the fix most likely to matter on this genre — but it should be built against a
+  measurement, not before one.
+- *Tuning correction* needs a tuning offset estimated from a finer-grained
+  spectrum than 12 folded bins can give. Not reachable from the current chroma at
+  all.
+
+So the order to work in is: measure both profile sets on a tagged library, then
+decide whether HPSS is still needed. `key_detection` stays `status: "planned"` and
+the pricing matrix keeps saying "Soon" until a number justifies otherwise.
+
 Useful side-effect: the tags in this library are **Open Key** notation
 (`7m`, `4d`), and the existing `toCamelot()` already converts them — so the
 accuracy comparison works against a real corpus with no new parsing.

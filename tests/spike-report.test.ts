@@ -24,6 +24,8 @@ function track(overrides: Partial<TrackAnalysis> = {}): TrackAnalysis {
     detectedKey: "Am",
     keyConfidence: 0.7,
     keyMargin: 0.1,
+    keyAgreement: 1,
+    keySegments: 3,
     features: null,
     taggedBpm: 128,
     taggedKey: "1m",

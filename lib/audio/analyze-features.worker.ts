@@ -52,7 +52,13 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 
     const rms: number[] = []
     const entropy: number[] = []
-    const chromaFrames: number[][] = []
+    /**
+     * One averaged chroma per window, so the key detector can let the windows vote
+     * instead of reading a single average of the whole track — see
+     * detectKeyByVote. The whole-track average is still reported alongside it.
+     */
+    const chromaSegments: number[][] = []
+    const allChromaFrames: number[][] = []
     /**
      * One flux envelope per window, never one concatenated array: flux is defined
      * between consecutive frames, and a seam between two windows would compare
@@ -66,6 +72,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 
     for (const { start, end } of windows) {
       const segmentFlux: number[] = []
+      const segmentChroma: number[][] = []
       // Reset per window: the first frame after a jump has no valid predecessor.
       let previousFrame: Float32Array | null = null
       let previousSpectrum: Float32Array | null = null
@@ -98,7 +105,11 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
           }
 
           if (extracted.chroma) {
-            chromaFrames.push(Array.from(extracted.chroma))
+            const frameChroma = Array.from(extracted.chroma)
+            // Kept twice on purpose: per window for the vote, and pooled for the
+            // whole-track average the Energy Model features still read.
+            segmentChroma.push(frameChroma)
+            allChromaFrames.push(frameChroma)
           }
         }
 
@@ -107,6 +118,9 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 
       if (segmentFlux.length > 0) {
         fluxSegments.push(segmentFlux)
+      }
+      if (segmentChroma.length > 0) {
+        chromaSegments.push(averageChroma(segmentChroma))
       }
     }
 
@@ -121,7 +135,8 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
         fluxMean: mean(fluxSegments.flat()),
         entropyMean: mean(entropy),
         onsetRate: onsetRateFromSegments(fluxSegments, frameRateHz),
-        chroma: averageChroma(chromaFrames),
+        chroma: averageChroma(allChromaFrames),
+        chromaSegments,
         frameCount: rms.length,
         // What the frames actually covered, so a reader of these numbers knows
         // they describe a sample of the track rather than all of it.

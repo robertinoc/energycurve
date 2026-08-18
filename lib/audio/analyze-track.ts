@@ -12,7 +12,11 @@
  * Meyda's chroma. See docs/spike-browser-audio-analysis.md.
  */
 
-import { detectKeyFromChroma } from "./key-detection"
+import {
+  detectKeyByVote,
+  DEFAULT_KEY_PROFILES,
+  type KeyProfileSet,
+} from "./key-detection"
 import type {
   AudioFeatures,
   TrackAnalysis,
@@ -110,6 +114,12 @@ export interface AnalyzeOptions {
   /** Tags already parsed for this file, used only for the accuracy comparison. */
   taggedBpm?: number | null
   taggedKey?: string | null
+  /**
+   * Which reference key profiles to correlate against. Exposed so the harness can
+   * run the same files through both and let the measurement decide, rather than
+   * having this choice settled by an assertion in a comment.
+   */
+  keyProfiles?: KeyProfileSet
 }
 
 /**
@@ -133,6 +143,8 @@ export async function analyzeAudioFile(
     detectedKey: null,
     keyConfidence: null,
     keyMargin: null,
+    keyAgreement: null,
+    keySegments: null,
     features: null,
     taggedBpm: options.taggedBpm ?? null,
     taggedKey: options.taggedKey ?? null,
@@ -181,11 +193,21 @@ export async function analyzeAudioFile(
     base.featuresMs = analyzeMs
     base.features = features
 
-    const key = detectKeyFromChroma(features.chroma)
+    // Each analysed window votes, rather than one average over the whole track
+    // deciding alone — the spike's second recommended fix for the 21% accuracy,
+    // whose failures were consistently a plausible tonic with the wrong mode.
+    const key = detectKeyByVote(
+      features.chromaSegments.length > 0
+        ? features.chromaSegments
+        : [features.chroma],
+      options.keyProfiles ?? DEFAULT_KEY_PROFILES
+    )
     if (key) {
       base.detectedKey = key.key
       base.keyConfidence = key.confidence
       base.keyMargin = key.margin
+      base.keyAgreement = key.agreement
+      base.keySegments = key.segmentsCounted
     }
   } catch (error) {
     base.error = error instanceof Error ? error.message : String(error)
