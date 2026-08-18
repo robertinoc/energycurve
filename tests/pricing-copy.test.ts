@@ -113,8 +113,12 @@ describe("pricing copy", () => {
     // ships. Key detection took its place rather than the row simply leaving,
     // because that is the half still unbuilt (21% against tagged files) and it
     // is the half a DJ assumes when they read "audio analysis".
-    en: ["musical key read", "energy model v3", "gig mode"],
-    es: ["tonalidad leída", "energy model v3", "gig mode"],
+    //
+    // "gig mode" left the same way when the booth view shipped, and residency
+    // mode replaced it — the list has to keep naming something genuinely unbuilt
+    // or the assertion passes without checking anything.
+    en: ["musical key read", "energy model v3", "residency mode"],
+    es: ["tonalidad leída", "energy model v3", "modo residencia"],
   }
 
   it.each(supportedLocales)(

@@ -320,10 +320,19 @@ server needed**, with two corrections to the plan.
   played. PRO+: set comparator, global library, per-transition advice, custom
   curve shapes. Plus the first-run guide, shareable public curves, conversion
   and churn events, and a bilingual purchase email.
-- **Still open and worth naming**: Gig Mode is the last task in the H2 epic;
-  Energy Model v3 is specified but unfitted and blocked on a labelled run over a
-  Mixed-In-Key-tagged library; key detection sits at 21% and stays dark until the
-  harness says otherwise.
+- **Gig Mode shipped 17 Aug 2026 — H2 is closed.** The booth view at
+  `/dashboard/playlists/[id]/gig`: current track as the largest thing on screen,
+  the next one with its tempo move already worked out, the arc with a marker where
+  the DJ actually is, and one thumb-sized control. Position is bookmarked in
+  `localStorage` per playlist so a locked phone or an evicted tab doesn't lose the
+  place; a Screen Wake Lock keeps the screen on (opt-in — it costs battery, and
+  the DJ knows whether the phone is plugged in); a narrowly scoped service worker
+  (`public/sw.js`) makes the set openable with no signal. `gig_mode` flipped to
+  `status: "shipped"` and the pricing card and matrix both dropped their "Soon".
+- **Still open and worth naming**: Energy Model v3 is specified but unfitted and
+  blocked on a labelled run over a Mixed-In-Key-tagged library; key detection sits
+  at 21% and stays dark until the harness says otherwise. Residency mode and
+  collaborative B2B/B3B sets remain the two planned PRO+ capabilities.
 - **Essentia.js is out** — AGPL-3.0, unusable in a closed-source paid product.
 - **Direct USB export researched and declined** — writing the database is
   solved, but a CDJ needs per-track ANLZ analysis files that only rekordbox

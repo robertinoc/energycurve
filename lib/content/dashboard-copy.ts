@@ -324,6 +324,63 @@ export const DASHBOARD_COPY = {
     back: { en: "Playlists", es: "Playlists" },
     analyzeSet: { en: "Analyze set", es: "Analizar set" },
     setSheet: { en: "Set sheet", es: "Hoja de set" },
+    gigMode: { en: "Gig Mode", es: "Modo cabina" },
+  },
+
+  /**
+   * Gig Mode. Written for someone reading a phone at arm's length, in the dark,
+   * with a monitor going — so the strings are short and say one thing each.
+   */
+  gigMode: {
+    pageTitle: { en: "Gig Mode", es: "Modo cabina" },
+    back: { en: "Leave Gig Mode", es: "Salir del modo cabina" },
+    open: { en: "Gig Mode", es: "Modo cabina" },
+    nowPlaying: { en: "Playing now", es: "Suena ahora" },
+    upNext: { en: "Up next", es: "Sigue" },
+    setEnd: { en: "End of set", es: "Fin del set" },
+    prev: { en: "Back", es: "Atrás" },
+    next: { en: "Next track", es: "Siguiente" },
+    restart: { en: "Back to the top", es: "Volver al principio" },
+    position: { en: "Track", es: "Track" },
+    of: { en: "of", es: "de" },
+    due: { en: "Due", es: "Va a las" },
+    keepAwake: { en: "Keep screen on", es: "Mantener pantalla encendida" },
+    keepAwakeOn: { en: "Screen stays on", es: "Pantalla siempre encendida" },
+    keepAwakeUnsupported: {
+      en: "This browser won't let a page hold the screen awake.",
+      es: "Este navegador no permite que una página mantenga la pantalla encendida.",
+    },
+    offlineReady: {
+      en: "Saved for offline — this set opens without signal.",
+      es: "Guardado sin conexión — este set abre sin señal.",
+    },
+    offlineNow: {
+      en: "No connection. Running from the copy saved on this device.",
+      es: "Sin conexión. Funcionando con la copia guardada en este dispositivo.",
+    },
+    resumed: {
+      en: "Picked up where you left off.",
+      es: "Retomado donde lo dejaste.",
+    },
+    peak: { en: "Peak", es: "Pico" },
+    hint: {
+      en: "Tap the big button as each track ends. Your place is saved on this device, so locking the phone or losing signal doesn't lose it.",
+      es: "Tocá el botón grande cuando termina cada track. Tu posición se guarda en este dispositivo, así que bloquear el celular o perder señal no la pierde.",
+    },
+    emptyTitle: { en: "No tracks to play", es: "No hay tracks para tocar" },
+    emptyBody: {
+      en: "Add tracks to this set and Gig Mode has something to walk you through.",
+      es: "Agregá tracks a este set y el modo cabina tiene algo para guiarte.",
+    },
+    lockedTitle: {
+      en: "Gig Mode is a PRO+ feature",
+      es: "El modo cabina es una función PRO+",
+    },
+    lockedBody: {
+      en: "The booth view keeps your set, its curve and every transition on one screen that stays awake and works without signal.",
+      es: "La vista de cabina mantiene tu set, su curva y cada transición en una pantalla que no se apaga y funciona sin señal.",
+    },
+    lockedCta: { en: "See plans", es: "Ver planes" },
   },
 
   setSheet: {

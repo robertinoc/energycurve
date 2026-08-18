@@ -1,7 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, AudioWaveform, GitCompare, Printer } from "lucide-react"
+import { ArrowLeft, AudioWaveform, GitCompare, Printer, Radio } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
@@ -110,6 +110,7 @@ export default async function PlaylistDetailPage({
     "custom_curve_templates"
   )
   const canCompareSets = can(billing.plan, billing.status, "set_comparator")
+  const canUseGigMode = can(billing.plan, billing.status, "gig_mode")
 
   // Free on every plan on purpose: this is the only growth loop in the roadmap,
   // and paywalling your own advertising is self-defeating. Null when no signing
@@ -168,6 +169,27 @@ export default async function PlaylistDetailPage({
                 nobody — an unentitled DJ lands on the page that explains it
                 instead of on the sheet, and the route enforces that itself.
               */}
+              {/* Same shape as the set sheet below: visible to everyone, and the
+                  route — not this link — is what enforces the plan. */}
+              <Link
+                href={
+                  canUseGigMode
+                    ? `/dashboard/playlists/${playlist.id}/gig`
+                    : "/pricing"
+                }
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "w-fit text-white/58 hover:text-white"
+                )}
+              >
+                <Radio className="size-4" />
+                {copy.gigMode[locale]}
+                {canUseGigMode ? null : (
+                  <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                    pro+
+                  </span>
+                )}
+              </Link>
               <Link
                 href={
                   canPrintSetSheet
