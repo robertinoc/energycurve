@@ -307,6 +307,10 @@ server needed**, with two corrections to the plan.
   ready.
 - **Key: 4/6 on a 6-track sample** — not shippable yet, and n is far too small to
   quote as a rate. Both misses were major/minor confusions, the tractable kind.
-- **Speed: ~6 s/track**, of which 88% is the framewise pass. Cost is exactly
-  linear in frame count (measured), so windowed sampling gets this under 1 s with
-  predictable arithmetic. Needed before shipping a 40-track playlist.
+- **Speed: windowed sampling shipped 17 Aug 2026.** The framewise pass was 88% of
+  a track's cost and exactly linear in frame count, so `lib/audio/sample-windows.ts`
+  now reads three 30-second windows at the centre of equal divisions of the track
+  instead of every frame — ~3× less work, with tracks under 90 s still analysed
+  whole. Flux is segmented per window so no seam reads as an onset. Re-run the
+  harness on a real library to quote the new wall-clock; the `Sampled` column
+  reports what each row actually examined.

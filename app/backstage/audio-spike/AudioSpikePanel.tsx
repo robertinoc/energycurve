@@ -332,6 +332,10 @@ export function AudioSpikePanel() {
                     <th className="px-3 py-2 font-medium">Flux</th>
                     <th className="px-3 py-2 font-medium">Entropy</th>
                     <th className="px-3 py-2 font-medium">Onsets/s</th>
+                    {/* How much of the track the frames actually covered. Shown
+                        because every column to the left is computed from that
+                        sample, not from the whole file — see sample-windows.ts. */}
+                    <th className="px-3 py-2 font-medium">Sampled</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -601,6 +605,13 @@ function TrackRow({ row }: { row: TrackAnalysis }) {
           </td>
           <td className="px-3 py-2 tabular-nums text-ec-text-dim">
             {row.features ? row.features.onsetRate.toFixed(2) : "—"}
+          </td>
+          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
+            {row.features && row.durationSeconds > 0
+              ? `${Math.round(row.features.analyzedSeconds)}s · ${Math.round(
+                  (row.features.analyzedSeconds / row.durationSeconds) * 100
+                )}%`
+              : "—"}
           </td>
         </>
       )}

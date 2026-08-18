@@ -94,13 +94,37 @@ pessimistic by roughly 3×; production is what ships, so production wins.
 Take the dev-build column as a floor on how bad it gets, not as the number to
 plan against.
 
-### Speed: acceptable, with an obvious next step
+### Speed: the obvious next step, now taken
 
-1 m 32 s for a 40-track playlist is tolerable but not comfortable. The
-optimisation path is arithmetic rather than guesswork, because cost is exactly
+1 m 32 s for a 40-track playlist was tolerable but not comfortable. The
+optimisation path was arithmetic rather than guesswork, because cost is exactly
 linear in frames analysed (measured — see the two controlled experiments below):
 analysing 3×30 s windows instead of whole tracks is ~3×, which puts a playlist
 around 30 seconds.
+
+**Shipped 17 Aug 2026.** `lib/audio/sample-windows.ts` places three 30-second
+windows at the centre of equal divisions of the track — never at either edge,
+because a DJ intro and outro are often beatless and quiet and misrepresent the
+track. Tracks under 90 s are still analysed whole: sampling them would cover
+everything anyway and buy nothing.
+
+Two consequences worth knowing rather than discovering:
+
+- **Flux is now segmented per window.** It is defined between *consecutive*
+  frames, so a seam between two windows would compare audio a minute apart and
+  read as an enormous onset at every join. Peaks are picked inside each window;
+  the threshold is still pooled across all of them, because it is a statistic
+  about the track and a per-window threshold would rescale itself inside a
+  breakdown and call it busy.
+- **The onset rate shifts by a hair, and predictably.** A peak needs a neighbour
+  on each side, so each window's first frame is disqualified as a candidate:
+  three windows lose three candidates where a whole-track pass loses one. On the
+  synthetic case in `tests/audio-sample-windows.test.ts` that is 27/30 vs 29/30 —
+  under 7%, and asserted exactly rather than tolerated.
+
+The wall-clock number above is the pre-change measurement. Re-run the harness
+against a real library to quote the new one; the `Sampled` column now reports the
+seconds and percentage each row actually examined.
 
 ### The interface freeze is the real blocker
 
@@ -202,8 +226,9 @@ probe never ticked. Re-measure with the tab visible before quoting it.
    the v3 features first; keep key behind a "beta" label or hold it back.
 4. **Fix the main-thread freeze first.** 561 ms is the blocker, not speed.
    Decoding and the downmix still run on the main thread.
-5. **Then optimise.** 1 m 32 s per playlist is tolerable, not good. Windowed
-   sampling is the lever and the linearity is measured, so ~30 s is predictable.
+5. **Then optimise.** ~~1 m 32 s per playlist is tolerable, not good. Windowed
+   sampling is the lever and the linearity is measured, so ~30 s is
+   predictable.~~ **Done 17 Aug 2026** — see "Speed" above.
 6. **No server-side batch needed.** H3's server analysis stays where it is —
    optional, demand-driven. The privacy promise ("your audio never leaves your
    machine") holds as a real property of the design.

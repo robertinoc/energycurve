@@ -122,23 +122,74 @@ export function onsetRate(
   frameRateHz: number,
   sensitivity = 1.5
 ): number {
-  if (flux.length < 3 || frameRateHz <= 0) {
+  return onsetRateFromSegments([flux], frameRateHz, sensitivity)
+}
+
+/**
+ * Onset rate over a track sampled in windows, where each segment is one window's
+ * flux envelope.
+ *
+ * Segments exist because flux is only meaningful between *consecutive* frames.
+ * Concatenating windows would place the last frame of one window next to the
+ * first frame of the next — audio a minute apart — and the fake jump between
+ * them reads as a huge onset at every seam. So peaks are picked inside each
+ * segment and never across a boundary.
+ *
+ * The threshold, by contrast, is computed over every segment pooled together: it
+ * is a statistic about the track, and a per-segment threshold would silently
+ * rescale itself inside a quiet breakdown and report the same onset rate there as
+ * in a peak-time passage.
+ *
+ * The result stays comparable to a whole-track analysis because it is a rate:
+ * onsets divided by the seconds actually examined, not by track length.
+ */
+export function onsetRateFromSegments(
+  segments: readonly (readonly number[])[],
+  frameRateHz: number,
+  sensitivity = 1.5
+): number {
+  if (frameRateHz <= 0) {
     return 0
   }
 
-  const average = mean(flux)
-  const variance = mean(flux.map((value) => (value - average) ** 2))
-  const threshold = average + sensitivity * Math.sqrt(variance)
+  let pooledCount = 0
+  for (const segment of segments) {
+    pooledCount += segment.length
+  }
+
+  // Under three frames there is no interior point to be a local maximum.
+  if (pooledCount < 3) {
+    return 0
+  }
+
+  let total = 0
+  for (const segment of segments) {
+    for (const value of segment) {
+      total += value
+    }
+  }
+  const average = total / pooledCount
+
+  let squaredError = 0
+  for (const segment of segments) {
+    for (const value of segment) {
+      squaredError += (value - average) ** 2
+    }
+  }
+  const threshold =
+    average + sensitivity * Math.sqrt(squaredError / pooledCount)
 
   let onsets = 0
-  for (let i = 1; i < flux.length - 1; i += 1) {
-    const value = flux[i]
-    if (value > threshold && value >= flux[i - 1] && value > flux[i + 1]) {
-      onsets += 1
+  for (const segment of segments) {
+    for (let i = 1; i < segment.length - 1; i += 1) {
+      const value = segment[i]
+      if (value > threshold && value >= segment[i - 1] && value > segment[i + 1]) {
+        onsets += 1
+      }
     }
   }
 
-  const seconds = flux.length / frameRateHz
+  const seconds = pooledCount / frameRateHz
   return seconds > 0 ? onsets / seconds : 0
 }
 
