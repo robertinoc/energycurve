@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import { detectKeyFromChroma } from "@/lib/audio/key-detection"
+import {
+  DEFAULT_KEY_PROFILES,
+  detectKeyByVote,
+  detectKeyFromChroma,
+  KEY_PROFILES,
+  type KeyProfileSet,
+} from "@/lib/audio/key-detection"
 import {
   averageChroma,
   mean,
@@ -259,5 +265,146 @@ describe("downmixToMono", () => {
 
   it("handles no channels at all", () => {
     expect(downmixToMono([])).toHaveLength(0)
+  })
+})
+
+describe("key profile sets", () => {
+  it("ships both published sets with 12 non-negative weights each", () => {
+    for (const [name, set] of Object.entries(KEY_PROFILES)) {
+      for (const scale of ["major", "minor"] as const) {
+        const weights = set[scale]
+        expect(weights, `${name}.${scale}`).toHaveLength(12)
+        expect(
+          weights.every((value) => Number.isFinite(value) && value >= 0),
+          `${name}.${scale}`
+        ).toBe(true)
+      }
+    }
+  })
+
+  it("weights the tonic among the two strongest degrees in every set", () => {
+    /**
+     * The property that makes a profile a key profile at all — but stated as "top
+     * two", not "the maximum", and that distinction is load-bearing rather than a
+     * loosened assertion.
+     *
+     * Temperley's **minor** profile puts the fifth (0.747) marginally above the
+     * tonic (0.712). That is a genuine consequence of how it was built: it counts
+     * notes in a corpus, and minor-key music really does sound the fifth slightly
+     * more often than the tonic. Krumhansl's, gathered by asking listeners how
+     * well a tone *fitted*, peaks on the tonic in both modes.
+     *
+     * Worth knowing because it looks like a transcription error and isn't.
+     */
+    for (const [name, set] of Object.entries(KEY_PROFILES)) {
+      for (const scale of ["major", "minor"] as const) {
+        const weights = set[scale]
+        const ranked = [...weights].sort((a, b) => b - a)
+        expect(
+          ranked.indexOf(weights[0]),
+          `${name}.${scale}: tonic should rank first or second`
+        ).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
+  it("separates the modes — the third degree is where they differ", () => {
+    // Major/minor confusion is the documented failure mode, and the minor third
+    // (index 3) vs major third (index 4) is the axis that decides it. Each set
+    // must actually prefer its own third, or the two modes are indistinguishable.
+    for (const [name, set] of Object.entries(KEY_PROFILES)) {
+      expect(set.major[4], `${name} major third`).toBeGreaterThan(set.major[3])
+      expect(set.minor[3], `${name} minor third`).toBeGreaterThan(set.minor[4])
+    }
+  })
+
+  it("still detects a clear triad whichever set is chosen", () => {
+    for (const profiles of Object.keys(KEY_PROFILES) as KeyProfileSet[]) {
+      expect(detectKeyFromChroma(chromaFor(C_MAJOR), profiles)?.key).toBe("C")
+      expect(detectKeyFromChroma(chromaFor(A_MINOR), profiles)?.key).toBe("Am")
+    }
+  })
+
+  it("defaults to the set the 21% baseline was measured with", () => {
+    // Changing the default silently would make the next harness run
+    // incomparable with the number in the spike report.
+    expect(DEFAULT_KEY_PROFILES).toBe("krumhansl")
+    expect(detectKeyFromChroma(chromaFor(C_MAJOR))).toEqual(
+      detectKeyFromChroma(chromaFor(C_MAJOR), "krumhansl")
+    )
+  })
+})
+
+describe("key detection by window vote", () => {
+  it("takes the key the majority of windows chose", () => {
+    const voted = detectKeyByVote([
+      chromaFor(C_MAJOR),
+      chromaFor(C_MAJOR),
+      chromaFor(F_SHARP_MAJOR),
+    ])
+
+    expect(voted?.key).toBe("C")
+    expect(voted?.agreement).toBeCloseTo(2 / 3, 5)
+    expect(voted?.segmentsCounted).toBe(3)
+  })
+
+  it("reports full agreement when every window concurs", () => {
+    const voted = detectKeyByVote([chromaFor(A_MINOR), chromaFor(A_MINOR)])
+    expect(voted?.key).toBe("Am")
+    expect(voted?.agreement).toBe(1)
+  })
+
+  it("exposes disagreement that an averaged chroma would have hidden", () => {
+    // The reason voting exists. Three unrelated keys averaged together produce one
+    // confident-looking answer; voting reports 1/3 and says the track is ambiguous.
+    const segments = [
+      chromaFor(C_MAJOR),
+      chromaFor(F_SHARP_MAJOR),
+      chromaFor([2, 6, 9]), // D major
+    ]
+
+    const voted = detectKeyByVote(segments)
+    expect(voted?.agreement).toBeCloseTo(1 / 3, 5)
+
+    // The averaged path can't distinguish this case from a unanimous one.
+    const averaged = detectKeyFromChroma(averageChroma(segments))
+    expect(averaged?.confidence).toBeGreaterThan(0)
+  })
+
+  it("matches the single-detection result for a track analysed whole", () => {
+    // Short tracks are analysed in one window (see sample-windows.ts), and that
+    // path must not change behaviour.
+    const chroma = chromaFor(C_MAJOR)
+    const voted = detectKeyByVote([chroma])
+    const single = detectKeyFromChroma(chroma)
+
+    expect(voted?.key).toBe(single?.key)
+    expect(voted?.confidence).toBeCloseTo(single!.confidence, 10)
+    expect(voted?.agreement).toBe(1)
+  })
+
+  it("skips unusable windows instead of letting them vote", () => {
+    const silent = new Array<number>(12).fill(0)
+    const voted = detectKeyByVote([chromaFor(C_MAJOR), silent, silent])
+
+    expect(voted?.key).toBe("C")
+    // Only one window could vote, and agreement describes the votes cast.
+    expect(voted?.segmentsCounted).toBe(1)
+    expect(voted?.agreement).toBe(1)
+  })
+
+  it("returns null when nothing could vote", () => {
+    expect(detectKeyByVote([])).toBeNull()
+    expect(detectKeyByVote([new Array<number>(12).fill(0)])).toBeNull()
+    expect(detectKeyByVote([[1, 2, 3]])).toBeNull()
+  })
+
+  it("breaks a tie by which key its voters were surer of", () => {
+    // One vote each: the decision has to come from somewhere, and confidence is
+    // the only information left.
+    const voted = detectKeyByVote([chromaFor(C_MAJOR), chromaFor(F_SHARP_MAJOR)])
+
+    expect(voted?.agreement).toBe(0.5)
+    expect(["C", "F#"]).toContain(voted?.key)
   })
 })

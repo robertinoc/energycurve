@@ -329,9 +329,17 @@ server needed**, with two corrections to the plan.
   the DJ knows whether the phone is plugged in); a narrowly scoped service worker
   (`public/sw.js`) makes the set openable with no signal. `gig_mode` flipped to
   `status: "shipped"` and the pricing card and matrix both dropped their "Soon".
+- **Key detection, 17 Aug 2026: two of the four spike fixes are in, and the number
+  is still unmeasured.** Per-window voting is on by default, and `keyAgreement`
+  replaces a confidence score that used to read 0.4–0.85 while getting the mode
+  wrong. Both Krumhansl and Temperley profiles ship with a picker in the harness;
+  the default is unchanged so the next run stays comparable with the 21% baseline.
+  HPSS and tuning correction are deliberately not done — the spike report explains
+  why, and the order to work in. Still `status: "planned"`, still "Soon" on the
+  pricing matrix, because no number justifies otherwise yet.
 - **Still open and worth naming**: Energy Model v3 is specified but unfitted and
-  blocked on a labelled run over a Mixed-In-Key-tagged library; key detection sits
-  at 21% and stays dark until the harness says otherwise. Residency mode and
+  blocked on a labelled run over a Mixed-In-Key-tagged library — the same run key
+  detection needs, so one session of tagged files unblocks both. Residency mode and
   collaborative B2B/B3B sets remain the two planned PRO+ capabilities.
 - **Essentia.js is out** — AGPL-3.0, unusable in a closed-source paid product.
 - **Direct USB export researched and declined** — writing the database is

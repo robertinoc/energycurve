@@ -25,8 +25,14 @@ export interface AudioFeatures {
   entropyMean: number
   /** Detected onsets per second. */
   onsetRate: number
-  /** Averaged 12-bin pitch-class profile, index 0 = C. */
+  /** Averaged 12-bin pitch-class profile over every analysed frame, index 0 = C. */
   chroma: number[]
+  /**
+   * One averaged chroma per analysed window, so the key detector can let the
+   * windows vote rather than trusting a single average of the whole track. A short
+   * track analysed whole yields exactly one entry.
+   */
+  chromaSegments: number[][]
   /** Frames actually analysed. */
   frameCount: number
   /**
@@ -76,6 +82,16 @@ export interface TrackAnalysis {
   detectedKey: string | null
   keyConfidence: number | null
   keyMargin: number | null
+  /**
+   * Share of analysed windows that voted for the detected key, 0…1.
+   *
+   * The number to trust over `keyConfidence`: correlation against an averaged
+   * chroma reported 0.4–0.85 while getting the mode wrong, whereas three windows
+   * that disagree can only report 0.33.
+   */
+  keyAgreement: number | null
+  /** Windows that produced a usable vote. */
+  keySegments: number | null
   features: AudioFeatures | null
   /** From the file's own tags, for an accuracy comparison. */
   taggedBpm: number | null

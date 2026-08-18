@@ -26,6 +26,11 @@ import { Button } from "@/components/ui/button"
 import type { TrackAnalysis } from "@/lib/audio/analysis-types"
 import { analyzeAudioFile, disposeAudioWorker } from "@/lib/audio/analyze-track"
 import {
+  DEFAULT_KEY_PROFILES,
+  KEY_PROFILES,
+  type KeyProfileSet,
+} from "@/lib/audio/key-detection"
+import {
   bpmAgrees,
   buildSpikeReport,
   formatDuration,
@@ -64,6 +69,13 @@ export function AudioSpikePanel() {
     truncated: 0,
   })
   const [supportsFolder, setSupportsFolder] = useState(false)
+  /**
+   * Which reference profiles this run correlates against. The whole point of the
+   * switch: run the same folder twice and read the Key column, instead of
+   * arguing about which published profile set suits dance music.
+   */
+  const [keyProfiles, setKeyProfiles] =
+    useState<KeyProfileSet>(DEFAULT_KEY_PROFILES)
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({
     key: "totalMs",
     desc: true,
@@ -142,7 +154,11 @@ export function AudioSpikePanel() {
         // Untagged files are exactly the case this feature exists for.
       }
 
-      const analysis = await analyzeAudioFile(file, { taggedBpm, taggedKey })
+      const analysis = await analyzeAudioFile(file, {
+        taggedBpm,
+        taggedKey,
+        keyProfiles,
+      })
       setRows((current) => [...current, analysis])
       setProgress({ done: index + 1, total: batch.length })
     }
@@ -206,6 +222,23 @@ export function AudioSpikePanel() {
               Pick a folder
             </Button>
           ) : null}
+          <label className="flex items-center gap-2 text-sm text-ec-text-dim">
+            Key profiles
+            <select
+              value={keyProfiles}
+              onChange={(event) =>
+                setKeyProfiles(event.target.value as KeyProfileSet)
+              }
+              disabled={running}
+              className="rounded-md border border-ec-border bg-ec-raised px-2 py-1 text-sm text-ec-text"
+            >
+              {Object.keys(KEY_PROFILES).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
           {running ? (
             <span className="text-sm text-ec-text-dim">
               Analysing {progress.done}/{progress.total}… keep this tab in front or
@@ -329,6 +362,9 @@ export function AudioSpikePanel() {
                       sort={sort}
                       onSort={toggleSort}
                     />
+                    {/* Windows that agreed. More trustworthy than Key conf.,
+                        which reported 0.4-0.85 while getting the mode wrong. */}
+                    <th className="px-3 py-2 font-medium">Agree</th>
                     <th className="px-3 py-2 font-medium">Flux</th>
                     <th className="px-3 py-2 font-medium">Entropy</th>
                     <th className="px-3 py-2 font-medium">Onsets/s</th>
@@ -596,6 +632,13 @@ function TrackRow({ row }: { row: TrackAnalysis }) {
           />
           <td className="px-3 py-2 tabular-nums text-ec-text-dim">
             {row.keyConfidence !== null ? row.keyConfidence.toFixed(2) : "—"}
+          </td>
+          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
+            {row.keyAgreement !== null
+              ? `${Math.round(row.keyAgreement * 100)}%${
+                  row.keySegments ? ` (${row.keySegments})` : ""
+                }`
+              : "—"}
           </td>
           <td className="px-3 py-2 tabular-nums text-ec-text-dim">
             {row.features ? row.features.fluxMean.toFixed(3) : "—"}
