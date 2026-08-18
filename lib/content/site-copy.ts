@@ -1212,6 +1212,15 @@ function resolvePlanCell(cell: PlanCell, locale: SiteLocale): ResolvedPlanCell {
 
 export function getSiteCopy(locale: SiteLocale = "en") {
   return {
+    /**
+     * The locale this copy was resolved for.
+     *
+     * Carried on the object because every internal link now has a per-language
+     * URL (`/pricing` vs `/es/pricing`), and every component that renders one
+     * already receives `copy`. Threading a second `locale` prop through the
+     * section tree in parallel would just create a way for the two to disagree.
+     */
+    locale,
     nav: {
       features: siteCopy.nav.features[locale],
       how: siteCopy.nav.how[locale],

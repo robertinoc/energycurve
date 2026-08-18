@@ -253,3 +253,52 @@ solo script listo para pegar en el SQL Editor de Supabase — buscar
 `RUN_THIS_IN_SUPABASE.sql` en el mensaje del PR #118, o concatenar los tres
 archivos de `supabase/migrations/`. Es idempotente: correrlo dos veces, o en
 un entorno donde una parte ya esté aplicada, no rompe nada.
+
+---
+
+## Ronda 3 — se cierra el hallazgo de SEO más caro (17/08/2026)
+
+**El español ya tiene URL propia.** Era la fila 93 del tracker (ERROR) y la mitad
+que quedaba de la 97: no existía ruta `/es`, cero `hreflang`, `og:locale` fijo en
+`en_US`, y el idioma se resolvía en el cliente — así que el servidor contestaba
+siempre en inglés y la traducción completa al español era invisible para Google
+y para los motores de respuesta.
+
+Lo que quedó implementado: inglés en la raíz, español bajo `/es`, seis páginas por
+idioma, canonical propio de cada idioma (apuntar el español al inglés le habría
+dicho a Google que no lo indexe), `hreflang` + `x-default`, títulos y
+descripciones traducidos, JSON-LD en el idioma de la ruta, sitemap con las doce
+URLs, y los links internos localizados para que quien está en `/es` siga en
+español al navegar.
+
+Verificado contra el HTML crudo del servidor (sin JS, que es lo que ve Googlebot):
+`/es` responde con `<title>` en español, `canonical` a `/es`, los tres `hreflang`,
+`og:locale=es_LA` y el hero en español. Las doce rutas siguen siendo estáticas en
+el build.
+
+**Filas del tracker que se pueden pasar a DONE por esto:** 93 (español sin URL ni
+hreflang) y 97 (JSON-LD en inglés — ahora está completo, antes sólo funcionaba
+para un usuario que volvía con cookie).
+
+**Fila 90 (JSON-LD duplicado): es un falso positivo, se puede marcar N/A.**
+Medido de nuevo con cuidado: hay **un solo** `<script type="application/ld+json">`
+real, tanto en el HTML servido como en el DOM ya hidratado. La segunda aparición
+del string está dentro del payload RSC de React (`self.__next_f.push(...)`), que
+es la serialización del árbol de componentes, no un tag renderizado — Google no lo
+lee como structured data. Contar ocurrencias del texto en el HTML da 2; contar
+tags da 1.
+
+**Encontrado y arreglado de paso:** el `<title>` de la landing en inglés no
+llevaba el sufijo "| EnergyCurve" sólo porque coincidía byte a byte con el
+`title.default` del root layout, caso que Next resuelve sin aplicar el template.
+El título en español no coincide, así que salía "EnergyCurve — Análisis … |
+EnergyCurve". Ahora la landing declara `title.absolute` explícitamente en vez de
+depender de que dos strings sigan siendo iguales.
+
+**Lo que sigue abierto acá:** el `<html lang>` del HTML servido sigue diciendo
+`en` en las páginas `/es`, y se corrige en el cliente. Es deliberado: derivarlo en
+el servidor exige leer el request en el root layout, y eso saca a **todas** las
+páginas del renderizado estático. Google no usa ese atributo para determinar el
+idioma (usa `hreflang` y el contenido visible, ambos correctos), y los lectores de
+pantalla leen el atributo vivo. Si algún día se quiere en el HTML servido, la vía
+correcta son dos root layouts con route groups.

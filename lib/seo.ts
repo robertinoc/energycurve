@@ -1,4 +1,13 @@
-import { getSiteCopy } from "@/lib/content/site-copy"
+import type { Metadata } from "next"
+
+import {
+  LOCALIZED_PATHS,
+  localizedPath,
+  PREFIXED_LOCALE,
+  type LocalizedPath,
+} from "@/lib/content/locale-routing"
+import { pageMetadata } from "@/lib/content/page-metadata"
+import { getSiteCopy, type SiteLocale } from "@/lib/content/site-copy"
 
 /**
  * Single source of truth for the canonical origin and the structured data we
@@ -6,6 +15,62 @@ import { getSiteCopy } from "@/lib/content/site-copy"
  * drift from each other.
  */
 export const SITE_URL = "https://energycurve.app"
+
+/**
+ * Open Graph locale codes.
+ *
+ * `es_LA` rather than `es_ES`: the Spanish copy is Rioplatense — voseo
+ * throughout ("Creá tu cuenta", "Analizá tu set") — and labelling it as
+ * peninsular Spanish would be wrong about the text we actually ship. Note this
+ * is only Open Graph's dialect hint; `hreflang` below stays the bare `es` so the
+ * page is offered to every Spanish speaker rather than one region.
+ */
+const OG_LOCALES: Record<SiteLocale, string> = {
+  en: "en_US",
+  es: "es_LA",
+}
+
+export function openGraphLocale(locale: SiteLocale): string {
+  return OG_LOCALES[locale]
+}
+
+/**
+ * The `alternates` block for one page in one language: a self-referencing
+ * canonical plus the `hreflang` set.
+ *
+ * **The canonical is per-locale on purpose.** Pointing `/es/pricing` at
+ * `/pricing` would tell Google the Spanish page is a duplicate that shouldn't be
+ * indexed — which is exactly the outcome this whole change exists to undo. Each
+ * language canonicalises to itself and the two are related through `languages`
+ * instead.
+ *
+ * `x-default` points at English: it's what a crawler should serve when it can't
+ * match a user's language to either version.
+ */
+export function buildAlternates(path: string, locale: SiteLocale) {
+  return {
+    canonical: localizedPath(path, locale),
+    languages: {
+      en: localizedPath(path, "en"),
+      [PREFIXED_LOCALE]: localizedPath(path, PREFIXED_LOCALE),
+      "x-default": localizedPath(path, "en"),
+    },
+  }
+}
+
+/** Absolute URLs for every language of every localized page — for the sitemap. */
+export function localizedSitemapEntries(): {
+  path: string
+  urls: Record<SiteLocale, string>
+}[] {
+  return LOCALIZED_PATHS.map((path) => ({
+    path,
+    urls: {
+      en: `${SITE_URL}${localizedPath(path, "en")}`,
+      es: `${SITE_URL}${localizedPath(path, "es")}`,
+    },
+  }))
+}
 
 /** The legal entity that operates EnergyCurve — the name that shows up on a
  *  customer's card statement, so it belongs in our public metadata too. */
@@ -191,5 +256,54 @@ export function buildPricingStructuredData({
         ],
       },
     ],
+  }
+}
+
+/**
+ * The full metadata block for one marketing page in one language.
+ *
+ * Every localized page needs the same five things — title, description, a
+ * self-referencing canonical, the `hreflang` set, and Open Graph/Twitter cards in
+ * the right language — and getting one of them wrong is invisible until it shows
+ * up in a search result. Building them from one function means `/pricing` and
+ * `/es/pricing` cannot drift apart in anything but their copy.
+ */
+export function marketingMetadata(
+  path: LocalizedPath,
+  locale: SiteLocale
+): Metadata {
+  const { title, description } = pageMetadata(path, locale)
+  const isLanding = path === "/"
+  // The landing page's title is already the full brand string; the rest are
+  // fragments that the root layout's template wraps into "… | EnergyCurve".
+  const socialTitle = isLanding ? title : `EnergyCurve — ${title}`
+
+  return {
+    /**
+     * `absolute` on the landing page, so the root layout's "%s | EnergyCurve"
+     * template doesn't append the brand to a title that already opens with it.
+     *
+     * English got away without this by accident: its landing title is byte-identical
+     * to the layout's `title.default`, and Next resolves that case to the untemplated
+     * default. The Spanish title isn't identical, so the same code produced
+     * "EnergyCurve — Análisis … | EnergyCurve". Stating it outright is better than
+     * depending on two strings staying equal.
+     */
+    title: isLanding ? { absolute: title } : title,
+    description,
+    alternates: buildAlternates(path, locale),
+    openGraph: {
+      title: socialTitle,
+      description,
+      url: `${SITE_URL}${localizedPath(path, locale)}`,
+      siteName: "EnergyCurve",
+      type: "website",
+      locale: openGraphLocale(locale),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: socialTitle,
+      description,
+    },
   }
 }
