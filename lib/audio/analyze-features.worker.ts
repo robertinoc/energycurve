@@ -17,11 +17,12 @@ import {
   type WorkerRequest,
   type WorkerResponse,
 } from "./analysis-types"
+import { planSampleWindows } from "./sample-windows"
 import {
   averageChroma,
   downmixToMono,
   mean,
-  onsetRate,
+  onsetRateFromSegments,
   percentile,
   spectralEntropy,
   spectralFlux,
@@ -50,45 +51,63 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
     Meyda.sampleRate = sampleRate
 
     const rms: number[] = []
-    const flux: number[] = []
     const entropy: number[] = []
     const chromaFrames: number[][] = []
+    /**
+     * One flux envelope per window, never one concatenated array: flux is defined
+     * between consecutive frames, and a seam between two windows would compare
+     * audio a minute apart. See onsetRateFromSegments.
+     */
+    const fluxSegments: number[][] = []
 
-    let previousFrame: Float32Array | null = null
-    let previousSpectrum: Float32Array | null = null
+    // Only part of the track is examined — see lib/audio/sample-windows.ts for
+    // why three centred windows, and why short tracks still run whole.
+    const windows = planSampleWindows(samples.length, sampleRate)
 
-    for (let offset = 0; offset + FRAME_SIZE <= samples.length; offset += HOP_SIZE) {
-      const frame = samples.subarray(offset, offset + FRAME_SIZE)
+    for (const { start, end } of windows) {
+      const segmentFlux: number[] = []
+      // Reset per window: the first frame after a jump has no valid predecessor.
+      let previousFrame: Float32Array | null = null
+      let previousSpectrum: Float32Array | null = null
 
-      const extracted = Meyda.extract(
-        FEATURES,
-        frame,
-        previousFrame ?? frame
-      ) as ExtractedFeatures | null
+      for (let offset = start; offset + FRAME_SIZE <= end; offset += HOP_SIZE) {
+        const frame = samples.subarray(offset, offset + FRAME_SIZE)
 
-      if (extracted) {
-        if (typeof extracted.rms === "number") {
-          rms.push(extracted.rms)
-        }
+        const extracted = Meyda.extract(
+          FEATURES,
+          frame,
+          previousFrame ?? frame
+        ) as ExtractedFeatures | null
 
-        const spectrum = extracted.amplitudeSpectrum
-        if (spectrum) {
-          // Power = amplitude², which is what entropy is defined over.
-          entropy.push(spectralEntropy(spectrum.map((value) => value * value)))
-
-          // Flux needs a predecessor, so the first frame contributes nothing.
-          if (previousSpectrum) {
-            flux.push(spectralFlux(spectrum, previousSpectrum))
+        if (extracted) {
+          if (typeof extracted.rms === "number") {
+            rms.push(extracted.rms)
           }
-          previousSpectrum = spectrum
+
+          const spectrum = extracted.amplitudeSpectrum
+          if (spectrum) {
+            // Power = amplitude², which is what entropy is defined over.
+            entropy.push(spectralEntropy(spectrum.map((value) => value * value)))
+
+            // Flux needs a predecessor, so each window's first frame contributes
+            // nothing.
+            if (previousSpectrum) {
+              segmentFlux.push(spectralFlux(spectrum, previousSpectrum))
+            }
+            previousSpectrum = spectrum
+          }
+
+          if (extracted.chroma) {
+            chromaFrames.push(Array.from(extracted.chroma))
+          }
         }
 
-        if (extracted.chroma) {
-          chromaFrames.push(Array.from(extracted.chroma))
-        }
+        previousFrame = frame
       }
 
-      previousFrame = frame
+      if (segmentFlux.length > 0) {
+        fluxSegments.push(segmentFlux)
+      }
     }
 
     const frameRateHz = sampleRate / HOP_SIZE
@@ -99,11 +118,14 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       features: {
         rmsMean: mean(rms),
         rmsPeak: percentile(rms, 95),
-        fluxMean: mean(flux),
+        fluxMean: mean(fluxSegments.flat()),
         entropyMean: mean(entropy),
-        onsetRate: onsetRate(flux, frameRateHz),
+        onsetRate: onsetRateFromSegments(fluxSegments, frameRateHz),
         chroma: averageChroma(chromaFrames),
         frameCount: rms.length,
+        // What the frames actually covered, so a reader of these numbers knows
+        // they describe a sample of the track rather than all of it.
+        analyzedSeconds: sampleRate > 0 ? (rms.length * HOP_SIZE) / sampleRate : 0,
       },
     }
 

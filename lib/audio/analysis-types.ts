@@ -29,6 +29,13 @@ export interface AudioFeatures {
   chroma: number[]
   /** Frames actually analysed. */
   frameCount: number
+  /**
+   * Seconds of audio the analysed frames covered — which is less than the track's
+   * duration whenever it was sampled in windows (see lib/audio/sample-windows.ts).
+   * Present so nobody reads these aggregates as a whole-track measurement when
+   * they aren't one.
+   */
+  analyzedSeconds: number
 }
 
 export interface WorkerRequest {
