@@ -726,7 +726,6 @@ const siteCopy: SiteCopySchema = {
               en: "Gig Mode: offline performance view for the booth",
               es: "Gig Mode: vista de performance offline para la cabina",
             },
-            soon: true,
           },
           {
             text: {
@@ -975,7 +974,7 @@ const siteCopy: SiteCopySchema = {
         },
         free: "no",
         pro: "no",
-        proPlus: "soon",
+        proPlus: "yes",
       },
       {
         key: "global_library",
