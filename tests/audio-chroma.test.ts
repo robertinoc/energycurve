@@ -4,6 +4,8 @@ import { FRAME_SIZE } from "@/lib/audio/analysis-types"
 import {
   MAX_HZ,
   MIN_HZ,
+  WIDE_FRAME_SIZE,
+  WIDE_MIN_HZ,
   chromaFromSpectrum,
   medianChroma,
   semitoneResolutionLimitHz,
@@ -276,5 +278,70 @@ describe("aggregating frames with a median", () => {
     expect(medianChroma([])).toEqual(new Array(12).fill(0))
     expect(medianChroma([new Array(12).fill(0)])).toEqual(new Array(12).fill(0))
     expect(medianChroma([[1, 2, 3]])).toEqual(new Array(12).fill(0))
+  })
+})
+
+describe("the wide-frame band", () => {
+  const WIDE_BIN = RATE / WIDE_FRAME_SIZE
+
+  function wideSpectrumAt(hz: number, magnitude = 10) {
+    const spectrum = new Array<number>(WIDE_FRAME_SIZE / 2).fill(0)
+    spectrum[Math.round(hz / WIDE_BIN)] = magnitude
+    return spectrum
+  }
+
+  const options = {
+    frameSize: WIDE_FRAME_SIZE,
+    minHz: WIDE_MIN_HZ,
+    maxHz: MAX_HZ,
+  }
+
+  it("resolves semitones far below where 2048 gives up", () => {
+    // The whole reason for the second pass, as arithmetic: 90 Hz against 362 Hz.
+    const wide = semitoneResolutionLimitHz(RATE, WIDE_FRAME_SIZE)
+    const narrow = semitoneResolutionLimitHz(RATE, FRAME_SIZE)
+
+    expect(wide).toBeLessThan(100)
+    expect(wide).toBeLessThan(narrow / 3)
+    // The band floor has to sit above the limit or it's claiming resolution it
+    // doesn't have.
+    expect(WIDE_MIN_HZ).toBeGreaterThan(wide)
+  })
+
+  it("keeps bass notes that the narrow band threw away", () => {
+    // A2 is 110 Hz: inside the wide band, discarded by the narrow one, and in this
+    // genre it's where the harmony actually is.
+    const wide = chromaFromSpectrum(wideSpectrumAt(110), RATE, options)
+    expect(wide[PITCH_CLASS.A]).toBeGreaterThan(0)
+
+    const narrow = chromaFromSpectrum(
+      spectrumAt([{ hz: 110, magnitude: 10 }]),
+      RATE,
+      { frameSize: FRAME_SIZE }
+    )
+    expect(narrow.every((value) => value === 0)).toBe(true)
+  })
+
+  it("separates two bass notes a semitone apart", () => {
+    // 110 (A2) and 116.5 (A#2) are 6.5 Hz apart — under one bin at 2048, over one at
+    // 8192. This is the claim the whole pass rests on.
+    const chroma = chromaFromSpectrum(
+      wideSpectrumAt(110).map((value, index) =>
+        index === Math.round(116.54 / WIDE_BIN) ? 10 : value
+      ),
+      RATE,
+      options
+    )
+
+    expect(chroma[PITCH_CLASS.A]).toBeGreaterThan(0)
+    expect(chroma[PITCH_CLASS["A#"]]).toBeGreaterThan(0)
+  })
+
+  it("still ignores what sits below its own limit", () => {
+    // A 55 Hz sub is below 90 Hz and stays unattributable even here. Claiming it
+    // would be the same mistake at a lower frequency.
+    expect(
+      chromaFromSpectrum(wideSpectrumAt(55), RATE, options).every((v) => v === 0)
+    ).toBe(true)
   })
 })
