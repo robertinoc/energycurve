@@ -266,6 +266,7 @@ export interface Database {
           comment: string | null
           duration_seconds: number | null
           perceived_db: number | null
+          audio_features: Json | null
           created_at: string
         }
         Insert: {
@@ -282,6 +283,7 @@ export interface Database {
           comment?: string | null
           duration_seconds?: number | null
           perceived_db?: number | null
+          audio_features?: Json | null
           created_at?: string
         }
         Update: {
@@ -298,6 +300,7 @@ export interface Database {
           comment?: string | null
           duration_seconds?: number | null
           perceived_db?: number | null
+          audio_features?: Json | null
           created_at?: string
         }
         Relationships: [

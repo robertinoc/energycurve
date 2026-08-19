@@ -165,11 +165,43 @@ justifies the whole feature: it closes the gap for wav/flac/aiff with no tags.
 **Key: 3/14 (21%).** Not shippable, and the sample is now large enough to say so
 with some confidence rather than as a smoke signal.
 
-Where it fails is consistent and diagnosable: **major/minor confusion**. Across
+~~Where it fails is consistent and diagnosable: **major/minor confusion**. Across
 the run the detector repeatedly produced a plausible tonic with the wrong mode
-(`Dm` against a tag of `11m`, `C` against `12d`), and the key-confidence column
-sits mostly between 0.4 and 0.85 — high confidence in the wrong answer, which is
-exactly what a whole-track averaged chroma produces on bass-heavy dance music.
+(`Dm` against a tag of `11m`, `C` against `12d`)~~ — **this was wrong, see
+"Measured 18 Aug 2026" below.** `11m` is **Gm**, not Dm in another mode, and `12d`
+is **F**, not C in another mode: both examples are a *fifth* away, not a mode swap.
+The Open Key notation was misread. The key-confidence column sitting mostly
+between 0.4 and 0.85 was a real observation — high confidence in the wrong answer,
+which is what a whole-track averaged chroma produces on bass-heavy dance music.
+
+### Why the chroma itself is the suspect (18 Aug 2026)
+
+The two profile sets were measured over the owner's library: **krumhansl 3/14
+(21%), temperley 2/14 (14%)** — and they agreed on *none* of the correct answers.
+Two detectors that overlap on zero out of fourteen are not two detectors of
+differing quality; they are both reading a profile with very little signal in it.
+That rules the reference profiles out as the cause, and points at the chroma.
+
+There is a mechanism, and it is arithmetic. At a 2048-sample frame and 44.1 kHz
+each FFT bin spans `44100 / 2048 ≈ 21.5 Hz`, while the gap between adjacent
+semitones at frequency `f` is `≈ 0.0595 · f`. They are equal at **≈ 362 Hz**:
+
+- above that, neighbouring semitones fall in different bins and a bin's magnitude
+  belongs to one pitch class;
+- below it, two or more semitones share a bin, and whichever class the bin's
+  centre rounds to collects all of their energy.
+
+Everything below 362 Hz is therefore unattributable — and that is exactly where a
+dance track puts most of its energy: kick fundamental, sub-bass, bass line. A
+chroma taken over the whole spectrum hands the key detector the loudest,
+least-resolvable content in the track, sorted into essentially arbitrary classes.
+
+`lib/audio/chroma.ts` ships a `banded` alternative: only 350–2100 Hz, aggregated
+with a per-class median across frames (the temporal half of Fitzgerald's
+harmonic/percussive separation — a sustained note survives a median, a kick in a
+few frames does not). **Not** the default, for the same reason Temperley isn't:
+the last change that sounded obviously right made the numbers worse. The harness
+has a `Chroma` picker; the next run over a real library decides.
 
 ### Why the chroma itself is the suspect (18 Aug 2026)
 
@@ -211,6 +243,50 @@ Fixes, in rough order of effort:
 
 The harness is how we'll know whether any of that worked: re-run, and see if 21%
 moves.
+
+### Measured 18 Aug 2026 — and the diagnosis above was wrong
+
+Both profile sets run over the same 23-file folder of the owner's own library
+(hard techno / hard dance, 147–164 BPM). 14 of the 23 files carry a key tag; 9
+don't. Errors classified by musical relationship rather than by eye:
+
+| | krumhansl | temperley |
+|---|---|---|
+| exact | **3** | 2 |
+| a fifth away (dominant / subdominant) | 2 | 4 |
+| same tonic, wrong mode | **1** | **1** |
+| no relationship at all | 8 | 7 |
+| **exact accuracy** | **21%** (3/14) | **14%** (2/14) |
+
+Four things follow, and they redirect the work:
+
+1. **Major/minor confusion is not the failure mode.** It is 1 case in 14, in both
+   runs. The original diagnosis came from misreading Open Key: `11m` is Gm and
+   `12d` is F, so "Dm vs 11m" and "C vs 12d" are fifth errors. Fifth confusion is a
+   classic key-detection failure — tonic and dominant share most of their pitch
+   content — and it has a different fix than mode confusion.
+2. **Swapping the profiles does not help.** Temperley came out *worse* (14% vs
+   21%), so the default stays `krumhansl`. Worth noting the two sets got
+   **completely different tracks right** — zero overlap between their 3 and their 2
+   — which on n=14 is what you'd see from two detectors with little real signal
+   rather than one being better than the other.
+3. **There is *some* signal, but weak.** Counting tonic-correct-regardless-of-mode,
+   krumhansl reaches 4/14 (29%) against ~8% expected from guessing. So the chroma
+   isn't noise; it's just not good enough. That is consistent with bass and kick
+   drums polluting the pitch-class profile, which is fix #1 — now justified by a
+   measurement instead of by reputation.
+4. **The reference itself is unverified, and this is the blocker.** The owner has
+   **never used Mixed In Key**, so the UI copy and this document were both wrong to
+   present the tags as MIK's. Something else wrote them, in Open Key notation. That
+   matters because several tags read as *major* keys (`9d` = Ab, `12d` = F, `5d` =
+   E) on hard techno, where minor is near-universal — while our detector answers
+   Am/Dm/Gm, which is the genre-plausible shape. It is entirely possible that part
+   of the 21% is the reference being wrong, not us.
+
+**Do this before building anything:** take 5 tracks where we disagree with the tag
+and have a DJ name the key by ear. Five verified answers beat fourteen comparisons
+against tags of unknown provenance, and it decides whether the 21% is even the
+number to improve. Only then is HPSS worth the effort.
 
 ### What was done about it — 17 Aug 2026
 

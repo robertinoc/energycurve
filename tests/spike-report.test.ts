@@ -258,3 +258,68 @@ describe("sorting the detail table", () => {
     expect(rows.map((row) => row.fileName)).toEqual(original)
   })
 })
+
+describe("recorded sets are listed but never counted", () => {
+  /**
+   * The bug this pins: a 56-minute recorded set was flagged in the table and then
+   * included in every statistic anyway. Two of them in a 23-file folder pulled the
+   * median analysis time from ~1 s to something that answered a question nobody
+   * asked, and their flattering realtime factor made the distortion look like good
+   * news.
+   */
+  const shortTracks = [
+    track({ fileName: "a.mp3", durationSeconds: 300, totalMs: 1_000 }),
+    track({ fileName: "b.mp3", durationSeconds: 300, totalMs: 1_000 }),
+    track({ fileName: "c.mp3", durationSeconds: 300, totalMs: 1_000 }),
+  ]
+  const recordedSet = track({
+    fileName: "my-set.mp3",
+    durationSeconds: 56 * 60,
+    totalMs: 9_000,
+    realtimeFactor: 380,
+  })
+
+  it("leaves them out of the track count", () => {
+    const report = buildSpikeReport([...shortTracks, recordedSet], null)
+    expect(report.tracks).toBe(3)
+    expect(report.longFiles).toBe(1)
+  })
+
+  it("keeps the median from being dragged by one long file", () => {
+    const withSet = buildSpikeReport([...shortTracks, recordedSet], null)
+    const without = buildSpikeReport(shortTracks, null)
+
+    expect(withSet.speed.medianPerTrack.value).toBe(
+      without.speed.medianPerTrack.value
+    )
+    expect(withSet.speed.p95PerTrack.value).toBe(without.speed.p95PerTrack.value)
+    expect(withSet.speed.realtimeFactor.value).toBe(
+      without.speed.realtimeFactor.value
+    )
+  })
+
+  it("does not count their audio in the analysed total", () => {
+    const report = buildSpikeReport([...shortTracks, recordedSet], null)
+    expect(report.audioSeconds).toBe(900)
+  })
+
+  it("says out loud that they were excluded", () => {
+    // Silently dropping them would be its own kind of wrong: the numbers would be
+    // right and the reader wouldn't know why the counts don't match the folder.
+    const report = buildSpikeReport([...shortTracks, recordedSet], null)
+    const notice = report.headlines.find((line) =>
+      line.text.includes("recorded set")
+    )
+    expect(notice).toBeDefined()
+    expect(notice!.verdict).toBe("warn")
+  })
+
+  it("still separates a failure from a recorded set", () => {
+    const broken = track({ fileName: "bad.mp3", error: "boom" })
+    const report = buildSpikeReport([...shortTracks, recordedSet, broken], null)
+
+    expect(report.failed).toBe(1)
+    expect(report.longFiles).toBe(1)
+    expect(report.tracks).toBe(3)
+  })
+})

@@ -201,7 +201,22 @@ export function buildSpikeReport(
   rows: TrackAnalysis[],
   worstFreezeMs: number | null
 ): SpikeReport {
-  const ok = rows.filter((row) => !row.error)
+  const analysed = rows.filter((row) => !row.error)
+
+  /**
+   * Recorded sets are listed and flagged, but kept out of every statistic.
+   *
+   * They already carry a "looks like a recorded set, not a track" warning in the
+   * table, and then were counted anyway — which quietly broke the one question the
+   * speed numbers exist to answer. A 56-minute set takes ~8 s where a track takes
+   * ~1 s, so two of them in a 23-file folder pull the median up and make
+   * "would a DJ wait for a 40-track playlist?" answer about something nobody is
+   * going to do. Their realtime factor is flattering for the same reason, which
+   * makes it worse: the distortion looks like good news.
+   */
+  const ok = analysed.filter((row) => row.durationSeconds < LONG_TRACK_SECONDS)
+  const excludedLongFiles = analysed.length - ok.length
+
   const totals = ok.map((row) => row.totalMs)
   const audioSeconds = ok.reduce((sum, row) => sum + row.durationSeconds, 0)
 
@@ -221,7 +236,7 @@ export function buildSpikeReport(
   //   Under a minute is unremarkable; over three and they'll leave the tab.
   // UI freeze — 100ms is the limit of "instant"; past 500ms it reads as broken.
   // BPM — this feeds the whole engine, so it has to be near-perfect to ship.
-  // KEY — Mixed In Key is the benchmark users compare against. Below ~85% we'd
+  // KEY — the file's own tags are the benchmark users compare against. Below ~85% we'd
   //   be shipping something that contradicts the tags they already trust.
   const speedVerdict: Verdict =
     playlistMs < 60_000 ? "good" : playlistMs < 180_000 ? "warn" : "bad"
@@ -278,18 +293,27 @@ export function buildSpikeReport(
     })
   }
 
-  if (ok.length > 0 && rows.length - ok.length > 0) {
+  if (analysed.length > 0 && rows.length - analysed.length > 0) {
     headlines.push({
       verdict: "warn",
-      text: `${rows.length - ok.length} file(s) failed to analyse — see the table.`,
+      text: `${rows.length - analysed.length} file(s) failed to analyse — see the table.`,
+    })
+  }
+
+  if (excludedLongFiles > 0) {
+    headlines.push({
+      verdict: "warn",
+      text: `${excludedLongFiles} file(s) look like recorded sets rather than tracks (over ${
+        LONG_TRACK_SECONDS / 60
+      } minutes). They're listed below but left out of every number above, because a 56-minute file answers a different question than a track does.`,
     })
   }
 
   return {
     tracks: ok.length,
-    failed: rows.length - ok.length,
+    failed: rows.length - analysed.length,
     audioSeconds,
-    longFiles: ok.filter((row) => row.durationSeconds >= LONG_TRACK_SECONDS).length,
+    longFiles: excludedLongFiles,
 
     speed: {
       batchTotal: {
@@ -340,7 +364,7 @@ export function buildSpikeReport(
         value: ratio(keyBreakdown.agreed, keyBreakdown.comparable),
         verdict: keyVerdict,
         meaning:
-          "Detected key vs the tag, as exact Camelot positions. Mixed In Key wrote most of those tags, so this is a comparison against the tool DJs already trust.",
+          "Detected key vs the tag, as exact Camelot positions. This is agreement with whatever tool wrote those tags — not accuracy. That tool has its own error rate, and on 18 Aug 2026 several tags read as major keys on hard techno, where minor is near-universal. Verify a handful by ear before treating this percentage as a score.",
       },
       bpmBreakdown,
       keyBreakdown,

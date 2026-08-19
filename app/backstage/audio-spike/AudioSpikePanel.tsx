@@ -599,7 +599,9 @@ function EmptyBriefing() {
         </li>
         <li>
           <strong>Are the results right?</strong> Checked against the BPM and key
-          tags your files already carry — most of which Mixed In Key wrote.
+          tags your files already carry. Whatever tool wrote those tags is the
+          reference, and it has its own error rate — a disagreement is not proof
+          we are the one that&apos;s wrong.
         </li>
       </ol>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-ec-text-dim">
@@ -797,8 +799,14 @@ function TrackRow({
 
   return (
     <tr className="border-b border-ec-border/60 last:border-b-0">
-      <td className="max-w-[260px] px-3 py-2" title={row.fileName}>
-        <span className="block truncate">{row.fileName}</span>
+      {/*
+        Wide, and wrapping rather than truncating. A DJ filename is
+        "01 - Artist, Other Artist - Title (Extended Mix).flac" — the part that
+        identifies the track sits at the end, which is exactly what an ellipsis
+        eats. Two lines of full name beat one line ending in "…".
+      */}
+      <td className="min-w-[22rem] max-w-[34rem] px-3 py-2" title={row.fileName}>
+        <span className="block break-words">{row.fileName}</span>
         {isLong ? (
           <span className="text-[0.7rem] text-ec-amber">
             looks like a recorded set, not a track

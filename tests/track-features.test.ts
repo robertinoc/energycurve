@@ -20,6 +20,8 @@ function workerFeatures(overrides: Partial<AudioFeatures> = {}): AudioFeatures {
     chromaSegments: [new Array<number>(12).fill(0.08)],
     frameCount: 1938,
     analyzedSeconds: 90,
+    // Required by AudioFeatures since tuning correction landed; the persisted
+    // shape drops it, which the "drops chroma" test below pins.
     tuningOffsetSemitones: 0,
     ...overrides,
   }
