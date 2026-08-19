@@ -8,6 +8,11 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    # Without this the job's ceiling is GitHub's default of 6 hours. The browser
+    # install below hung for 22 minutes on two pull requests at once, and a hung
+    # check is worse than a failing one: nothing can merge and nothing says why.
+    # Every green run so far finishes inside 6 minutes.
+    timeout-minutes: 20
     env:
       # Placeholders only: routes are force-dynamic, so nothing connects to
       # these services at build time. They exist so config readers that
@@ -44,8 +49,32 @@ jobs:
       # After the build, reusing its output: the e2e suite runs against `next start`,
       # not `next dev`, because it asserts on rendered metadata and structured data
       # and dev-mode output is not what ships.
+
+      # Keyed on the resolved Playwright version, not on the lockfile hash: the
+      # browser build only changes when Playwright does, so an unrelated dependency
+      # bump shouldn't throw away a 100 MB download.
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browser
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      # No `--with-deps`. That flag shells out to `sudo apt-get install`, which is
+      # what actually hung: apt blocks on a lock the runner image's own
+      # unattended-upgrades holds, with no timeout of its own. The ubuntu-latest
+      # image already ships the shared libraries headless chromium needs — and if
+      # that ever stops being true, chromium fails to launch and the e2e step says
+      # so, which is a diagnosable failure instead of a silent stall.
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 5
+        run: npx playwright install chromium
 
       - name: End-to-end tests
+        timeout-minutes: 8
         run: npm run test:e2e

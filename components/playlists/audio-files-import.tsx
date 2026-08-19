@@ -121,17 +121,31 @@ export function AudioFilesImport({
   const cancelAnalysis = useRef(false)
 
   /**
-   * Reads the real BPM out of the audio, for the tracks whose tags don't carry
-   * one.
+   * Reads what the audio itself says: the real BPM, and the spectral measurements
+   * Energy Model v3 is specified against.
    *
-   * Only those: a file that already declares its tempo has nothing to gain from
-   * two seconds of DSP, and skipping them is what keeps a rekordbox-tagged
-   * folder instant. This is the whole point of the feature — wav/flac/aiff with
-   * no tags were previously energy-estimated from their position in the set.
+   * Two scopes, because they answer different needs. "missing-bpm" is the original
+   * one and stays the default: a file that already declares its tempo has nothing
+   * to gain from DSP, and skipping those is what keeps a rekordbox-tagged folder
+   * instant.
+   *
+   * "all" exists because that reasoning is only true about *tempo*. No tag format
+   * carries spectral flux, entropy or onset rate, so a fully-tagged folder produced
+   * no features at all — and a track with no features can't be scored by v3 or used
+   * to fit it. Skipping them was saving time on the one thing tags can't give us.
+   *
+   * It became a reasonable offer only after windowed sampling: at ~1 s per track,
+   * analysing 40 is under a minute. At the old ~6 s it would have been five.
    */
-  async function analyzeMissingBpm() {
+  async function analyzeAudio(scope: "missing-bpm" | "all" = "missing-bpm") {
     const targets = rows.filter(
-      (row) => row.included && row.track.bpm === null
+      (row) =>
+        row.included &&
+        (scope === "all"
+          ? // Already measured: re-running would spend seconds to produce the same
+            // numbers, since nothing about the file changed.
+            row.track.audioFeatures == null
+          : row.track.bpm === null)
     )
 
     if (targets.length === 0 || analysis?.running) {
@@ -330,6 +344,11 @@ export function AudioFilesImport({
 
   const includedRows = rows.filter((row) => row.included)
   const missingBpm = includedRows.filter((row) => row.track.bpm === null).length
+  // Tags never carry spectral measurements, so this is usually every included
+  // track — including the ones whose BPM is already known.
+  const missingFeatures = includedRows.filter(
+    (row) => row.track.audioFeatures == null
+  ).length
   const missingKey = includedRows.filter((row) => row.track.key === null).length
 
   const contextCustoms: TaxonomyCustomOption[] = customContexts.map((entry) => ({
@@ -475,7 +494,7 @@ export function AudioFilesImport({
             </p>
           ) : null}
 
-          {missingBpm > 0 ? (
+          {missingBpm > 0 || missingFeatures > 0 ? (
             <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3">
               <h3 className="flex items-center gap-2 text-sm font-medium text-white">
                 <AudioLines className="size-4 text-white/40" />
@@ -488,9 +507,15 @@ export function AudioFilesImport({
               </h3>
               <p className="mt-1.5 text-xs leading-5 text-white/48">
                 {canAnalyzeAudio
-                  ? formatTemplate(COPY.analyzeBody[locale], {
-                      count: missingBpm,
-                    })
+                  ? missingBpm > 0
+                    ? formatTemplate(COPY.analyzeBody[locale], {
+                        count: missingBpm,
+                      })
+                    : // Everything has a BPM tag, so the pitch has to be the part
+                      // tags can't cover, not the part they already did.
+                      formatTemplate(COPY.analyzeFeaturesBody[locale], {
+                        count: missingFeatures,
+                      })
                   : COPY.analyzeLockedBody[locale]}
               </p>
 
@@ -541,16 +566,37 @@ export function AudioFilesImport({
                     : ""}
                 </p>
               ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={analyzeMissingBpm}
-                  className="mt-3 w-fit"
-                >
-                  {formatTemplate(COPY.analyzeCta[locale], {
-                    count: missingBpm,
-                  })}
-                </Button>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {missingBpm > 0 ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => analyzeAudio("missing-bpm")}
+                      className="w-fit"
+                    >
+                      {formatTemplate(COPY.analyzeCta[locale], {
+                        count: missingBpm,
+                      })}
+                    </Button>
+                  ) : null}
+                  {/* Secondary when there are untagged files to fix first, primary
+                      when there aren't — in a fully-tagged folder this is the only
+                      thing analysis has left to offer, so it shouldn't look
+                      optional. */}
+                  {missingFeatures > missingBpm ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={missingBpm > 0 ? "outline" : "default"}
+                      onClick={() => analyzeAudio("all")}
+                      className="w-fit"
+                    >
+                      {formatTemplate(COPY.analyzeAllCta[locale], {
+                        count: missingFeatures,
+                      })}
+                    </Button>
+                  ) : null}
+                </div>
               )}
             </div>
           ) : null}

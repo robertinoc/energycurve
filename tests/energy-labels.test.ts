@@ -11,6 +11,8 @@ import {
   removeEnergyLabel,
   summarizeEnergyLabels,
   writeEnergyLabel,
+  labelsForFitting,
+  parseLabelsDocument,
   type EnergyLabel,
 } from "@/lib/audio/energy-labels"
 import { TRACK_FEATURES_VERSION } from "@/lib/audio/track-features"
@@ -34,6 +36,7 @@ function label(
     fileName: "peak.mp3",
     label: 7,
     features: features(version),
+    bpm: 150,
     at: "2026-08-19T09:00:00.000Z",
     ...overrides,
   }
@@ -104,7 +107,7 @@ describe("parsing a rating", () => {
 describe("storing ratings", () => {
   it("writes and reads one back", () => {
     writeEnergyLabel(
-      { clip: "a::1", fileName: "a.mp3", label: 8, features: features() },
+      { clip: "a::1", fileName: "a.mp3", label: 8, features: features(), bpm: 150 },
       "2026-08-19T09:00:00.000Z"
     )
 
@@ -116,11 +119,11 @@ describe("storing ratings", () => {
   it("replaces a previous rating for the same clip", () => {
     // Re-rating is a better label, not a conflict — a second listen should win.
     writeEnergyLabel(
-      { clip: "a::1", fileName: "a.mp3", label: 4, features: features() },
+      { clip: "a::1", fileName: "a.mp3", label: 4, features: features(), bpm: 150 },
       "2026-08-19T09:00:00.000Z"
     )
     const after = writeEnergyLabel(
-      { clip: "a::1", fileName: "a.mp3", label: 9, features: features() },
+      { clip: "a::1", fileName: "a.mp3", label: 9, features: features(), bpm: 150 },
       "2026-08-19T10:00:00.000Z"
     )
 
@@ -130,7 +133,7 @@ describe("storing ratings", () => {
 
   it("removes one", () => {
     writeEnergyLabel(
-      { clip: "a::1", fileName: "a.mp3", label: 4, features: features() },
+      { clip: "a::1", fileName: "a.mp3", label: 4, features: features(), bpm: 150 },
       "t"
     )
     expect(Object.keys(removeEnergyLabel("a::1"))).toHaveLength(0)
@@ -149,7 +152,7 @@ describe("storing ratings", () => {
     store.set("energycurve:energy-labels", JSON.stringify(full))
 
     const refused = writeEnergyLabel(
-      { clip: "one-more", fileName: "x.mp3", label: 5, features: features() },
+      { clip: "one-more", fileName: "x.mp3", label: 5, features: features(), bpm: 150 },
       "t"
     )
     expect(refused["one-more"]).toBeUndefined()
@@ -157,7 +160,7 @@ describe("storing ratings", () => {
     // A correction to something already stored still goes through — the cap is on
     // growth, not on fixing a rating.
     const corrected = writeEnergyLabel(
-      { clip: "c0", fileName: "x.mp3", label: 9, features: features() },
+      { clip: "c0", fileName: "x.mp3", label: 9, features: features(), bpm: 150 },
       "t"
     )
     expect(corrected["c0"].label).toBe(9)
@@ -264,5 +267,92 @@ describe("exporting", () => {
     ) as { entries: unknown[] }
 
     expect(parseEnergyLabel(exported.entries[0])).toEqual(label({ clip: "a" }))
+  })
+})
+
+describe("tempo on a label", () => {
+  it("counts a label with no tempo as unfittable, not as broken", () => {
+    // The bug this exists for: the model needs a tempo, TrackAudioFeatures
+    // deliberately doesn't carry one (beat detection is a separate, better
+    // measurement), and the first version of the export stored neither. Every
+    // exported row would have been silently dropped by the fit.
+    //
+    // A rating with no detectable beat is still a real rating, so it's kept and
+    // reported separately rather than rejected — throwing it away would discard part
+    // of a listening session.
+    const labels = {
+      fittable: label({ clip: "fittable", label: 6 }),
+      beatless: label({ clip: "beatless", label: 3, bpm: null }),
+    }
+
+    const summary = summarizeEnergyLabels(labels)
+
+    expect(summary.total).toBe(2)
+    expect(summary.usable).toBe(1)
+    expect(summary.withoutTempo).toBe(1)
+    // Its rating doesn't count toward coverage either, because it can't train.
+    expect(summary.missingRatings).toContain(3)
+  })
+
+  it("reads a label written before tempo was stored", () => {
+    const legacy = { ...label(), bpm: undefined }
+    const parsed = parseEnergyLabel(legacy)
+
+    expect(parsed).not.toBeNull()
+    expect(parsed!.bpm).toBeNull()
+  })
+
+  it("rejects a tempo that isn't a positive number", () => {
+    for (const bad of [0, -140, "150", Number.NaN]) {
+      expect(parseEnergyLabel({ ...label(), bpm: bad })!.bpm).toBeNull()
+    }
+  })
+
+  it("round-trips the tempo through the export", () => {
+    const exported = JSON.parse(
+      exportEnergyLabels({ a: label({ clip: "a", bpm: 147.5 }) })
+    ) as { entries: unknown[] }
+
+    expect(parseEnergyLabel(exported.entries[0])!.bpm).toBe(147.5)
+  })
+})
+
+describe("preparing labels for a fit", () => {
+  it("keeps only rows a fit can actually use", () => {
+    const labels = {
+      good: label({ clip: "good", label: 5 }),
+      stale: label({ clip: "stale", label: 6 }, TRACK_FEATURES_VERSION - 1),
+      beatless: label({ clip: "beatless", label: 7, bpm: null }),
+    }
+
+    const rows = labelsForFitting(labels)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].label).toBe(5)
+  })
+})
+
+describe("reading a pasted labels document", () => {
+  it("accepts the export envelope", () => {
+    const text = exportEnergyLabels({ a: label({ clip: "a" }) })
+    expect(Object.keys(parseLabelsDocument(text))).toEqual(["a"])
+  })
+
+  it("accepts a bare array, because people paste the inner list", () => {
+    const text = JSON.stringify([label({ clip: "a" }), label({ clip: "b" })])
+    expect(Object.keys(parseLabelsDocument(text)).sort()).toEqual(["a", "b"])
+  })
+
+  it("skips unreadable entries instead of failing the whole paste", () => {
+    // Losing one row beats losing forty.
+    const text = JSON.stringify({
+      entries: [label({ clip: "good" }), { label: 99 }, null],
+    })
+    expect(Object.keys(parseLabelsDocument(text))).toEqual(["good"])
+  })
+
+  it("returns nothing for input that isn't a labels document", () => {
+    expect(parseLabelsDocument("not json")).toEqual({})
+    expect(parseLabelsDocument("42")).toEqual({})
+    expect(parseLabelsDocument(JSON.stringify({ entries: "nope" }))).toEqual({})
   })
 })
