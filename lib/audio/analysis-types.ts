@@ -81,12 +81,21 @@ export interface WorkerRequest {
  * - **banded** — ours: band-limited to where a 2048-point FFT can resolve a
  *   semitone, aggregated with a temporal median. See lib/audio/chroma.ts for the
  *   arithmetic behind the band.
+ * - **wide** — a second pass at a 8192-sample frame, which resolves semitones down
+ *   to 90 Hz instead of 362 and so keeps the bass where this genre puts its harmony.
+ *   The `banded` result argued for this: cutting the unresolvable band made accuracy
+ *   worse, which says the band held signal and what was missing was resolution.
  * - **banded-tuned** — the same band, plus a tuning correction estimated over the
  *   whole track before folding to twelve classes. See lib/audio/tuning.ts. Held
  *   separate from `banded` so a run can tell whether the band helped, whether the
  *   tuning helped, or whether only the two together do.
  */
-export const CHROMA_METHODS = ["meyda", "banded", "banded-tuned"] as const
+export const CHROMA_METHODS = [
+  "meyda",
+  "banded",
+  "banded-tuned",
+  "wide",
+] as const
 
 /** Derived from the list so the harness picker and the type can't drift apart. */
 export type ChromaMethod = (typeof CHROMA_METHODS)[number]

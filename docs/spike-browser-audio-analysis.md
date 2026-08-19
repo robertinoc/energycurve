@@ -232,6 +232,39 @@ few frames does not). **Not** the default, for the same reason Temperley isn't:
 the last change that sounded obviously right made the numbers worse. The harness
 has a `Chroma` picker; the next run over a real library decides.
 
+### The band experiment was measured, and it lost (19/08/2026)
+
+Three runs over the same folder, one pick each thanks to the variant matrix:
+
+| chroma | key hits | distinct keys / 23 | most repeated |
+|---|---|---|---|
+| **meyda** | **3/14 (21%)** | **10** | Dm ×5 |
+| banded | 2/14 (14%) | 5 | **Am ×15** |
+| banded-tuned | 2/14 (14%) | 5 | Am ×7 |
+
+The hit rate barely moved — one match on n=14 is noise. The second column is not
+noise: going from 10 distinct answers to 5, with one key covering two thirds of the
+library, is a detector that stopped discriminating. **`meyda` stays the default.**
+
+The arithmetic behind the band was right and the conclusion drawn from it was wrong.
+Semitones genuinely don't resolve below 362 Hz at a 2048 frame — but in hard techno
+the harmony lives in the bass, so removing that region removed the signal and kept
+the noise. Unresolvable-but-present beat resolvable-but-absent.
+
+A second hypothesis was tested and also failed: that the temporal median was
+flattening a changing harmony. On a synthetic Am→F→C→G progression the median
+*increases* contrast (50 vs 37.7) and still detects C, so aggregation isn't the
+culprit.
+
+What the same arithmetic actually implies is the opposite move — add resolution
+rather than discard the band. At 8192 samples semitones resolve from **90 Hz**, which
+reaches the bass fundamentals. Shipped as the `wide` variant, on its own pass so the
+energy features keep their frame regime. 16384 was rejected: 372 ms per frame is most
+of a beat at dance tempos, so a chord change would smear across it.
+
+Not the default either. It is a hypothesis with better arithmetic behind it than the
+last one, which is not the same as being right.
+
 Fixes, in rough order of effort:
 
 1. Harmonic/percussive separation before chroma — kicks and bass pollute the

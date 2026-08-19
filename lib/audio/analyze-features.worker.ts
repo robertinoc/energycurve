@@ -11,7 +11,14 @@
 
 import Meyda, { type MeydaAudioFeature, type MeydaFeaturesObject } from "meyda"
 
-import { MAX_HZ, MIN_HZ, chromaFromSpectrum, medianChroma } from "./chroma"
+import {
+  MAX_HZ,
+  MIN_HZ,
+  WIDE_FRAME_SIZE,
+  WIDE_MIN_HZ,
+  chromaFromSpectrum,
+  medianChroma,
+} from "./chroma"
 import {
   BINS_PER_SEMITONE,
   estimateTuningOffset,
@@ -49,6 +56,9 @@ Meyda.bufferSize = FRAME_SIZE
  * request the amplitude spectrum and compute flux ourselves.
  */
 const FEATURES: MeydaAudioFeature[] = ["rms", "amplitudeSpectrum", "chroma"]
+
+/** The wide pass needs the spectrum and nothing else. */
+const WIDE_FEATURES: MeydaAudioFeature[] = ["amplitudeSpectrum"]
 
 type ExtractedFeatures = Partial<MeydaFeaturesObject>
 
@@ -182,6 +192,61 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       }
     }
 
+    /**
+     * Second pass, at a bigger frame, for chroma only.
+     *
+     * Sequential and self-contained: Meyda's buffer size is a mutable field on its
+     * default export, so it's raised here and put back afterwards. That is safe
+     * because nothing else runs between — this whole handler is one synchronous
+     * body — and it would not be safe the moment any of it became concurrent.
+     */
+    const wideSegments: number[][] = []
+    const wideFrames: number[][] = []
+
+    Meyda.bufferSize = WIDE_FRAME_SIZE
+
+    try {
+      for (const { start, end } of windows) {
+        const segment: number[][] = []
+        let previous: Float32Array | null = null
+
+        for (
+          let offset = start;
+          offset + WIDE_FRAME_SIZE <= end;
+          offset += WIDE_FRAME_SIZE
+        ) {
+          const frame = samples.subarray(offset, offset + WIDE_FRAME_SIZE)
+          const extracted = Meyda.extract(
+            WIDE_FEATURES,
+            frame,
+            previous ?? frame
+          ) as ExtractedFeatures | null
+
+          const spectrum = extracted?.amplitudeSpectrum
+
+          if (spectrum) {
+            const chroma = chromaFromSpectrum(spectrum, sampleRate, {
+              frameSize: WIDE_FRAME_SIZE,
+              minHz: WIDE_MIN_HZ,
+              maxHz: MAX_HZ,
+            })
+            segment.push(chroma)
+            wideFrames.push(chroma)
+          }
+
+          previous = frame
+        }
+
+        if (segment.length > 0) {
+          wideSegments.push(medianChroma(segment))
+        }
+      }
+    } finally {
+      // Restored even if a frame throws: leaving it raised would silently change
+      // the energy features on the next track the reused worker analyses.
+      Meyda.bufferSize = FRAME_SIZE
+    }
+
     // The tuning offset is estimated from every frame of the track pooled together,
     // then each window is folded with it. Folding per window with a per-window
     // estimate would reintroduce exactly the noise that pooling avoids.
@@ -199,6 +264,10 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       banded: {
         chroma: aggregate("banded", bandedFrames),
         chromaSegments: bandedSegments,
+      },
+      wide: {
+        chroma: medianChroma(wideFrames),
+        chromaSegments: wideSegments,
       },
       "banded-tuned": {
         chroma: foldFineChroma(pooledFine, BINS_PER_SEMITONE, tuningOffset),

@@ -192,3 +192,49 @@ export function semitoneResolutionLimitHz(
   // f · (2^(1/12) − 1) = binWidth
   return binWidth / (Math.pow(2, 1 / 12) - 1)
 }
+
+/**
+ * Frame size for the wide chroma pass, and the band it unlocks.
+ *
+ * ## Why a second, bigger frame
+ *
+ * The band limiting above was the right arithmetic and the wrong conclusion. At 2048
+ * samples a semitone is narrower than a bin below 362 Hz, so I removed everything
+ * under it — and the measurement got *worse*: 21% → 14%, with the detector answering
+ * "Am" for 15 of 23 tracks. In hard techno the harmony lives in the bass. Cutting the
+ * unresolvable region cut the signal and left the noise.
+ *
+ * The same arithmetic points the other way. Resolution is what's missing, so add
+ * resolution instead of discarding the band:
+ *
+ * | frame | bin width | semitones resolve above | frames per 30 s |
+ * |-------|-----------|-------------------------|-----------------|
+ * | 2048  | 21.5 Hz   | 362 Hz                  | 645             |
+ * | 8192  | 5.4 Hz    | **90 Hz**               | 161             |
+ * | 16384 | 2.7 Hz    | 45 Hz                   | 80              |
+ *
+ * 8192 reaches down past the bass fundamentals that carry the harmony. 16384 would
+ * reach further and is rejected anyway: at 372 ms per frame it spans most of a beat
+ * at dance tempos, so a chord change smears across the frame and the profile
+ * describes two chords at once. 8192 is 186 ms — under half a beat at 150 BPM, which
+ * is the trade this wants.
+ *
+ * ## Why a separate pass rather than raising FRAME_SIZE
+ *
+ * FRAME_SIZE also governs RMS, flux, entropy and onset rate. Those are persisted,
+ * versioned, and are the inputs Energy Model v3 will be fitted against — changing
+ * their frame regime would invalidate stored measurements to fix an unrelated
+ * problem. So chroma gets its own pass, and the energy features keep theirs.
+ *
+ * The extra cost is smaller than it looks: an FFT is O(n log n), and this runs a
+ * quarter as many frames at four times the size, so it lands around a quarter more
+ * work rather than four times.
+ */
+export const WIDE_FRAME_SIZE = 8192
+
+/**
+ * Lower edge for the wide pass. G2 is 98 Hz, just above the 90.5 Hz resolution limit
+ * at this frame size, so the band starts on a note that can actually be told from
+ * its neighbours.
+ */
+export const WIDE_MIN_HZ = 98
