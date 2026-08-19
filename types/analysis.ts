@@ -10,7 +10,16 @@ import type {
  * refined by the track's perceived loudness within the set (B19) — real
  * differentiation, unlike plain "bpm".
  */
-export type EnergySource = "manual" | "bpm" | "bpm_loudness" | "estimated"
+/**
+ * Where a track's energy number came from, in descending order of trust.
+ * "audio" is Energy Model v3 — measured from the track's own spectrum.
+ */
+export type EnergySource =
+  | "manual"
+  | "audio"
+  | "bpm"
+  | "bpm_loudness"
+  | "estimated"
 
 export interface ResolvedTrackEnergy {
   trackId: string | null

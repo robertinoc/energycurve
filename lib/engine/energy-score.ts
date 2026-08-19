@@ -15,6 +15,8 @@ import {
 import { toCamelot } from "@/lib/music/camelot"
 import { mapGenreTag } from "@/lib/playlists/genre-mapping"
 import type { EnergySource, ResolvedTrackEnergy } from "@/types/analysis"
+import { parseTrackAudioFeatures } from "@/lib/audio/track-features"
+import { energyFromAudioFeatures } from "./energy-model-v3"
 
 /**
  * Interpolation anchors for the open-ended first and last BPM bands (A1).
@@ -205,6 +207,34 @@ export interface TrackEnergyInput {
   musical_key?: string | null
   /** Perceived loudness in dB; refines the BPM energy within the set (B19). */
   perceived_db?: number | null
+  /**
+   * Spectral measurements from the track's own audio. When present and the model
+   * is fitted, Energy Model v3 scores from these instead of from BPM alone.
+   *
+   * Typed `unknown` because it arrives straight off a jsonb column: callers pass
+   * database rows, and validating here — once, at the read boundary — is what
+   * stops every call site having to parse first. Same posture as `anchors` in
+   * curve-template-service: unreadable is dropped, not thrown.
+   */
+  audio_features?: unknown
+}
+
+/**
+ * v3's score for a track, or null when it can't produce one — no fitted model, no
+ * features, or no tempo to pair them with.
+ *
+ * Null rather than a fallback value on purpose: the caller's `else if` chain is
+ * what implements the documented precedence, so "can't answer" has to be
+ * distinguishable from "answered low".
+ */
+function audioScore(track: TrackEnergyInput): number | null {
+  const features = parseTrackAudioFeatures(track.audio_features)
+
+  if (!features) {
+    return null
+  }
+
+  return energyFromAudioFeatures(features, track.bpm)
 }
 
 interface LoudnessContext {
@@ -270,6 +300,14 @@ export function resolveTrackEnergies(
         )
       )
       source = "manual"
+    } else if (audioScore(track) !== null) {
+      // Energy Model v3, one rung below a value the DJ set by hand and above the
+      // BPM heuristic: a measurement of the track beats an inference from its
+      // tempo. Silent until the model is fitted — audioScore returns null while
+      // ENERGY_MODEL_V3 is null, so this branch simply doesn't fire and the ladder
+      // behaves exactly as it did before.
+      score = audioScore(track) as number
+      source = "audio"
     } else if (track.bpm !== null) {
       // The track's own tag anchors its band only when the BPM is plausible
       // for that genre (B14) — a "Techno"-tagged track at 158 BPM is
