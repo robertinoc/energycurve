@@ -42,6 +42,15 @@ export interface AudioFeatures {
    * they aren't one.
    */
   analyzedSeconds: number
+  /**
+   * Estimated distance from A = 440, in semitones, on the `banded-tuned` path;
+   * 0 on the others because they don't estimate it.
+   *
+   * Reported so a run can be told apart from a broken estimator: if this is 0.00
+   * for every track in a library, the correction isn't measuring anything and any
+   * change in accuracy came from somewhere else.
+   */
+  tuningOffsetSemitones: number
 }
 
 export interface WorkerRequest {
@@ -72,8 +81,12 @@ export interface WorkerRequest {
  * - **banded** — ours: band-limited to where a 2048-point FFT can resolve a
  *   semitone, aggregated with a temporal median. See lib/audio/chroma.ts for the
  *   arithmetic behind the band.
+ * - **banded-tuned** — the same band, plus a tuning correction estimated over the
+ *   whole track before folding to twelve classes. See lib/audio/tuning.ts. Held
+ *   separate from `banded` so a run can tell whether the band helped, whether the
+ *   tuning helped, or whether only the two together do.
  */
-export const CHROMA_METHODS = ["meyda", "banded"] as const
+export const CHROMA_METHODS = ["meyda", "banded", "banded-tuned"] as const
 
 /** Derived from the list so the harness picker and the type can't drift apart. */
 export type ChromaMethod = (typeof CHROMA_METHODS)[number]

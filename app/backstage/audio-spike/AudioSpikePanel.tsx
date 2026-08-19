@@ -397,6 +397,10 @@ export function AudioSpikePanel() {
                         because every column to the left is computed from that
                         sample, not from the whole file — see sample-windows.ts. */}
                     <th className="px-3 py-2 font-medium">Sampled</th>
+                    {/* Cents off A=440, on the banded-tuned path. All zeros means
+                        the estimator isn't measuring, not that the library is
+                        perfectly tuned. */}
+                    <th className="px-3 py-2 font-medium">Tuning</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -687,6 +691,13 @@ function TrackRow({ row }: { row: TrackAnalysis }) {
               ? `${Math.round(row.features.analyzedSeconds)}s · ${Math.round(
                   (row.features.analyzedSeconds / row.durationSeconds) * 100
                 )}%`
+              : "—"}
+          </td>
+          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
+            {row.features
+              ? `${row.features.tuningOffsetSemitones >= 0 ? "+" : ""}${Math.round(
+                  row.features.tuningOffsetSemitones * 100
+                )}¢`
               : "—"}
           </td>
         </>
