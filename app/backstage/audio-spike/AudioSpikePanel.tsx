@@ -475,7 +475,11 @@ export function AudioSpikePanel() {
                 {" · "}
                 {labelSummary.coveredRatings}/10 ratings covered
               </span>
-              {labelSummary.missingRatings.length > 0 ? (
+              {labelSummary.total === 0 ? (
+                <span className="text-ec-text-muted">
+                  Rate a track in the second column to start
+                </span>
+              ) : labelSummary.missingRatings.length > 0 ? (
                 <span className="text-ec-amber">
                   {/* More useful than a raw count: fifty tracks all rated 7 fit a
                       model that can only ever answer 7. */}
@@ -490,6 +494,13 @@ export function AudioSpikePanel() {
                 onClick={copyLabels}
                 disabled={labelSummary.usable === 0}
                 className="h-7 px-2 text-xs"
+                /* A disabled button with no reason reads as broken — it was read
+                   that way once. Say what would enable it. */
+                title={
+                  labelSummary.usable === 0
+                    ? "Rate at least one track first — there's nothing to copy yet"
+                    : `Copy ${labelSummary.usable} label(s) as JSON`
+                }
               >
                 {copied ? "Copied" : "Copy labels JSON"}
               </Button>
@@ -501,7 +512,7 @@ export function AudioSpikePanel() {
               onEnded={() => setPlaying(null)}
               className="hidden"
             />
-            <table className="w-full min-w-[940px] text-left text-sm">
+            <table className="w-full text-left text-sm">
                 <thead className="text-xs uppercase tracking-wide text-ec-text-dim">
                   <tr className="border-b border-ec-border">
                     <SortableHeader
@@ -510,24 +521,12 @@ export function AudioSpikePanel() {
                       sort={sort}
                       onSort={toggleSort}
                     />
-                    <SortableHeader
-                      label="Length"
-                      sortKey="durationSeconds"
-                      sort={sort}
-                      onSort={toggleSort}
-                    />
-                    <SortableHeader
-                      label="Analysis time"
-                      sortKey="totalMs"
-                      sort={sort}
-                      onSort={toggleSort}
-                    />
-                    <SortableHeader
-                      label="×RT"
-                      sortKey="realtimeFactor"
-                      sort={sort}
-                      onSort={toggleSort}
-                    />
+                    {/* Second column, not last. This is what the screen is *for*
+                        while labelling, and fourteen columns overflowed the
+                        container — so the one control the task needs sat past the
+                        right edge, behind a scroll bar that announces there is more
+                        but not that the more is the point. */}
+                    <th className="px-3 py-2 font-medium">Energy by ear</th>
                     <SortableHeader
                       label="Tempo — ours / tag"
                       sortKey="bpm"
@@ -540,29 +539,11 @@ export function AudioSpikePanel() {
                       sort={sort}
                       onSort={toggleSort}
                     />
-                    <SortableHeader
-                      label="Key conf."
-                      sortKey="keyConfidence"
-                      sort={sort}
-                      onSort={toggleSort}
-                    />
-                    {/* Windows that agreed. More trustworthy than Key conf.,
-                        which reported 0.4-0.85 while getting the mode wrong. */}
                     <th className="px-3 py-2 font-medium">Agree</th>
-                    <th className="px-3 py-2 font-medium">Flux</th>
-                    <th className="px-3 py-2 font-medium">Entropy</th>
-                    <th className="px-3 py-2 font-medium">Onsets/s</th>
-                    {/* How much of the track the frames actually covered. Shown
-                        because every column to the left is computed from that
-                        sample, not from the whole file — see sample-windows.ts. */}
-                    <th className="px-3 py-2 font-medium">Sampled</th>
-                    {/* Cents off A=440, on the banded-tuned path. All zeros means
-                        the estimator isn't measuring, not that the library is
-                        perfectly tuned. */}
-                    <th className="px-3 py-2 font-medium">Tuning</th>
-                    {/* Training labels for Energy Model v3 — lib/audio/energy-labels.ts
-                        explains why a DJ's ear is the source rather than a tag. */}
-                    <th className="px-3 py-2 font-medium">Energy by ear</th>
+                    {/* The nine numeric columns that used to live here, folded into
+                        one cell. Losing a little column-scannability buys back every
+                        value being on screen at once. */}
+                    <th className="px-3 py-2 font-medium">Signals</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -871,6 +852,68 @@ function AnalysisProgress({
   )
 }
 
+/**
+ * The per-track diagnostics, as labelled pairs in one cell.
+ *
+ * These were nine separate columns, and nine columns plus a filename overflowed the
+ * page container. The resulting horizontal scroll cost more than tidiness: the
+ * energy-rating control sat past the right edge, so the one thing the screen existed
+ * for was the one thing nobody could see. A scroll bar announces that there is more
+ * — never that the more is the point.
+ *
+ * Wrapping pairs give up a little scannability down a column and buy back every
+ * value being visible at once, which is the trade this tool wants.
+ */
+function Signals({ row }: { row: TrackAnalysis }) {
+  const seconds = Math.round(row.durationSeconds)
+
+  const pairs: [string, string][] = [
+    [
+      "len",
+      `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`,
+    ],
+    ["took", formatDuration(row.totalMs)],
+    ["×rt", `${Math.round(row.realtimeFactor)}×`],
+  ]
+
+  if (row.keyConfidence !== null) {
+    pairs.push(["conf", row.keyConfidence.toFixed(2)])
+  }
+
+  if (row.features) {
+    pairs.push(
+      ["flux", row.features.fluxMean.toFixed(3)],
+      ["entr", row.features.entropyMean.toFixed(3)],
+      ["ons/s", row.features.onsetRate.toFixed(2)],
+      [
+        "tune",
+        `${row.features.tuningOffsetSemitones >= 0 ? "+" : ""}${Math.round(
+          row.features.tuningOffsetSemitones * 100
+        )}¢`,
+      ]
+    )
+
+    if (row.durationSeconds > 0) {
+      pairs.push([
+        "sampled",
+        `${Math.round(row.features.analyzedSeconds)}s · ${Math.round(
+          (row.features.analyzedSeconds / row.durationSeconds) * 100
+        )}%`,
+      ])
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[0.7rem] leading-5 text-ec-text-dim">
+      {pairs.map(([label, value]) => (
+        <span key={label} className="tabular-nums whitespace-nowrap">
+          <span className="text-ec-text-muted">{label}</span> {value}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function TrackRow({
   row,
   label,
@@ -905,20 +948,51 @@ function TrackRow({
         ) : null}
       </td>
 
+      {/* Second column: what the screen is for while labelling. */}
+      <td className="px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => onTogglePlay(row)}
+            disabled={!canPlay}
+            className="rounded border border-ec-border px-2 py-1 text-xs text-ec-text-dim hover:text-ec-text disabled:opacity-40"
+            aria-label={playing ? "Stop" : "Play"}
+            title={canPlay ? undefined : "Re-pick the folder to play from here"}
+          >
+            {playing ? "■" : "▶"}
+          </button>
+          <select
+            value={label?.label ?? ""}
+            onChange={(event) =>
+              onRate(
+                row,
+                event.target.value === "" ? null : Number(event.target.value)
+              )
+            }
+            disabled={!row.features}
+            className="rounded-md border border-ec-border bg-ec-raised px-2 py-1 text-xs text-ec-text disabled:opacity-40"
+            title={
+              row.features
+                ? "How energetic this track feels to you, 1–10"
+                : "No measurements for this file, so a rating can't be paired with anything"
+            }
+          >
+            <option value="">—</option>
+            {ENERGY_RATINGS.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </div>
+      </td>
+
       {row.error ? (
-        <td colSpan={9} className="px-3 py-2 text-ec-error">
+        <td colSpan={4} className="px-3 py-2 text-ec-error">
           {row.error}
         </td>
       ) : (
         <>
-          <td className="px-3 py-2 tabular-nums">
-            {Math.floor(row.durationSeconds / 60)}:
-            {String(Math.round(row.durationSeconds % 60)).padStart(2, "0")}
-          </td>
-          <td className="px-3 py-2 tabular-nums">{formatDuration(row.totalMs)}</td>
-          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
-            {Math.round(row.realtimeFactor)}×
-          </td>
           <ComparisonCell
             detected={row.bpm ? row.bpm.toFixed(1) : "—"}
             tagged={row.taggedBpm !== null ? String(row.taggedBpm) : "—"}
@@ -930,68 +1004,14 @@ function TrackRow({
             agrees={keysAgree(row.detectedKey, row.taggedKey)}
           />
           <td className="px-3 py-2 tabular-nums text-ec-text-dim">
-            {row.keyConfidence !== null ? row.keyConfidence.toFixed(2) : "—"}
-          </td>
-          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
             {row.keyAgreement !== null
               ? `${Math.round(row.keyAgreement * 100)}%${
                   row.keySegments ? ` (${row.keySegments})` : ""
                 }`
               : "—"}
           </td>
-          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
-            {row.features ? row.features.fluxMean.toFixed(3) : "—"}
-          </td>
-          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
-            {row.features ? row.features.entropyMean.toFixed(3) : "—"}
-          </td>
-          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
-            {row.features ? row.features.onsetRate.toFixed(2) : "—"}
-          </td>
-          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
-            {row.features && row.durationSeconds > 0
-              ? `${Math.round(row.features.analyzedSeconds)}s · ${Math.round(
-                  (row.features.analyzedSeconds / row.durationSeconds) * 100
-                )}%`
-              : "—"}
-          </td>
-          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
-            {row.features
-              ? `${row.features.tuningOffsetSemitones >= 0 ? "+" : ""}${Math.round(
-                  row.features.tuningOffsetSemitones * 100
-                )}¢`
-              : "—"}
-          </td>
           <td className="px-3 py-2">
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => onTogglePlay(row)}
-                disabled={!canPlay}
-                className="rounded border border-ec-border px-1.5 py-0.5 text-xs text-ec-text-dim hover:text-ec-text disabled:opacity-40"
-                aria-label={playing ? "Stop" : "Play"}
-              >
-                {playing ? "■" : "▶"}
-              </button>
-              <select
-                value={label?.label ?? ""}
-                onChange={(event) =>
-                  onRate(
-                    row,
-                    event.target.value === "" ? null : Number(event.target.value)
-                  )
-                }
-                disabled={!row.features}
-                className="rounded-md border border-ec-border bg-ec-raised px-1.5 py-0.5 text-xs text-ec-text disabled:opacity-40"
-              >
-                <option value="">—</option>
-                {ENERGY_RATINGS.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Signals row={row} />
           </td>
         </>
       )}
