@@ -15,12 +15,14 @@
 import {
   detectKeyByVote,
   DEFAULT_KEY_PROFILES,
+  KEY_PROFILES,
   type KeyProfileSet,
 } from "./key-detection"
-import { DEFAULT_CHROMA_METHOD } from "./analysis-types"
+import { CHROMA_METHODS, DEFAULT_CHROMA_METHOD } from "./analysis-types"
 import type {
   AudioFeatures,
   ChromaMethod,
+  ChromaVariant,
   TrackAnalysis,
   WorkerRequest,
   WorkerResponse,
@@ -48,7 +50,14 @@ function copyChannels(buffer: AudioBuffer): Float32Array[] {
 let worker: Worker | null = null
 const pending = new Map<
   string,
-  { resolve: (value: { features: AudioFeatures; analyzeMs: number }) => void; reject: (error: Error) => void }
+  {
+    resolve: (value: {
+      features: AudioFeatures
+      variants: Record<ChromaMethod, ChromaVariant>
+      analyzeMs: number
+    }) => void
+    reject: (error: Error) => void
+  }
 >()
 
 function getWorker(): Worker {
@@ -69,7 +78,11 @@ function getWorker(): Worker {
 
     pending.delete(message.id)
     if (message.ok) {
-      entry.resolve({ features: message.features, analyzeMs: message.analyzeMs })
+      entry.resolve({
+        features: message.features,
+        variants: message.variants,
+        analyzeMs: message.analyzeMs,
+      })
     } else {
       entry.reject(new Error(message.error))
     }
@@ -97,7 +110,11 @@ function extractFeatures(
   channels: Float32Array[],
   sampleRate: number,
   chromaMethod: ChromaMethod
-): Promise<{ features: AudioFeatures; analyzeMs: number }> {
+): Promise<{
+  features: AudioFeatures
+  variants: Record<ChromaMethod, ChromaVariant>
+  analyzeMs: number
+}> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
   const active = getWorker()
 
@@ -155,6 +172,7 @@ export async function analyzeAudioFile(
     keyMargin: null,
     keyAgreement: null,
     keySegments: null,
+    keyByVariant: {},
     features: null,
     taggedBpm: options.taggedBpm ?? null,
     taggedKey: options.taggedKey ?? null,
@@ -196,7 +214,7 @@ export async function analyzeAudioFile(
     base.bpmMs = performance.now() - bpmStart
 
     const channels = copyChannels(buffer)
-    const { features, analyzeMs } = await extractFeatures(
+    const { features, variants, analyzeMs } = await extractFeatures(
       channels,
       buffer.sampleRate,
       options.chromaMethod ?? DEFAULT_CHROMA_METHOD
@@ -207,6 +225,23 @@ export async function analyzeAudioFile(
     // Each analysed window votes, rather than one average over the whole track
     // deciding alone — the spike's second recommended fix for the 21% accuracy,
     // whose failures were consistently a plausible tonic with the wrong mode.
+    // Every combination, from the one frame pass. Six votes over already-computed
+    // chroma cost microseconds next to the FFT that produced them, and having them
+    // all is what lets a single run answer "which variant is best" — instead of one
+    // run per variant, with a human transcribing the results in between.
+    for (const method of CHROMA_METHODS) {
+      const variant = variants[method]
+      const segments =
+        variant.chromaSegments.length > 0
+          ? variant.chromaSegments
+          : [variant.chroma]
+
+      for (const profiles of Object.keys(KEY_PROFILES) as KeyProfileSet[]) {
+        base.keyByVariant[`${method}|${profiles}`] =
+          detectKeyByVote(segments, profiles)?.key ?? null
+      }
+    }
+
     const key = detectKeyByVote(
       features.chromaSegments.length > 0
         ? features.chromaSegments

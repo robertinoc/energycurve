@@ -9,6 +9,7 @@
  */
 
 import { toCamelot } from "@/lib/music/camelot"
+import type { ChromaMethod } from "./analysis-types"
 import type { TrackAnalysis } from "./analysis-types"
 
 /** How a measurement reads against its threshold. */
@@ -372,4 +373,117 @@ export function buildSpikeReport(
 
     headlines,
   }
+}
+
+/** One (chroma × profiles) combination's accuracy against the files' own tags. */
+export interface VariantAccuracy {
+  chroma: ChromaMethod
+  profiles: string
+  /** Tracks where the detected key matched the tag. */
+  hits: number
+  /** Tracks that had a tag to compare against at all. */
+  comparable: number
+  /**
+   * Distinct keys the combination produced across every analysed track, tagged or
+   * not.
+   *
+   * Reported next to the hit count because it catches a failure the hit count
+   * hides: a variant that answers "Am" for two thirds of a library can look
+   * respectable on a small sample while having lost the ability to tell tracks
+   * apart. That is exactly what the first banded run did — 21% → 14% is a
+   * one-track difference on n=14 and easy to dismiss, whereas 10 distinct keys → 5
+   * is not.
+   */
+  distinctKeys: number
+  /** The most frequent answer and how often it appeared, for the same reason. */
+  topKey: { key: string; count: number } | null
+}
+
+/**
+ * Accuracy for every variant, from rows a single run produced.
+ *
+ * Exists so a comparison is a table of numbers rather than three runs and a human
+ * reading values off screenshots — which is both slow and a place for transcription
+ * errors to enter the record.
+ */
+export function variantAccuracy(
+  rows: readonly TrackAnalysis[]
+): VariantAccuracy[] {
+  const combinations = new Map<string, VariantAccuracy>()
+
+  for (const row of rows) {
+    for (const [combination, detected] of Object.entries(row.keyByVariant)) {
+      const [chroma, profiles] = combination.split("|")
+
+      let entry = combinations.get(combination)
+      if (!entry) {
+        entry = {
+          chroma: chroma as ChromaMethod,
+          profiles,
+          hits: 0,
+          comparable: 0,
+          distinctKeys: 0,
+          topKey: null,
+        }
+        combinations.set(combination, entry)
+      }
+
+      if (row.taggedKey) {
+        entry.comparable += 1
+        if (keysAgree(detected, row.taggedKey)) {
+          entry.hits += 1
+        }
+      }
+    }
+  }
+
+  // Concentration is counted over every track, tagged or not: losing the ability to
+  // discriminate shows up on the untagged ones too.
+  for (const [combination, entry] of combinations) {
+    const counts = new Map<string, number>()
+
+    for (const row of rows) {
+      const detected = row.keyByVariant[combination]
+      if (detected) {
+        counts.set(detected, (counts.get(detected) ?? 0) + 1)
+      }
+    }
+
+    entry.distinctKeys = counts.size
+
+    let top: { key: string; count: number } | null = null
+    for (const [key, count] of counts) {
+      if (!top || count > top.count) {
+        top = { key, count }
+      }
+    }
+    entry.topKey = top
+  }
+
+  return [...combinations.values()].sort(
+    (left, right) =>
+      right.hits / (right.comparable || 1) - left.hits / (left.comparable || 1)
+  )
+}
+
+/** The matrix as pasteable text, so a result can be reported without a screenshot. */
+export function formatVariantAccuracy(rows: VariantAccuracy[]): string {
+  if (rows.length === 0) {
+    return "No variant results — analyse some files first."
+  }
+
+  const lines = rows.map((row) => {
+    const percent =
+      row.comparable > 0
+        ? `${Math.round((row.hits / row.comparable) * 100)}%`
+        : "n/a"
+
+    const concentration = row.topKey
+      ? `${row.distinctKeys} distinct, top ${row.topKey.key} ×${row.topKey.count}`
+      : "no answers"
+
+    return `${row.chroma} + ${row.profiles}: ${row.hits}/${row.comparable} = ${percent}  (${concentration})`
+  })
+
+  return lines.join("\n")
 }

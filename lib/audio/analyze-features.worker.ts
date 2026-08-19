@@ -23,6 +23,8 @@ import {
   DEFAULT_CHROMA_METHOD,
   FRAME_SIZE,
   HOP_SIZE,
+  type ChromaMethod,
+  type ChromaVariant,
   type WorkerRequest,
   type WorkerResponse,
 } from "./analysis-types"
@@ -55,20 +57,15 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   const chromaFrom = chromaMethod ?? DEFAULT_CHROMA_METHOD
 
   /**
-   * A median across frames suppresses percussion — a kick is a spike in a few
-   * frames, a played note sustains across most of them — so it pairs with the
-   * band limiting rather than being a separate idea. Meyda's path keeps the mean
-   * it was measured with, so the A/B compares two whole methods and not a mix.
+   * Meyda's path keeps the mean it was measured with; the banded ones use a median
+   * across frames, which suppresses percussion — a kick is a spike in a few frames,
+   * a played note sustains across most of them. Pairing the median with the band
+   * limiting is deliberate, so a comparison contrasts whole methods rather than a
+   * mix of halves.
    */
-  const aggregateChroma = (frames: number[][]) =>
-    chromaFrom === "meyda" ? averageChroma(frames) : medianChroma(frames)
+  const aggregate = (method: ChromaMethod, frames: number[][]) =>
+    method === "meyda" ? averageChroma(frames) : medianChroma(frames)
 
-  /**
-   * The tuned path collects a fine profile per frame and folds it only once the
-   * whole-track offset is known — see lib/audio/tuning.ts for why the estimate
-   * can't be per frame.
-   */
-  const tuned = chromaFrom === "banded-tuned"
   const startedAt = performance.now()
 
   try {
@@ -83,9 +80,15 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
      * instead of reading a single average of the whole track — see
      * detectKeyByVote. The whole-track average is still reported alongside it.
      */
-    const chromaSegments: number[][] = []
-    const allChromaFrames: number[][] = []
-    /** Fine profiles per window, kept only on the tuned path. */
+    /**
+     * Per-variant accumulators. Every method is built in the same pass because the
+     * FFT is already paid for — see the note on WorkerResponse.variants.
+     */
+    const meydaSegments: number[][] = []
+    const meydaFrames: number[][] = []
+    const bandedSegments: number[][] = []
+    const bandedFrames: number[][] = []
+    /** Fine profiles per window, for the tuned variant. */
     const fineSegments: number[][][] = []
     /**
      * One flux envelope per window, never one concatenated array: flux is defined
@@ -100,7 +103,8 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 
     for (const { start, end } of windows) {
       const segmentFlux: number[] = []
-      const segmentChroma: number[][] = []
+      const segmentMeyda: number[][] = []
+      const segmentBanded: number[][] = []
       const segmentFine: number[][] = []
       // Reset per window: the first frame after a jump has no valid predecessor.
       let previousFrame: Float32Array | null = null
@@ -133,39 +137,31 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
             previousSpectrum = spectrum
           }
 
-          // "banded" builds the profile from the spectrum we already asked for,
-          // keeping only the frequencies where a semitone is wider than one FFT
-          // bin; "meyda" uses the extractor's own whole-spectrum chroma. See
-          // lib/audio/chroma.ts for why the band exists.
-          if (tuned) {
-            if (spectrum) {
-              segmentFine.push(
-                fineChromaFromSpectrum(spectrum, sampleRate, {
-                  frameSize: FRAME_SIZE,
-                  minHz: MIN_HZ,
-                  maxHz: MAX_HZ,
-                  binsPerSemitone: BINS_PER_SEMITONE,
-                })
-              )
-            }
-          } else {
-            const frameChroma =
-              chromaFrom === "banded"
-                ? spectrum
-                  ? chromaFromSpectrum(spectrum, sampleRate, {
-                      frameSize: FRAME_SIZE,
-                    })
-                  : null
-                : extracted.chroma
-                  ? Array.from(extracted.chroma)
-                  : null
+          // All three variants from the one spectrum. Meyda's own chroma covers
+          // the whole spectrum; ours keeps only the band where a semitone is wider
+          // than an FFT bin (lib/audio/chroma.ts); the fine profile is what tuning
+          // correction needs before folding (lib/audio/tuning.ts).
+          if (extracted.chroma) {
+            const frameChroma = Array.from(extracted.chroma)
+            segmentMeyda.push(frameChroma)
+            meydaFrames.push(frameChroma)
+          }
 
-            if (frameChroma) {
-              // Kept twice on purpose: per window for the vote, and pooled for the
-              // whole-track average the Energy Model features still read.
-              segmentChroma.push(frameChroma)
-              allChromaFrames.push(frameChroma)
-            }
+          if (spectrum) {
+            const banded = chromaFromSpectrum(spectrum, sampleRate, {
+              frameSize: FRAME_SIZE,
+            })
+            segmentBanded.push(banded)
+            bandedFrames.push(banded)
+
+            segmentFine.push(
+              fineChromaFromSpectrum(spectrum, sampleRate, {
+                frameSize: FRAME_SIZE,
+                minHz: MIN_HZ,
+                maxHz: MAX_HZ,
+                binsPerSemitone: BINS_PER_SEMITONE,
+              })
+            )
           }
         }
 
@@ -175,35 +171,39 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       if (segmentFlux.length > 0) {
         fluxSegments.push(segmentFlux)
       }
-      if (segmentChroma.length > 0) {
-        chromaSegments.push(aggregateChroma(segmentChroma))
+      if (segmentMeyda.length > 0) {
+        meydaSegments.push(aggregate("meyda", segmentMeyda))
+      }
+      if (segmentBanded.length > 0) {
+        bandedSegments.push(aggregate("banded", segmentBanded))
       }
       if (segmentFine.length > 0) {
         fineSegments.push(segmentFine)
       }
     }
 
-    // Tuned path: the offset is estimated from every frame of the track pooled
-    // together, then each window is folded with it. Folding per window with a
-    // per-window estimate would reintroduce exactly the noise this avoids.
-    let tuningOffset = 0
-    if (tuned) {
-      const pooled = sumFineChroma(fineSegments.flat())
-      tuningOffset = estimateTuningOffset(pooled, BINS_PER_SEMITONE)
+    // The tuning offset is estimated from every frame of the track pooled together,
+    // then each window is folded with it. Folding per window with a per-window
+    // estimate would reintroduce exactly the noise that pooling avoids.
+    const pooledFine = sumFineChroma(fineSegments.flat())
+    const tuningOffset = estimateTuningOffset(pooledFine, BINS_PER_SEMITONE)
+    const tunedSegments = fineSegments.map((segment) =>
+      foldFineChroma(sumFineChroma(segment), BINS_PER_SEMITONE, tuningOffset)
+    )
 
-      for (const segmentFine of fineSegments) {
-        chromaSegments.push(
-          foldFineChroma(
-            sumFineChroma(segmentFine),
-            BINS_PER_SEMITONE,
-            tuningOffset
-          )
-        )
-      }
-
-      allChromaFrames.push(
-        foldFineChroma(pooled, BINS_PER_SEMITONE, tuningOffset)
-      )
+    const variants: Record<ChromaMethod, ChromaVariant> = {
+      meyda: {
+        chroma: aggregate("meyda", meydaFrames),
+        chromaSegments: meydaSegments,
+      },
+      banded: {
+        chroma: aggregate("banded", bandedFrames),
+        chromaSegments: bandedSegments,
+      },
+      "banded-tuned": {
+        chroma: foldFineChroma(pooledFine, BINS_PER_SEMITONE, tuningOffset),
+        chromaSegments: tunedSegments,
+      },
     }
 
     const frameRateHz = sampleRate / HOP_SIZE
@@ -211,14 +211,17 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       id,
       ok: true,
       analyzeMs: performance.now() - startedAt,
+      variants,
       features: {
         rmsMean: mean(rms),
         rmsPeak: percentile(rms, 95),
         fluxMean: mean(fluxSegments.flat()),
         entropyMean: mean(entropy),
         onsetRate: onsetRateFromSegments(fluxSegments, frameRateHz),
-        chroma: aggregateChroma(allChromaFrames),
-        chromaSegments,
+        // The features still report the selected method's profile, so the table's
+        // Key column keeps meaning what the picker says it means.
+        chroma: variants[chromaFrom].chroma,
+        chromaSegments: variants[chromaFrom].chromaSegments,
         frameCount: rms.length,
         // What the frames actually covered, so a reader of these numbers knows
         // they describe a sample of the track rather than all of it.
