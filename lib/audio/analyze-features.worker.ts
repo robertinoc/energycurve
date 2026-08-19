@@ -11,7 +11,9 @@
 
 import Meyda, { type MeydaAudioFeature, type MeydaFeaturesObject } from "meyda"
 
+import { chromaFromSpectrum, medianChroma } from "./chroma"
 import {
+  DEFAULT_CHROMA_METHOD,
   FRAME_SIZE,
   HOP_SIZE,
   type WorkerRequest,
@@ -42,7 +44,17 @@ const FEATURES: MeydaAudioFeature[] = ["rms", "amplitudeSpectrum", "chroma"]
 type ExtractedFeatures = Partial<MeydaFeaturesObject>
 
 self.onmessage = (event: MessageEvent<WorkerRequest>) => {
-  const { id, channels, sampleRate } = event.data
+  const { id, channels, sampleRate, chromaMethod } = event.data
+  const chromaFrom = chromaMethod ?? DEFAULT_CHROMA_METHOD
+
+  /**
+   * A median across frames suppresses percussion — a kick is a spike in a few
+   * frames, a played note sustains across most of them — so it pairs with the
+   * band limiting rather than being a separate idea. Meyda's path keeps the mean
+   * it was measured with, so the A/B compares two whole methods and not a mix.
+   */
+  const aggregateChroma = (frames: number[][]) =>
+    chromaFrom === "banded" ? medianChroma(frames) : averageChroma(frames)
   const startedAt = performance.now()
 
   try {
@@ -104,8 +116,22 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
             previousSpectrum = spectrum
           }
 
-          if (extracted.chroma) {
-            const frameChroma = Array.from(extracted.chroma)
+          // "banded" builds the profile from the spectrum we already asked for,
+          // keeping only the frequencies where a semitone is wider than one FFT
+          // bin; "meyda" uses the extractor's own whole-spectrum chroma. See
+          // lib/audio/chroma.ts for why the band exists.
+          const frameChroma =
+            chromaFrom === "banded"
+              ? spectrum
+                ? chromaFromSpectrum(spectrum, sampleRate, {
+                    frameSize: FRAME_SIZE,
+                  })
+                : null
+              : extracted.chroma
+                ? Array.from(extracted.chroma)
+                : null
+
+          if (frameChroma) {
             // Kept twice on purpose: per window for the vote, and pooled for the
             // whole-track average the Energy Model features still read.
             segmentChroma.push(frameChroma)
@@ -120,7 +146,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
         fluxSegments.push(segmentFlux)
       }
       if (segmentChroma.length > 0) {
-        chromaSegments.push(averageChroma(segmentChroma))
+        chromaSegments.push(aggregateChroma(segmentChroma))
       }
     }
 
@@ -135,7 +161,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
         fluxMean: mean(fluxSegments.flat()),
         entropyMean: mean(entropy),
         onsetRate: onsetRateFromSegments(fluxSegments, frameRateHz),
-        chroma: averageChroma(allChromaFrames),
+        chroma: aggregateChroma(allChromaFrames),
         chromaSegments,
         frameCount: rms.length,
         // What the frames actually covered, so a reader of these numbers knows

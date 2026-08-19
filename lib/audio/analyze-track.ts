@@ -17,8 +17,10 @@ import {
   DEFAULT_KEY_PROFILES,
   type KeyProfileSet,
 } from "./key-detection"
+import { DEFAULT_CHROMA_METHOD } from "./analysis-types"
 import type {
   AudioFeatures,
+  ChromaMethod,
   TrackAnalysis,
   WorkerRequest,
   WorkerResponse,
@@ -93,14 +95,15 @@ export function disposeAudioWorker(): void {
 
 function extractFeatures(
   channels: Float32Array[],
-  sampleRate: number
+  sampleRate: number,
+  chromaMethod: ChromaMethod
 ): Promise<{ features: AudioFeatures; analyzeMs: number }> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
   const active = getWorker()
 
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject })
-    const request: WorkerRequest = { id, channels, sampleRate }
+    const request: WorkerRequest = { id, channels, sampleRate, chromaMethod }
     // Transferred rather than cloned: a 5-minute stereo track is ~100 MB of
     // Float32, and cloning it would cost more than the analysis.
     active.postMessage(
@@ -120,6 +123,13 @@ export interface AnalyzeOptions {
    * having this choice settled by an assertion in a comment.
    */
   keyProfiles?: KeyProfileSet
+  /**
+   * How the pitch-class profile is built. Same reasoning as `keyProfiles`: the
+   * band-limited method has a mechanism behind it, but so did Temperley's
+   * profiles, and those made the numbers worse — so the harness runs both and the
+   * measurement decides.
+   */
+  chromaMethod?: ChromaMethod
 }
 
 /**
@@ -188,7 +198,8 @@ export async function analyzeAudioFile(
     const channels = copyChannels(buffer)
     const { features, analyzeMs } = await extractFeatures(
       channels,
-      buffer.sampleRate
+      buffer.sampleRate,
+      options.chromaMethod ?? DEFAULT_CHROMA_METHOD
     )
     base.featuresMs = analyzeMs
     base.features = features
