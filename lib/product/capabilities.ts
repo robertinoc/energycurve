@@ -97,7 +97,11 @@ export const CAPABILITIES = {
 
   // ── PRO+: professional workflow ───────────────────────────────────────────
   custom_curve_templates: { minPlan: "pro_plus", status: "shipped" },
-  residency_mode: { minPlan: "pro_plus", status: "planned" },
+  residency_mode: {
+    minPlan: "pro_plus",
+    status: "shipped",
+    note: "Needs a venue on the playlist and a set marked as played at that same venue; without both it reports nothing. Gated in services/residency-service.ts via the playlist page.",
+  },
   b2b_sets: { minPlan: "pro_plus", status: "planned" },
   gig_mode: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
   global_library: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
