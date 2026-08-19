@@ -71,29 +71,47 @@ implemented, and nobody would know they were invented rather than measured.
 
 ## How to fit it
 
-The labelled dataset already exists and costs nothing: **Mixed In Key writes its
-own 1–10 energy into the tags**, and the import path already reads those tags.
-Every analysed file that carries a MIK energy is one training row of
-`(features) → (label)`.
+> **Corrected 19 Aug 2026.** This section used to say the labelled dataset
+> "already exists and costs nothing" because **Mixed In Key writes its own 1–10
+> energy into the tags**. That premise is false for this project: the owner has
+> never used Mixed In Key, so no such corpus exists here and none will appear. The
+> plan below replaces it. Everything about the *form* of the model above is
+> unaffected.
 
-1. Run the analysis harness at `/backstage/audio-spike` over a library with MIK
-   energies in the tags. A few hundred tracks across at least three genres —
-   a single-genre corpus fits a genre, not a model.
-2. Export `(tempo, rmsMean, fluxMean, entropyMean, onsetRate, mikEnergy)` per
-   track.
-3. Fit by ordinary least squares. Hold out 20% and report the error on the
-   holdout, not on the training set.
-4. **The bar to beat is the current model, not zero.** Score the same holdout
-   with today's BPM-only model first. If v3 doesn't beat it, it doesn't ship —
-   a more complicated model that predicts no better is strictly worse.
-5. Write the fitted coefficients and both error figures into this document, and
-   only then into `lib/product/strategy.ts`.
+Labels come from a listener rating tracks by ear, in the harness. That is not a
+lesser substitute. The quantity being predicted is *arousal* — how activating the
+music feels — a perceptual construct with no instrument to read it off. Mixed In
+Key's numbers were themselves a heuristic somebody chose: a convenient reference,
+not a ground truth. A working DJ rating tracks from the genre they actually play
+is a defensible source, and better matched to this catalogue than a
+general-purpose tool calibrated on everything.
 
-Where MIK and v3 disagree, MIK is the label but not necessarily right — it is
-one vendor's opinion, fitted to their own catalogue. The goal is agreeing with
-it closely enough to be trusted, then extending to the files it says nothing
-about, which is the whole point: the tracks with no tags are the ones the user
-came here with.
+1. Analyse a folder at `/backstage/audio-spike`, then rate each track 1–10 in the
+   **Energy by ear** column while listening to it. Aim across the whole scale, not
+   just the peak-time material: the panel names which ratings still have no
+   example, because a corpus rated only 7–8 fits a model that can only answer 7–8.
+2. `Copy labels JSON`. Each entry already pairs the rating with the features
+   measured for that same file, so there is nothing to join.
+3. Feed it to `fitEnergyModelV3` (`lib/engine/energy-model-v3.ts`). It
+   standardises against the training rows only, holds out every fifth row, and
+   fits by ordinary least squares on the logit of the rating — the link is
+   inverted first, so the thing being fitted really is linear in the features.
+4. **The bar to beat is the current model, not zero.** `fitEnergyModelV3` returns
+   `bpmBaselineMae` — today's BPM-only model scored on the same holdout — next to
+   `holdoutMae`, so the comparison can't be forgotten. If v3 doesn't beat it, it
+   doesn't ship: a more complicated model that predicts no better is strictly
+   worse.
+5. Write the fitted weights and both error figures into this document, and only
+   then into `ENERGY_MODEL_V3`.
+
+Until step 5 happens, `ENERGY_MODEL_V3` is `null` and the scorer is inert — a
+track carrying features still resolves from BPM, and a test pins that. The
+coefficients stay absent rather than plausible, for the reason stated above.
+
+A caveat worth carrying into the fit: one person's ratings are one person's
+ratings. They encode a single taste and a single genre range, which is exactly
+what makes them well matched here and exactly what limits how far the model
+generalises. Widening that means more raters, not more tracks.
 
 ## Source precedence, which does not change
 

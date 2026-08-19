@@ -377,6 +377,9 @@ export const ANALYSIS_UI = {
   phaseClosing: { en: "Closing", es: "Closing" },
   // Energy source labels
   sourceManual: { en: "manual", es: "manual" },
+  // "from the audio", not "from AI" or "measured": it says where the number came
+  // from without implying more certainty than a measurement carries.
+  sourceAudio: { en: "from the audio", es: "desde el audio" },
   sourceBpm: { en: "from BPM", es: "desde BPM" },
   sourceBpmLoudness: { en: "from BPM + loudness", es: "desde BPM + volumen" },
   sourceEstimated: { en: "estimated", es: "estimado" },
