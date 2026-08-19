@@ -164,22 +164,64 @@ test.describe("crawlability", () => {
 })
 
 test.describe("health probe", () => {
-  test("answers with a body and a content type", async ({ request }) => {
-    // An uptime monitor reads this. It was reported once as returning an empty
-    // body, which would make the monitor useless while looking configured.
+  /**
+   * What can honestly be asserted here, and what can't.
+   *
+   * This endpoint's whole job is to report whether the database is reachable, and
+   * CI runs with placeholder Supabase credentials — so it answers 503 with
+   * `database: "unreachable"`, which is the *correct* answer in that environment.
+   * Asserting 200 would mean either faking the thing being probed or wiring a real
+   * database into every pull request, and the first defeats the purpose while the
+   * second is a bigger commitment than a health check is worth.
+   *
+   * So these assert the **contract** instead of the verdict, and that turns out to
+   * catch more than the status code did: a route that 404s, a route that throws and
+   * returns an HTML error page, a missing content type — which is the bug that was
+   * actually reported against this endpoint — and a change to the field names an
+   * uptime monitor reads. Whether the database is up is production's question, and
+   * production has a monitor for it.
+   */
+  const OK_OR_DEGRADED = [200, 503]
+
+  test("answers with JSON in the shape a monitor reads", async ({ request }) => {
     const response = await request.get("/api/health")
 
-    expect(response.status()).toBe(200)
+    expect(OK_OR_DEGRADED).toContain(response.status())
     expect(response.headers()["content-type"]).toContain("application/json")
 
     const body = await response.json()
+
+    // Every field a monitor or a human would key off. Renaming one of these
+    // silently breaks whatever is watching.
     expect(body).toHaveProperty("status")
+    expect(body).toHaveProperty("database")
+    expect(body).toHaveProperty("auth")
+    expect(body).toHaveProperty("timestamp")
+
+    // The two values are the two real states, and the pair has to stay consistent:
+    // "ok" with an unreachable database would be the dangerous kind of wrong.
+    expect(["ok", "degraded"]).toContain(body.status)
+    expect(body.status === "ok").toBe(body.database === "ok")
+  })
+
+  test("leaks nothing about the configuration", async ({ request }) => {
+    // A public probe: no counts, no versions, no connection strings. Worth pinning
+    // because the natural way to debug a failing health check is to add detail to
+    // its response, and this is the one endpoint where that's a disclosure.
+    const body = await (await request.get("/api/health")).json()
+
+    expect(Object.keys(body).sort()).toEqual([
+      "auth",
+      "database",
+      "status",
+      "timestamp",
+    ])
   })
 
   test("answers a HEAD request too", async ({ request }) => {
     // Some monitors only send HEAD.
     const response = await request.head("/api/health")
-    expect(response.status()).toBe(200)
+    expect(OK_OR_DEGRADED).toContain(response.status())
   })
 })
 
