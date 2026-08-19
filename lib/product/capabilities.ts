@@ -100,7 +100,7 @@ export const CAPABILITIES = {
   residency_mode: {
     minPlan: "pro_plus",
     status: "shipped",
-    note: "Needs a venue on the playlist and a set marked as played at that same venue; without both it reports nothing. Gated in services/residency-service.ts via the playlist page.",
+    note: "Needs a venue on the playlist and a set marked as played at that same venue; without both it reports nothing. Gated in services/residency-service.ts, called from both the playlist page and the analysis workbench.",
   },
   b2b_sets: { minPlan: "pro_plus", status: "planned" },
   gig_mode: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },

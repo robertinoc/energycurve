@@ -337,10 +337,19 @@ server needed**, with two corrections to the plan.
   HPSS and tuning correction are deliberately not done — the spike report explains
   why, and the order to work in. Still `status: "planned"`, still "Soon" on the
   pricing matrix, because no number justifies otherwise yet.
+- **Residency mode shipped 19 Aug 2026, and it reaches the reorder screen.** The
+  playlist page warns about tracks played recently at the same venue; the analysis
+  workbench additionally flags the ones the *current* order moves **earlier**, which
+  is the only case that is new information. Computed against the live derived order
+  rather than the engine's one-shot suggestion, because by then the DJ has applied,
+  discarded and hand-moved things. It reports and does not intervene: excluding
+  repeats from the optimiser would quietly weaken the curve with no explanation, and
+  sometimes the repeated track is genuinely the one that fixes the set — the room is
+  the DJ's call, the curve is ours.
 - **Still open and worth naming**: Energy Model v3 is specified but unfitted and
-  blocked on a labelled run over a Mixed-In-Key-tagged library — the same run key
-  detection needs, so one session of tagged files unblocks both. Residency mode and
-  collaborative B2B/B3B sets remain the two planned PRO+ capabilities.
+  blocked on a labelled run over a tagged library — the same run key detection
+  needs, so one session of tagged files unblocks both. Collaborative B2B/B3B sets
+  are now the one remaining planned PRO+ capability.
 - **Essentia.js is out** — AGPL-3.0, unusable in a closed-source paid product.
 - **Direct USB export researched and declined** — writing the database is
   solved, but a CDJ needs per-track ANLZ analysis files that only rekordbox
