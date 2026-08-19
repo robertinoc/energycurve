@@ -40,3 +40,12 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      # After the build, reusing its output: the e2e suite runs against `next start`,
+      # not `next dev`, because it asserts on rendered metadata and structured data
+      # and dev-mode output is not what ships.
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
