@@ -22,6 +22,7 @@ import {
   AUDIO_IMPORT_MAX_FILES,
   audioTagsToImportedTrack,
   isAudioFileName,
+  isSystemJunkFile,
   type AudioTagSource,
 } from "@/lib/playlists/parse-audio-tags"
 import {
@@ -208,7 +209,11 @@ export function AudioFilesImport({
 
   async function handleFiles(fileList: FileList | File[]) {
     const all = Array.from(fileList)
-    const audio = all.filter((file) => isAudioFileName(file.name))
+    // Dropped before counting: see isSystemJunkFile. A folder of tracks on a Mac
+    // also contains .DS_Store, and saying "1 file ignored" about it reads as though
+    // something the DJ chose was mishandled.
+    const picked = all.filter((file) => !isSystemJunkFile(file.name))
+    const audio = picked.filter((file) => isAudioFileName(file.name))
 
     if (audio.length === 0) {
       setError(COPY.zeroReadable[locale])
@@ -230,8 +235,8 @@ export function AudioFilesImport({
     setError(null)
     setNotes({
       filtered:
-        audio.length < all.length
-          ? { kept: audio.length, total: all.length }
+        audio.length < picked.length
+          ? { kept: audio.length, total: picked.length }
           : null,
       truncated: kept.length < unique.length,
       unreadable: 0,

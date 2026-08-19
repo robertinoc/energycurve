@@ -26,6 +26,38 @@ export const AUDIO_FILE_EXTENSIONS = [
   "opus",
 ] as const
 
+/**
+ * Files an operating system leaves inside a folder that the person who picked it
+ * did not put there.
+ *
+ * Kept apart from "not audio" because reporting them is worse than useless. Pick a
+ * folder of 23 tracks on a Mac and it also contains `.DS_Store`; telling the user
+ * "1 non-audio file ignored" makes it look as though something they chose was
+ * mishandled, when nothing they chose was even involved. A stray `.pdf` or `.jpg`
+ * a DJ actually left in the folder is different — that one is worth a mention,
+ * because they might have meant to include it.
+ */
+const SYSTEM_JUNK_FILENAMES = new Set([
+  ".ds_store",
+  "thumbs.db",
+  "desktop.ini",
+  "icon\r",
+  ".localized",
+])
+
+/**
+ * True for OS bookkeeping files, which should be dropped without comment.
+ *
+ * Dotfiles in general: resource forks (`._track.mp3`), Spotlight and Dropbox
+ * metadata, editor leftovers. None of it is ever a track, and a leading dot is the
+ * long-standing convention for "not user content".
+ */
+export function isSystemJunkFile(name: string): boolean {
+  const base = name.split("/").pop() ?? name
+
+  return base.startsWith(".") || SYSTEM_JUNK_FILENAMES.has(base.toLowerCase())
+}
+
 /** Client-side cap on files per import; the server caps tracks at 500. */
 export const AUDIO_IMPORT_MAX_FILES = 100
 

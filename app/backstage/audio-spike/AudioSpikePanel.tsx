@@ -19,6 +19,7 @@ import {
   CircleHelp,
   FolderOpen,
   Music4,
+  TriangleAlert,
   XCircle,
 } from "lucide-react"
 
@@ -58,7 +59,10 @@ import {
   type SortKey,
   type Verdict,
 } from "@/lib/audio/spike-report"
-import { isAudioFileName } from "@/lib/playlists/parse-audio-tags"
+import {
+  isAudioFileName,
+  isSystemJunkFile,
+} from "@/lib/playlists/parse-audio-tags"
 import { cn } from "@/lib/utils"
 
 /** 1…10, derived from the label bounds so the picker can't drift from the scale. */
@@ -84,7 +88,12 @@ export function AudioSpikePanel() {
 
   const [rows, setRows] = useState<TrackAnalysis[]>([])
   const [running, setRunning] = useState(false)
-  const [progress, setProgress] = useState({ done: 0, total: 0 })
+  const [progress, setProgress] = useState({
+    done: 0,
+    total: 0,
+    /** What's being analysed right now — the thing that shows the run is alive. */
+    current: "",
+  })
   const [worstFreezeMs, setWorstFreezeMs] = useState<number | null>(null)
   const [notes, setNotes] = useState<SelectionNotes>({
     skippedNonAudio: 0,
@@ -196,7 +205,11 @@ export function AudioSpikePanel() {
 
   async function run(fileList: FileList | File[]) {
     const all = Array.from(fileList)
-    const audio = all.filter((file) => isAudioFileName(file.name))
+    // The OS's own bookkeeping (.DS_Store and friends) is dropped before anything
+    // is counted. It was never picked by a person, so reporting it as "ignored"
+    // only makes a clean folder look like it had a problem.
+    const picked = all.filter((file) => !isSystemJunkFile(file.name))
+    const audio = picked.filter((file) => isAudioFileName(file.name))
 
     // Dedupe by path + size. Picking files *and* the folder that contains them
     // otherwise analyses each one twice, which quietly doubles the batch and
@@ -220,7 +233,7 @@ export function AudioSpikePanel() {
     }
 
     setNotes({
-      skippedNonAudio: all.length - audio.length,
+      skippedNonAudio: picked.length - audio.length,
       skippedDuplicates: audio.length - unique.length,
       truncated: unique.length - batch.length,
     })
@@ -232,7 +245,7 @@ export function AudioSpikePanel() {
 
     setRows([])
     setRunning(true)
-    setProgress({ done: 0, total: batch.length })
+    setProgress({ done: 0, total: batch.length, current: batch[0]?.name ?? "" })
     setWorstFreezeMs(null)
 
     // Main-thread responsiveness probe. requestAnimationFrame is throttled when
@@ -273,7 +286,13 @@ export function AudioSpikePanel() {
         chromaMethod,
       })
       setRows((current) => [...current, analysis])
-      setProgress({ done: index + 1, total: batch.length })
+      setProgress({
+        done: index + 1,
+        total: batch.length,
+        // The next file, so the label names what is being worked on rather than
+        // what just finished.
+        current: batch[index + 1]?.name ?? "",
+      })
     }
 
     probing = false
@@ -369,13 +388,13 @@ export function AudioSpikePanel() {
               ))}
             </select>
           </label>
-          {running ? (
-            <span className="text-sm text-ec-text-dim">
-              Analysing {progress.done}/{progress.total}… keep this tab in front or
-              the freeze probe can&apos;t measure
-            </span>
-          ) : null}
         </div>
+
+        {/* A long run has to look like a long run. The previous version of this was
+            one line of dim grey text, which reads as a frozen page rather than as
+            work in progress — and the instruction inside it (keep the tab in front)
+            is load-bearing: without it the freeze probe measures nothing. */}
+        {running ? <AnalysisProgress progress={progress} /> : null}
 
         <SelectionSummary notes={notes} analysed={report.tracks + report.failed} />
       </div>
@@ -777,6 +796,78 @@ function ComparisonCell({
         <span className="ml-1 text-[0.7rem] text-ec-text-dim">no tag</span>
       ) : null}
     </td>
+  )
+}
+
+/**
+ * What a run in progress looks like.
+ *
+ * Three things a reader needs and a dim one-liner didn't give them: that work is
+ * happening at all (a bar that moves and a dot that pulses), how far along it is
+ * (count, percentage, and the file being worked on), and the one instruction that
+ * decides whether the numbers are worth anything.
+ *
+ * That last part is why the warning is a bordered amber panel rather than a note:
+ * `requestAnimationFrame` is throttled in a background tab, so a run watched from
+ * another window reports a freeze of 0 ms — indistinguishable from "never froze",
+ * and the spike has already been burned by exactly that. An instruction that
+ * invalidates the measurement when ignored cannot be styled like a footnote.
+ */
+function AnalysisProgress({
+  progress,
+}: {
+  progress: { done: number; total: number; current: string }
+}) {
+  const percent =
+    progress.total > 0
+      ? Math.round((progress.done / progress.total) * 100)
+      : 0
+
+  return (
+    <div className="mt-4 rounded-xl border border-ec-border-strong bg-ec-raised p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="flex items-center gap-2 text-sm font-medium text-ec-text">
+          {/* Two spans: the outer one pings outward, the inner is a solid dot, so
+              the signal reads as alive even when the bar sits on a slow file. */}
+          <span className="relative flex size-2.5">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-ec-violet opacity-75" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-ec-violet" />
+          </span>
+          Analysing {progress.done} of {progress.total}
+        </span>
+        <span className="text-sm tabular-nums text-ec-text-dim">{percent}%</span>
+      </div>
+
+      <div
+        className="mt-3 h-2 w-full overflow-hidden rounded-full bg-ec-sunken"
+        role="progressbar"
+        aria-valuenow={progress.done}
+        aria-valuemin={0}
+        aria-valuemax={progress.total}
+        aria-label="Analysis progress"
+      >
+        <div
+          className="h-full rounded-full bg-ec-gradient transition-[width] duration-300 ease-out"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+
+      {progress.current ? (
+        <p className="mt-2 truncate text-xs text-ec-text-muted" title={progress.current}>
+          {progress.current}
+        </p>
+      ) : null}
+
+      <div className="mt-3 flex items-start gap-2 rounded-lg border border-ec-amber/40 bg-ec-amber/10 px-3 py-2">
+        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-ec-amber" />
+        <p className="text-xs text-ec-text">
+          <strong className="font-medium">Keep this tab in front.</strong> The
+          freeze probe uses animation frames, and the browser throttles those in a
+          background tab — look away and it reports 0&nbsp;ms, which is
+          indistinguishable from never having frozen.
+        </p>
+      </div>
+    </div>
   )
 }
 

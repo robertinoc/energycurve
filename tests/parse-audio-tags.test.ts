@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   audioTagsToImportedTrack,
   isAudioFileName,
+  isSystemJunkFile,
   splitFilenameToArtistTitle,
   type AudioTagSource,
 } from "@/lib/playlists/parse-audio-tags"
@@ -148,5 +149,49 @@ describe("audioTagsToImportedTrack", () => {
       tags({ title: "A", bpm: "128,5" })
     )
     expect(track.bpm).toBe(128.5)
+  })
+})
+
+describe("system junk files", () => {
+  it("recognises the files an OS leaves in a folder", () => {
+    for (const name of [
+      ".DS_Store",
+      ".ds_store",
+      "Thumbs.db",
+      "desktop.ini",
+      ".localized",
+      "._track.mp3",
+      ".hidden",
+    ]) {
+      expect(isSystemJunkFile(name), name).toBe(true)
+    }
+  })
+
+  it("looks at the basename, not the path", () => {
+    // Folder picks arrive with webkitRelativePath-style names.
+    expect(isSystemJunkFile("My Set/.DS_Store")).toBe(true)
+    expect(isSystemJunkFile("My Set/track.mp3")).toBe(false)
+  })
+
+  it("leaves real files alone, audio or not", () => {
+    // A stray PDF the DJ actually put there is worth reporting; junk isn't. So
+    // this must stay false for anything a person could plausibly have chosen.
+    for (const name of [
+      "01 - Track.mp3",
+      "cover.jpg",
+      "setlist.pdf",
+      "notes.txt",
+      "track.with.dots.flac",
+    ]) {
+      expect(isSystemJunkFile(name), name).toBe(false)
+    }
+  })
+
+  it("is a separate question from being audio", () => {
+    // The two filters compose: junk is dropped silently, non-audio is reported.
+    expect(isSystemJunkFile("cover.jpg")).toBe(false)
+    expect(isAudioFileName("cover.jpg")).toBe(false)
+    expect(isSystemJunkFile("._real.mp3")).toBe(true)
+    expect(isAudioFileName("._real.mp3")).toBe(true)
   })
 })
