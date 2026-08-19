@@ -58,6 +58,8 @@ import {
   type Measure,
   type SortKey,
   type Verdict,
+  variantAccuracy,
+  formatVariantAccuracy,
 } from "@/lib/audio/spike-report"
 import {
   isAudioFileName,
@@ -512,6 +514,8 @@ export function AudioSpikePanel() {
               onEnded={() => setPlaying(null)}
               className="hidden"
             />
+            <VariantMatrix rows={rows} />
+
             <table className="w-full text-left text-sm">
                 <thead className="text-xs uppercase tracking-wide text-ec-text-dim">
                   <tr className="border-b border-ec-border">
@@ -864,6 +868,104 @@ function AnalysisProgress({
  * Wrapping pairs give up a little scannability down a column and buy back every
  * value being visible at once, which is the trade this tool wants.
  */
+/**
+ * How every chroma × profile combination did, from the one run.
+ *
+ * The reason this exists rather than a picker and three runs: comparing variants
+ * used to mean Robertino running the harness once per variant and sending
+ * screenshots, which I then read by eye. That is slow for him and it puts a
+ * transcription step between the measurement and the conclusion. Every vote here
+ * comes from chroma the same frame pass already produced, so the whole comparison
+ * is free.
+ */
+function VariantMatrix({ rows }: { rows: TrackAnalysis[] }) {
+  const [copied, setCopied] = useState(false)
+  const matrix = useMemo(() => variantAccuracy(rows), [rows])
+
+  if (matrix.length === 0) {
+    return null
+  }
+
+  const best = matrix[0]
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(formatVariantAccuracy(matrix))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  return (
+    <section className="mb-5 rounded-xl border border-ec-border bg-ec-raised/40 p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="font-heading text-sm font-bold">
+          Key accuracy by variant
+        </h3>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={copy}
+          className="h-7 px-2 text-xs"
+          title="Copy the table as text, so a result can be reported without a screenshot"
+        >
+          {copied ? "Copied" : "Copy as text"}
+        </Button>
+      </div>
+
+      <table className="mt-3 w-full text-left text-xs">
+        <thead className="uppercase tracking-wide text-ec-text-dim">
+          <tr>
+            <th className="py-1 pr-3 font-medium">Chroma</th>
+            <th className="py-1 pr-3 font-medium">Profiles</th>
+            <th className="py-1 pr-3 font-medium">Matches tag</th>
+            {/* Sits beside the hit rate because it catches what the hit rate hides:
+                a variant that answers the same key everywhere can look respectable
+                on a small tagged sample while having lost all discrimination. */}
+            <th className="py-1 font-medium">Spread of answers</th>
+          </tr>
+        </thead>
+        <tbody>
+          {matrix.map((row) => {
+            const percent =
+              row.comparable > 0
+                ? `${Math.round((row.hits / row.comparable) * 100)}%`
+                : "n/a"
+
+            return (
+              <tr
+                key={`${row.chroma}|${row.profiles}`}
+                className="border-t border-ec-border/60"
+              >
+                <td className="py-1.5 pr-3">{row.chroma}</td>
+                <td className="py-1.5 pr-3 text-ec-text-dim">{row.profiles}</td>
+                <td className="py-1.5 pr-3 tabular-nums">
+                  {row.hits}/{row.comparable}{" "}
+                  <span className="text-ec-text-dim">({percent})</span>
+                </td>
+                <td className="py-1.5 tabular-nums text-ec-text-dim">
+                  {row.topKey
+                    ? `${row.distinctKeys} keys · top ${row.topKey.key} ×${row.topKey.count}`
+                    : "—"}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+
+      <p className="mt-3 text-xs text-ec-text-muted">
+        Best on this library: <strong className="text-ec-text">{best.chroma}</strong>{" "}
+        with {best.profiles}. Worth trusting only if its spread of answers is also
+        wide — a combination that names one key for most of a library agrees with the
+        tags by luck, not by reading the music.
+      </p>
+    </section>
+  )
+}
+
 function Signals({ row }: { row: TrackAnalysis }) {
   const seconds = Math.round(row.durationSeconds)
 

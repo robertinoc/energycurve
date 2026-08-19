@@ -22,6 +22,10 @@ export default defineConfig({
     // ours — inflating the reported count and surfacing failures that don't
     // exist in this tree. Same reason .claude/** is in the eslint ignores.
     // (CI clones fresh, so it always saw the real number; only local runs lied.)
-    exclude: [...defaultExclude, "**/.claude/**", "**/.next/**"],
+    // e2e/ belongs to Playwright. Its files end in .spec.ts, which matches
+    // Vitest's default glob, so without this Vitest picks them up and
+    // `test.describe` throws — Playwright's runner isn't there to receive it.
+    // The two runners have to be told about each other exactly once, here.
+    exclude: [...defaultExclude, "**/.claude/**", "**/.next/**", "e2e/**"],
   },
 })

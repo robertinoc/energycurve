@@ -146,3 +146,51 @@ Same 10 queries, same method:
    competitive clock.
 4. Does our FAQ get cited in an AI answer on any question-shaped query? That's
    the AEO signal proper.
+
+---
+
+## Auditoría del español después del routing /es (19/08/2026)
+
+Revisión de qué quedó bien y qué no, ahora que las rutas en español existen.
+
+### Correcto
+
+- **Título y descripción por locale.** `/es` sirve *"EnergyCurve — Análisis de
+  energía y orden de tracks para DJs"* con su propia descripción, no la inglesa.
+  Verificado sobre el HTML del build de producción, no sobre el código.
+- **`lang="es"`** en el documento, y `hreflang` para `en` y `es` en las dos versiones.
+- **JSON-LD en el idioma de la página**, incluido el FAQPage — que es la apuesta de
+  AEO, porque las respuestas viajan en el HTML aunque el `<details>` esté cerrado.
+- Cubierto ahora por `e2e/public-surface.spec.ts`, así que una regresión en cualquiera
+  de estos rompe el CI en vez de aparecer en una ronda manual.
+
+### Deliberadamente no arreglado: `meta keywords`
+
+Las rutas `/es` sirven la lista de keywords en inglés, porque `SEO_KEYWORDS` es
+global. Lo dejé así a propósito.
+
+**Google ignora `meta keywords` desde 2009** y lo dijo públicamente; Bing lo trata
+como señal de spam si acaso. Traducir esa lista se vería como trabajo de SEO y no
+movería nada — sería teatro, y peor: dejaría la sensación de que el español ya está
+optimizado cuando lo que falta es contenido. Si algún día se saca la etiqueta
+entera, mejor.
+
+Lo que sí importa para las consultas 8 y 9 del baseline es contenido en español, y de
+eso no había nada.
+
+### Sembrado, esperando infraestructura
+
+`content/blog/es/` tiene los cinco artículos escritos y listos para publicar, uno por
+cada hueco medido en "Real gaps" más arriba. Están en markdown con frontmatter y
+`publishedAt: null`; no dependen de dónde termine viviendo el blog, que sigue siendo
+una decisión abierta.
+
+Escribirlos antes de decidir la infraestructura es a propósito: la tarea llevaba
+bloqueada desde el 12/08 esperando una decisión que el texto no necesita.
+
+### Sigue siendo tuyo y no lo puedo hacer yo
+
+- **Search Console** — necesita tu cuenta. Sin esto todo el SEO es a ciegas.
+- **Dónde vive el blog** — misma decisión que en Migbirds: repo propio o dentro de la
+  app.
+- **La colisión con energycurve.com** (la agritech) — decisión de marca.

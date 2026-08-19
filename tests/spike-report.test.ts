@@ -8,12 +8,15 @@ import {
   keysAgree,
   LONG_TRACK_SECONDS,
   sortTracks,
+  variantAccuracy,
+  formatVariantAccuracy,
 } from "@/lib/audio/spike-report"
 
 function track(overrides: Partial<TrackAnalysis> = {}): TrackAnalysis {
   return {
     fileName: "track.mp3",
     fileSizeBytes: 5_000_000,
+    keyByVariant: {},
     durationSeconds: 300,
     decodeMs: 300,
     bpmMs: 250,
@@ -321,5 +324,82 @@ describe("recorded sets are listed but never counted", () => {
     expect(report.failed).toBe(1)
     expect(report.longFiles).toBe(1)
     expect(report.tracks).toBe(3)
+  })
+})
+
+describe("variant accuracy matrix", () => {
+  function withVariants(
+    taggedKey: string | null,
+    keys: Record<string, string | null>
+  ) {
+    return track({ taggedKey, keyByVariant: keys })
+  }
+
+  it("scores each combination against the files' own tags", () => {
+    const rows = [
+      withVariants("1m", { "meyda|krumhansl": "Am", "banded|krumhansl": "C" }),
+      withVariants("12m", { "meyda|krumhansl": "Dm", "banded|krumhansl": "C" }),
+    ]
+
+    const matrix = variantAccuracy(rows)
+    const meyda = matrix.find((row) => row.chroma === "meyda")!
+    const banded = matrix.find((row) => row.chroma === "banded")!
+
+    expect(meyda.hits).toBe(2)
+    expect(meyda.comparable).toBe(2)
+    expect(banded.hits).toBe(0)
+  })
+
+  it("sorts the best combination first", () => {
+    const rows = [
+      withVariants("1m", { "meyda|krumhansl": "C", "banded|krumhansl": "Am" }),
+      withVariants("1m", { "meyda|krumhansl": "C", "banded|krumhansl": "Am" }),
+    ]
+
+    expect(variantAccuracy(rows)[0].chroma).toBe("banded")
+  })
+
+  it("ignores tracks with no tag when scoring", () => {
+    const rows = [
+      withVariants(null, { "meyda|krumhansl": "Am" }),
+      withVariants("1m", { "meyda|krumhansl": "Am" }),
+    ]
+
+    const [entry] = variantAccuracy(rows)
+    expect(entry.comparable).toBe(1)
+    expect(entry.hits).toBe(1)
+  })
+
+  it("counts concentration over every track, tagged or not", () => {
+    // The check the hit rate hides: a variant answering the same key everywhere can
+    // look fine on a small tagged sample while having lost all discrimination. The
+    // untagged tracks are evidence too.
+    const rows = [
+      withVariants("1m", { "meyda|krumhansl": "Am" }),
+      withVariants(null, { "meyda|krumhansl": "Am" }),
+      withVariants(null, { "meyda|krumhansl": "Am" }),
+      withVariants(null, { "meyda|krumhansl": "Em" }),
+    ]
+
+    const [entry] = variantAccuracy(rows)
+    expect(entry.distinctKeys).toBe(2)
+    expect(entry.topKey).toEqual({ key: "Am", count: 3 })
+  })
+
+  it("reports n/a rather than 0% when nothing is comparable", () => {
+    const rows = [withVariants(null, { "meyda|krumhansl": "Am" })]
+    expect(formatVariantAccuracy(variantAccuracy(rows))).toContain("n/a")
+  })
+
+  it("formats as pasteable text", () => {
+    const rows = [withVariants("1m", { "meyda|krumhansl": "Am" })]
+    const text = formatVariantAccuracy(variantAccuracy(rows))
+
+    expect(text).toContain("meyda + krumhansl: 1/1 = 100%")
+    expect(text).toContain("distinct")
+  })
+
+  it("says so when there is nothing to report", () => {
+    expect(formatVariantAccuracy([])).toContain("analyse some files first")
   })
 })
