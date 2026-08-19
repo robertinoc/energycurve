@@ -549,6 +549,16 @@ export const DASHBOARD_COPY = {
       en: "Notes about this set — venue, vibe, what you're going for…",
       es: "Notas sobre este set — el lugar, la vibra, lo que buscás…",
     },
+    venueLabel: { en: "Venue", es: "Club" },
+    venuePlaceholder: { en: "Club X", es: "Club X" },
+    /**
+     * Says what it's for and what it costs, because a blank field with no
+     * explanation gets left blank — and left blank, residency mode never fires.
+     */
+    venueHint: {
+      en: "Fill this in and sets you mark as played here won't be suggested back to you next time. Leave it blank and nothing changes.",
+      es: "Si lo completás, los sets que marques como tocados acá no te van a volver a ser sugeridos la próxima fecha. Si lo dejás vacío, no cambia nada.",
+    },
     slotLabel: { en: "Your slot (optional)", es: "Tu horario (opcional)" },
     slotStartLabel: { en: "From", es: "Desde" },
     slotEndLabel: { en: "To", es: "Hasta" },

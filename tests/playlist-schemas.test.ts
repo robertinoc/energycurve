@@ -6,6 +6,7 @@ import {
   createTrackInputSchema,
   createTracklistImportSchema,
   updatePlaylistDetailsSchema,
+  PLAYLIST_VENUE_MAX_LENGTH,
 } from "@/lib/playlists/schemas"
 
 describe("createPlaylistSchema", () => {
@@ -304,5 +305,51 @@ describe("updatePlaylistDetailsSchema — curve templates", () => {
 
     expect(result.targetShape).toBeNull()
     expect(result.targetTemplateId).toBeNull()
+  })
+})
+
+describe("venue on the details form", () => {
+  const base = { name: "Set", description: "" }
+
+  it("stores a trimmed venue", () => {
+    const result = updatePlaylistDetailsSchema("en").safeParse({
+      ...base,
+      venue: "  Club X  ",
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.venue).toBe("Club X")
+  })
+
+  it("turns an empty venue into null, not an empty string", () => {
+    // The residency check treats an unknown venue as "takes no part". An empty
+    // string would read as a venue named nothing, and would match other blanks.
+    for (const value of ["", "   "]) {
+      const result = updatePlaylistDetailsSchema("en").safeParse({
+        ...base,
+        venue: value,
+      })
+      expect(result.data?.venue).toBeNull()
+    }
+  })
+
+  it("leaves the stored venue alone when the field is absent", () => {
+    // Same contract as the slot fields: a user on a stale JS bundle submits a form
+    // without this input, and a required field would silently wipe a venue they
+    // never touched.
+    const result = updatePlaylistDetailsSchema("en").safeParse(base)
+
+    expect(result.success).toBe(true)
+    expect(result.data).not.toHaveProperty("venue")
+  })
+
+  it("truncates rather than rejecting an over-long venue", () => {
+    const result = updatePlaylistDetailsSchema("en").safeParse({
+      ...base,
+      venue: "C".repeat(200),
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.venue?.length).toBe(PLAYLIST_VENUE_MAX_LENGTH)
   })
 })

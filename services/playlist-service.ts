@@ -290,6 +290,8 @@ export async function updatePlaylistDetails(
     /** Minutes from midnight. Both or neither — the DB constraint enforces it too. */
     slotStartMinutes?: number | null
     slotEndMinutes?: number | null
+    /** Where it's played, for residency checks. Same absent/null contract. */
+    venue?: string | null
     /** Null clears it back to the derived target; absent leaves it untouched. */
     targetShape?: CurveShape | null
     /** Same contract. Set together with targetShape, since one control feeds both. */
@@ -318,6 +320,7 @@ export async function updatePlaylistDetails(
       ...(input.slotEndMinutes !== undefined
         ? { slot_end_minutes: input.slotEndMinutes }
         : {}),
+      ...(input.venue !== undefined ? { venue: input.venue } : {}),
       ...(input.targetShape !== undefined
         ? { target_shape: input.targetShape }
         : {}),

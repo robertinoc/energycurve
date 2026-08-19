@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { CURVE_SHAPE_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
+import { PLAYLIST_VENUE_MAX_LENGTH } from "@/lib/playlists/schemas"
 import { formatClock } from "@/lib/engine/slot"
 import { CURVE_SHAPES, type CurveShape } from "@/lib/product/strategy"
 import { PLAYLIST_DESCRIPTION_MAX_LENGTH } from "@/lib/playlists/schemas"
@@ -27,6 +28,7 @@ export function PlaylistHeaderEdit({
   playlistId,
   name,
   description,
+  venue,
   slotStartMinutes,
   slotEndMinutes,
   targetShape,
@@ -38,6 +40,7 @@ export function PlaylistHeaderEdit({
   name: string
   description: string | null
   /** Minutes from midnight, or null when the DJ hasn't declared a slot. */
+  venue: string | null
   slotStartMinutes: number | null
   slotEndMinutes: number | null
   /** Declared shape, or null when the target is derived from genre + context. */
@@ -55,6 +58,7 @@ export function PlaylistHeaderEdit({
       playlistId={playlistId}
       name={name}
       description={description}
+      venue={venue}
       slotStartMinutes={slotStartMinutes}
       slotEndMinutes={slotEndMinutes}
       targetShape={targetShape}
@@ -91,6 +95,7 @@ function HeaderEditForm({
   playlistId,
   name,
   description,
+  venue,
   slotStartMinutes,
   slotEndMinutes,
   targetShape,
@@ -102,6 +107,7 @@ function HeaderEditForm({
   playlistId: string
   name: string
   description: string | null
+  venue: string | null
   slotStartMinutes: number | null
   slotEndMinutes: number | null
   targetShape: CurveShape | null
@@ -163,6 +169,23 @@ function HeaderEditForm({
           placeholder={COPY.descriptionPlaceholder[locale]}
           className="border-white/12 text-sm text-white placeholder:text-white/28"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="playlist-edit-venue" className="text-white/72">
+          {COPY.venueLabel[locale]}
+        </Label>
+        <Input
+          id="playlist-edit-venue"
+          name="venue"
+          defaultValue={venue ?? ""}
+          maxLength={PLAYLIST_VENUE_MAX_LENGTH}
+          placeholder={COPY.venuePlaceholder[locale]}
+          className="border-white/12 text-sm text-white placeholder:text-white/28"
+        />
+        <p className="text-xs leading-5 text-white/40">
+          {COPY.venueHint[locale]}
+        </p>
       </div>
 
       {/*

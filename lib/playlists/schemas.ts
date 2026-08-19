@@ -167,6 +167,13 @@ export function createTrackInputSchema(locale: SiteLocale) {
 
 export const PLAYLIST_DESCRIPTION_MAX_LENGTH = 500
 
+/**
+ * A venue label, not an address. Long enough for "Club X, Buenos Aires" and short
+ * enough that it stays a label — the residency check compares these to each other
+ * and nothing else parses them.
+ */
+export const PLAYLIST_VENUE_MAX_LENGTH = 80
+
 /** Rename + optional description for an existing playlist (V3 feedback). */
 export function updatePlaylistDetailsSchema(locale: SiteLocale) {
   const messages = getPlaylistValidationMessages(locale)
@@ -192,6 +199,16 @@ export function updatePlaylistDetailsSchema(locale: SiteLocale) {
     // A user whose browser still holds the previous JS bundle submits a form
     // without these fields, and a required field would quietly wipe a slot they
     // never touched.
+    // Where the set is played, for residency checks. Optional for the same reason as
+    // the slot fields: absent means "leave it alone", so a stale JS bundle can't wipe
+    // a venue the user never touched.
+    //
+    // Trimmed to null when empty rather than stored as "", because the residency
+    // check treats an unknown venue as "takes no part" and an empty string would
+    // read as a venue named nothing.
+    venue: lenientText(PLAYLIST_VENUE_MAX_LENGTH)
+      .transform((value) => value.trim() || null)
+      .optional(),
     slotStart: z
       .string()
       .transform((value) => parseClock(value))
