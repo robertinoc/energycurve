@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   RESIDENCY_LOOKBACK_SETS,
   normalizeVenue,
+  residencyInSuggestedOrder,
   residencyRepeats,
   sameVenue,
   summarizeResidency,
@@ -183,5 +184,53 @@ describe("summarising", () => {
       summarizeResidency("Club X", [track("A", "B", 1)], history.slice(0, 2))
         .setsConsidered
     ).toBe(2)
+  })
+})
+
+describe("what the suggested order does with recent repeats", () => {
+  const repeat = (position: number, name: string, setsAgo = 1) => ({
+    position,
+    artist: "A",
+    name,
+    setsAgo,
+    playedAt: "2026-08-01T02:00:00Z",
+    playlistName: "Aug",
+  })
+
+  it("reports where each repeat lands in the new order", () => {
+    // Suggested order moves original #3 to the front.
+    const result = residencyInSuggestedOrder([repeat(3, "Emergency")], [3, 1, 2])
+
+    expect(result[0].suggestedPosition).toBe(1)
+    expect(result[0].promoted).toBe(true)
+  })
+
+  it("flags only the ones the suggestion moves earlier", () => {
+    // The actionable fact: the optimiser promoting a track the room heard last time.
+    const result = residencyInSuggestedOrder(
+      [repeat(1, "Early"), repeat(3, "Late")],
+      [2, 3, 1]
+    )
+
+    expect(result.find((r) => r.name === "Late")!.promoted).toBe(true)
+    expect(result.find((r) => r.name === "Early")!.promoted).toBe(false)
+  })
+
+  it("says nothing about a repeat the suggestion dropped", () => {
+    expect(residencyInSuggestedOrder([repeat(9, "Gone")], [1, 2, 3])).toEqual([])
+  })
+
+  it("does not change the order it was given", () => {
+    // It reports; it doesn't intervene. Excluding repeats from the optimiser would
+    // quietly weaken the curve with no explanation, and sometimes the repeated track
+    // is genuinely the one that fixes the set.
+    const order = [3, 1, 2]
+    residencyInSuggestedOrder([repeat(3, "Emergency")], order)
+    expect(order).toEqual([3, 1, 2])
+  })
+
+  it("degrades on empty input", () => {
+    expect(residencyInSuggestedOrder([], [1, 2])).toEqual([])
+    expect(residencyInSuggestedOrder([repeat(1, "x")], [])).toEqual([])
   })
 })

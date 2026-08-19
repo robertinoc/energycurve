@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { CircleCheck, Loader2, Sparkles } from "lucide-react"
+import { CircleCheck, History, Loader2, Sparkles } from "lucide-react"
 
 import { reorderTracksAction } from "@/app/dashboard/playlists/actions"
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
@@ -23,6 +23,10 @@ import {
 } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { decodeSmartOrderEvents } from "@/lib/smart-order/stream"
+import {
+  residencyInSuggestedOrder,
+  type ResidencyRepeat,
+} from "@/lib/playlists/residency"
 import {
   deriveOrder,
   potentialScore,
@@ -137,6 +141,13 @@ export interface AnalysisWorkbenchProps {
   playlistId: string
   playlistName: string
   importSource: string | null
+  /**
+   * Tracks already played recently at this venue, keyed by ORIGINAL position.
+   *
+   * Empty for everyone who isn't a resident with history here — which is most sets,
+   * so nothing below may assume it has entries.
+   */
+  residencyRepeats?: readonly ResidencyRepeat[]
   /** Tracks in the ORIGINAL saved order. */
   tracks: WorkbenchTrack[]
   /** Energies resolved for the original order (index-aligned). */
@@ -170,6 +181,7 @@ export function AnalysisWorkbench({
   context,
   baseScore,
   targetCurve,
+  residencyRepeats = [],
   locale,
 }: AnalysisWorkbenchProps) {
   const originalIds = useMemo(() => tracks.map((track) => track.id), [tracks])
@@ -408,6 +420,31 @@ export function AnalysisWorkbench({
         originalPosition: originalPositionById.get(id) ?? 0,
       })),
     [order, tracksById, energiesById, originalPositionById]
+  )
+
+  /**
+   * What the current order does with tracks this room heard recently.
+   *
+   * Recomputed against the live order rather than against the engine's one-shot
+   * suggestion, because by the time a DJ is looking at this they have applied,
+   * discarded and hand-moved things — a warning about an order they are no longer
+   * looking at would be worse than none.
+   */
+  const residencyInOrder = useMemo(
+    () =>
+      residencyInSuggestedOrder(
+        residencyRepeats,
+        order.map((id) => originalPositionById.get(id) ?? 0)
+      ),
+    [residencyRepeats, order, originalPositionById]
+  )
+
+  // Only the promoted ones get a banner. A repeat the order left alone is already
+  // reported on the playlist page, and repeating that here would train people to
+  // scroll past the one case that is new information.
+  const residencyPromoted = useMemo(
+    () => residencyInOrder.filter((entry) => entry.promoted),
+    [residencyInOrder]
   )
 
   // The CURRENT derived order (fixes + smart order), exportable as-is —
@@ -778,6 +815,38 @@ export function AnalysisWorkbench({
         <div className="rounded-xl border border-ec-cyan/35 bg-ec-cyan/[0.06] px-4 py-3 text-sm text-white/80">
           {ANALYSIS_UI.smartFallbackBanner[locale]}
         </div>
+      ) : null}
+
+      {/* Residency: the one conflict the optimiser can't see. Sits above the
+          tracklist because it's about rows the DJ is looking at right now. */}
+      {residencyPromoted.length > 0 ? (
+        <section className="flex flex-col gap-2 rounded-xl border border-ec-amber/35 bg-ec-amber/[0.06] px-4 py-3 text-sm text-white/80">
+          <h2 className="flex items-center gap-2 font-heading text-sm font-bold text-white">
+            <History className="size-4 shrink-0 text-ec-amber" />
+            {ANALYSIS_UI.residencyPromotedTitle[locale]}
+          </h2>
+          <ul className="space-y-1">
+            {residencyPromoted.map((entry) => (
+              <li key={`${entry.position}-${entry.name}`}>
+                {formatTemplate(ANALYSIS_UI.residencyPromotedRow[locale], {
+                  artist: entry.artist,
+                  name: entry.name,
+                  to: String(entry.suggestedPosition),
+                  from: String(entry.position),
+                  when:
+                    entry.setsAgo === 1
+                      ? ANALYSIS_UI.residencyLastDate[locale]
+                      : formatTemplate(ANALYSIS_UI.residencyDatesAgo[locale], {
+                          n: String(entry.setsAgo),
+                        }),
+                })}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-white/58">
+            {ANALYSIS_UI.residencyPromotedNote[locale]}
+          </p>
+        </section>
       ) : null}
 
       {/* Zone 3: the live tracklist — replaces the two 48-row lists. */}

@@ -23,6 +23,7 @@ import { buildReturnToHref } from "@/lib/auth/return-to"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
+import { getResidencySummary } from "@/services/residency-service"
 import {
   getPlaylistAnalysis,
   MIN_ANALYZABLE_TRACKS,
@@ -94,6 +95,20 @@ export default async function PlaylistAnalysisPage({
   }
 
   const { playlist, energies, analysis, recommendations } = result
+
+  // The venue check, on the screen that reorders the set. Gated inside the service,
+  // so this runs unconditionally and a reader without residency mode gets an empty
+  // summary rather than a leaked query. Awaited rather than streamed because the
+  // workbench needs it in its first render to avoid a banner popping in late.
+  const residency = await getResidencySummary(
+    profile.id,
+    { id: playlist.id, venue: playlist.venue },
+    playlist.tracks.map((track, index) => ({
+      artist: track.artist,
+      name: track.name,
+      position: index + 1,
+    }))
+  )
 
   // Redesign (zone 0/1): every issue becomes an actionable fix with concrete
   // reorder operations; the client workbench derives order + score from them.
@@ -183,6 +198,7 @@ export default async function PlaylistAnalysisPage({
           context={analysis.context}
           baseScore={analysis.setScore}
           targetCurve={analysis.targetCurve}
+          residencyRepeats={residency.repeats}
           locale={locale}
         />
 

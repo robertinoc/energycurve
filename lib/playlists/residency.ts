@@ -183,3 +183,60 @@ export function summarizeResidency(
     noHistory: normalizeVenue(venue) !== null && pastSets.length === 0,
   }
 }
+
+export interface ResidencyInOrder extends ResidencyRepeat {
+  /** 1-based position the suggested order gives this track. */
+  suggestedPosition: number
+  /**
+   * True when the suggestion moves it earlier in the set.
+   *
+   * The fact worth surfacing. A warning that a track was played here recently is
+   * mild; "the optimiser just moved that track closer to the front" is a conflict
+   * between two features that were previously blind to each other.
+   */
+  promoted: boolean
+}
+
+/**
+ * What the suggested order does with the tracks already played at this venue.
+ *
+ * Deliberately reports rather than intervenes. Excluding recent repeats from the
+ * optimiser was the other option and it's worse: the curve it produces would be
+ * quietly weaker with no explanation, and sometimes the repeated track genuinely is
+ * the one that fixes the set. The DJ knows things this doesn't — that the room turns
+ * over every week, that the track is their signature, that nobody remembers. So the
+ * conflict is put in front of them instead of being resolved on their behalf.
+ *
+ * `suggestedOrder` is original 1-based positions in their new playing order, which is
+ * what suggestReorder returns.
+ */
+export function residencyInSuggestedOrder(
+  repeats: readonly ResidencyRepeat[],
+  suggestedOrder: readonly number[]
+): ResidencyInOrder[] {
+  if (repeats.length === 0 || suggestedOrder.length === 0) {
+    return []
+  }
+
+  const newPositionOf = new Map<number, number>()
+  for (const [index, original] of suggestedOrder.entries()) {
+    newPositionOf.set(original, index + 1)
+  }
+
+  return repeats.flatMap((repeat) => {
+    const suggestedPosition = newPositionOf.get(repeat.position)
+
+    // A repeat the suggested order dropped entirely has nothing to report.
+    if (suggestedPosition === undefined) {
+      return []
+    }
+
+    return [
+      {
+        ...repeat,
+        suggestedPosition,
+        promoted: suggestedPosition < repeat.position,
+      },
+    ]
+  })
+}

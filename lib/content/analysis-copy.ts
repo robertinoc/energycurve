@@ -536,6 +536,26 @@ export const ANALYSIS_UI = {
     es: "La ordenación inteligente no está disponible ahora. Probá de nuevo en un minuto.",
   },
 
+  /**
+   * Residency vs the current order. Worded as an observation, not a verdict: the
+   * optimiser is right about the curve and the DJ is right about the room, and
+   * neither of those facts settles the other.
+   */
+  residencyPromotedTitle: {
+    en: "This order moves tracks the room heard recently",
+    es: "Este orden adelanta tracks que la sala escuchó hace poco",
+  },
+  residencyPromotedRow: {
+    en: "{artist} — {name}: now #{to}, was #{from} · played here {when}",
+    es: "{artist} — {name}: ahora #{to}, estaba en #{from} · tocado acá {when}",
+  },
+  residencyLastDate: { en: "last date", es: "la fecha pasada" },
+  residencyDatesAgo: { en: "{n} dates ago", es: "hace {n} fechas" },
+  residencyPromotedNote: {
+    en: "Said rather than fixed: sometimes that track is exactly what the curve needs, and only you know whether this room would notice. Move it back by hand if it would.",
+    es: "Se avisa, no se corrige: a veces ese track es justo lo que la curva necesita, y sólo vos sabés si esta sala lo va a notar. Si lo va a notar, movelo a mano.",
+  },
+
   // Misc — read by the locale toggle, which renders in the dashboard shell.
   // Deleting this key crashes every /dashboard route, not just the analysis
   // screen. See the `satisfies` note above.
