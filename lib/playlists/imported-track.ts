@@ -1,3 +1,5 @@
+import type { TrackAudioFeatures } from "@/lib/audio/track-features"
+
 /**
  * A track parsed from a DJ-software library/playlist export. Richer than the
  * text paste parser: DJ exports carry BPM, key, genre, and (via Mixed In Key
@@ -28,6 +30,12 @@ export interface ImportedTrack {
   durationSeconds: number | null
   /** Perceived loudness in dB (Traktor PERCEIVED_DB); an energy signal (B19). */
   perceivedDb?: number | null
+  /**
+   * Spectral measurements from the file's own audio. Only ever present on the
+   * `files` import path, and only for files that were actually analysed — a
+   * playlist parsed from a Rekordbox XML has no audio to measure.
+   */
+  audioFeatures?: TrackAudioFeatures | null
 }
 
 export type ImportSource = "rekordbox" | "traktor" | "text" | "m3u8" | "files"
