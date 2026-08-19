@@ -26,6 +26,18 @@ import { Button } from "@/components/ui/button"
 import type { TrackAnalysis } from "@/lib/audio/analysis-types"
 import { analyzeAudioFile, disposeAudioWorker } from "@/lib/audio/analyze-track"
 import {
+  ENERGY_LABEL_MAX,
+  ENERGY_LABEL_MIN,
+  clipKey,
+  exportEnergyLabels,
+  readEnergyLabels,
+  removeEnergyLabel,
+  summarizeEnergyLabels,
+  writeEnergyLabel,
+  type EnergyLabel,
+} from "@/lib/audio/energy-labels"
+import { toTrackAudioFeatures } from "@/lib/audio/track-features"
+import {
   CHROMA_METHODS,
   DEFAULT_CHROMA_METHOD,
   type ChromaMethod,
@@ -48,6 +60,12 @@ import {
 } from "@/lib/audio/spike-report"
 import { isAudioFileName } from "@/lib/playlists/parse-audio-tags"
 import { cn } from "@/lib/utils"
+
+/** 1…10, derived from the label bounds so the picker can't drift from the scale. */
+const ENERGY_RATINGS = Array.from(
+  { length: ENERGY_LABEL_MAX - ENERGY_LABEL_MIN + 1 },
+  (_, index) => ENERGY_LABEL_MIN + index
+)
 
 const MAX_FILES = 60
 
@@ -83,6 +101,87 @@ export function AudioSpikePanel() {
     useState<KeyProfileSet>(DEFAULT_KEY_PROFILES)
   const [chromaMethod, setChromaMethod] =
     useState<ChromaMethod>(DEFAULT_CHROMA_METHOD)
+
+  /**
+   * Energy ratings, the training labels Energy Model v3 has no other source for.
+   * Mirrored into localStorage so a reload doesn't lose an hour of listening.
+   */
+  const [labels, setLabels] = useState<Record<string, EnergyLabel>>({})
+  const [copied, setCopied] = useState(false)
+  /**
+   * The picked File handles, so a row can be played. TrackAnalysis carries only
+   * measurements, and rating a track you can't hear isn't rating.
+   */
+  const filesByClip = useRef(new Map<string, File>())
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [playing, setPlaying] = useState<string | null>(null)
+
+  // After mount, not during render: localStorage doesn't exist on the server, and
+  // reading it in render would be a hydration mismatch.
+  useEffect(() => setLabels(readEnergyLabels()), [])
+
+  function rate(row: TrackAnalysis, value: number | null) {
+    const clip = clipKey(row.fileName, row.fileSizeBytes)
+
+    if (value === null) {
+      setLabels(removeEnergyLabel(clip))
+      return
+    }
+
+    const features = row.features ? toTrackAudioFeatures(row.features) : null
+
+    // A rating with no measurement behind it can't train anything, so it isn't
+    // stored — the select stays empty rather than pretending to have saved.
+    if (!features) {
+      return
+    }
+
+    setLabels(
+      writeEnergyLabel(
+        { clip, fileName: row.fileName, label: value, features },
+        new Date().toISOString()
+      )
+    )
+  }
+
+  function togglePlay(row: TrackAnalysis) {
+    const clip = clipKey(row.fileName, row.fileSizeBytes)
+    const element = audioRef.current
+    const file = filesByClip.current.get(clip)
+
+    if (!element || !file) {
+      return
+    }
+
+    if (playing === clip) {
+      element.pause()
+      setPlaying(null)
+      return
+    }
+
+    // Revoked on switch rather than accumulated: one live blob URL per rated track
+    // would pin every file in memory for the session.
+    if (element.src.startsWith("blob:")) {
+      URL.revokeObjectURL(element.src)
+    }
+
+    element.src = URL.createObjectURL(file)
+    void element.play()
+    setPlaying(clip)
+  }
+
+  const labelSummary = useMemo(() => summarizeEnergyLabels(labels), [labels])
+
+  async function copyLabels() {
+    try {
+      await navigator.clipboard.writeText(exportEnergyLabels(labels))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard permission can be refused; the labels are still in localStorage.
+      setCopied(false)
+    }
+  }
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({
     key: "totalMs",
     desc: true,
@@ -113,6 +212,12 @@ export function AudioSpikePanel() {
     })
 
     const batch = unique.slice(0, MAX_FILES)
+
+    // Kept so a row can be played back for rating. A File is a reference to bytes
+    // on disk, not the bytes, so holding the batch costs nothing.
+    for (const file of batch) {
+      filesByClip.current.set(clipKey(file.name, file.size), file)
+    }
 
     setNotes({
       skippedNonAudio: all.length - audio.length,
@@ -342,7 +447,42 @@ export function AudioSpikePanel() {
             </div>
 
             <div className="overflow-x-auto rounded-lg border border-ec-border">
-              <table className="w-full min-w-[940px] text-left text-sm">
+              <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-ec-text-dim">
+              <span>
+                Energy labels: <strong className="text-ec-text">{labelSummary.usable}</strong> usable
+                {labelSummary.total !== labelSummary.usable
+                  ? ` (${labelSummary.total - labelSummary.usable} from an older extraction)`
+                  : ""}
+                {" · "}
+                {labelSummary.coveredRatings}/10 ratings covered
+              </span>
+              {labelSummary.missingRatings.length > 0 ? (
+                <span className="text-ec-amber">
+                  {/* More useful than a raw count: fifty tracks all rated 7 fit a
+                      model that can only ever answer 7. */}
+                  still need a {labelSummary.missingRatings.join(", ")}
+                </span>
+              ) : (
+                <span className="text-ec-mint">every rating has an example</span>
+              )}
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={copyLabels}
+                disabled={labelSummary.usable === 0}
+                className="h-7 px-2 text-xs"
+              >
+                {copied ? "Copied" : "Copy labels JSON"}
+              </Button>
+            </div>
+            {/* One element for the whole table: a per-row <audio> would decode
+                every file the moment the rows render. */}
+            <audio
+              ref={audioRef}
+              onEnded={() => setPlaying(null)}
+              className="hidden"
+            />
+            <table className="w-full min-w-[940px] text-left text-sm">
                 <thead className="text-xs uppercase tracking-wide text-ec-text-dim">
                   <tr className="border-b border-ec-border">
                     <SortableHeader
@@ -401,11 +541,28 @@ export function AudioSpikePanel() {
                         the estimator isn't measuring, not that the library is
                         perfectly tuned. */}
                     <th className="px-3 py-2 font-medium">Tuning</th>
+                    {/* Training labels for Energy Model v3 — lib/audio/energy-labels.ts
+                        explains why a DJ's ear is the source rather than a tag. */}
+                    <th className="px-3 py-2 font-medium">Energy by ear</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sortedRows.map((row, index) => (
-                    <TrackRow key={`${index}-${row.fileName}`} row={row} />
+                    <TrackRow
+                      key={`${index}-${row.fileName}`}
+                      row={row}
+                      label={
+                        labels[clipKey(row.fileName, row.fileSizeBytes)] ?? null
+                      }
+                      playing={
+                        playing === clipKey(row.fileName, row.fileSizeBytes)
+                      }
+                      canPlay={filesByClip.current.has(
+                        clipKey(row.fileName, row.fileSizeBytes)
+                      )}
+                      onRate={rate}
+                      onTogglePlay={togglePlay}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -623,7 +780,21 @@ function ComparisonCell({
   )
 }
 
-function TrackRow({ row }: { row: TrackAnalysis }) {
+function TrackRow({
+  row,
+  label,
+  playing,
+  canPlay,
+  onRate,
+  onTogglePlay,
+}: {
+  row: TrackAnalysis
+  label: EnergyLabel | null
+  playing: boolean
+  canPlay: boolean
+  onRate: (row: TrackAnalysis, value: number | null) => void
+  onTogglePlay: (row: TrackAnalysis) => void
+}) {
   const isLong = row.durationSeconds >= LONG_TRACK_SECONDS
 
   return (
@@ -699,6 +870,37 @@ function TrackRow({ row }: { row: TrackAnalysis }) {
                   row.features.tuningOffsetSemitones * 100
                 )}¢`
               : "—"}
+          </td>
+          <td className="px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => onTogglePlay(row)}
+                disabled={!canPlay}
+                className="rounded border border-ec-border px-1.5 py-0.5 text-xs text-ec-text-dim hover:text-ec-text disabled:opacity-40"
+                aria-label={playing ? "Stop" : "Play"}
+              >
+                {playing ? "■" : "▶"}
+              </button>
+              <select
+                value={label?.label ?? ""}
+                onChange={(event) =>
+                  onRate(
+                    row,
+                    event.target.value === "" ? null : Number(event.target.value)
+                  )
+                }
+                disabled={!row.features}
+                className="rounded-md border border-ec-border bg-ec-raised px-1.5 py-0.5 text-xs text-ec-text disabled:opacity-40"
+              >
+                <option value="">—</option>
+                {ENERGY_RATINGS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
           </td>
         </>
       )}
