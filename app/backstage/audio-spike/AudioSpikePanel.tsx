@@ -35,8 +35,11 @@ import {
   removeEnergyLabel,
   summarizeEnergyLabels,
   writeEnergyLabel,
+  labelsForFitting,
+  parseLabelsDocument,
   type EnergyLabel,
 } from "@/lib/audio/energy-labels"
+import { fitEnergyModelV3 } from "@/lib/engine/energy-model-v3"
 import { toTrackAudioFeatures } from "@/lib/audio/track-features"
 import {
   CHROMA_METHODS,
@@ -149,7 +152,9 @@ export function AudioSpikePanel() {
 
     setLabels(
       writeEnergyLabel(
-        { clip, fileName: row.fileName, label: value, features },
+        // The tempo the run detected: the model needs it and the feature set
+        // doesn't carry it.
+        { clip, fileName: row.fileName, label: value, features, bpm: row.bpm },
         new Date().toISOString()
       )
     )
@@ -515,6 +520,7 @@ export function AudioSpikePanel() {
               className="hidden"
             />
             <VariantMatrix rows={rows} />
+            <FitPanel labels={labels} />
 
             <table className="w-full text-left text-sm">
                 <thead className="text-xs uppercase tracking-wide text-ec-text-dim">
@@ -962,6 +968,153 @@ function VariantMatrix({ rows }: { rows: TrackAnalysis[] }) {
         wide — a combination that names one key for most of a library agrees with the
         tags by luck, not by reading the music.
       </p>
+    </section>
+  )
+}
+
+/**
+ * Fits Energy Model v3 from the labels, right here.
+ *
+ * Until this existed the loop went: Robertino labels, copies the JSON, pastes it to
+ * me, I run `fitEnergyModelV3` in a scratch script, I read the numbers back. That
+ * makes the one step that turns a listening session into a model depend on me being
+ * in the conversation, and it means he can't re-fit after adding ten more tracks
+ * without asking.
+ *
+ * The verdict is not hidden behind interpretation: the spec's rule is that a more
+ * complicated model which predicts no better is strictly worse, so the panel says
+ * "ship it" or "don't" and shows both errors next to each other.
+ */
+function FitPanel({
+  labels,
+}: {
+  labels: Record<string, EnergyLabel>
+}) {
+  const [pasted, setPasted] = useState("")
+  const [copied, setCopied] = useState(false)
+
+  const rows = useMemo(() => {
+    // A paste wins over the live store, so a labels file from another machine can be
+    // fitted without importing it anywhere.
+    const source = pasted.trim() ? parseLabelsDocument(pasted) : labels
+    return labelsForFitting(source)
+  }, [labels, pasted])
+
+  const result = useMemo(() => fitEnergyModelV3(rows), [rows])
+
+  async function copyModel() {
+    if (!result) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(
+        JSON.stringify(result.model, null, 2)
+      )
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  const beatsBaseline =
+    result !== null && result.holdoutMae < result.bpmBaselineMae
+
+  return (
+    <section className="mt-6 rounded-xl border border-ec-border bg-ec-raised/40 p-4">
+      <h3 className="font-heading text-sm font-bold">Fit Energy Model v3</h3>
+      <p className="mt-1 text-xs text-ec-text-muted">
+        Uses the ratings above, or paste a labels export from another machine.
+        Standardises on the training rows only, holds out every fifth row, and fits
+        by least squares on the logit of the rating.
+      </p>
+
+      <textarea
+        value={pasted}
+        onChange={(event) => setPasted(event.target.value)}
+        placeholder="Paste a labels JSON here (optional)"
+        rows={2}
+        className="mt-3 w-full rounded-md border border-ec-border bg-ec-sunken px-2 py-1.5 font-mono text-xs text-ec-text"
+      />
+
+      <p className="mt-2 text-xs text-ec-text-dim">
+        {rows.length} fittable row(s)
+        {pasted.trim() ? " from the paste" : " from this session"}.
+      </p>
+
+      {result === null ? (
+        <p className="mt-3 text-xs text-ec-amber">
+          {/* Two different reasons, and the difference is actionable: one needs more
+              tracks, the other needs more *varied* tracks. */}
+          {rows.length < 18
+            ? `Not enough to fit six parameters — ${rows.length} of about 30 rows. Rate more tracks.`
+            : "Couldn't fit: two predictors are collinear, or one is constant across the corpus. Usually means the tracks are too alike — try a wider range of tempos and styles."}
+        </p>
+      ) : (
+        <>
+          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
+            <div>
+              <dt className="text-ec-text-dim">Holdout error</dt>
+              <dd className="tabular-nums text-ec-text">
+                {result.holdoutMae.toFixed(2)} pts
+              </dd>
+            </div>
+            <div>
+              <dt className="text-ec-text-dim">BPM-only, same rows</dt>
+              <dd className="tabular-nums text-ec-text">
+                {result.bpmBaselineMae.toFixed(2)} pts
+              </dd>
+            </div>
+            <div>
+              <dt className="text-ec-text-dim">Training error</dt>
+              <dd className="tabular-nums text-ec-text-dim">
+                {result.trainingMae.toFixed(2)} pts
+              </dd>
+            </div>
+            <div>
+              <dt className="text-ec-text-dim">Rows</dt>
+              <dd className="tabular-nums text-ec-text-dim">
+                {result.usedRows} train / {result.holdoutRows} holdout
+              </dd>
+            </div>
+          </dl>
+
+          <p
+            className={cn(
+              "mt-3 rounded-lg border px-3 py-2 text-xs",
+              beatsBaseline
+                ? "border-ec-mint/40 bg-ec-mint/10 text-ec-text"
+                : "border-ec-amber/40 bg-ec-amber/10 text-ec-text"
+            )}
+          >
+            {beatsBaseline ? (
+              <>
+                <strong className="font-medium">Beats BPM-only.</strong> Write both
+                errors into docs/energy-model-v3.md, then paste the coefficients into
+                ENERGY_MODEL_V3.
+              </>
+            ) : (
+              <>
+                <strong className="font-medium">Does not beat BPM-only.</strong> A
+                model with more inputs that predicts no better is strictly worse, so
+                this one doesn&apos;t ship. More rows across a wider range of energies
+                is the next thing to try, not different coefficients.
+              </>
+            )}
+          </p>
+
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={copyModel}
+            className="mt-3 h-7 px-2 text-xs"
+            title="Copy the fitted coefficients as JSON"
+          >
+            {copied ? "Copied" : "Copy coefficients"}
+          </Button>
+        </>
+      )}
     </section>
   )
 }
