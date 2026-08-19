@@ -98,8 +98,31 @@ export type ChromaMethod = (typeof CHROMA_METHODS)[number]
  */
 export const DEFAULT_CHROMA_METHOD: ChromaMethod = "meyda"
 
+/**
+ * One chroma method's output for a track: the whole-track profile and the
+ * per-window profiles the vote reads.
+ */
+export interface ChromaVariant {
+  chroma: number[]
+  chromaSegments: number[][]
+}
+
 export type WorkerResponse =
-  | { id: string; ok: true; features: AudioFeatures; analyzeMs: number }
+  | {
+      id: string
+      ok: true
+      features: AudioFeatures
+      /**
+       * Every chroma method's profile, from the same frame pass.
+       *
+       * All three cost almost nothing next to each other because the FFT — ~88% of
+       * the work — is already done by the time any of them is computed. Producing
+       * them together is what lets one run compare every variant, instead of the
+       * three separate runs (and three screenshots) it used to take.
+       */
+      variants: Record<ChromaMethod, ChromaVariant>
+      analyzeMs: number
+    }
   | { id: string; ok: false; error: string }
 
 /** Everything the harness measures for one file. */
@@ -131,6 +154,14 @@ export interface TrackAnalysis {
   keyAgreement: number | null
   /** Windows that produced a usable vote. */
   keySegments: number | null
+  /**
+   * Every (chroma method × key profile set) combination's answer for this track,
+   * keyed "chroma|profiles".
+   *
+   * Filled from one frame pass, so a single run can compare all six instead of
+   * needing one run per combination and a human reading numbers off a screenshot.
+   */
+  keyByVariant: Record<string, string | null>
   features: AudioFeatures | null
   /** From the file's own tags, for an accuracy comparison. */
   taggedBpm: number | null
