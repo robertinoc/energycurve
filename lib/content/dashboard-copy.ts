@@ -649,6 +649,19 @@ export const DASHBOARD_COPY = {
       es: "{count} de estos tracks no traen BPM en los tags, así que su energía se está adivinando solo por la posición. Analizar el audio la mide. Tarda un par de segundos por track y pasa en tu máquina — no se sube nada.",
     },
     analyzeCta: { en: "Analyse {count} tracks", es: "Analizar {count} tracks" },
+    /**
+     * Shown when every file already has a BPM tag, where the original pitch —
+     * "your energy is being guessed" — would be false. What tags never carry is the
+     * spectral side, so that's what this offers.
+     */
+    analyzeFeaturesBody: {
+      en: "These tracks all carry a BPM tag, but no tag format carries what the audio sounds like — how loud it is, how fast the spectrum moves, how many attacks per second. Measuring it on {count} tracks takes about a second each, on your machine, and is what the next energy model reads. Nothing is uploaded.",
+      es: "Estos tracks ya traen BPM en los tags, pero ningún formato de tags guarda cómo suena el audio — cuán fuerte es, cuánto se mueve el espectro, cuántos ataques por segundo tiene. Medirlo en {count} tracks tarda alrededor de un segundo cada uno, en tu máquina, y es lo que lee el próximo modelo de energía. No se sube nada.",
+    },
+    analyzeAllCta: {
+      en: "Measure all {count}",
+      es: "Medir los {count}",
+    },
     analyzeProgress: { en: "{done} of {total}", es: "{done} de {total}" },
     analyzeCancel: { en: "Stop", es: "Frenar" },
     analyzeDone: {
