@@ -13,6 +13,7 @@ import {
   TaxonomySelect,
   type TaxonomyCustomOption,
 } from "@/components/playlists/taxonomy-select"
+import { toTrackAudioFeatures } from "@/lib/audio/track-features"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -152,10 +153,28 @@ export function AudioFilesImport({
 
       const result = await analyzeAudioFile(row.file)
 
+      // The spectral features are kept whether or not beat detection worked.
+      // They are independent measurements — a beatless ambient intro still has a
+      // loudness, a flux and an entropy — and they are what Energy Model v3 is
+      // specified against. Before this they were computed and discarded.
+      const audioFeatures = result.features
+        ? toTrackAudioFeatures(result.features)
+        : null
+
       if (result.bpm === null) {
         // Beat detection legitimately fails on ambient and beatless material.
-        // The row keeps whatever it had; it isn't an error worth a red banner.
+        // The row keeps whatever BPM it had; it isn't an error worth a red banner.
         failed += 1
+
+        if (audioFeatures) {
+          setRows((current) =>
+            current.map((entry) =>
+              entry.id === row.id
+                ? { ...entry, track: { ...entry.track, audioFeatures } }
+                : entry
+            )
+          )
+        }
       } else {
         const detected = Math.round(result.bpm)
 
@@ -165,7 +184,7 @@ export function AudioFilesImport({
               ? {
                   ...entry,
                   analyzedBpm: detected,
-                  track: { ...entry.track, bpm: detected },
+                  track: { ...entry.track, bpm: detected, audioFeatures },
                 }
               : entry
           )

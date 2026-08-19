@@ -1,4 +1,5 @@
 import type { Database } from "@/types/database"
+import type { TrackAudioFeatures } from "@/lib/audio/track-features"
 import type {
   PlaylistContext,
   SupportedGenre,
@@ -67,6 +68,12 @@ export interface TrackWriteInput {
   durationSeconds?: number | null
   /** Perceived loudness in dB (Traktor PERCEIVED_DB) — energy signal (B19). */
   perceivedDb?: number | null
+  /**
+   * Spectral measurements taken from the track's own audio, when it was analysed
+   * in the browser. Null/absent means never analysed — which the energy scorer
+   * has to distinguish from "analysed and quiet".
+   */
+  audioFeatures?: TrackAudioFeatures | null
 }
 
 export interface ProductStrategySnapshot {

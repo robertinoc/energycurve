@@ -784,6 +784,7 @@ export async function importAudioFilesAction(
     sourceUri: track.sourceUri,
     comment: track.comment,
     durationSeconds: track.durationSeconds,
+    audioFeatures: track.audioFeatures,
   }))
 
   const { dominant } = detectGenres(tracks)
@@ -825,6 +826,7 @@ export async function importAudioFilesAction(
         comment: track.comment,
         durationSeconds: track.durationSeconds,
         perceivedDb: null,
+        audioFeatures: track.audioFeatures ?? null,
       }))
     )
   } catch (error) {

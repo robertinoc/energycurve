@@ -6,6 +6,7 @@ import { logError, logInfo } from "@/lib/observability/logger"
 import { finalPositions, isValidReorder } from "@/lib/tracklist/reorder"
 import { captureVersion } from "@/services/version-service"
 import type { CurveShape } from "@/lib/product/strategy"
+import type { Json } from "@/types/database"
 import type {
   Playlist,
   PlaylistContext,
@@ -412,6 +413,10 @@ export async function addTrack(
       comment: input.comment ?? null,
       duration_seconds: input.durationSeconds ?? null,
       perceived_db: input.perceivedDb ?? null,
+      // Cast at the jsonb boundary, same as `anchors` in curve-template-service:
+      // a structured interface has no index signature, so it isn't `Json` by
+      // assignment. It was validated by parseTrackAudioFeatures on the way in.
+      audio_features: (input.audioFeatures ?? null) as unknown as Json,
     })
     .select()
     .single()
@@ -632,6 +637,7 @@ export async function replaceTracks(
       comment: track.comment ?? null,
       duration_seconds: track.durationSeconds ?? null,
         perceived_db: track.perceivedDb ?? null,
+        audio_features: (track.audioFeatures ?? null) as unknown as Json,
     }))
   )
 

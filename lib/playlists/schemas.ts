@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { parseTrackAudioFeatures } from "@/lib/audio/track-features"
 import { parseClock } from "@/lib/engine/slot"
 
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -318,6 +319,19 @@ export function createAudioImportSchema(locale: SiteLocale) {
     ),
     durationSeconds: numberOrNull({ min: 1, max: 86400, integer: true }),
     sourceUri: sourceUriSchema,
+    /**
+     * Measured in the browser, so it arrives as untrusted input like everything
+     * else on this path. `parseTrackAudioFeatures` is the single gate: it is
+     * all-or-nothing, so a tampered or partial object becomes null rather than a
+     * feature vector with holes in it. Absent is normal — most tracks are not
+     * analysed.
+     */
+    audioFeatures: z
+      .unknown()
+      .optional()
+      .transform((value) =>
+        value === undefined ? null : parseTrackAudioFeatures(value)
+      ),
   })
 
   return z.object({
