@@ -270,6 +270,7 @@ export default async function PlaylistDetailPage({
               playlistId={playlist.id}
               name={playlist.name}
               description={playlist.description}
+            venue={playlist.venue}
               slotStartMinutes={playlist.slot_start_minutes}
               slotEndMinutes={playlist.slot_end_minutes}
               targetShape={parseCurveShape(playlist.target_shape)}

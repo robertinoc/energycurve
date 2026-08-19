@@ -359,6 +359,9 @@ export async function updatePlaylistDetailsAction(
     // `has`, not `get`: a field the submitted form never carried stays absent, so
     // the schema and service leave the stored value untouched instead of clearing
     // it. Coercing a missing field to "" would read as "the user cleared this".
+    ...(formData.has("venue")
+      ? { venue: String(formData.get("venue") ?? "") }
+      : {}),
     ...(formData.has("slotStart")
       ? { slotStart: String(formData.get("slotStart") ?? "") }
       : {}),
