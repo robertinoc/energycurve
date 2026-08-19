@@ -1,7 +1,14 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, AudioWaveform, GitCompare, Printer, Radio } from "lucide-react"
+import {
+  ArrowLeft,
+  AudioWaveform,
+  GitCompare,
+  History,
+  Printer,
+  Radio,
+} from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
@@ -42,6 +49,7 @@ import { getProfileBilling } from "@/services/billing-service"
 import { listCurveTemplates } from "@/services/curve-template-service"
 import { listVersions } from "@/services/version-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
+import { getResidencySummary } from "@/services/residency-service"
 
 export const metadata: Metadata = {
   title: "Playlist",
@@ -117,6 +125,18 @@ export default async function PlaylistDetailPage({
   // secret is configured, which hides the button rather than minting dead links.
   const shareToken = buildShareToken(playlist.id)
   const shareUrl = shareToken ? `${SITE_URL}/c/${shareToken}` : null
+
+  // The gate lives inside the service, so this call is safe to make unconditionally
+  // and a non-PRO+ reader gets an empty summary rather than a leaked query.
+  const residency = await getResidencySummary(
+    profile.id,
+    { id: playlist.id, venue: playlist.venue },
+    playlist.tracks.map((track, index) => ({
+      artist: track.artist,
+      name: track.name,
+      position: index + 1,
+    }))
+  )
 
   // Not queried at all when the reader can't see it. Versions are still being
   // *recorded* for them — the history is waiting the day they upgrade.
@@ -290,6 +310,41 @@ export default async function PlaylistDetailPage({
             </div>
           </div>
         </header>
+
+      {/* Residency warnings, right under the header: they change what the DJ does
+          with this set, so they belong above the tracklist rather than below it. */}
+      {residency.repeats.length > 0 ? (
+        <section className="rounded-xl border border-ec-amber/40 bg-ec-amber/10 p-4">
+          <h2 className="flex items-center gap-2 font-heading text-sm font-bold text-ec-text">
+            <History className="size-4 text-ec-amber" />
+            You played these at {residency.venue} recently
+          </h2>
+          <ul className="mt-3 space-y-1.5 text-sm text-ec-text-muted">
+            {residency.repeats.map((repeat) => (
+              <li key={`${repeat.position}-${repeat.name}`}>
+                <span className="tabular-nums text-ec-text-dim">
+                  #{repeat.position}
+                </span>{" "}
+                <span className="text-ec-text">
+                  {repeat.artist} — {repeat.name}
+                </span>{" "}
+                <span className="text-ec-text-dim">
+                  {repeat.setsAgo === 1
+                    ? "last date here"
+                    : `${repeat.setsAgo} dates ago here`}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-ec-text-dim">
+            {/* Said plainly because the check can only see what was marked as
+                played: silence from it is not proof of anything. */}
+            Checked against the last {residency.setsConsidered} set(s) you marked as
+            played at this venue. Nothing else is compared, so a set you never marked
+            won&apos;t show up here.
+          </p>
+        </section>
+      ) : null}
 
         <VersionHistory
           playlistId={playlist.id}

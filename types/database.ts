@@ -203,6 +203,7 @@ export interface Database {
           slot_end_minutes: number | null
           target_shape: string | null
           target_template_id: string | null
+          venue: string | null
           custom_context_id: string | null
           custom_genre_id: string | null
           created_at: string
@@ -220,6 +221,7 @@ export interface Database {
           slot_end_minutes?: number | null
           target_shape?: string | null
           target_template_id?: string | null
+          venue?: string | null
           custom_context_id?: string | null
           custom_genre_id?: string | null
           created_at?: string
@@ -237,6 +239,7 @@ export interface Database {
           slot_end_minutes?: number | null
           target_shape?: string | null
           target_template_id?: string | null
+          venue?: string | null
           custom_context_id?: string | null
           custom_genre_id?: string | null
           created_at?: string

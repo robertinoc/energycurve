@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
 
+import {
+  CAPABILITIES,
+  type CapabilityKey,
+} from "@/lib/product/capabilities"
 import { getSiteCopy, supportedLocales } from "@/lib/content/site-copy"
 import { buildPricingStructuredData } from "@/lib/seo"
 
@@ -108,34 +112,37 @@ describe("pricing copy", () => {
 
   // Roadmap-only capabilities, named precisely enough not to collide with the
   // import row (which legitimately mentions "audio files").
-  const UNBUILT: Record<string, string[]> = {
-    // "real audio analysis" used to sit here and no longer does: tempo detection
-    // ships. Key detection took its place rather than the row simply leaving,
-    // because that is the half still unbuilt (21% against tagged files) and it
-    // is the half a DJ assumes when they read "audio analysis".
-    //
-    // "gig mode" left the same way when the booth view shipped, and residency
-    // mode replaced it — the list has to keep naming something genuinely unbuilt
-    // or the assertion passes without checking anything.
-    en: ["musical key read", "energy model v3", "residency mode"],
-    es: ["tonalidad leída", "energy model v3", "modo residencia"],
-  }
-
   it.each(supportedLocales)(
     "never claims an unbuilt capability is included (%s)",
     (locale) => {
       const { rows } = getSiteCopy(locale).pricing
 
-      // "yes" here would be a false promise on the page where people decide
-      // to pay. Every one of these must read "soon" or "no".
-      for (const needle of UNBUILT[locale]) {
-        const row = rows.find((entry) =>
-          entry.capability.toLowerCase().includes(needle)
-        )
-        expect(row, `expected a row mentioning "${needle}"`).toBeDefined()
+      // Derived from the registry rather than from a hand-written list. The list
+      // version went stale the first time a capability shipped — residency mode was
+      // still on it after the gate flipped — and a staleness bug in the test that
+      // guards against overclaiming is the worst place to have one.
+      const planned = (Object.keys(CAPABILITIES) as CapabilityKey[]).filter(
+        (key) => CAPABILITIES[key].status === "planned"
+      )
 
-        for (const cell of [row!.free, row!.pro, row!.proPlus]) {
-          expect(cell.kind).not.toBe("yes")
+      expect(planned.length).toBeGreaterThan(0)
+
+      for (const key of planned) {
+        const row = rows.find((entry) => entry.key === key)
+
+        // Not every planned capability has to appear in the matrix, but one that
+        // does must not be sold as included.
+        if (!row) {
+          continue
+        }
+
+        // "yes" here would be a false promise on the page where people decide to
+        // pay. Every cell has to read "soon" or "no".
+        for (const cell of [row.free, row.pro, row.proPlus]) {
+          expect(
+            cell.kind,
+            `${key} is status:"planned" but its ${locale} matrix row claims it's included`
+          ).not.toBe("yes")
         }
       }
     }

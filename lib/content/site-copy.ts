@@ -719,7 +719,6 @@ const siteCopy: SiteCopySchema = {
               en: "Residency mode: never repeat what you played there last time",
               es: "Modo residencia: no repitas lo que tocaste la última vez",
             },
-            soon: true,
           },
           {
             text: {
@@ -944,7 +943,7 @@ const siteCopy: SiteCopySchema = {
         },
         free: "no",
         pro: "no",
-        proPlus: "soon",
+        proPlus: "yes",
       },
       {
         key: "b2b_sets",
