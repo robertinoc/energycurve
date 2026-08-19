@@ -53,6 +53,20 @@ export interface EnergyLabel {
   label: number
   /** What the analysis measured for this same file. */
   features: TrackAudioFeatures
+  /**
+   * Detected tempo, kept alongside the features because the model needs it and the
+   * feature set doesn't carry it.
+   *
+   * Tempo comes from beat detection rather than from the spectral pass — a separate
+   * and far more accurate measurement — so `TrackAudioFeatures` deliberately has no
+   * BPM field. The consequence, which I missed when this shipped: a label without a
+   * tempo can't be turned into a feature vector, so it can't be fitted. Storing it
+   * here is what makes the exported labels usable at all.
+   *
+   * Null for a track with no detectable beat (ambient, beatless). Those rows are
+   * real ratings and are kept, but they can't take part in a fit.
+   */
+  bpm: number | null
   /** ISO timestamp, so a later re-rating can be told from the original. */
   at: string
 }
@@ -107,11 +121,20 @@ export function parseEnergyLabel(input: unknown): EnergyLabel | null {
     return null
   }
 
+  // Absent rather than invalid for labels written before tempo was stored: the
+  // rating and the features are still real, so the row is kept and simply doesn't
+  // count as fittable. Rejecting it would throw away a listening session.
+  const bpm =
+    typeof raw.bpm === "number" && Number.isFinite(raw.bpm) && raw.bpm > 0
+      ? raw.bpm
+      : null
+
   return {
     clip: raw.clip,
     fileName: raw.fileName,
     label,
     features,
+    bpm,
     at: typeof raw.at === "string" ? raw.at : "",
   }
 }
@@ -202,6 +225,8 @@ export interface LabelSetSummary {
   total: number
   /** Labels whose features came from the current extraction version. */
   usable: number
+  /** Rated, but with no detectable tempo — real ratings a fit can't use. */
+  withoutTempo: number
   /** How many of the ten rating values have at least one example. */
   coveredRatings: number
   /** Ratings with no example yet, ascending — what to go and find next. */
@@ -224,7 +249,10 @@ export function summarizeEnergyLabels(
   let usable = 0
 
   for (const entry of values) {
-    if (entry.features.version === TRACK_FEATURES_VERSION) {
+    // "Usable" means fittable, not merely readable: the current extraction version
+    // *and* a tempo. Counting a row the fit would silently drop would overstate how
+    // much training data there is, which is the number this exists to report.
+    if (entry.features.version === TRACK_FEATURES_VERSION && entry.bpm !== null) {
       usable += 1
       seen.add(entry.label)
     }
@@ -240,6 +268,7 @@ export function summarizeEnergyLabels(
   return {
     total: values.length,
     usable,
+    withoutTempo: values.filter((entry) => entry.bpm === null).length,
     coveredRatings: seen.size,
     missingRatings,
   }
@@ -270,4 +299,65 @@ export function exportEnergyLabels(
     null,
     2
   )
+}
+
+/**
+ * Turns a labels export — or the live store — into rows the fitter accepts.
+ *
+ * Drops what can't train: an older extraction version (mixing them attributes a
+ * change in method to a change in the music) and a missing tempo (the vector is
+ * incomplete without it). Both are reported by `summarizeEnergyLabels` so the count
+ * that reaches a fit is never a surprise.
+ */
+export function labelsForFitting(
+  labels: Record<string, EnergyLabel>
+): { features: TrackAudioFeatures; bpm: number | null; label: number }[] {
+  return Object.values(labels)
+    .filter(
+      (entry) =>
+        entry.features.version === TRACK_FEATURES_VERSION && entry.bpm !== null
+    )
+    .map((entry) => ({
+      features: entry.features,
+      bpm: entry.bpm,
+      label: entry.label,
+    }))
+}
+
+/**
+ * Reads a pasted labels document back into the store shape.
+ *
+ * Accepts the export's `{ entries: [...] }` envelope and a bare array, because a
+ * person pasting JSON will sometimes paste the inner list. Unreadable entries are
+ * skipped rather than failing the whole paste — losing one row beats losing forty.
+ */
+export function parseLabelsDocument(text: string): Record<string, EnergyLabel> {
+  let parsed: unknown
+
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    return {}
+  }
+
+  const entries = Array.isArray(parsed)
+    ? parsed
+    : typeof parsed === "object" && parsed !== null
+      ? ((parsed as { entries?: unknown }).entries ?? [])
+      : []
+
+  if (!Array.isArray(entries)) {
+    return {}
+  }
+
+  const labels: Record<string, EnergyLabel> = {}
+
+  for (const entry of entries) {
+    const label = parseEnergyLabel(entry)
+    if (label) {
+      labels[label.clip] = label
+    }
+  }
+
+  return labels
 }
