@@ -26,6 +26,11 @@ import { Button } from "@/components/ui/button"
 import type { TrackAnalysis } from "@/lib/audio/analysis-types"
 import { analyzeAudioFile, disposeAudioWorker } from "@/lib/audio/analyze-track"
 import {
+  CHROMA_METHODS,
+  DEFAULT_CHROMA_METHOD,
+  type ChromaMethod,
+} from "@/lib/audio/analysis-types"
+import {
   DEFAULT_KEY_PROFILES,
   KEY_PROFILES,
   type KeyProfileSet,
@@ -76,6 +81,8 @@ export function AudioSpikePanel() {
    */
   const [keyProfiles, setKeyProfiles] =
     useState<KeyProfileSet>(DEFAULT_KEY_PROFILES)
+  const [chromaMethod, setChromaMethod] =
+    useState<ChromaMethod>(DEFAULT_CHROMA_METHOD)
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({
     key: "totalMs",
     desc: true,
@@ -158,6 +165,7 @@ export function AudioSpikePanel() {
         taggedBpm,
         taggedKey,
         keyProfiles,
+        chromaMethod,
       })
       setRows((current) => [...current, analysis])
       setProgress({ done: index + 1, total: batch.length })
@@ -233,6 +241,23 @@ export function AudioSpikePanel() {
               className="rounded-md border border-ec-border bg-ec-raised px-2 py-1 text-sm text-ec-text"
             >
               {Object.keys(KEY_PROFILES).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ec-text-dim">
+            Chroma
+            <select
+              value={chromaMethod}
+              onChange={(event) =>
+                setChromaMethod(event.target.value as ChromaMethod)
+              }
+              disabled={running}
+              className="rounded-md border border-ec-border bg-ec-raised px-2 py-1 text-sm text-ec-text"
+            >
+              {CHROMA_METHODS.map((name) => (
                 <option key={name} value={name}>
                   {name}
                 </option>
@@ -372,6 +397,10 @@ export function AudioSpikePanel() {
                         because every column to the left is computed from that
                         sample, not from the whole file — see sample-windows.ts. */}
                     <th className="px-3 py-2 font-medium">Sampled</th>
+                    {/* Cents off A=440, on the banded-tuned path. All zeros means
+                        the estimator isn't measuring, not that the library is
+                        perfectly tuned. */}
+                    <th className="px-3 py-2 font-medium">Tuning</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -654,6 +683,13 @@ function TrackRow({ row }: { row: TrackAnalysis }) {
               ? `${Math.round(row.features.analyzedSeconds)}s · ${Math.round(
                   (row.features.analyzedSeconds / row.durationSeconds) * 100
                 )}%`
+              : "—"}
+          </td>
+          <td className="px-3 py-2 tabular-nums text-ec-text-dim">
+            {row.features
+              ? `${row.features.tuningOffsetSemitones >= 0 ? "+" : ""}${Math.round(
+                  row.features.tuningOffsetSemitones * 100
+                )}¢`
               : "—"}
           </td>
         </>

@@ -171,6 +171,35 @@ the run the detector repeatedly produced a plausible tonic with the wrong mode
 sits mostly between 0.4 and 0.85 — high confidence in the wrong answer, which is
 exactly what a whole-track averaged chroma produces on bass-heavy dance music.
 
+### Why the chroma itself is the suspect (18 Aug 2026)
+
+The two profile sets were measured over the owner's library: **krumhansl 3/14
+(21%), temperley 2/14 (14%)** — and they agreed on *none* of the correct answers.
+Two detectors that overlap on zero out of fourteen are not two detectors of
+differing quality; they are both reading a profile with very little signal in it.
+That rules the reference profiles out as the cause, and points at the chroma.
+
+There is a mechanism, and it is arithmetic. At a 2048-sample frame and 44.1 kHz
+each FFT bin spans `44100 / 2048 ≈ 21.5 Hz`, while the gap between adjacent
+semitones at frequency `f` is `≈ 0.0595 · f`. They are equal at **≈ 362 Hz**:
+
+- above that, neighbouring semitones fall in different bins and a bin's magnitude
+  belongs to one pitch class;
+- below it, two or more semitones share a bin, and whichever class the bin's
+  centre rounds to collects all of their energy.
+
+Everything below 362 Hz is therefore unattributable — and that is exactly where a
+dance track puts most of its energy: kick fundamental, sub-bass, bass line. A
+chroma taken over the whole spectrum hands the key detector the loudest,
+least-resolvable content in the track, sorted into essentially arbitrary classes.
+
+`lib/audio/chroma.ts` ships a `banded` alternative: only 350–2100 Hz, aggregated
+with a per-class median across frames (the temporal half of Fitzgerald's
+harmonic/percussive separation — a sustained note survives a median, a kick in a
+few frames does not). **Not** the default, for the same reason Temperley isn't:
+the last change that sounded obviously right made the numbers worse. The harness
+has a `Chroma` picker; the next run over a real library decides.
+
 Fixes, in rough order of effort:
 
 1. Harmonic/percussive separation before chroma — kicks and bass pollute the

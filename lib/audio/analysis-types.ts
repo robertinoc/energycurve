@@ -42,6 +42,15 @@ export interface AudioFeatures {
    * they aren't one.
    */
   analyzedSeconds: number
+  /**
+   * Estimated distance from A = 440, in semitones, on the `banded-tuned` path;
+   * 0 on the others because they don't estimate it.
+   *
+   * Reported so a run can be told apart from a broken estimator: if this is 0.00
+   * for every track in a library, the correction isn't measuring anything and any
+   * change in accuracy came from somewhere else.
+   */
+  tuningOffsetSemitones: number
 }
 
 export interface WorkerRequest {
@@ -57,7 +66,37 @@ export interface WorkerRequest {
    */
   channels: Float32Array[]
   sampleRate: number
+  /**
+   * How to turn each frame's spectrum into a pitch-class profile. Belongs in the
+   * request rather than applied afterwards — unlike the key profiles, which are
+   * correlated against an already-computed chroma, this changes how the chroma
+   * itself is built, so it has to happen inside the frame loop.
+   */
+  chromaMethod?: ChromaMethod
 }
+
+/**
+ * - **meyda** — Meyda's own chroma extractor, over the whole spectrum. What the
+ *   21% baseline was measured with.
+ * - **banded** — ours: band-limited to where a 2048-point FFT can resolve a
+ *   semitone, aggregated with a temporal median. See lib/audio/chroma.ts for the
+ *   arithmetic behind the band.
+ * - **banded-tuned** — the same band, plus a tuning correction estimated over the
+ *   whole track before folding to twelve classes. See lib/audio/tuning.ts. Held
+ *   separate from `banded` so a run can tell whether the band helped, whether the
+ *   tuning helped, or whether only the two together do.
+ */
+export const CHROMA_METHODS = ["meyda", "banded", "banded-tuned"] as const
+
+/** Derived from the list so the harness picker and the type can't drift apart. */
+export type ChromaMethod = (typeof CHROMA_METHODS)[number]
+
+/**
+ * Unchanged on purpose, so the next harness run stays comparable with the 21%
+ * baseline. The last change that sounded obviously right — Temperley's profiles —
+ * made the numbers worse, so this one waits for a measurement too.
+ */
+export const DEFAULT_CHROMA_METHOD: ChromaMethod = "meyda"
 
 export type WorkerResponse =
   | { id: string; ok: true; features: AudioFeatures; analyzeMs: number }

@@ -11,7 +11,16 @@
 
 import Meyda, { type MeydaAudioFeature, type MeydaFeaturesObject } from "meyda"
 
+import { MAX_HZ, MIN_HZ, chromaFromSpectrum, medianChroma } from "./chroma"
 import {
+  BINS_PER_SEMITONE,
+  estimateTuningOffset,
+  fineChromaFromSpectrum,
+  foldFineChroma,
+  sumFineChroma,
+} from "./tuning"
+import {
+  DEFAULT_CHROMA_METHOD,
   FRAME_SIZE,
   HOP_SIZE,
   type WorkerRequest,
@@ -42,7 +51,24 @@ const FEATURES: MeydaAudioFeature[] = ["rms", "amplitudeSpectrum", "chroma"]
 type ExtractedFeatures = Partial<MeydaFeaturesObject>
 
 self.onmessage = (event: MessageEvent<WorkerRequest>) => {
-  const { id, channels, sampleRate } = event.data
+  const { id, channels, sampleRate, chromaMethod } = event.data
+  const chromaFrom = chromaMethod ?? DEFAULT_CHROMA_METHOD
+
+  /**
+   * A median across frames suppresses percussion — a kick is a spike in a few
+   * frames, a played note sustains across most of them — so it pairs with the
+   * band limiting rather than being a separate idea. Meyda's path keeps the mean
+   * it was measured with, so the A/B compares two whole methods and not a mix.
+   */
+  const aggregateChroma = (frames: number[][]) =>
+    chromaFrom === "meyda" ? averageChroma(frames) : medianChroma(frames)
+
+  /**
+   * The tuned path collects a fine profile per frame and folds it only once the
+   * whole-track offset is known — see lib/audio/tuning.ts for why the estimate
+   * can't be per frame.
+   */
+  const tuned = chromaFrom === "banded-tuned"
   const startedAt = performance.now()
 
   try {
@@ -59,6 +85,8 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
      */
     const chromaSegments: number[][] = []
     const allChromaFrames: number[][] = []
+    /** Fine profiles per window, kept only on the tuned path. */
+    const fineSegments: number[][][] = []
     /**
      * One flux envelope per window, never one concatenated array: flux is defined
      * between consecutive frames, and a seam between two windows would compare
@@ -73,6 +101,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
     for (const { start, end } of windows) {
       const segmentFlux: number[] = []
       const segmentChroma: number[][] = []
+      const segmentFine: number[][] = []
       // Reset per window: the first frame after a jump has no valid predecessor.
       let previousFrame: Float32Array | null = null
       let previousSpectrum: Float32Array | null = null
@@ -104,12 +133,39 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
             previousSpectrum = spectrum
           }
 
-          if (extracted.chroma) {
-            const frameChroma = Array.from(extracted.chroma)
-            // Kept twice on purpose: per window for the vote, and pooled for the
-            // whole-track average the Energy Model features still read.
-            segmentChroma.push(frameChroma)
-            allChromaFrames.push(frameChroma)
+          // "banded" builds the profile from the spectrum we already asked for,
+          // keeping only the frequencies where a semitone is wider than one FFT
+          // bin; "meyda" uses the extractor's own whole-spectrum chroma. See
+          // lib/audio/chroma.ts for why the band exists.
+          if (tuned) {
+            if (spectrum) {
+              segmentFine.push(
+                fineChromaFromSpectrum(spectrum, sampleRate, {
+                  frameSize: FRAME_SIZE,
+                  minHz: MIN_HZ,
+                  maxHz: MAX_HZ,
+                  binsPerSemitone: BINS_PER_SEMITONE,
+                })
+              )
+            }
+          } else {
+            const frameChroma =
+              chromaFrom === "banded"
+                ? spectrum
+                  ? chromaFromSpectrum(spectrum, sampleRate, {
+                      frameSize: FRAME_SIZE,
+                    })
+                  : null
+                : extracted.chroma
+                  ? Array.from(extracted.chroma)
+                  : null
+
+            if (frameChroma) {
+              // Kept twice on purpose: per window for the vote, and pooled for the
+              // whole-track average the Energy Model features still read.
+              segmentChroma.push(frameChroma)
+              allChromaFrames.push(frameChroma)
+            }
           }
         }
 
@@ -120,8 +176,34 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
         fluxSegments.push(segmentFlux)
       }
       if (segmentChroma.length > 0) {
-        chromaSegments.push(averageChroma(segmentChroma))
+        chromaSegments.push(aggregateChroma(segmentChroma))
       }
+      if (segmentFine.length > 0) {
+        fineSegments.push(segmentFine)
+      }
+    }
+
+    // Tuned path: the offset is estimated from every frame of the track pooled
+    // together, then each window is folded with it. Folding per window with a
+    // per-window estimate would reintroduce exactly the noise this avoids.
+    let tuningOffset = 0
+    if (tuned) {
+      const pooled = sumFineChroma(fineSegments.flat())
+      tuningOffset = estimateTuningOffset(pooled, BINS_PER_SEMITONE)
+
+      for (const segmentFine of fineSegments) {
+        chromaSegments.push(
+          foldFineChroma(
+            sumFineChroma(segmentFine),
+            BINS_PER_SEMITONE,
+            tuningOffset
+          )
+        )
+      }
+
+      allChromaFrames.push(
+        foldFineChroma(pooled, BINS_PER_SEMITONE, tuningOffset)
+      )
     }
 
     const frameRateHz = sampleRate / HOP_SIZE
@@ -135,12 +217,13 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
         fluxMean: mean(fluxSegments.flat()),
         entropyMean: mean(entropy),
         onsetRate: onsetRateFromSegments(fluxSegments, frameRateHz),
-        chroma: averageChroma(allChromaFrames),
+        chroma: aggregateChroma(allChromaFrames),
         chromaSegments,
         frameCount: rms.length,
         // What the frames actually covered, so a reader of these numbers knows
         // they describe a sample of the track rather than all of it.
         analyzedSeconds: sampleRate > 0 ? (rms.length * HOP_SIZE) / sampleRate : 0,
+        tuningOffsetSemitones: tuningOffset,
       },
     }
 
