@@ -57,7 +57,33 @@ export interface WorkerRequest {
    */
   channels: Float32Array[]
   sampleRate: number
+  /**
+   * How to turn each frame's spectrum into a pitch-class profile. Belongs in the
+   * request rather than applied afterwards — unlike the key profiles, which are
+   * correlated against an already-computed chroma, this changes how the chroma
+   * itself is built, so it has to happen inside the frame loop.
+   */
+  chromaMethod?: ChromaMethod
 }
+
+/**
+ * - **meyda** — Meyda's own chroma extractor, over the whole spectrum. What the
+ *   21% baseline was measured with.
+ * - **banded** — ours: band-limited to where a 2048-point FFT can resolve a
+ *   semitone, aggregated with a temporal median. See lib/audio/chroma.ts for the
+ *   arithmetic behind the band.
+ */
+export const CHROMA_METHODS = ["meyda", "banded"] as const
+
+/** Derived from the list so the harness picker and the type can't drift apart. */
+export type ChromaMethod = (typeof CHROMA_METHODS)[number]
+
+/**
+ * Unchanged on purpose, so the next harness run stays comparable with the 21%
+ * baseline. The last change that sounded obviously right — Temperley's profiles —
+ * made the numbers worse, so this one waits for a measurement too.
+ */
+export const DEFAULT_CHROMA_METHOD: ChromaMethod = "meyda"
 
 export type WorkerResponse =
   | { id: string; ok: true; features: AudioFeatures; analyzeMs: number }

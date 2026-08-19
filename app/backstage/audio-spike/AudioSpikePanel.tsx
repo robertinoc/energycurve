@@ -26,6 +26,11 @@ import { Button } from "@/components/ui/button"
 import type { TrackAnalysis } from "@/lib/audio/analysis-types"
 import { analyzeAudioFile, disposeAudioWorker } from "@/lib/audio/analyze-track"
 import {
+  CHROMA_METHODS,
+  DEFAULT_CHROMA_METHOD,
+  type ChromaMethod,
+} from "@/lib/audio/analysis-types"
+import {
   DEFAULT_KEY_PROFILES,
   KEY_PROFILES,
   type KeyProfileSet,
@@ -76,6 +81,8 @@ export function AudioSpikePanel() {
    */
   const [keyProfiles, setKeyProfiles] =
     useState<KeyProfileSet>(DEFAULT_KEY_PROFILES)
+  const [chromaMethod, setChromaMethod] =
+    useState<ChromaMethod>(DEFAULT_CHROMA_METHOD)
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({
     key: "totalMs",
     desc: true,
@@ -158,6 +165,7 @@ export function AudioSpikePanel() {
         taggedBpm,
         taggedKey,
         keyProfiles,
+        chromaMethod,
       })
       setRows((current) => [...current, analysis])
       setProgress({ done: index + 1, total: batch.length })
@@ -233,6 +241,23 @@ export function AudioSpikePanel() {
               className="rounded-md border border-ec-border bg-ec-raised px-2 py-1 text-sm text-ec-text"
             >
               {Object.keys(KEY_PROFILES).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ec-text-dim">
+            Chroma
+            <select
+              value={chromaMethod}
+              onChange={(event) =>
+                setChromaMethod(event.target.value as ChromaMethod)
+              }
+              disabled={running}
+              className="rounded-md border border-ec-border bg-ec-raised px-2 py-1 text-sm text-ec-text"
+            >
+              {CHROMA_METHODS.map((name) => (
                 <option key={name} value={name}>
                   {name}
                 </option>
