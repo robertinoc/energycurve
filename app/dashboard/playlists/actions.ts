@@ -29,6 +29,7 @@ import {
   createAudioImportSchema,
   createPlaylistSchema,
   createTrackInputSchema,
+  createMeasuredAudioSchema,
   createTracklistImportSchema,
   updatePlaylistDetailsSchema,
 } from "@/lib/playlists/schemas"
@@ -40,7 +41,11 @@ import {
 } from "@/lib/product/strategy"
 import { can } from "@/lib/product/capabilities"
 import { restorableOrder } from "@/lib/playlists/versions"
+import { parseTrackAudioFeatures } from "@/lib/audio/track-features"
+import type { Json } from "@/types/database"
+import { applyMeasuredAudio } from "@/services/playlist-service"
 import { getProfileBilling } from "@/services/billing-service"
+import { mayWrite } from "@/lib/playlists/edit-lock"
 import {
   addSuggestion,
   getLockState,
@@ -51,7 +56,6 @@ import {
   takeEditLock,
   touchEditLock,
 } from "@/services/collaboration-service"
-import { mayWrite } from "@/lib/playlists/edit-lock"
 import {
   captureVersion,
   compareWithCurrent,
@@ -1298,6 +1302,81 @@ export async function resolveSuggestionAction(
   revalidatePath(`/dashboard/shared/${playlistId}`)
 
   return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Enriching an existing playlist from audio files on disk.
+// ---------------------------------------------------------------------------
+
+export interface EnrichAudioResult {
+  ok: boolean
+  written?: number
+  message?: string
+}
+
+/**
+ * Writes measured BPM, key and spectral features onto tracks that already exist.
+ *
+ * The matching happened in the browser, where the files are, and the DJ already
+ * reviewed it — this only persists what they confirmed. Features are re-validated
+ * here anyway with `parseTrackAudioFeatures`: the payload crossed a network
+ * boundary, and a jsonb column will accept whatever it's handed.
+ *
+ * Gated on `audio_analysis`, the same capability the import-time flow uses. It is
+ * the same measurement; doing it to a playlist you already have shouldn't cost a
+ * different plan than doing it while creating one.
+ */
+export async function applyMeasuredAudioAction(
+  payload: unknown
+): Promise<EnrichAudioResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "import", locale)
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message ?? undefined }
+  }
+
+  const parsed = createMeasuredAudioSchema().safeParse(payload)
+
+  if (!parsed.success) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  const billing = await getProfileBilling(profile.id)
+
+  if (!can(billing.plan, billing.status, "audio_analysis")) {
+    return { ok: false, message: ACTION_COPY.audioAnalysisNotEntitled[locale] }
+  }
+
+  try {
+    const written = await applyMeasuredAudio(
+      profile.id,
+      parsed.data.playlistId,
+      parsed.data.updates.map((update) => ({
+        trackId: update.trackId,
+        bpm: update.bpm,
+        musicalKey: update.musicalKey,
+        // Null rather than a rejection when the shape is wrong: the BPM and key
+        // are the part the DJ came for, and losing them because one feature field
+        // arrived malformed would be the wrong trade.
+        audioFeatures:
+          (parseTrackAudioFeatures(update.features) as unknown as Json) ?? null,
+      }))
+    )
+
+    revalidatePath(`/dashboard/playlists/${parsed.data.playlistId}`)
+    revalidatePath(`/dashboard/playlists/${parsed.data.playlistId}/analysis`)
+
+    return { ok: true, written }
+  } catch (error) {
+    logError("playlist.audio_enrich_failed", error, {
+      profileId: profile.id,
+      playlistId: parsed.data.playlistId,
+    })
+
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
 }
 
 // ---------------------------------------------------------------------------

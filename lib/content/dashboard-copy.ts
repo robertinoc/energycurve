@@ -898,6 +898,10 @@ export const DASHBOARD_COPY = {
       en: " {count} line(s) were skipped.",
       es: " Se saltearon {count} línea(s).",
     },
+    audioAnalysisNotEntitled: {
+      en: "Measuring audio is a PRO feature.",
+      es: "Medir el audio es una función PRO.",
+    },
     inviteBadEmail: {
       en: "That doesn't look like an email address.",
       es: "Eso no parece una dirección de email.",
@@ -978,6 +982,53 @@ export const DASHBOARD_COPY = {
    * collaborator who thinks they can reorder and then can't reads the feature as
    * broken rather than as scoped.
    */
+  /**
+   * Measuring the audio of a playlist that already exists.
+   *
+   * The words lean on "measure" rather than "analyse" throughout: the app already
+   * uses "analyse" for what it does to a *set*, and a DJ reading "analyse the
+   * audio" next to "analyse the set" has no way to tell which is which.
+   */
+  audioEnrich: {
+    title: { en: "Measure the audio", es: "Medir el audio" },
+    intro: {
+      en: "Point at the folder with these tracks and we read real BPM, key and energy from the files. The audio never leaves your machine — only the numbers are saved. You review which file goes with which track before anything is written.",
+      es: "Apuntá a la carpeta con estos temas y leemos BPM, tonalidad y energía reales de los archivos. El audio nunca sale de tu máquina — sólo se guardan los números. Vos revisás qué archivo va con cada track antes de que se escriba nada.",
+    },
+    pickFolder: { en: "Choose folder", es: "Elegir carpeta" },
+    reading: { en: "Reading tags", es: "Leyendo tags" },
+    measuring: { en: "Measuring", es: "Midiendo" },
+    keepTabOpen: {
+      en: "Keep this tab in front — measuring pauses in a background tab.",
+      es: "Mantené esta pestaña adelante — la medición se pausa en una pestaña de fondo.",
+    },
+    titleOnly: {
+      en: "title only — check this one",
+      es: "sólo por título — revisá este",
+    },
+    leftOut: {
+      en: "{unmatched} tracks had no matching file, and {ambiguous} matched more than one. Those are left exactly as they are.",
+      es: "{unmatched} tracks no encontraron archivo, y {ambiguous} coincidieron con más de uno. Esos quedan exactamente como están.",
+    },
+    measureCount: {
+      en: "Measure {count} tracks",
+      es: "Medir {count} tracks",
+    },
+    cancel: { en: "Start over", es: "Empezar de nuevo" },
+    doneCount: {
+      en: "{count} tracks updated",
+      es: "{count} tracks actualizados",
+    },
+    noAudioFiles: {
+      en: "That folder has no audio files we can read.",
+      es: "Esa carpeta no tiene archivos de audio que podamos leer.",
+    },
+    nothingMeasured: {
+      en: "Nothing could be measured from those files.",
+      es: "No se pudo medir nada de esos archivos.",
+    },
+  },
+
   /**
    * Turn-based editing. The words avoid "lock", which sounds like a failure — the
    * DJ isn't locked out of anything, the other one is holding the pen.
