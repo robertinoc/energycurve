@@ -87,7 +87,7 @@ const STRINGS: Record<
     subjectNew: (plan) => `Welcome to EnergyCurve ${plan}`,
     subjectUpgrade: (plan) => `You're on ${plan}`,
     statement:
-      "One thing worth knowing before your statement arrives: the charge appears as STAGELINK LLC, not EnergyCurve. EnergyCurve is part of the StageLink suite, and StageLink LLC is the company that processes the payment. Nothing is wrong if that's the name you see.",
+      "One thing worth knowing before your statement arrives: the charge appears as STAGELINK LLC, not EnergyCurve. EnergyCurve is part of the StageLink family, and StageLink LLC is the company that processes the payment. Nothing is wrong if that's the name you see.",
     cancel:
       "You can change or cancel your plan whenever you want, from your account — no email required, no retention call.",
     button: "Open EnergyCurve",
@@ -101,7 +101,7 @@ const STRINGS: Record<
     subjectNew: (plan) => `Bienvenido a EnergyCurve ${plan}`,
     subjectUpgrade: (plan) => `Ya estás en ${plan}`,
     statement:
-      "Algo que conviene saber antes de que te llegue el resumen: el cargo aparece como STAGELINK LLC, no como EnergyCurve. EnergyCurve es parte de la suite StageLink, y StageLink LLC es la empresa que procesa el pago. No hay nada mal si ese es el nombre que ves.",
+      "Algo que conviene saber antes de que te llegue el resumen: el cargo aparece como STAGELINK LLC, no como EnergyCurve. EnergyCurve es parte de la familia StageLink, y StageLink LLC es la empresa que procesa el pago. No hay nada mal si ese es el nombre que ves.",
     cancel:
       "Podés cambiar o cancelar tu plan cuando quieras, desde tu cuenta — sin mandar un mail, sin llamada de retención.",
     button: "Abrir EnergyCurve",

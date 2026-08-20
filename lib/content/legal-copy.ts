@@ -39,7 +39,7 @@ const en: Record<LegalDocId, LegalDoc> = {
     title: "Privacy Policy",
     updated: UPDATED.en,
     intro:
-      `This policy explains what data EnergyCurve collects, why, and the choices you have. EnergyCurve is a tool for DJs to analyze the energy of their sets, operated by ${OPERATOR} as part of the StageLink suite.`,
+      `This policy explains what data EnergyCurve collects, why, and the choices you have. EnergyCurve is a tool for DJs to analyze the energy of their sets, operated by ${OPERATOR} as part of the StageLink family.`,
     sections: [
       {
         heading: "What we collect",
@@ -98,7 +98,7 @@ const en: Record<LegalDocId, LegalDoc> = {
       {
         heading: "Who operates EnergyCurve",
         body: [
-          `EnergyCurve is part of the StageLink suite and is operated by ${OPERATOR}, the company responsible for the service and for this agreement.`,
+          `EnergyCurve is part of the StageLink family and is operated by ${OPERATOR}, the company responsible for the service and for this agreement.`,
           `If you purchase a paid plan, the charge is processed by ${OPERATOR}, so "${OPERATOR}" is the name that appears on your card statement, invoices, and receipts — not "EnergyCurve".`,
         ],
       },
@@ -177,7 +177,7 @@ const es: Record<LegalDocId, LegalDoc> = {
     title: "Política de Privacidad",
     updated: UPDATED.es,
     intro:
-      `Esta política explica qué datos recopila EnergyCurve, por qué, y qué opciones tenés. EnergyCurve es una herramienta para que los DJs analicen la energía de sus sets, operada por ${OPERATOR} como parte de la suite StageLink.`,
+      `Esta política explica qué datos recopila EnergyCurve, por qué, y qué opciones tenés. EnergyCurve es una herramienta para que los DJs analicen la energía de sus sets, operada por ${OPERATOR} como parte de la familia StageLink.`,
     sections: [
       {
         heading: "Qué recopilamos",
@@ -236,7 +236,7 @@ const es: Record<LegalDocId, LegalDoc> = {
       {
         heading: "Quién opera EnergyCurve",
         body: [
-          `EnergyCurve es parte de la suite StageLink y está operado por ${OPERATOR}, la empresa responsable del servicio y de este acuerdo.`,
+          `EnergyCurve es parte de la familia StageLink y está operado por ${OPERATOR}, la empresa responsable del servicio y de este acuerdo.`,
           `Si contratás un plan pago, el cobro lo procesa ${OPERATOR}, así que "${OPERATOR}" es el nombre que vas a ver en tu resumen de tarjeta, facturas y recibos — no "EnergyCurve".`,
         ],
       },
