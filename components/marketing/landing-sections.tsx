@@ -1,19 +1,14 @@
 import {
   ArrowRight,
-  BarChart3,
   CalendarClock,
   ChevronDown,
-  CreditCard,
-  GitBranch,
   GitCompareArrows,
   History,
   Layers,
   Library,
-  LineChart,
   Mail,
   MapPin,
   Printer,
-  Sparkles,
   Waves,
   WifiOff,
 } from "lucide-react"
@@ -26,6 +21,7 @@ import {
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { CTAButton } from "@/components/marketing/cta-button"
 import { LandingContactForm } from "@/components/marketing/landing-contact-form"
+import { LayerDiagram } from "@/components/marketing/layer-diagram"
 import { SectionContainer } from "@/components/marketing/section-container"
 import { SectionReveal } from "@/components/marketing/section-reveal"
 import { EnergyCurveHeroVisual } from "@/components/marketing/energy-curve-hero-visual"
@@ -33,8 +29,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ResolvedSiteCopy } from "@/lib/content/site-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import { cn } from "@/lib/utils"
-
-const featureIcons = [LineChart, GitBranch, Sparkles, BarChart3, Waves] as const
 
 export function HeroSection({
   copy,
@@ -55,45 +49,12 @@ export function HeroSection({
         <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,16,31,0.96),rgba(8,5,15,0.98))] px-5 py-7 shadow-[0_0_60px_rgba(162,77,224,0.08)]">
           <div className="flex flex-col items-center gap-5 text-center">
             <EnergyCurveLogo tone="light" size="xl" kind="horizontal" priority />
-            <div className="grid w-full gap-4 rounded-[22px] border border-white/8 bg-black/18 px-5 py-5 lg:grid-cols-[0.9fr_1.1fr_0.7fr]">
-              <div className="space-y-3 text-left">
-                <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {copy.ui.builtFor}
-                </p>
-                {copy.hero.audienceTags.map((label, index) => (
-                  <div key={label} className="flex items-center gap-3 text-white/70">
-                    <div className="rounded-xl border border-white/8 bg-white/[0.04] p-2">
-                      {index === 0 ? (
-                        <LineChart className="size-4 text-[#CDA2F1]" />
-                      ) : index === 1 ? (
-                        <Sparkles className="size-4 text-[#CDA2F1]" />
-                      ) : (
-                        <Waves className="size-4 text-[#CDA2F1]" />
-                      )}
-                    </div>
-                    <span className="text-sm">{label}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-3 border-y border-white/8 py-4 text-left lg:border-x lg:border-y-0 lg:px-5 lg:py-0">
-                <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {copy.ui.firstOutput}
-                </p>
-                <p className="text-2xl font-heading font-semibold leading-tight text-white">
-                  {copy.hero.support}
-                </p>
-              </div>
-
-              <div className="space-y-3 text-left">
-                <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/38">
-                  {copy.ui.whyTrust}
-                </p>
-                <div className="space-y-2 text-sm leading-6 text-white/68">
-                  <p>{copy.ui.trustSignals.founder}</p>
-                  <p>{copy.ui.trustSignals.workflows}</p>
-                </div>
-              </div>
+            {/* Where the product sits, said before anything else — this space
+                used to hold a "built for / what you get / why trust it" strip
+                that titled the page with everything except what it does. */}
+            <div className="w-full text-left">
+              <p className="ec-eyebrow mb-3 text-center">{copy.layer.eyebrow}</p>
+              <LayerDiagram copy={copy} variant="strip" />
             </div>
 
             <div className="mt-2 max-w-4xl space-y-4">
@@ -103,7 +64,7 @@ export function HeroSection({
               <p className="mx-auto max-w-3xl text-base leading-7 text-white/68 sm:text-lg">
                 {copy.hero.subtitle}
               </p>
-              <p className="mx-auto max-w-3xl text-sm leading-6 text-white/46">
+              <p className="mx-auto max-w-3xl text-sm leading-6 text-white/64">
                 {copy.hero.audienceLine}
               </p>
             </div>
@@ -125,9 +86,12 @@ export function HeroSection({
               </a>
             </div>
 
-            <p className="text-sm text-white/50">
-              {copy.ui.trustSignals.founder} {copy.ui.trustSignals.access}
-            </p>
+            <div className="max-w-3xl space-y-1.5 text-sm leading-6 text-white/64">
+              <p>{copy.hero.support}</p>
+              <p className="text-white/50">
+                {copy.ui.trustSignals.founder} {copy.ui.trustSignals.access}
+              </p>
+            </div>
           </div>
 
           <div className="mt-6 rounded-[24px] border border-white/8 bg-black/18 p-3">
@@ -139,20 +103,22 @@ export function HeroSection({
   )
 }
 
+/** Semantic dot colours for the feature points — same scale as the curve markers. */
+const featureDot = ["bg-[#A24DE0]", "bg-[#22D3EE]", "bg-[#F0348A]", "bg-[#F5A524]"] as const
+
 export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
+  const { panel } = copy.features
+
   return (
     <SectionReveal delay={50}>
       <SectionContainer
         id="features"
-        className="space-y-5 bg-[linear-gradient(180deg,rgba(12,9,23,0.98),rgba(12,9,23,0.98)),radial-gradient(circle_at_12%_16%,rgba(162,77,224,0.14),transparent_28%),radial-gradient(circle_at_88%_28%,rgba(34,211,238,0.1),transparent_24%),radial-gradient(circle_at_52%_108%,rgba(255,94,138,0.08),transparent_28%)]"
+        className="space-y-6 bg-[linear-gradient(180deg,rgba(12,9,23,0.98),rgba(12,9,23,0.98)),radial-gradient(circle_at_12%_16%,rgba(162,77,224,0.14),transparent_28%),radial-gradient(circle_at_88%_28%,rgba(34,211,238,0.1),transparent_24%)]"
       >
         <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-6rem] top-[-4rem] h-[16rem] w-[16rem] opacity-28" />
-        <AmbientGlow tone="magenta" className="ambient-drift-slow left-[18%] top-[55%] h-[14rem] w-[14rem] opacity-18" />
         <div className="space-y-3">
-          <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
-            {copy.nav.features}
-          </p>
-          <h2 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
+          <p className="ec-eyebrow">{copy.nav.features}</p>
+          <h2 className="max-w-3xl text-balance text-3xl font-heading font-semibold text-white sm:text-4xl">
             {copy.features.title}
           </h2>
           <p className="max-w-3xl text-base leading-7 text-white/62">
@@ -160,32 +126,93 @@ export function FeaturesSection({ copy }: { copy: ResolvedSiteCopy }) {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {copy.features.cards.map((feature, index) => {
-            const Icon = featureIcons[index % featureIcons.length]
+        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+          {/* The product's own output, rather than a description of it. */}
+          <div className="rounded-[22px] border border-white/10 bg-ec-sunken p-5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-mono text-[0.72rem] uppercase tracking-[0.16em] text-white/60">
+                {panel.orderLabel}
+              </span>
+              <span className="rounded-full border border-[#F5A524]/45 bg-[#F5A524]/15 px-3 py-1 font-mono text-[0.68rem] font-bold uppercase tracking-[0.04em] text-[#FFCA7A]">
+                {panel.issuesBadge}
+              </span>
+            </div>
 
-            return (
-              <Card
-                key={feature.key}
-                className="border-white/10 bg-white/[0.03] text-white ring-0 transition hover:-translate-y-1 hover:border-white/16 hover:shadow-[0_20px_48px_rgba(0,0,0,0.22),0_0_32px_rgba(162,77,224,0.08)]"
-              >
-                <CardHeader className="gap-3">
-                  <div className="flex items-center justify-between">
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                      <Icon className="size-5 text-white/66" />
-                    </div>
-                    <span className="text-[0.68rem] uppercase tracking-[0.2em] text-white/28">
-                      0{index + 1}
+            <div className="mt-4 grid gap-2">
+              {panel.tracks.map((track) => (
+                <div
+                  key={track.position}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl bg-black/25 px-4 py-2.5",
+                    track.flagged && "outline outline-1 outline-[#F5A524]/45"
+                  )}
+                >
+                  <span className="w-6 font-mono text-[0.8rem] text-white/50">
+                    {track.position}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-white">
+                      {track.title}
                     </span>
-                  </div>
-                  <CardTitle className="text-xl text-white">{feature.title}</CardTitle>
-                  <CardDescription className="text-white/60">
-                    {feature.description}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            )
-          })}
+                    <span className="block font-mono text-[0.72rem] text-white/50">
+                      {track.meta}
+                    </span>
+                  </span>
+                  <span aria-hidden className="hidden h-[7px] w-20 shrink-0 overflow-hidden rounded-full bg-ec-raised sm:block">
+                    <span
+                      className="ec-gradient-bg block h-full"
+                      style={{ width: `${track.energy}%` }}
+                    />
+                  </span>
+                  <span
+                    className={cn(
+                      "w-8 shrink-0 text-right font-mono text-sm font-bold",
+                      track.flagged ? "text-[#FFCA7A]" : "text-[#FF89B9]"
+                    )}
+                  >
+                    {track.score}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 border-t border-white/8 pt-4">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="rounded-full border border-[#F5A524]/45 bg-[#F5A524]/15 px-3 py-1 font-mono text-[0.68rem] font-bold uppercase tracking-[0.04em] text-[#FFCA7A]">
+                  {panel.dropChip}
+                </span>
+                <span className="text-sm text-white/60">{panel.dropWhere}</span>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-white">{panel.fixText}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-4">
+                <span className="rounded-xl border border-[#22D3EE]/35 bg-[#22D3EE]/10 px-4 py-2 text-sm font-semibold text-ec-cyan">
+                  {panel.applyLabel}
+                </span>
+                <span className="font-mono text-sm text-white/60">
+                  {panel.scoreBefore}{" "}
+                  <span className="text-ec-cyan">→ {panel.scoreAfter}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <ul className="grid gap-5">
+            {copy.features.cards.map((feature, index) => (
+              <li key={feature.key} className="flex gap-3.5">
+                <span
+                  aria-hidden
+                  className={cn(
+                    "mt-2 size-2 shrink-0 rounded-full",
+                    featureDot[index % featureDot.length]
+                  )}
+                />
+                <p className="text-[0.95rem] leading-7 text-white/64">
+                  <strong className="font-semibold text-white">{feature.title}.</strong>{" "}
+                  {feature.description}
+                </p>
+              </li>
+            ))}
+          </ul>
         </div>
       </SectionContainer>
     </SectionReveal>
@@ -197,7 +224,7 @@ export function DifferentiationSection({ copy }: { copy: ResolvedSiteCopy }) {
       <SectionReveal delay={100}>
       <SectionContainer className="bg-[linear-gradient(135deg,rgba(162,77,224,0.14),rgba(34,211,238,0.06),rgba(76,110,245,0.10))]">
         <AmbientGlow tone="blend" className="ambient-drift-slow right-[-5rem] top-[-5rem] h-[18rem] w-[18rem] opacity-45" />
-        <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+        <p className="ec-eyebrow">
           {copy.ui.differentiation}
         </p>
         <h2 className="mt-3 text-3xl font-heading font-semibold text-white sm:text-4xl">
@@ -206,6 +233,13 @@ export function DifferentiationSection({ copy }: { copy: ResolvedSiteCopy }) {
         <p className="mt-3 max-w-3xl text-base leading-7 text-white/68">
           {copy.diff.body}
         </p>
+
+        {/* The differentiator was two sentences on the page that exists to make
+            it. Drawn, it does the work the sentences were asking the reader to
+            do on their own. */}
+        <div className="mt-7">
+          <LayerDiagram copy={copy} />
+        </div>
       </SectionContainer>
     </SectionReveal>
   )
@@ -225,7 +259,7 @@ export function HowItWorksSection({
           <AmbientGlow tone="violet" className="ambient-drift-slow left-[-6rem] top-[4rem] h-[16rem] w-[16rem] opacity-22" />
           <EnergyWaveBackdrop className="left-[2%] top-[-1rem] h-[9rem] w-[96%] opacity-16" />
           <CardHeader className="space-y-3">
-            <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+            <p className="ec-eyebrow">
               {copy.nav.how}
             </p>
             <CardTitle className="text-3xl text-white sm:text-4xl">
@@ -291,7 +325,7 @@ export function StorySection({ copy }: { copy: ResolvedSiteCopy }) {
         <EnergyWaveBackdrop className="right-[4%] top-[0.5rem] h-[8rem] w-[42%] opacity-12" />
         <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
           <CardHeader className="space-y-3">
-            <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+            <p className="ec-eyebrow">
               {copy.nav.story}
             </p>
             <CardTitle className="text-3xl text-white sm:text-4xl">
@@ -324,9 +358,9 @@ export function SuiteSection({ copy }: { copy: ResolvedSiteCopy }) {
           className="ambient-drift-slow left-[-6rem] top-[-4rem] h-[18rem] w-[18rem] opacity-40"
         />
 
-        <div className="grid gap-8 lg:grid-cols-[1.25fr_1fr] lg:items-start">
+        <div className="max-w-3xl">
           <div>
-            <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+            <p className="ec-eyebrow">
               {copy.suite.eyebrow}
             </p>
             <h2 className="mt-3 flex items-center gap-3 text-3xl font-heading font-semibold text-white sm:text-4xl">
@@ -347,20 +381,6 @@ export function SuiteSection({ copy }: { copy: ResolvedSiteCopy }) {
             </a>
           </div>
 
-          {/* Billing transparency: say it before Stripe does. */}
-          <div className="rounded-3xl border border-white/12 bg-black/24 p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5">
-                <CreditCard aria-hidden className="size-5 text-white/66" />
-              </div>
-              <h3 className="text-base font-heading font-semibold text-white">
-                {copy.suite.billingTitle}
-              </h3>
-            </div>
-            <p className="mt-4 text-sm leading-6 text-white/64">
-              {copy.suite.billingBody}
-            </p>
-          </div>
         </div>
       </SectionContainer>
     </SectionReveal>
@@ -396,7 +416,7 @@ export function LoopSection({ copy }: { copy: ResolvedSiteCopy }) {
           className="ambient-drift-slow right-[-7rem] top-[-5rem] h-[20rem] w-[20rem] opacity-30"
         />
 
-        <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+        <p className="ec-eyebrow">
           {copy.loop.eyebrow}
         </p>
         <h2 className="mt-3 max-w-3xl text-balance text-3xl font-heading font-semibold text-white sm:text-4xl">
@@ -410,7 +430,7 @@ export function LoopSection({ copy }: { copy: ResolvedSiteCopy }) {
           {copy.loop.stages.map((stage, stageIndex) => (
             <div key={stage.title}>
               <div className="flex items-baseline gap-2.5">
-                <span className="font-heading text-[0.68rem] uppercase tracking-[0.2em] text-white/28">
+                <span className="font-mono text-[0.7rem] font-bold uppercase tracking-[0.18em] text-ec-cyan/70">
                   {String(stageIndex + 1).padStart(2, "0")}
                 </span>
                 <h3 className="text-lg font-heading font-semibold text-white">
@@ -422,6 +442,14 @@ export function LoopSection({ copy }: { copy: ResolvedSiteCopy }) {
                 style={{ opacity: 0.5 + stageIndex * 0.25 }}
                 aria-hidden
               />
+              {/* Free first, in every stage: the paid cards below are the depth,
+                  not the entry fee. */}
+              <div className="mb-3 flex items-start gap-2.5">
+                <span className="mt-0.5 shrink-0 rounded-full border border-[#22D3EE]/40 bg-[#22D3EE]/12 px-2.5 py-0.5 font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-[#7DE6F7]">
+                  {copy.pricing.plans[0].name}
+                </span>
+                <p className="text-[0.86rem] leading-6 text-white/64">{stage.freeNote}</p>
+              </div>
               <div className="grid gap-3">
                 {stage.items.map((item) => {
                   const Icon = loopIcons[item.capability as keyof typeof loopIcons]
@@ -459,7 +487,7 @@ export function LoopSection({ copy }: { copy: ResolvedSiteCopy }) {
           <CTAButton href={localizedPath("/pricing", copy.locale)}>
             {copy.loop.cta}
           </CTAButton>
-          <p className="text-sm text-white/46">{copy.loop.footNote}</p>
+          <p className="text-sm text-white/64">{copy.loop.footNote}</p>
         </div>
       </SectionContainer>
     </SectionReveal>
@@ -474,7 +502,7 @@ export function PricingTeaserSection({ copy }: { copy: ResolvedSiteCopy }) {
         className="space-y-6 bg-[linear-gradient(180deg,rgba(12,9,23,0.98),rgba(12,9,23,0.98)),radial-gradient(circle_at_18%_14%,rgba(162,77,224,0.14),transparent_28%)]"
       >
         <div className="space-y-3">
-          <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+          <p className="ec-eyebrow">
             {copy.pricing.eyebrow}
           </p>
           <h2 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
@@ -520,7 +548,7 @@ export function PricingTeaserSection({ copy }: { copy: ResolvedSiteCopy }) {
               <p className="mt-3 font-heading text-2xl font-semibold tracking-tight text-white">
                 {plan.price}
                 {plan.annual ? (
-                  <span className="ml-1 text-sm font-normal text-white/46">
+                  <span className="ml-1 text-sm font-normal text-white/60">
                     {copy.pricing.perMonth}
                   </span>
                 ) : null}
@@ -549,7 +577,7 @@ export function FaqSection({ copy }: { copy: ResolvedSiteCopy }) {
         className="space-y-5 bg-[linear-gradient(180deg,rgba(12,9,23,0.98),rgba(12,9,23,0.98)),radial-gradient(circle_at_88%_12%,rgba(162,77,224,0.12),transparent_26%)]"
       >
         <div className="space-y-3">
-          <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+          <p className="ec-eyebrow">
             {copy.faq.eyebrow}
           </p>
           <h2 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
@@ -569,7 +597,7 @@ export function FaqSection({ copy }: { copy: ResolvedSiteCopy }) {
                 </h3>
                 <ChevronDown
                   aria-hidden
-                  className="mt-1 size-5 shrink-0 text-white/40 transition group-open:rotate-180"
+                  className="mt-1 size-5 shrink-0 text-white/60 transition group-open:rotate-180"
                 />
               </summary>
               <p className="mt-3 max-w-3xl pr-9 text-sm leading-7 text-white/62">
@@ -590,7 +618,7 @@ export function ContactSection({ copy }: { copy: ResolvedSiteCopy }) {
         <Card className="relative overflow-hidden border-white/10 bg-white/[0.03] text-white ring-0">
           <AmbientGlow tone="cyan" className="ambient-drift-slow right-[-5rem] top-[-4rem] h-[14rem] w-[14rem] opacity-18" />
           <CardHeader className="space-y-3">
-            <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+            <p className="ec-eyebrow">
               {copy.nav.contact}
             </p>
             <CardTitle className="text-3xl text-white sm:text-4xl">
@@ -649,7 +677,7 @@ export function FinalCTASection({
         <EnergyWaveBackdrop className="right-[-2rem] top-0 h-full w-[52%] opacity-18" />
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl space-y-3">
-            <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+            <p className="ec-eyebrow">
               {copy.ui.earlyAccess}
             </p>
             <h2 className="text-3xl font-heading font-semibold text-white sm:text-4xl">
@@ -688,9 +716,7 @@ function FooterColumn({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
-        {heading}
-      </p>
+      <p className="ec-eyebrow text-[0.7rem]">{heading}</p>
       <nav className="flex flex-col gap-2">
         {links.map((link) => (
           <a
@@ -708,7 +734,7 @@ function FooterColumn({
 
 export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
   return (
-    <footer className="flex flex-col gap-10 border-t border-white/8 pt-8 text-sm text-white/46">
+    <footer className="flex flex-col gap-10 border-t border-white/8 pt-8 text-sm text-white/64">
       <div className="flex flex-col gap-10 md:flex-row md:justify-between">
         {/* Brand */}
         <div className="max-w-xs space-y-4">
@@ -731,7 +757,7 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
               </span>
             ))}
           </p>
-          <p className="text-xs leading-5 text-white/40">{copy.footer.billing}</p>
+          <p className="text-[0.8rem] leading-5 text-white/64">{copy.footer.billing}</p>
         </div>
 
         {/* Link columns */}
@@ -741,6 +767,7 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
             links={[
               { href: "#features", label: copy.nav.features },
               { href: "#how-it-works", label: copy.nav.how },
+              { href: "#loop", label: copy.loop.navLabel },
               { href: "#story", label: copy.nav.story },
               { href: "#faq", label: copy.nav.faq },
               { href: "#contact", label: copy.nav.contact },

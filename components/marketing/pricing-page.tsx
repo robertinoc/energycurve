@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Check, Clock, CreditCard, Minus } from "lucide-react"
+import { Check, Clock, Minus } from "lucide-react"
 
 import { CheckoutButton } from "@/components/marketing/checkout-button"
 import { LanguageToggle } from "@/components/marketing/language-toggle"
@@ -178,7 +178,18 @@ export function PricingPage({ locale }: { locale: SiteLocale }) {
                   {interval === "yearly" && plan.annual ? plan.annual : plan.price}
                 </span>
                 {plan.annual && interval === "monthly" ? (
-                  <span className="text-sm text-white/50">{copy.perMonth}</span>
+                  <span className="text-sm text-white/60">{copy.perMonth}</span>
+                ) : null}
+                {/* Marks the paid plans; the footnote below the table explains
+                    that the charge reads "StageLink LLC". */}
+                {plan.annual ? (
+                  <a
+                    href="#billing-note"
+                    aria-label={copy.billingTitle}
+                    className="font-mono text-sm font-bold text-ec-cyan transition hover:text-white"
+                  >
+                    *
+                  </a>
                 ) : null}
               </div>
               {plan.annual ? (
@@ -301,18 +312,15 @@ export function PricingPage({ locale }: { locale: SiteLocale }) {
           </div>
         </section>
 
-        {/* Billing transparency — said before Stripe says it. */}
-        <section className="rounded-3xl border border-white/12 bg-black/24 p-6">
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5">
-              <CreditCard aria-hidden className="size-5 text-white/66" />
-            </div>
-            <h2 className="font-heading text-lg font-semibold">{copy.billingTitle}</h2>
-          </div>
-          <p className="mt-4 max-w-3xl text-sm leading-6 text-white/64">
-            {copy.billingBody}
-          </p>
-        </section>
+        {/* Billing transparency — a footnote on the asterisk beside each paid
+            price, rather than the full panel it used to be. Same promise, said
+            where the prices are, without reading like a warning. */}
+        <p
+          id="billing-note"
+          className="max-w-3xl scroll-mt-24 border-t border-white/8 pt-5 text-sm leading-6 text-white/64"
+        >
+          <span className="font-mono font-bold text-ec-cyan">*</span> {copy.billingBody}
+        </p>
 
         <section className="rounded-3xl border border-white/10 bg-[#14101F]/60 p-6">
           <h2 className="font-heading text-lg font-semibold">{copy.questionsTitle}</h2>

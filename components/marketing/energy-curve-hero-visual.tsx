@@ -18,12 +18,28 @@ const points = mapTracksToCurvePoints(
 const curvePath = buildSmoothCurvePath(points)
 const areaPath = buildCurveAreaPath(points, WIDTH, HEIGHT, PADDING)
 
+/**
+ * The states the engine actually reports, in the brand kit's semantic colours:
+ * peak = magenta, sharp drop = amber, flat zone = indigo, strong close = cyan.
+ * These used to be invented marketing words ("Teaser", "Set arc %") set in
+ * white at 45% — unreadable, and describing nothing the product returns.
+ */
+export type CurveMarkerTone = "peak" | "drop" | "flat" | "close"
+
+const MARKER_TONE: Record<CurveMarkerTone, string> = {
+  peak: "border-[#F0348A]/45 bg-[#F0348A]/15 text-[#FF89B9]",
+  drop: "border-[#F5A524]/45 bg-[#F5A524]/15 text-[#FFCA7A]",
+  flat: "border-[#4C6EF5]/50 bg-[#4C6EF5]/18 text-[#A6B6FF]",
+  close: "border-[#22D3EE]/45 bg-[#22D3EE]/13 text-[#7DE6F7]",
+}
+
 interface EnergyCurveHeroVisualProps {
   labels?: {
     energyScore: string
     peakIntensity: string
     setDuration: string
-    tags: string[]
+    markers: { label: string; tone: CurveMarkerTone }[]
+    phases: string[]
   }
 }
 
@@ -32,13 +48,13 @@ export function EnergyCurveHeroVisual({
     energyScore: "Energy score",
     peakIntensity: "Peak intensity",
     setDuration: "Set duration",
-    tags: [
-      "Cold opening",
-      "Track rise",
-      "Set arc %",
-      "Teaser",
-      "Stand easy",
+    markers: [
+      { label: "▲ Peak at 7 · 9.7", tone: "peak" },
+      { label: "Flat zone", tone: "flat" },
+      { label: "▼ Drop −3", tone: "drop" },
+      { label: "Strong close", tone: "close" },
     ],
+    phases: ["Opening", "Build-up", "Peak time", "Closing"],
   },
 }: EnergyCurveHeroVisualProps) {
   return (
@@ -192,15 +208,23 @@ export function EnergyCurveHeroVisual({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2 rounded-[16px] border border-white/8 bg-black/25 p-3">
-        {labels.tags.map((label) => (
-          <span
-            key={label}
-            className="whitespace-nowrap rounded-lg bg-white/[0.03] px-2.5 py-1.5 text-[0.6rem] uppercase tracking-[0.08em] text-white/45"
-          >
-            {label}
-          </span>
-        ))}
+      <div className="mt-4 rounded-[16px] border border-white/8 bg-black/25 p-3">
+        <div className="flex flex-wrap gap-2">
+          {labels.markers.map((marker) => (
+            <span
+              key={marker.label}
+              className={`whitespace-nowrap rounded-full border px-3 py-1 font-mono text-[0.72rem] font-bold uppercase tracking-[0.04em] ${MARKER_TONE[marker.tone]}`}
+            >
+              {marker.label}
+            </span>
+          ))}
+        </div>
+        {/* Phase axis, per the brand kit's curve spec. */}
+        <div className="mt-3 flex justify-between border-t border-white/8 px-1 pt-2.5 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-white/60">
+          {labels.phases.map((phase) => (
+            <span key={phase}>{phase}</span>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -209,7 +233,7 @@ export function EnergyCurveHeroVisual({
 function Metric({ title, value }: { title: string; value: string }) {
   return (
     <div className="rounded-xl border border-ec-border bg-ec-sunken px-3 py-4">
-      <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ec-text-muted">
+      <p className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ec-text-muted">
         {title}
       </p>
       <p className="ec-gradient-text mt-2 font-mono text-3xl font-bold">
