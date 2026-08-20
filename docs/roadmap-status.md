@@ -349,14 +349,17 @@ server needed**, with two corrections to the plan.
 - **Still open and worth naming**: Energy Model v3 is specified but unfitted and
   blocked on a labelled run over a tagged library — the same run key detection
   needs, so one session of tagged files unblocks both. Collaborative B2B/B3B sets
-  are now the one remaining planned PRO+ capability.
+  shipped its first slice on 20 Aug 2026 — sharing a set read-only with another DJ,
+  who can leave suggestions. Deliberately not simultaneous editing: two DJs
+  reordering one tracklist needs conflict resolution, presence and a merge story,
+  and none of that is what a B2B pair actually does the week before. There are now
+  no planned PRO+ capabilities left.
 
 ### What is not built yet
 
 <!-- planned-capabilities:start -->
 - `key_detection`
 - `energy_model_v3`
-- `b2b_sets`
 <!-- planned-capabilities:end -->
 
 Generated from `CAPABILITIES` in `lib/product/capabilities.ts` and checked by

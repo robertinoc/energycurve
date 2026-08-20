@@ -125,6 +125,90 @@ export interface Database {
           },
         ]
       }
+      set_collaborators: {
+        Row: {
+          id: string
+          playlist_id: string
+          invited_email: string
+          invited_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          playlist_id: string
+          invited_email: string
+          invited_by: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          playlist_id?: string
+          invited_email?: string
+          invited_by?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "set_collaborators_playlist_id_fkey"
+            columns: ["playlist_id"]
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+            isOneToOne: false
+          },
+          {
+            foreignKeyName: "set_collaborators_invited_by_fkey"
+            columns: ["invited_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+            isOneToOne: false
+          },
+        ]
+      }
+      set_suggestions: {
+        Row: {
+          id: string
+          playlist_id: string
+          author_id: string
+          track_id: string | null
+          body: string
+          resolved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          playlist_id: string
+          author_id: string
+          track_id?: string | null
+          body: string
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          playlist_id?: string
+          author_id?: string
+          track_id?: string | null
+          body?: string
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "set_suggestions_playlist_id_fkey"
+            columns: ["playlist_id"]
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+            isOneToOne: false
+          },
+          {
+            foreignKeyName: "set_suggestions_author_id_fkey"
+            columns: ["author_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+            isOneToOne: false
+          },
+        ]
+      }
       playlist_versions: {
         Row: {
           id: string

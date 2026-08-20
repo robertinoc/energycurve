@@ -215,13 +215,22 @@ describe("can()", () => {
   })
 
   it("answers about entitlement, not about existence", () => {
-    // A PRO+ subscriber is entitled to collaborative sets; they just don't exist
-    // yet. Gig Mode, then residency mode, each had to move out of this test when
-    // they shipped — the pair only means anything while the capability is planned,
-    // which is the point: `can` is about the plan, `isAvailable` about reality.
-    expect(CAPABILITIES.b2b_sets.status).toBe("planned")
+    // A PRO subscriber is entitled to key detection; it just isn't trustworthy
+    // yet — 21% against a reference of unknown provenance. Gig Mode, residency
+    // mode and now shared sets each had to move out of this test when they
+    // shipped: the pair only means anything while the capability is planned,
+    // which is the point — `can` is about the plan, `isAvailable` about reality.
+    expect(CAPABILITIES.key_detection.status).toBe("planned")
+    expect(can("pro", "active", "key_detection")).toBe(true)
+    expect(isAvailable("pro", "active", "key_detection")).toBe(false)
+  })
+
+  it("now grants shared sets for real", () => {
+    // The first slice shipped, so `can` and `isAvailable` agree.
     expect(can("pro_plus", "active", "b2b_sets")).toBe(true)
-    expect(isAvailable("pro_plus", "active", "b2b_sets")).toBe(false)
+    expect(isAvailable("pro_plus", "active", "b2b_sets")).toBe(true)
+    // And it stays PRO+: sharing is what the owner pays for.
+    expect(can("pro", "active", "b2b_sets")).toBe(false)
   })
 })
 
