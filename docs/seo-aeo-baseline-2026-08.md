@@ -55,6 +55,11 @@ Not fatal, but **"energycurve" alone will probably never be a clean branded
 query.** Target `energycurve dj`, `energycurve app`, `energy curve dj set`, and
 always ship the DJ disambiguator in title tags.
 
+Followed up in [brand-name-collision.md](brand-name-collision.md), which found
+that the .com is the *smaller* half of the problem: "energy curve" is the DJ
+category's own vocabulary and five competitors ship features named with it. The
+decision recorded there is to keep the name and stop competing for the phrase.
+
 ### 3. Three near-identical competitors are already running this playbook
 
 **SetFlow** (setflow.app), **Mixgraph** (mixgraph.io), and **HarmonySet**
