@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   buildMetric,
+  buildRetention,
   isAnalyticsPeriod,
   zeroFillSeries,
 } from "@/lib/backstage/analytics"
@@ -92,5 +93,50 @@ describe("zeroFillSeries bucket formats", () => {
     )
 
     expect(points.find((point) => point.label === "05 Jul")?.value).toBe(5)
+  })
+})
+
+describe("buildRetention", () => {
+  it("reports the share of the previous window's users who came back", () => {
+    const retention = buildRetention(6, 10, 40, 12)
+
+    expect(retention.rate).toBeCloseTo(0.6)
+    expect(retention.returningUsers).toBe(6)
+    expect(retention.priorActiveUsers).toBe(10)
+  })
+
+  it("returns null rather than 0% when there was nobody to retain", () => {
+    // The young-product case. 0% reads as total churn; the truth is that the
+    // previous window was empty, and those are opposite facts.
+    expect(buildRetention(0, 0, 5, 3).rate).toBeNull()
+  })
+
+  it("reports zero honestly when a real cohort all left", () => {
+    // Distinct from the case above, and the distinction is the point.
+    expect(buildRetention(0, 10, 5, 3).rate).toBe(0)
+  })
+
+  it("measures engagement per active user, not per event", () => {
+    // A DJ who analyses one set and leaves and a DJ who analyses nine are both
+    // one active user; the difference is the whole question.
+    expect(buildRetention(3, 5, 27, 9).analysesPerActiveUser).toBe(3)
+  })
+
+  it("rounds engagement to one decimal", () => {
+    expect(buildRetention(1, 2, 10, 3).analysesPerActiveUser).toBe(3.3)
+  })
+
+  it("returns null engagement when nobody was active", () => {
+    // Rather than dividing by zero and rendering Infinity in a tile.
+    expect(buildRetention(0, 4, 0, 0).analysesPerActiveUser).toBeNull()
+  })
+
+  it("can report more returning users than analyses", () => {
+    // Someone can come back, look at a set and not analyse anything. That's a
+    // real state, not a data error, so nothing here should clamp it.
+    const retention = buildRetention(8, 10, 2, 8)
+
+    expect(retention.rate).toBeCloseTo(0.8)
+    expect(retention.analysesPerActiveUser).toBe(0.3)
   })
 })

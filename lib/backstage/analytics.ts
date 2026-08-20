@@ -70,6 +70,56 @@ export function buildMetric(
   }
 }
 
+/**
+ * Retention, as the two things the strategy doc actually names: returning users
+ * and analysed sets per user.
+ *
+ * Shaped differently from the count tiles on purpose. A retention *rate* is already
+ * a percentage, and running it through `buildMetric` would produce a percent change
+ * of a percentage — a number nobody can read at a glance and everybody
+ * misinterprets. And it needs no third time window, so it can't tempt anyone into
+ * inventing a trend out of two data points.
+ */
+export interface RetentionMetric {
+  /** Active in this window and also active in the previous one. */
+  returningUsers: number
+  /** Active in the previous window — the pool that could have come back. */
+  priorActiveUsers: number
+  /**
+   * returningUsers / priorActiveUsers, 0–1.
+   *
+   * Null when nobody was here in the previous window, which is the honest answer
+   * for a young product: 0% would read as "everyone churned" when the truth is
+   * "there was nobody to churn".
+   */
+  rate: number | null
+  /**
+   * Analyses completed per active user this window. Null when nobody was active.
+   *
+   * The engagement half of retention: a DJ who analyses one set and leaves and a
+   * DJ who analyses nine are both one active user, and the difference is the whole
+   * question.
+   */
+  analysesPerActiveUser: number | null
+}
+
+export function buildRetention(
+  returningUsers: number,
+  priorActiveUsers: number,
+  analysesCompleted: number,
+  activeUsers: number
+): RetentionMetric {
+  return {
+    returningUsers,
+    priorActiveUsers,
+    rate: priorActiveUsers === 0 ? null : returningUsers / priorActiveUsers,
+    analysesPerActiveUser:
+      activeUsers === 0
+        ? null
+        : Math.round((analysesCompleted / activeUsers) * 10) / 10,
+  }
+}
+
 export interface SeriesPoint {
   label: string
   value: number
@@ -81,6 +131,7 @@ export interface BackstageAnalyticsSummary {
   signups: MetricWithDelta
   analysesCompleted: MetricWithDelta
   playlistsCreated: MetricWithDelta
+  retention: RetentionMetric
   /** Analyses completed per bucket (hourly for 24h, daily otherwise). */
   series: SeriesPoint[]
 }
