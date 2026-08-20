@@ -102,7 +102,15 @@ describe("pricing copy", () => {
         /audio/i.test(highlight.text)
       )
       expect(audio, "expected an audio-analysis highlight on PRO").toBeDefined()
-      expect(audio!.soon).toBe(true)
+      // BPM-from-audio shipped, so the bullet sells it as available — but it may
+      // only claim BPM: key detection is still status:"planned" in capabilities.ts.
+      expect(audio!.soon).toBeFalsy()
+      expect(audio!.text).not.toMatch(/\bkey\b|tonalidad/i)
+
+      // The honesty signal stays on the cards: PRO+ still flags the co-building
+      // B2B vision as soon (only read-only sharing has shipped).
+      const proPlus = plans.find((plan) => plan.id === "proPlus")!
+      expect(proPlus.highlights.some((highlight) => highlight.soon)).toBe(true)
 
       // The free plan promises nothing that isn't already shipped.
       const free = plans.find((plan) => plan.id === "free")!

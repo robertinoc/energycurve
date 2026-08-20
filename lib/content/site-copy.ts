@@ -108,6 +108,24 @@ interface SiteCopySchema {
     intro: LocalizedLabel
     items: { q: LocalizedLabel; a: LocalizedLabel }[]
   }
+  loop: {
+    eyebrow: LocalizedLabel
+    title: LocalizedLabel
+    intro: LocalizedLabel
+    footNote: LocalizedLabel
+    cta: LocalizedLabel
+    stages: {
+      title: LocalizedLabel
+      items: {
+        // Joins lib/product/capabilities.ts — tests assert every item is a
+        // shipped capability and the badge matches its real minPlan.
+        capability: CapabilityKey
+        plan: "pro" | "pro_plus"
+        title: LocalizedLabel
+        desc: LocalizedLabel
+      }[]
+    }[]
+  }
   pricing: {
     navLabel: LocalizedLabel
     eyebrow: LocalizedLabel
@@ -515,8 +533,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿Cuánto cuesta EnergyCurve?",
         },
         a: {
-          en: "There is a free tier, and there always will be. Paid plans — PRO at US$9.99/month and PRO+ at US$19.99/month, with roughly two months free on annual — are available now and unlock real audio analysis, unlimited playlists, and unlimited AI ordering. Your card statement will read “StageLink LLC”.",
-          es: "Hay un plan gratuito, y siempre lo va a haber. Los planes pagos — PRO a u$s9,99/mes y PRO+ a u$s19,99/mes, con unos dos meses gratis en el anual — ya están disponibles y habilitan análisis de audio real, playlists ilimitadas y ordenamiento con IA ilimitado. En el resumen de tu tarjeta va a figurar “StageLink LLC”.",
+          en: "There is a free tier, and there always will be. Paid plans — PRO at US$9.99/month and PRO+ at US$19.99/month, with roughly two months free on annual — are available now and unlock real BPM analysis from your audio, unlimited playlists, and unlimited AI ordering. Your card statement will read “StageLink LLC”.",
+          es: "Hay un plan gratuito, y siempre lo va a haber. Los planes pagos — PRO a u$s9,99/mes y PRO+ a u$s19,99/mes, con unos dos meses gratis en el anual — ya están disponibles y habilitan BPM real medido de tu audio, playlists ilimitadas y ordenamiento con IA ilimitado. En el resumen de tu tarjeta va a figurar “StageLink LLC”.",
         },
       },
       {
@@ -549,6 +567,141 @@ const siteCopy: SiteCopySchema = {
           es: "Con todos. El género define la banda esperada de BPM y energía — techno, house, drum & bass y más vienen incluidos — y podés crear tu propio género y contexto de set (apertura, main time, cierre) si los presets no coinciden con lo que tocás.",
         },
       },
+      {
+        q: {
+          en: "Can I use EnergyCurve in the DJ booth without internet?",
+          es: "¿Puedo usar EnergyCurve en la cabina sin internet?",
+        },
+        a: {
+          en: "Yes. Gig Mode (PRO+) is a performance view built for the booth: big tracklist, the energy curve, and your per-track notes. Install EnergyCurve as an app, open the set before you leave, and it keeps working with no signal.",
+          es: "Sí. Gig Mode (PRO+) es una vista de performance pensada para la cabina: tracklist grande, la curva de energía y tus notas por tema. Instalá EnergyCurve como app, abrí el set antes de salir, y sigue funcionando sin señal.",
+        },
+      },
+      {
+        q: {
+          en: "Does EnergyCurve warn me if I'm about to repeat tracks at a residency?",
+          es: "¿EnergyCurve me avisa si voy a repetir temas en una residencia?",
+        },
+        a: {
+          en: "Yes. Residency mode (PRO+) compares your new order against the sets you marked as played at that same venue and flags the tracks you'd be repeating. It needs a venue on the playlist and at least one earlier set marked as played there.",
+          es: "Sí. El modo residencia (PRO+) compara tu orden nuevo contra los sets que marcaste como tocados en ese mismo club y señala los temas que estarías repitiendo. Necesita que la playlist tenga un club asignado y al menos un set anterior marcado como tocado ahí.",
+        },
+      },
+      {
+        q: {
+          en: "Can I compare what I planned with what I actually played?",
+          es: "¿Puedo comparar lo que planifiqué con lo que toqué de verdad?",
+        },
+        a: {
+          en: "Yes. After the gig, mark what you actually played and in what order, and EnergyCurve (PRO) puts the planned curve next to the real one. That's the point of the loop: the next set starts from what the floor actually got, not from memory.",
+          es: "Sí. Después de la fecha, marcá qué tocaste de verdad y en qué orden, y EnergyCurve (PRO) pone la curva planificada al lado de la real. Ése es el sentido del loop: el próximo set arranca de lo que la pista recibió de verdad, no de la memoria.",
+        },
+      },
+    ],
+  },
+  loop: {
+    eyebrow: { en: "The full loop", es: "El loop completo" },
+    title: {
+      en: "The set doesn't end when you export: plan it, play it, learn from it",
+      es: "El set no termina cuando exportás: planificá, tocá, aprendé",
+    },
+    intro: {
+      en: "PRO and PRO+ features cover the whole gig — before, during, and after — and what you learn from one night feeds the next.",
+      es: "Las funciones PRO y PRO+ acompañan la fecha completa — antes, durante y después — y lo que aprendés de una noche alimenta la siguiente.",
+    },
+    footNote: {
+      en: "The analysis, the fixes, and native export stay free, permanently.",
+      es: "El análisis, los arreglos y el export nativo siguen gratis, para siempre.",
+    },
+    cta: { en: "See the plans", es: "Ver los planes" },
+    stages: [
+      {
+        title: { en: "Plan", es: "Planificá" },
+        items: [
+          {
+            capability: "slot_aware_planning",
+            plan: "pro",
+            title: { en: "Your curve, on the real clock", es: "Tu curva, en el reloj real" },
+            desc: {
+              en: "Tell it when you play — \"01:00 to 03:00\" — and the curve maps to your slot. If the peak lands too early for your set time, it warns you before you burn the floor.",
+              es: "Decile a qué hora tocás — \"de 01:00 a 03:00\" — y la curva se mapea a tu franja. Si el pico cae demasiado temprano para el slot, te avisa antes de quemar la pista.",
+            },
+          },
+          {
+            capability: "named_curve_shapes",
+            plan: "pro",
+            title: { en: "Named curve shapes", es: "Curvas con nombre" },
+            desc: {
+              en: "Warm-up, peak time, after-hours: pick the shape the gig calls for and the engine optimizes toward that shape, not a generic ideal.",
+              es: "Warm-up, peak time, after-hours: elegí la forma que pide la fecha y el motor optimiza hacia esa forma, no hacia un ideal genérico.",
+            },
+          },
+        ],
+      },
+      {
+        title: { en: "Play", es: "Tocá" },
+        items: [
+          {
+            capability: "gig_mode",
+            plan: "pro_plus",
+            title: { en: "Gig Mode: the booth, offline", es: "Gig Mode: la cabina, sin internet" },
+            desc: {
+              en: "A show view with a big tracklist, the curve, and your per-track notes. Installs as an app and works with no signal — load the set before you leave and play easy.",
+              es: "Vista de show con tracklist grande, curva y notas por tema. Se instala como app y funciona sin señal — cargá el set antes de salir y tocá tranquilo.",
+            },
+          },
+          {
+            capability: "printable_set_sheet",
+            plan: "pro",
+            title: { en: "Printable set sheet", es: "Set sheet imprimible" },
+            desc: {
+              en: "The set as a printable PDF sheet, for the booth or your phone: order, BPM, key, and energy at hand.",
+              es: "El set como hoja en PDF, para la cabina o el teléfono: orden, BPM, tonalidad y energía a mano.",
+            },
+          },
+          {
+            capability: "residency_mode",
+            plan: "pro_plus",
+            title: { en: "Residency mode", es: "Modo residencia" },
+            desc: {
+              en: "\"Don't repeat what I played at this club the last few dates.\" Give the playlist a venue and the suggested order takes it into account.",
+              es: "\"No me repitas lo que toqué en este club las últimas fechas.\" Cargale el club a la playlist y el orden sugerido lo tiene en cuenta.",
+            },
+          },
+        ],
+      },
+      {
+        title: { en: "Learn", es: "Aprendé" },
+        items: [
+          {
+            capability: "planned_vs_played",
+            plan: "pro",
+            title: { en: "Planned vs. played", es: "Planificado vs. tocado" },
+            desc: {
+              en: "After the gig, mark what you actually played and compare the planned curve against the real one. The next set starts from that data.",
+              es: "Después de la fecha, marcá qué tocaste de verdad y compará la curva planificada contra la real. El próximo set arranca con esa data.",
+            },
+          },
+          {
+            capability: "version_history",
+            plan: "pro",
+            title: { en: "Version history", es: "Historial de versiones" },
+            desc: {
+              en: "Original, with fixes applied, AI order: compare curves and scores across versions of the same set.",
+              es: "Original, con arreglos aplicados, orden de la IA: compará curvas y scores entre versiones del mismo set.",
+            },
+          },
+          {
+            capability: "global_library",
+            plan: "pro_plus",
+            title: { en: "Your whole library", es: "Tu librería completa" },
+            desc: {
+              en: "Every track cross-playlist: what you repeat too much, what you never play, and two sets side by side to compare.",
+              es: "Todos tus temas cross-playlist: qué repetís demasiado, qué no tocás nunca, y dos sets lado a lado para comparar.",
+            },
+          },
+        ],
+      },
     ],
   },
   pricing: {
@@ -567,8 +720,8 @@ const siteCopy: SiteCopySchema = {
       es: "Empezá gratis — y el export de vuelta a tu software de DJ también es gratis",
     },
     teaserBody: {
-      en: "The analysis, the energy curve, the fixes, and native export to Rekordbox, Traktor, and M3U8 all live on the free tier, permanently. PRO and PRO+ lift the limits and add real audio analysis — both are available now.",
-      es: "El análisis, la curva de energía, los arreglos y el export nativo a Rekordbox, Traktor y M3U8 están todos en el plan gratis, para siempre. PRO y PRO+ suben los límites y agregan análisis de audio real — los dos ya están disponibles.",
+      en: "The analysis, the energy curve, the fixes, and native export to Rekordbox, Traktor, and M3U8 all live on the free tier, permanently. PRO and PRO+ lift the limits and add real BPM analysis from your audio — both are available now.",
+      es: "El análisis, la curva de energía, los arreglos y el export nativo a Rekordbox, Traktor y M3U8 están todos en el plan gratis, para siempre. PRO y PRO+ suben los límites y agregan BPM real medido de tu audio — los dos ya están disponibles.",
     },
     teaserCta: { en: "See all plans", es: "Ver todos los planes" },
     liveBadge: { en: "Available now", es: "Disponible ahora" },
@@ -654,11 +807,13 @@ const siteCopy: SiteCopySchema = {
             },
           },
           {
+            // Shipped for BPM — audio_analysis in lib/product/capabilities.ts is
+            // status:"shipped" minPlan:"pro". Key detection stays "soon" in the
+            // matrix (key_detection is still planned); this bullet must not claim it.
             text: {
-              en: "Real audio analysis in your browser — BPM, key, and energy for untagged files",
-              es: "Análisis de audio real en tu navegador — BPM, tonalidad y energía para archivos sin tags",
+              en: "Real BPM detected from your audio, in your browser — no tags needed",
+              es: "BPM real detectado de tu audio, en tu navegador — sin necesidad de tags",
             },
-            soon: true,
           },
           {
             // Shipped — matches version_history/named_curve_shapes/planned_vs_played/
@@ -1322,6 +1477,22 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       items: siteCopy.faq.items.map((item) => ({
         question: item.q[locale],
         answer: item.a[locale],
+      })),
+    },
+    loop: {
+      eyebrow: siteCopy.loop.eyebrow[locale],
+      title: siteCopy.loop.title[locale],
+      intro: siteCopy.loop.intro[locale],
+      footNote: siteCopy.loop.footNote[locale],
+      cta: siteCopy.loop.cta[locale],
+      stages: siteCopy.loop.stages.map((stage) => ({
+        title: stage.title[locale],
+        items: stage.items.map((item) => ({
+          capability: item.capability,
+          plan: item.plan,
+          title: item.title[locale],
+          desc: item.desc[locale],
+        })),
       })),
     },
     pricing: {

@@ -404,3 +404,27 @@ describe("every non-free shipped capability is actually gated", () => {
     ).toEqual([])
   })
 })
+
+describe("the landing loop section only advertises shipped capabilities", () => {
+  // The loop section is the landing's showcase of paid features. Same contract
+  // as the pricing matrix: every card must be a real, shipped capability, and
+  // the plan badge must match what the gate actually enforces — so a planned
+  // capability (key_detection, energy_model_v3) can never be sold here by
+  // accident.
+  it.each(supportedLocales)("every card is shipped and badged with its real tier (%s)", (locale) => {
+    const { loop } = getSiteCopy(locale)
+    const items = loop.stages.flatMap((stage) => stage.items)
+    expect(items.length).toBeGreaterThanOrEqual(6)
+
+    for (const item of items) {
+      expect(isCapabilityKey(item.capability), item.capability).toBe(true)
+      const spec = CAPABILITIES[item.capability as CapabilityKey]
+      expect(spec.status, `${item.capability} must be shipped to be advertised`).toBe(
+        "shipped"
+      )
+      expect(spec.minPlan, `${item.capability} badge disagrees with its gate`).toBe(
+        item.plan
+      )
+    }
+  })
+})
