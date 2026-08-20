@@ -29,7 +29,7 @@ const HINTS: Record<
  * crawling, which is the slower half of the job the sitemap exists to do.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-08-17")
+  const lastModified = new Date("2026-08-20")
 
   // Articles, each in the one language it was written in. No `alternates` block:
   // there is no translation, and claiming one would point a crawler at a 404.
