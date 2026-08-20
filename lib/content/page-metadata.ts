@@ -70,6 +70,16 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
       es: "Los términos que regulan tu uso de EnergyCurve.",
     },
   },
+  "/blog": {
+    title: {
+      en: "Blog",
+      es: "Blog",
+    },
+    description: {
+      en: "How to read a set's energy before you play it: ordering, energy jumps, and what to do when your tracks carry no BPM or key.",
+      es: "Cómo leer la energía de un set antes de tocarlo: orden, saltos de energía, y qué hacer cuando tus temas no traen BPM ni tonalidad.",
+    },
+  },
   "/cookie-policy": {
     title: {
       en: "Cookie Policy",

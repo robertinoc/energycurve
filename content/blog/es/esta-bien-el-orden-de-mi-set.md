@@ -4,7 +4,7 @@ description: "Todas las guías te explican cómo armar un arco de energía. Ning
 slug: esta-bien-el-orden-de-mi-set
 locale: es
 targetQuery: "cómo ordenar los tracks de un set de DJ"
-publishedAt: null
+publishedAt: 2026-08-20
 ---
 
 Hay muchísimo escrito sobre cómo *armar* un set: empezá tranquilo, subí de a poco,

@@ -4,7 +4,7 @@ description: "No hace falta Rekordbox ni Serato para analizar el orden de un set
 slug: ordenar-un-set-desde-una-lista-de-texto
 locale: es
 targetQuery: "ordenar set de DJ sin Rekordbox"
-publishedAt: null
+publishedAt: 2026-08-20
 ---
 
 Casi todo lo que se escribe sobre preparar sets asume que tenés la librería cargada en

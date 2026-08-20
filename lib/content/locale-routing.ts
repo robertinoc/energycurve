@@ -32,10 +32,17 @@ export const LOCALE_PREFIX = `/${PREFIXED_LOCALE}`
  * Auth screens and the dashboard are deliberately absent: they are behind or
  * beside the funnel, are not indexable, and translating their URLs would double
  * the auth surface for no reach.
+ *
+ * `/blog` is the index, which exists in both languages because its chrome is
+ * translated. Individual articles are NOT here: they exist in the language they
+ * were written in and nothing else, so they carry a self-canonical and no
+ * `hreflang` pair. Advertising an English translation of a Spanish-only article
+ * would point a crawler at a 404, which is worse than offering no alternate.
  */
 export const LOCALIZED_PATHS = [
   "/",
   "/pricing",
+  "/blog",
   "/install",
   "/privacy",
   "/terms",

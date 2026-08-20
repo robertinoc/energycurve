@@ -4,7 +4,7 @@ description: "Las reglas del tipo 'no pases del 8% de BPM' sirven poco cuando el
 slug: cuanto-es-mucho-salto-de-energia
 locale: es
 targetQuery: "salto de energía entre tracks DJ"
-publishedAt: null
+publishedAt: 2026-08-20
 ---
 
 La regla que más se repite es "no cambies más de 6 u 8% de BPM entre dos temas". Es
