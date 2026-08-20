@@ -46,12 +46,12 @@ export function LandingNavbar({
             : "border-white/10 bg-white/[0.045] shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-md"
         )}
       >
-        <div className="flex items-center justify-between gap-4">
-          <a href="#top" className="min-w-0">
+        <div className="flex items-center justify-between gap-3">
+          <a href="#top" className="shrink-0">
             <EnergyCurveLogo tone="light" size="md" kind="horizontal" priority />
           </a>
 
-          <nav aria-label="Primary" className="hidden items-center gap-2 lg:flex">
+          <nav aria-label="Primary" className="hidden items-center gap-1 xl:flex">
             {items.map((item) => {
               const active = activeSection === item.href.slice(1)
 
@@ -61,7 +61,9 @@ export function LandingNavbar({
                   href={item.href}
                   aria-current={active ? "location" : undefined}
                   className={cn(
-                    "rounded-full px-3 py-2 text-sm transition-all duration-250 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/45",
+                    // whitespace-nowrap: without it the flex row wraps the
+                    // two-word labels onto a second line and the bar grows.
+                    "whitespace-nowrap rounded-full px-2.5 py-2 text-sm transition-all duration-250 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/45",
                     active
                       ? "bg-linear-to-r from-[#A24DE0]/18 via-[#6A5CF0]/10 to-[#22D3EE]/16 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(255,255,255,0.05),0_0_24px_rgba(162,77,224,0.16)]"
                       : "text-white/62 hover:-translate-y-0.5 hover:bg-linear-to-r hover:from-[#A24DE0]/16 hover:via-[#6A5CF0]/10 hover:to-[#22D3EE]/18 hover:text-white hover:shadow-[0_12px_28px_rgba(82,77,255,0.14),0_0_22px_rgba(34,211,238,0.1)]"
@@ -73,7 +75,7 @@ export function LandingNavbar({
             })}
           </nav>
 
-          <div className="hidden items-center gap-3 lg:flex">
+          <div className="hidden shrink-0 items-center gap-2.5 xl:flex">
             <LanguageToggle locale={locale} onChange={onLocaleChange} />
             <Link
               href="/login?returnTo=%2Fdashboard"
@@ -88,7 +90,7 @@ export function LandingNavbar({
 
           <button
             type="button"
-            className="inline-flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white transition hover:bg-white/[0.07] lg:hidden"
+            className="inline-flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white transition hover:bg-white/[0.07] xl:hidden"
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
@@ -101,7 +103,7 @@ export function LandingNavbar({
         <div
           id="mobile-nav"
           className={cn(
-            "grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 lg:hidden",
+            "grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 xl:hidden",
             open ? "mt-4 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
           )}
         >
