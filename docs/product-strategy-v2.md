@@ -212,6 +212,29 @@ the story carries itself.
 - Rough revenue sketch (paid users → MRR at 70/30 PRO/PRO+ mix):
   100 → ~$780 · 500 → ~$3.9k · 2,000 → ~$15.6k.
 
+## 6b. Title lookup — shipped 20 Aug 2026
+
+The H3 "lookup API for tracks with no file" item, built with **GetSongBPM**: free,
+3,000 requests an hour, no card. The cost is a **mandatory visible backlink** to
+getsongbpm.com — their terms suspend accounts without notice if it disappears. The
+credit lives in the panel that uses the data, which is where it belongs anyway.
+
+Two boundaries that are not negotiable, written down so a future change has to
+argue with them rather than drift past them:
+
+- **No audio is sent.** This feature exists *because* the DJ doesn't have the
+  files; there is nothing to send even if we wanted to.
+- **Artist and title are sent, and that is disclosed.** Opt-in per playlist, the
+  recipient named in the panel copy above the button, and GetSongBPM listed in the
+  privacy policy in both languages with an e2e test pinning it there.
+
+Only tracks with no BPM are looked up. Re-asking about a track that has one would
+spend the rate limit to overwrite better data with worse — a measured value, or the
+DJ's own tag, beats a crowd-contributed one.
+
+Paced at 250 ms and sequential rather than parallel: 3,000/hour is 1.2 per second,
+and a burst of thirty is exactly the shape that trips a rate limiter.
+
 ## 7. Risks & open questions
 
 - **Key accuracy** vs Mixed In Key: the spike measured 4/6 exact Camelot on a
