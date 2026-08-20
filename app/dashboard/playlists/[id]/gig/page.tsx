@@ -134,6 +134,7 @@ export default async function GigModePage({
             )
           : null
       }
+      slot={slot}
       peakPosition={tracks[peakIndex]?.position ?? null}
       backHref={backHref}
       locale={locale}
