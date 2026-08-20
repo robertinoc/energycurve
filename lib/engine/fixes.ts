@@ -410,6 +410,11 @@ function operationsForIssue(
     // above.
     case "peak_too_early_for_slot":
     case "peak_too_late_for_slot":
+    // Same family, and no reorder touches them at all: the answer is bringing
+    // more music or knowing what to cut, which happens before the DJ opens this
+    // screen.
+    case "set_short_for_slot":
+    case "set_over_slot":
       return []
   }
 }

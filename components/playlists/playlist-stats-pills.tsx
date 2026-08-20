@@ -1,8 +1,8 @@
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
+import { resolveSetTiming } from "@/lib/engine/set-timing"
 import {
-  STANDARD_TRACK_DURATION_MINUTES,
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
@@ -48,21 +48,17 @@ export function PlaylistStatsPills({
     bpms.length > 0
       ? Math.round(bpms.reduce((sum, bpm) => sum + bpm, 0) / bpms.length)
       : null
-  const everyHasDuration = tracks.every(
-    (track) => track.duration_seconds !== null
-  )
-  const totalMinutes = everyHasDuration
-    ? Math.round(
-        tracks.reduce((sum, track) => sum + (track.duration_seconds ?? 0), 0) /
-          60
-      )
-    : tracks.length * STANDARD_TRACK_DURATION_MINUTES
+  // Shared with the engine so the pill and the length advice can't disagree. Also
+  // degrades per track: the previous every() check threw away every real length in
+  // the set because one file was untagged.
+  const timing = resolveSetTiming(tracks.map((track) => track.duration_seconds))
+  const totalMinutes = timing.totalMinutes
   const eMin = scores.length ? Math.min(...scores) : null
   const eMax = scores.length ? Math.max(...scores) : null
 
   const pills: string[] = [
     `${tracks.length} ${copy.statsTracks[locale]}`,
-    `${everyHasDuration ? "" : "~"}${formatMinutes(totalMinutes)}`,
+    `${timing.measured ? "" : "~"}${formatMinutes(totalMinutes)}`,
   ]
 
   if (avgBpm !== null) {

@@ -177,6 +177,39 @@ export const ISSUE_COPY: Record<IssueType, IssueCopy> = {
       es: "Recortá primero el tramo medio — mantené intactos la rampa de apertura y el cierre.",
     },
   },
+  /**
+   * The declared-slot pair. Fires instead of set_too_short / set_too_long, which
+   * compare against a generic 45–150 minute guideline: once the DJ has told us the
+   * slot they actually play, comparing against a typical one is a worse answer.
+   */
+  set_short_for_slot: {
+    title: {
+      en: "Not enough music for your slot",
+      es: "No alcanza la música para tu slot",
+    },
+    body: {
+      en: "{trackCount} tracks add up to about {duration} min of music, and your slot runs {slotMinutes} min — roughly {gap} short.",
+      es: "{trackCount} tracks suman unos {duration} min de música, y tu slot dura {slotMinutes} min — te faltan unos {gap}.",
+    },
+    recommendation: {
+      en: "Bring more than you need. Stretching what you have with long mixes and loops works, but it decides the set for you before you can read the floor.",
+      es: "Llevá más de lo que necesitás. Estirar lo que tenés con mezclas largas y loops funciona, pero te decide el set antes de poder leer la pista.",
+    },
+  },
+  set_over_slot: {
+    title: {
+      en: "More music than slot",
+      es: "Más música que slot",
+    },
+    body: {
+      en: "{trackCount} tracks add up to about {duration} min of music for a {slotMinutes} min slot — about {gap} more than you can play.",
+      es: "{trackCount} tracks suman unos {duration} min de música para un slot de {slotMinutes} min — unos {gap} más de lo que vas a poder tocar.",
+    },
+    recommendation: {
+      en: "Not a problem in itself — spare tracks are how you react to a room. Just know which ones you'd drop, because deciding at 02:40 means dropping the ending you planned.",
+      es: "No es un problema en sí — los tracks de sobra son con lo que reaccionás a una sala. Pero tené decidido cuáles sacarías, porque decidirlo a las 02:40 significa perder el cierre que planeaste.",
+    },
+  },
   peak_too_early_for_slot: {
     title: {
       en: "Peak lands early for your slot",
@@ -606,6 +639,8 @@ export const MARKER_LABELS: Record<string, LocalizedLabel> = {
   energy_data_missing: { en: "GUESSED DATA", es: "DATO ESTIMADO" },
   set_too_short: { en: "SHORT SET", es: "SET CORTO" },
   set_too_long: { en: "LONG SET", es: "SET LARGO" },
+  set_short_for_slot: { en: "SHORT FOR SLOT", es: "FALTA MÚSICA" },
+  set_over_slot: { en: "OVER SLOT", es: "SOBRA MÚSICA" },
   peak_too_early_for_slot: { en: "EARLY FOR SLOT", es: "TEMPRANO" },
   peak_too_late_for_slot: { en: "LATE FOR SLOT", es: "TARDE" },
 }
