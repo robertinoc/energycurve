@@ -23,6 +23,7 @@ import {
 } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { decodeSmartOrderEvents } from "@/lib/smart-order/stream"
+import type { EnergyCoverage } from "@/lib/engine/energy-coverage"
 import {
   residencyInSuggestedOrder,
   type ResidencyRepeat,
@@ -148,6 +149,11 @@ export interface AnalysisWorkbenchProps {
    * so nothing below may assume it has entries.
    */
   residencyRepeats?: readonly ResidencyRepeat[]
+  /**
+   * Where the curve's energy values came from. Optional so the component still
+   * renders for a caller that doesn't have it; absent means no caveat is shown.
+   */
+  coverage?: EnergyCoverage
   /** Tracks in the ORIGINAL saved order. */
   tracks: WorkbenchTrack[]
   /** Energies resolved for the original order (index-aligned). */
@@ -182,6 +188,7 @@ export function AnalysisWorkbench({
   baseScore,
   targetCurve,
   residencyRepeats = [],
+  coverage,
   locale,
 }: AnalysisWorkbenchProps) {
   const originalIds = useMemo(() => tracks.map((track) => track.id), [tracks])
@@ -707,6 +714,7 @@ export function AnalysisWorkbench({
         decidableCount={decidable.length}
         decidedCount={decidedCount}
         smartOrdered={smartStatus === "done"}
+        coverage={coverage}
         locale={locale}
       />
 

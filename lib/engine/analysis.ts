@@ -12,6 +12,11 @@ import {
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
+import {
+  INVENTED_SHARE_WARN,
+  energyCoverageOf,
+  type EnergyCoverage,
+} from "@/lib/engine/energy-coverage"
 import { assessSlot } from "@/lib/engine/slot"
 import { buildTargetCurve, genreCurveCharacter } from "@/lib/engine/target-curve"
 import type {
@@ -703,7 +708,8 @@ function deriveIssues(
   scored: ScoredCurve,
   curve: number[],
   genre: SupportedGenre,
-  context: PlaylistContext
+  context: PlaylistContext,
+  coverage: EnergyCoverage
 ): DetectedIssue[] {
   const breatherIndexes = new Set(
     scored.dynamics.breathers.map((breather) => breather.index)
@@ -727,6 +733,21 @@ function deriveIssues(
   if (scored.lowConfidence || scored.dynamics.suppressedFlatZoneCount > 0) {
     issues.push({
       type: "low_energy_confidence",
+      severity: "info",
+      trackPositions: [],
+      penaltyApplied: 0,
+      penaltyCategory: null,
+    })
+  }
+
+  // Separate from low_energy_confidence, and it has to be: that rule fires when
+  // missing signal shows up as a curve that barely moves, which is the right test
+  // for a BPM-only set. Invented values hide the opposite way — they're a clean ramp
+  // across the context's full range, so the flatness test can never see them, and a
+  // set with no data at all was scoring 9.2 with nothing on screen saying why.
+  if (coverage.inventedShare >= INVENTED_SHARE_WARN) {
+    issues.push({
+      type: "energy_data_missing",
       severity: "info",
       trackPositions: [],
       penaltyApplied: 0,
@@ -781,7 +802,8 @@ export function analyzePlaylist({
     targetShape,
     targetAnchors
   )
-  const issues = deriveIssues(scored, curve, genre, context)
+  const coverage = energyCoverageOf(trackMeta)
+  const issues = deriveIssues(scored, curve, genre, context, coverage)
   const slotAssessment = slot ? assessSlot(curve, slot) : null
 
   // Appended after the scored issues and carrying zero penalty: timing is a
@@ -818,5 +840,6 @@ export function analyzePlaylist({
     contextScores,
     bestFitContext,
     slot: slotAssessment,
+    coverage,
   }
 }

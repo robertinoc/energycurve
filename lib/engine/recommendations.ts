@@ -74,6 +74,8 @@ function buildTemplateParams(
     threshold: roundToOneDecimal(target[target.length - 1] ?? targetMax),
     context: CONTEXT_DISPLAY_NAMES[analysis.context][locale],
     trackCount: analysis.curve.length,
+    // Read only by energy_data_missing, which can't fire at zero.
+    inventedCount: analysis.coverage.inventedCount,
     duration: analysis.curve.length * STANDARD_TRACK_DURATION_MINUTES,
     minDuration: SET_DURATION_GUIDELINE_MINUTES.min,
     maxDuration: SET_DURATION_GUIDELINE_MINUTES.max,
