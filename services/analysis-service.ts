@@ -12,7 +12,6 @@ import type { SiteLocale } from "@/lib/content/site-copy"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { analyzePlaylist } from "@/lib/engine/analysis"
 import {
-  estimateSetDurationMinutes,
   resolveTrackEnergies,
 } from "@/lib/engine/energy-score"
 import {
@@ -123,6 +122,9 @@ export async function getPlaylistAnalysis(
       source: entry.source,
       bpm: entry.bpm,
     })),
+    // Real lengths, read from each file's own tags at import. Index-aligned with
+    // the curve because playlist.tracks is what built it.
+    durationsSeconds: playlist.tracks.map((track) => track.duration_seconds),
     slot,
     targetShape,
     targetAnchors: template?.anchors ?? null,
@@ -171,7 +173,10 @@ export async function getPlaylistAnalysis(
     analysis,
     recommendations,
     reorder,
-    durationMinutes: estimateSetDurationMinutes(playlist.tracks.length),
+    // The engine already resolved this from real file lengths; recomputing it from
+    // the track count here would have the results page and the analysis quoting two
+    // different set lengths on the same screen.
+    durationMinutes: analysis.timing.totalMinutes,
   }
 }
 

@@ -7,7 +7,6 @@ import {
   ENERGY_SCORE_RANGE,
   GENRE_BPM_PROFILES_V2,
   LOUDNESS_RULES_V4,
-  STANDARD_TRACK_DURATION_MINUTES,
   TRACK_GENRE_ANCHOR_BPM_MARGIN,
   type PlaylistContext,
   type SupportedGenre,
@@ -373,6 +372,3 @@ export function resolveTrackEnergies(
   })
 }
 
-export function estimateSetDurationMinutes(trackCount: number): number {
-  return trackCount * STANDARD_TRACK_DURATION_MINUTES
-}

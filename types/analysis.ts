@@ -1,3 +1,4 @@
+import type { SetTiming, SlotFit } from "@/lib/engine/set-timing"
 import type { ResolvedSlot, SlotAssessment } from "@/lib/engine/slot"
 import type {
   CurveShape,
@@ -55,6 +56,8 @@ export type IssueType =
   | "set_too_long"
   // Slot-aware timing. Informational by design: see the note on
   // PlaylistAnalysis.slot for why these never cost score points.
+  | "set_short_for_slot"
+  | "set_over_slot"
   | "peak_too_early_for_slot"
   | "peak_too_late_for_slot"
 
@@ -107,6 +110,15 @@ export interface PlaylistAnalysisInput {
    */
   trackMeta?: TrackEnergyMeta[]
   /**
+   * Real track lengths in seconds, same length/order as `curve`, with null for
+   * tracks whose file carried no duration.
+   *
+   * Separate from `trackMeta` on purpose: that field is energy *provenance*, and a
+   * track's length has nothing to do with how its energy was derived. Optional, and
+   * a set that omits it falls back to the standard-track estimate exactly as before.
+   */
+  durationsSeconds?: (number | null)[]
+  /**
    * The wall-clock slot the set is played in, when the DJ declared one. Absent
    * for every set that hasn't, which is the default — the analysis works exactly
    * as before without it.
@@ -148,4 +160,19 @@ export interface PlaylistAnalysis {
    * slot issues are informational and cost zero points.
    */
   slot: SlotAssessment | null
+  /**
+   * How much music the set actually holds, from real file lengths where they exist.
+   *
+   * Present on every analysis because the previous answer — track count times three
+   * minutes — was wrong for anyone whose tracks aren't three minutes long, and the
+   * engine was emitting "short set" advice on the strength of it. `measured` says
+   * whether the number is worth stating out loud.
+   */
+  timing: SetTiming
+  /**
+   * Whether the set has enough music for the declared slot. Null without a slot, and
+   * null when the length is only estimated — a fit computed from a guess is a guess
+   * wearing a number.
+   */
+  slotFit: SlotFit | null
 }
