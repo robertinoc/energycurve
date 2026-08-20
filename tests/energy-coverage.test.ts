@@ -4,6 +4,7 @@ import {
   INVENTED_SHARE_THRESHOLD,
   INVENTED_SHARE_WARN,
   energyCoverageOf,
+  scoreIsMeaningful,
 } from "@/lib/engine/energy-coverage"
 import type { EnergySource } from "@/types/analysis"
 
@@ -95,5 +96,31 @@ describe("energyCoverageOf", () => {
     expect(
       coverage.measuredShare + coverage.inferredShare + coverage.inventedShare
     ).toBeCloseTo(1)
+  })
+})
+
+describe("scoreIsMeaningful", () => {
+  it("refuses to vouch for a score built on invented data", () => {
+    expect(scoreIsMeaningful(from(...repeat("estimated", 20)))).toBe(false)
+  })
+
+  it("vouches for a measured or inferred set", () => {
+    expect(scoreIsMeaningful(from(...repeat("audio", 10)))).toBe(true)
+    expect(scoreIsMeaningful(from(...repeat("bpm", 10)))).toBe(true)
+  })
+
+  it("still vouches for a set that is a third fabricated", () => {
+    // The caveat covers that case. Hiding the score at one third invented would
+    // be over-correcting — two thirds of the shape is really the DJ's.
+    const coverage = from(...repeat("bpm", 6), ...repeat("estimated", 4))
+
+    expect(coverage.inventedShare).toBeGreaterThanOrEqual(INVENTED_SHARE_WARN)
+    expect(scoreIsMeaningful(coverage)).toBe(true)
+  })
+
+  it("refuses on an empty set", () => {
+    // No curve, so no score to vouch for. Defaulting the other way would show a
+    // number for a playlist with nothing in it.
+    expect(scoreIsMeaningful(energyCoverageOf([]))).toBe(false)
   })
 })

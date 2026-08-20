@@ -4,6 +4,7 @@ import { ANALYSIS_UI, formatTemplate } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   INVENTED_SHARE_WARN,
+  scoreIsMeaningful,
   type EnergyCoverage,
 } from "@/lib/engine/energy-coverage"
 
@@ -56,8 +57,19 @@ export function ScoreHeader({
   const progress =
     totalPoints > 0 ? Math.min(1, Math.max(0, gainedPoints / totalPoints)) : 0
 
+  /**
+   * Whether the two numbers are worth showing at all.
+   *
+   * Below the line they aren't: the curve being scored is a ramp drawn from track
+   * positions, and the target it's graded against comes from the same context, so
+   * a set with no data at all scored 9.2. The caveat that used to sit *beside* the
+   * number now takes its place — a headline and its retraction don't carry equal
+   * weight, and the headline was winning.
+   */
+  const scorable = !coverage || scoreIsMeaningful(coverage)
+
   const caveat =
-    coverage && coverage.inventedShare >= INVENTED_SHARE_WARN
+    coverage && scorable && coverage.inventedShare >= INVENTED_SHARE_WARN
       ? coverage.inventedShare === 1
         ? ANALYSIS_UI.coverageInventedAll[locale]
         : formatTemplate(ANALYSIS_UI.coverageInventedSome[locale], {
@@ -77,6 +89,35 @@ export function ScoreHeader({
         : formatTemplate(ANALYSIS_UI.applyRemainingNote[locale], {
             count: remainingCount,
           })
+
+  /**
+   * The no-score state. Not an error and not an empty state: the analysis ran and
+   * the tools below work — only the verdict is withheld, with what's missing and
+   * how to get it, so the screen still tells the DJ what to do next.
+   */
+  if (!scorable) {
+    return (
+      <section className="rounded-[30px] border border-ec-amber/30 bg-ec-amber/[0.05] p-5 sm:p-6">
+        <div className="flex flex-col gap-2">
+          <p className="font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-ec-amber">
+            {ANALYSIS_UI.scoreNow[locale]}
+          </p>
+          <h2 className="font-heading text-[22px] font-bold leading-tight text-ec-text sm:text-[26px]">
+            {ANALYSIS_UI.scoreUnavailable[locale]}
+          </h2>
+          <p className="max-w-[62ch] text-[13.5px] leading-6 text-white/70">
+            {formatTemplate(ANALYSIS_UI.scoreUnavailableBody[locale], {
+              count: coverage!.inventedCount,
+              total: coverage!.trackCount,
+            })}
+          </p>
+          <p className="max-w-[62ch] text-[13px] leading-6 text-ec-text-dim">
+            {ANALYSIS_UI.scoreUnavailableFix[locale]}
+          </p>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="rounded-[30px] border border-white/10 bg-ec-surface p-5 sm:p-6">
