@@ -131,6 +131,35 @@ describe("storing ratings", () => {
     expect(after["a::1"].label).toBe(9)
   })
 
+  it("keeps earlier ratings when a later batch is rated", () => {
+    // The property the whole workflow rests on. The harness clears its visible
+    // table on every new file pick, so a DJ rating three tracks at a time only
+    // ever sees the current three — and would have no way to notice if the
+    // previous ones had been dropped. They must survive in the store.
+    writeEnergyLabel(
+      { clip: "a::1", fileName: "a.mp3", label: 3, features: features(), bpm: 122 },
+      "2026-08-19T09:00:00.000Z"
+    )
+    writeEnergyLabel(
+      { clip: "b::2", fileName: "b.mp3", label: 7, features: features(), bpm: 128 },
+      "2026-08-19T09:05:00.000Z"
+    )
+    const after = writeEnergyLabel(
+      { clip: "c::3", fileName: "c.mp3", label: 9, features: features(), bpm: 134 },
+      "2026-08-19T09:10:00.000Z"
+    )
+
+    expect(Object.keys(after).sort()).toEqual(["a::1", "b::2", "c::3"])
+    expect(after["a::1"].label).toBe(3)
+    expect(after["b::2"].label).toBe(7)
+
+    // And they survive a reload, which is the case that actually loses an
+    // afternoon: the store is the only copy until the export is taken.
+    const reloaded = readEnergyLabels()
+    expect(Object.keys(reloaded)).toHaveLength(3)
+    expect(reloaded["a::1"].label).toBe(3)
+  })
+
   it("removes one", () => {
     writeEnergyLabel(
       { clip: "a::1", fileName: "a.mp3", label: 4, features: features(), bpm: 150 },
