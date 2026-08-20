@@ -20,7 +20,14 @@ import { SetCurve } from "@/components/playlists/set-curve"
 import { Button } from "@/components/ui/button"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
-import { formatClock } from "@/lib/engine/slot"
+import {
+  assessPace,
+  formatClock,
+  formatGap,
+  type ResolvedSlot,
+} from "@/lib/engine/slot"
+import { formatTemplate } from "@/lib/content/analysis-copy"
+import { useNowMinutes } from "@/lib/use-now-minutes"
 import {
   bpmDelta,
   clampGigPosition,
@@ -39,6 +46,11 @@ interface GigModeProps {
   /** Ideal arc for this genre + context, same length as tracks, or null. */
   target: number[] | null
   peakPosition: number | null
+  /**
+   * The declared slot, when there is one. Needed here and not just per track,
+   * because pace is a fact about the slot as a whole rather than about a row.
+   */
+  slot: ResolvedSlot | null
   backHref: string
   locale: SiteLocale
 }
@@ -49,6 +61,7 @@ export function GigMode({
   tracks,
   target,
   peakPosition,
+  slot,
   backHref,
   locale,
 }: GigModeProps) {
@@ -107,6 +120,19 @@ export function GigMode({
     return () => window.removeEventListener("keydown", onKey)
   }, [move, position])
 
+  /**
+   * Pace: where the DJ is against where the plan said they'd be.
+   *
+   * Gig Mode already showed the clock time each track was *due* at and never
+   * compared it to the actual time — which is the comparison a booth is for. Null
+   * until mounted, and null with no slot, so nothing here renders on the server.
+   */
+  const nowMinutes = useNowMinutes()
+  const pace =
+    slot && nowMinutes !== null
+      ? assessPace(nowMinutes, position, tracks.length, slot)
+      : null
+
   const current = tracks[position]
   const next = tracks[position + 1]
   const delta = bpmDelta(current, next)
@@ -155,6 +181,55 @@ export function GigMode({
         <p className="truncate text-xs uppercase tracking-[0.2em] text-white/35">
           {playlistName}
         </p>
+
+        {/* Pace, above "now playing" and below the set name: the second thing the
+            eye lands on, because it's the only line here that can change what the
+            DJ does next. Colour-coded for a glance in a dark booth. */}
+        {pace ? (
+          <div
+            className={`rounded-2xl border px-4 py-3 ${
+              pace.status === "behind"
+                ? "border-amber-400/40 bg-amber-400/10"
+                : pace.status === "ahead"
+                  ? "border-sky-400/40 bg-sky-400/10"
+                  : "border-white/10 bg-white/[0.03]"
+            }`}
+          >
+            <p
+              className={`text-base font-semibold sm:text-lg ${
+                pace.status === "behind"
+                  ? "text-amber-200"
+                  : pace.status === "ahead"
+                    ? "text-sky-200"
+                    : "text-white/70"
+              }`}
+            >
+              {pace.remainingSlotMinutes < 0
+                ? formatTemplate(copy.paceSlotOver[locale], {
+                    gap: formatGap(-pace.remainingSlotMinutes),
+                  })
+                : pace.status === "on_time"
+                  ? copy.paceOnTime[locale]
+                  : formatTemplate(
+                      pace.status === "behind"
+                        ? copy.paceBehind[locale]
+                        : copy.paceAhead[locale],
+                      { gap: formatGap(Math.abs(pace.driftMinutes)) }
+                    )}
+            </p>
+            {/* The line that turns drift into a decision. Stated, not prescribed:
+                whether to cut two tracks or ride a long mix is the DJ's call. */}
+            {pace.minutesPerRemainingTrack !== null ? (
+              <p className="mt-0.5 text-sm text-white/50">
+                {formatTemplate(copy.paceRoom[locale], {
+                  gap: formatGap(pace.remainingSlotMinutes),
+                  count: pace.tracksRemaining,
+                  each: pace.minutesPerRemainingTrack,
+                })}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Now playing — deliberately the largest thing on the screen. */}
         <section className="flex-1">

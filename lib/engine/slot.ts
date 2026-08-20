@@ -215,3 +215,140 @@ export function parseClock(value: string): number | null {
 
   return hours * 60 + minutes
 }
+
+// ---------------------------------------------------------------------------
+// Pace: where the DJ actually is, against where the plan said they'd be.
+// ---------------------------------------------------------------------------
+
+/**
+ * Drift absorbed without comment.
+ *
+ * Five minutes is inside the noise of a real set — one long mix, one track played
+ * to the end instead of cut. Flagging it would make the booth view cry wolf during
+ * the hour when the DJ least wants to be second-guessed.
+ */
+export const PACE_TOLERANCE_MINUTES = 5
+
+export type SlotPhase = "before" | "inside" | "after"
+
+export interface SlotPosition {
+  phase: SlotPhase
+  /**
+   * Minutes into the slot when `inside`. When `before`, minutes until it starts;
+   * when `after`, minutes since it ended. Always non-negative — `phase` carries
+   * the direction.
+   */
+  minutes: number
+}
+
+/**
+ * Locates a wall-clock minute relative to the slot, wrap-aware.
+ *
+ * The whole reason this isn't subtraction: most club slots cross midnight, and
+ * both values are minutes-from-midnight. At 00:30 in a 23:00–01:00 slot, `now -
+ * start` is −1350, which reads as "twenty-two hours early" when the truth is
+ * "ninety minutes in". Modular arithmetic fixes that but introduces its own
+ * ambiguity — every instant is simultaneously a little before the slot and a lot
+ * after it — so the two candidate distances are compared and the nearer one wins.
+ */
+export function locateInSlot(
+  nowMinutes: number,
+  slot: ResolvedSlot
+): SlotPosition {
+  const sinceStart =
+    ((nowMinutes - slot.startMinutes) % MINUTES_IN_DAY + MINUTES_IN_DAY) %
+    MINUTES_IN_DAY
+
+  if (sinceStart <= slot.durationMinutes) {
+    return { phase: "inside", minutes: sinceStart }
+  }
+
+  const untilStart = MINUTES_IN_DAY - sinceStart
+  const sinceEnd = sinceStart - slot.durationMinutes
+
+  return untilStart < sinceEnd
+    ? { phase: "before", minutes: untilStart }
+    : { phase: "after", minutes: sinceEnd }
+}
+
+export type PaceStatus = "ahead" | "on_time" | "behind"
+
+export interface PaceAssessment {
+  status: PaceStatus
+  /** Minutes behind the plan. Negative when running ahead of it. */
+  driftMinutes: number
+  /** Minutes of slot left. Negative once the slot has ended. */
+  remainingSlotMinutes: number
+  /** Tracks still to play, counting the one playing now. */
+  tracksRemaining: number
+  /**
+   * Minutes each remaining track can have if the slot is to end on time. Null
+   * when the slot is already over, or when nothing is left to play.
+   *
+   * The number that turns drift into a decision: twenty minutes left and six
+   * tracks to go means cutting four of them, and knowing that at 02:40 is worth
+   * more than knowing it at 02:58.
+   */
+  minutesPerRemainingTrack: number | null
+}
+
+/**
+ * How the set is running against its own plan.
+ *
+ * Gig Mode already showed the clock time each track was *due* at, and never
+ * compared it to the actual time — which is the comparison the booth is for. A DJ
+ * who is twenty minutes behind with six tracks left needs to cut two of them now,
+ * while there is still a choice about which two.
+ *
+ * Returns null before the slot starts: there is no pace yet, and reporting a DJ as
+ * "ahead of schedule" an hour before they go on is noise dressed as information.
+ */
+export function assessPace(
+  nowMinutes: number,
+  currentIndex: number,
+  trackCount: number,
+  slot: ResolvedSlot
+): PaceAssessment | null {
+  if (trackCount <= 0) {
+    return null
+  }
+
+  const position = locateInSlot(nowMinutes, slot)
+
+  if (position.phase === "before") {
+    return null
+  }
+
+  const elapsed =
+    position.phase === "after"
+      ? slot.durationMinutes + position.minutes
+      : position.minutes
+
+  // clockAt returns wall-clock; the comparison has to happen in slot-relative
+  // minutes or it inherits the same midnight problem locateInSlot exists to solve.
+  const scheduled =
+    ((clockAt(currentIndex, trackCount, slot) - slot.startMinutes) %
+      MINUTES_IN_DAY +
+      MINUTES_IN_DAY) %
+    MINUTES_IN_DAY
+
+  const driftMinutes = Math.round(elapsed - scheduled)
+  const remainingSlotMinutes = Math.round(slot.durationMinutes - elapsed)
+  const tracksRemaining = Math.max(0, trackCount - currentIndex)
+
+  return {
+    status:
+      driftMinutes > PACE_TOLERANCE_MINUTES
+        ? "behind"
+        : driftMinutes < -PACE_TOLERANCE_MINUTES
+          ? "ahead"
+          : "on_time",
+    driftMinutes,
+    remainingSlotMinutes,
+    tracksRemaining,
+    minutesPerRemainingTrack:
+      remainingSlotMinutes <= 0 || tracksRemaining === 0
+        ? null
+        : Math.round((remainingSlotMinutes / tracksRemaining) * 10) / 10,
+  }
+}

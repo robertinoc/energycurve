@@ -344,6 +344,22 @@ export const DASHBOARD_COPY = {
     position: { en: "Track", es: "Track" },
     of: { en: "of", es: "de" },
     due: { en: "Due", es: "Va a las" },
+    /**
+     * Pace copy. Phrased as a fact plus a consequence, never as an instruction:
+     * cutting two tracks or riding a long mix is the DJ's call, and a booth screen
+     * telling someone what to play is the fastest way to get itself ignored.
+     */
+    paceOnTime: { en: "On schedule", es: "En horario" },
+    paceBehind: { en: "{gap} behind schedule", es: "{gap} atrasado" },
+    paceAhead: { en: "{gap} ahead of schedule", es: "{gap} adelantado" },
+    paceRoom: {
+      en: "{gap} left for {count} tracks — about {each} min each",
+      es: "Quedan {gap} para {count} tracks — unos {each} min cada uno",
+    },
+    paceSlotOver: {
+      en: "Your slot ended {gap} ago",
+      es: "Tu slot terminó hace {gap}",
+    },
     keepAwake: { en: "Keep screen on", es: "Mantener pantalla encendida" },
     keepAwakeOn: { en: "Screen stays on", es: "Pantalla siempre encendida" },
     keepAwakeUnsupported: {
