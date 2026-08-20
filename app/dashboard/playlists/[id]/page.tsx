@@ -18,6 +18,7 @@ import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
 import { TransitionList } from "@/components/playlists/transition-list"
 import { SaveShapeButton } from "@/components/playlists/save-shape-button"
 import { ShareCurveButton } from "@/components/playlists/share-curve-button"
+import { AudioEnrich } from "@/components/playlists/audio-enrich"
 import { CollaboratorsPanel } from "@/components/playlists/collaborators-panel"
 import { SuggestionThread } from "@/components/playlists/suggestion-thread"
 import {
@@ -93,6 +94,13 @@ export default async function PlaylistDetailPage({
 
   const locale = await getRequestLocale()
   const canShareSet = can(billing.plan, billing.status, "b2b_sets")
+  const canMeasureAudio = can(billing.plan, billing.status, "audio_analysis")
+
+  // How many tracks would gain something. Shown as the reason to bother rather
+  // than offering the panel to a set that's already fully measured.
+  const tracksWithoutBpm = playlist.tracks.filter(
+    (track) => track.bpm === null
+  ).length
 
   // Both reads are gated the same way as the panel that renders them, so a
   // non-PRO+ page load doesn't pay for a feature it won't show.
@@ -363,6 +371,23 @@ export default async function PlaylistDetailPage({
           </p>
         </section>
       ) : null}
+
+        {/* Offered only when there is something to gain: a set whose every track
+            already carries a BPM has nothing to measure, and a panel that does
+            nothing is a panel that teaches people to ignore panels. */}
+        {canMeasureAudio && tracksWithoutBpm > 0 ? (
+          <AudioEnrich
+            playlistId={id}
+            tracks={playlist.tracks.map((track, index) => ({
+              id: track.id,
+              artist: track.artist,
+              name: track.name,
+              position: index + 1,
+              hasBpm: track.bpm !== null,
+            }))}
+            locale={locale}
+          />
+        ) : null}
 
         {/* Sharing and the thread on it, next to each other: an owner who just
             invited someone is the owner most likely to want to read what they

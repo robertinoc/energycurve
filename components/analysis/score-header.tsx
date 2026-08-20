@@ -1,4 +1,5 @@
-import { ArrowRight } from "lucide-react"
+import Link from "next/link"
+import { ArrowRight, AudioLines } from "lucide-react"
 
 import { ANALYSIS_UI, formatTemplate } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -33,6 +34,11 @@ interface ScoreHeaderProps {
    * A caveat the reader has to scroll for is a caveat that doesn't work.
    */
   coverage?: EnergyCoverage
+  /**
+   * Where the measuring panel lives, when the reader owns this set. Absent means
+   * no link is offered — the no-score state still explains itself.
+   */
+  playlistHref?: string
   locale: SiteLocale
 }
 
@@ -52,6 +58,7 @@ export function ScoreHeader({
   decidedCount,
   smartOrdered = false,
   coverage,
+  playlistHref,
   locale,
 }: ScoreHeaderProps) {
   const progress =
@@ -114,6 +121,18 @@ export function ScoreHeader({
           <p className="max-w-[62ch] text-[13px] leading-6 text-ec-text-dim">
             {ANALYSIS_UI.scoreUnavailableFix[locale]}
           </p>
+          {/* Back to the playlist, where the measuring panel lives. A link rather
+              than the panel itself: measuring reads files from disk and belongs
+              next to the tracklist it changes, not inside a results screen. */}
+          {playlistHref ? (
+            <Link
+              href={playlistHref}
+              className="mt-1 inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold text-ec-amber underline-offset-4 hover:underline"
+            >
+              <AudioLines className="size-3.5" />
+              {ANALYSIS_UI.scoreUnavailableCta[locale]}
+            </Link>
+          ) : null}
         </div>
       </section>
     )
