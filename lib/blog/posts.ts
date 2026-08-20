@@ -3,7 +3,7 @@ import "server-only"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
-import { renderMarkdown } from "@/lib/blog/markdown"
+import { parseMarkdown, type BlogBlock } from "@/lib/blog/markdown"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
 const CONTENT_ROOT = join(process.cwd(), "content", "blog")
@@ -17,8 +17,13 @@ export interface BlogPost {
   publishedAt: string | null
   /** The query this was written against, from the AEO baseline. Not rendered. */
   targetQuery: string | null
-  /** Rendered HTML body, frontmatter stripped. */
-  html: string
+  /**
+   * The body as blocks, frontmatter stripped.
+   *
+   * Blocks rather than an HTML string so the article component renders elements
+   * and React does the escaping — see the note at the top of lib/blog/markdown.ts.
+   */
+  blocks: BlogBlock[]
 }
 
 /**
@@ -82,7 +87,7 @@ function readPost(locale: SiteLocale, fileName: string): BlogPost {
     description: fields.description!,
     publishedAt: fields.publishedAt ?? null,
     targetQuery: fields.targetQuery ?? null,
-    html: renderMarkdown(body),
+    blocks: parseMarkdown(body),
   }
 }
 
