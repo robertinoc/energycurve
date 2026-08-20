@@ -1,10 +1,16 @@
-# Seed articles
+# Blog articles
 
-Five Spanish articles, written to be published as-is once the blog has somewhere to
-live. **That decision is still open** — same repo or separate, like the Migbirds
-blog — and it is deliberately not made here: the writing doesn't depend on it, and
-blocking the writing on the infrastructure is what has kept this task TO DO since
-August 12th.
+Five Spanish articles, live since 20 Aug 2026 at `/es/blog` (the EN index at
+`/blog` shows an honest empty state until English articles exist). The
+where-does-the-blog-live decision landed on **same repo**: routes in `app/blog/`
+and `app/es/blog/`, pipeline in `lib/blog/`, chrome copy in
+`lib/content/blog-copy.ts`, and a deliberately restricted markdown renderer that
+throws on syntax it doesn't support — so a new article using anything fancier
+fails `tests/blog.test.ts` instead of rendering broken.
+
+To add an article: drop a `.md` file in `es/` whose filename equals its `slug`
+and fill the frontmatter; it appears in the index, the sitemap, and its own
+route on the next build. An article with `publishedAt: null` stays a draft.
 
 ## Why Spanish first
 

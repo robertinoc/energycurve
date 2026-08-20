@@ -294,8 +294,13 @@ space `seo-aeo-baseline-2026-08.md` named as the most winnable.
   layout opts *every* page out of static rendering — a real per-request cost for
   an attribute Google ignores when determining page language.
 
-Still open in this area: blog seed content (needs blog infrastructure, which
-this repo doesn't have), and the Search Console property itself (code support
+The blog shipped 20 Aug 2026: the five Spanish seed articles are live, served
+from this repo at `/blog` (EN index with an honest empty state) and `/es/blog`
+(pipeline in `lib/blog/`, chrome copy in `lib/content/blog-copy.ts`, guarded by
+`tests/blog.test.ts`). The footer's Resources column links to it — it briefly
+shipped orphaned, fixed the same day.
+
+Still open in this area: the Search Console property itself (code support
 shipped via `GOOGLE_SITE_VERIFICATION`; claiming the domain needs the account).
 
 ## v3 — approved capability set (12 Aug 2026)
