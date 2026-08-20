@@ -23,7 +23,10 @@ import {
 } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { decodeSmartOrderEvents } from "@/lib/smart-order/stream"
-import type { EnergyCoverage } from "@/lib/engine/energy-coverage"
+import {
+  scoreIsMeaningful,
+  type EnergyCoverage,
+} from "@/lib/engine/energy-coverage"
 import {
   residencyInSuggestedOrder,
   type ResidencyRepeat,
@@ -192,6 +195,10 @@ export function AnalysisWorkbench({
   locale,
 }: AnalysisWorkbenchProps) {
   const originalIds = useMemo(() => tracks.map((track) => track.id), [tracks])
+
+  // Asked once, used by the header and the smart-order banner, so the two can't
+  // disagree about whether this set's score means anything.
+  const scorable = !coverage || scoreIsMeaningful(coverage)
   const tracksById = useMemo(
     () => new Map(tracks.map((track) => [track.id, track])),
     [tracks]
@@ -809,7 +816,10 @@ export function AnalysisWorkbench({
       ) : smartStatus === "done" ? (
         <div className="flex items-center gap-3 rounded-xl border border-ec-cyan/35 bg-ec-cyan/[0.06] px-4 py-3 text-sm text-white/80">
           <Sparkles className="size-4 shrink-0 text-ec-cyan" />
-          {currentScore > baseScore
+          {/* The flat variant when the score isn't presentable: it says the order
+              was rewritten without quoting a before-and-after, which is the only
+              honest thing to say when both numbers grade a curve we drew. */}
+          {scorable && currentScore > baseScore
             ? formatTemplate(ANALYSIS_UI.smartDoneBanner[locale], {
                 from: baseScore.toFixed(1),
                 to: currentScore.toFixed(1),

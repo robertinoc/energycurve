@@ -583,6 +583,23 @@ export const ANALYSIS_UI = {
    * 46-pixel "9.2" is information the reader never reaches, and the whole point of
    * this caveat is that the number above it means less than it looks like.
    */
+  /**
+   * Reemplaza los dos números cuando la curva es mayormente inventada. Es la
+   * misma información que antes iba de aviso al lado del 9,2 — sólo que ahora
+   * ocupa el lugar del número, porque un titular y su desmentida no pesan igual.
+   */
+  scoreUnavailable: {
+    en: "Not enough data to score this set",
+    es: "No hay datos suficientes para puntuar este set",
+  },
+  scoreUnavailableBody: {
+    en: "{count} of {total} tracks have no energy tag, no BPM and no audio analysis, so the curve below is drawn from where each track sits in the list — not from your music. A score on top of that would be grading our own drawing.",
+    es: "{count} de {total} tracks no tienen etiqueta de energía, ni BPM, ni análisis de audio, así que la curva de abajo sale de dónde cae cada track en la lista — no de tu música. Un score encima de eso sería calificar nuestro propio dibujo.",
+  },
+  scoreUnavailableFix: {
+    en: "Run the audio analysis on this playlist, or re-import it from a source that carries BPMs. The reordering tools below still work — they just can't be scored yet.",
+    es: "Corré el análisis de audio en esta playlist, o reimportala desde una fuente que traiga BPMs. Las herramientas de reordenamiento de abajo siguen funcionando — sólo que todavía no se pueden puntuar.",
+  },
   coverageInventedAll: {
     en: "No BPM or audio data — this curve is drawn from track positions, so the score reflects the shape you asked for, not your set.",
     es: "Sin BPM ni datos de audio — esta curva sale de la posición de los tracks, así que el score refleja la forma que pediste, no tu set.",

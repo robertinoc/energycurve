@@ -6,6 +6,10 @@ import { buttonVariants } from "@/components/ui/button"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { computeSetScore } from "@/lib/engine/analysis"
+import {
+  energyCoverageOf,
+  scoreIsMeaningful,
+} from "@/lib/engine/energy-coverage"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { curveDomain } from "@/lib/playlists/version-diff"
 import { readShareToken } from "@/lib/playlists/share-token"
@@ -65,14 +69,25 @@ export default async function PublicCurvePage({
     playlist.genre
   )
   const curve = energies.map((entry) => entry.score)
+  const meta = energies.map((entry) => ({
+    source: entry.source,
+    bpm: entry.bpm,
+  }))
+
+  /**
+   * No score on a shared page when the curve is mostly ours.
+   *
+   * This is the growth loop — the page a DJ sends to other people — which makes it
+   * the worst place to publish a number the engine invented. A set with no tags at
+   * all scored 9.2, because the curve being graded is a ramp drawn from track
+   * positions and the target comes from the same context. The curve itself still
+   * renders: its *shape* is the DJ's ordering, which is the thing worth sharing.
+   */
   const score =
-    playlist.genre && playlist.context
-      ? computeSetScore(
-          curve,
-          playlist.genre,
-          playlist.context,
-          energies.map((entry) => ({ source: entry.source, bpm: entry.bpm }))
-        )
+    playlist.genre &&
+    playlist.context &&
+    scoreIsMeaningful(energyCoverageOf(meta))
+      ? computeSetScore(curve, playlist.genre, playlist.context, meta)
       : null
 
   return (

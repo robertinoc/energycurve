@@ -141,3 +141,20 @@ function verdictFor(
 
   return "mixed"
 }
+
+/**
+ * Whether the set score is worth presenting as a verdict.
+ *
+ * One function so the rule lives in one place: the analysis screen, the
+ * smart-order banner and the public shared curve all ask the same question and
+ * cannot drift into disagreeing about the same set.
+ *
+ * The line is the `invented` verdict — two thirds — and deliberately not
+ * `INVENTED_SHARE_WARN`. A set that is one third fabricated still has two thirds
+ * of a real shape, and hiding its score would be over-correcting: the caveat is
+ * the right response there, not silence. Above two thirds the curve is mostly a
+ * ramp we drew from track positions, and the score is grading our own drawing.
+ */
+export function scoreIsMeaningful(coverage: EnergyCoverage): boolean {
+  return coverage.verdict !== "invented"
+}
