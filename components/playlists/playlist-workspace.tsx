@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/ui/toast"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
+import {
+  estimatedPointIndices,
+  shouldMarkEstimated,
+} from "@/lib/charts/estimated-points"
+import { formatTemplate } from "@/lib/content/analysis-copy"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
 import {
@@ -71,6 +76,16 @@ export function PlaylistWorkspace({
   )
 
   const scores = useMemo(() => energies.map((e) => e.score), [energies])
+
+  // Marked only when some points are real and some aren't: the contrast is what
+  // carries the meaning. An all-hollow chart is a uniform texture that reads as
+  // decoration, and that case is covered louder on the analysis screen, where the
+  // score is withheld outright.
+  const estimatedIndices = useMemo(() => {
+    const invented = estimatedPointIndices(energies.map((e) => e.source))
+
+    return shouldMarkEstimated(invented.length, energies.length) ? invented : []
+  }, [energies])
 
   const target = useMemo(
     () =>
@@ -151,7 +166,20 @@ export function PlaylistWorkspace({
               ) : null}
             </div>
           </div>
-          <SetCurve scores={scores} target={target} hoveredIndex={hoveredIndex} />
+          <SetCurve
+            scores={scores}
+            target={target}
+            hoveredIndex={hoveredIndex}
+            estimatedIndices={estimatedIndices}
+          />
+
+          {estimatedIndices.length > 0 ? (
+            <p className="px-1 text-xs leading-5 text-white/32">
+              {formatTemplate(copy.estimatedPoints[locale], {
+                count: estimatedIndices.length,
+              })}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
