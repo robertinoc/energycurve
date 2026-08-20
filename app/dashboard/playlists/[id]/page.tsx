@@ -19,6 +19,7 @@ import { TransitionList } from "@/components/playlists/transition-list"
 import { SaveShapeButton } from "@/components/playlists/save-shape-button"
 import { ShareCurveButton } from "@/components/playlists/share-curve-button"
 import { AudioEnrich } from "@/components/playlists/audio-enrich"
+import { TitleLookup } from "@/components/playlists/title-lookup"
 import { CollaboratorsPanel } from "@/components/playlists/collaborators-panel"
 import { SuggestionThread } from "@/components/playlists/suggestion-thread"
 import {
@@ -49,6 +50,7 @@ import { getRequestLocale } from "@/lib/server-locale"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { getProfileBilling } from "@/services/billing-service"
+import { isTitleLookupConfigured } from "@/services/title-lookup-service"
 import {
   listCollaborators,
   listSuggestions,
@@ -95,6 +97,9 @@ export default async function PlaylistDetailPage({
   const locale = await getRequestLocale()
   const canShareSet = can(billing.plan, billing.status, "b2b_sets")
   const canMeasureAudio = can(billing.plan, billing.status, "audio_analysis")
+  // Hidden entirely with no key configured, rather than shown and failing: an
+  // offer that can't be taken is worse than no offer.
+  const lookupConfigured = isTitleLookupConfigured()
 
   // How many tracks would gain something. Shown as the reason to bother rather
   // than offering the panel to a set that's already fully measured.
@@ -371,6 +376,18 @@ export default async function PlaylistDetailPage({
           </p>
         </section>
       ) : null}
+
+        {/* The other half of the same problem: measuring needs the files, this
+            doesn't. Shown together and in this order because measuring is the
+            better answer when it's available — it reads the actual audio, and it
+            sends nothing anywhere. */}
+        {canMeasureAudio && tracksWithoutBpm > 0 && lookupConfigured ? (
+          <TitleLookup
+            playlistId={id}
+            missingCount={tracksWithoutBpm}
+            locale={locale}
+          />
+        ) : null}
 
         {/* Offered only when there is something to gain: a set whose every track
             already carries a BPM has nothing to measure, and a panel that does

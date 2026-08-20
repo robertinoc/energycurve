@@ -42,6 +42,10 @@ import {
 import { can } from "@/lib/product/capabilities"
 import { restorableOrder } from "@/lib/playlists/versions"
 import { parseTrackAudioFeatures } from "@/lib/audio/track-features"
+import {
+  isTitleLookupConfigured,
+  lookupTracks,
+} from "@/services/title-lookup-service"
 import type { Json } from "@/types/database"
 import { applyMeasuredAudio } from "@/services/playlist-service"
 import { getProfileBilling } from "@/services/billing-service"
@@ -1477,4 +1481,101 @@ export async function reorderSharedTracksAction(
   revalidatePath(`/dashboard/playlists/${playlistId}`)
 
   return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Filling in BPM and key by looking tracks up by name.
+// ---------------------------------------------------------------------------
+
+export interface TitleLookupResult {
+  ok: boolean
+  /** How many tracks gained something. */
+  written?: number
+  /** How many were asked about, so the DJ can see what didn't match. */
+  asked?: number
+  message?: string
+}
+
+/**
+ * Looks up the tracks of a playlist that have no BPM, and writes what comes back.
+ *
+ * Explicitly invoked, never on a timer or on import: this sends artist and title
+ * to a third party, and the DJ agrees to that per playlist with the recipient
+ * named. The audio promise is untouched — no audio is uploaded here or anywhere —
+ * but a track name is still their data leaving their machine.
+ *
+ * Only tracks missing a BPM are asked about. Re-asking about a track that already
+ * has one would spend the rate limit to overwrite better data with worse: a
+ * measured value or a value from the DJ's own tags beats a crowd-contributed one.
+ */
+export async function lookupTitlesAction(
+  playlistId: string
+): Promise<TitleLookupResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "import", locale)
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message ?? undefined }
+  }
+
+  if (!isTitleLookupConfigured()) {
+    return { ok: false, message: ACTION_COPY.lookupUnavailable[locale] }
+  }
+
+  const billing = await getProfileBilling(profile.id)
+
+  // Same gate as measuring audio: both fill in the same two fields, and charging
+  // differently for them by source would be arbitrary.
+  if (!can(billing.plan, billing.status, "audio_analysis")) {
+    return { ok: false, message: ACTION_COPY.audioAnalysisNotEntitled[locale] }
+  }
+
+  const playlist = await getOwnedPlaylistWithTracks(profile.id, playlistId)
+
+  if (!playlist) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  const missing = playlist.tracks.filter((track) => track.bpm === null)
+
+  if (missing.length === 0) {
+    return { ok: true, written: 0, asked: 0 }
+  }
+
+  try {
+    const outcomes = await lookupTracks(
+      missing.map((track) => ({
+        trackId: track.id,
+        artist: track.artist,
+        title: track.name,
+      }))
+    )
+
+    const updates = outcomes
+      .filter((outcome) => outcome.result !== null)
+      .map((outcome) => ({
+        trackId: outcome.trackId,
+        bpm: outcome.result!.bpm,
+        musicalKey: outcome.result!.musicalKey,
+        // No spectral features from a lookup: those describe the audio, and we
+        // never heard it. Leaving the column null keeps "never analysed"
+        // distinguishable from "analysed", which the energy scorer depends on.
+        audioFeatures: null,
+      }))
+
+    const written = await applyMeasuredAudio(profile.id, playlistId, updates)
+
+    revalidatePath(`/dashboard/playlists/${playlistId}`)
+    revalidatePath(`/dashboard/playlists/${playlistId}/analysis`)
+
+    return { ok: true, written, asked: missing.length }
+  } catch (error) {
+    logError("playlist.title_lookup_failed", error, {
+      profileId: profile.id,
+      playlistId,
+    })
+
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
 }
