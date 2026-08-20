@@ -12,7 +12,7 @@
  * name here — and mail from a company that names itself is treated better by
  * spam filters than mail that doesn't.
  */
-const EMAIL_OPERATOR_LINE = "Part of the StageLink suite · operated by StageLink LLC"
+const EMAIL_OPERATOR_LINE = "Part of the StageLink family · operated by StageLink LLC"
 
 const BRAND = {
   bg: "#08050F",

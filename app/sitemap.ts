@@ -12,6 +12,7 @@ const HINTS: Record<
   (typeof LOCALIZED_PATHS)[number],
   { changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }
 > = {
+  // Declaration order is emission order: keep this descending by priority.
   "/": { changeFrequency: "weekly", priority: 1 },
   "/pricing": { changeFrequency: "monthly", priority: 0.9 },
   "/blog": { changeFrequency: "weekly", priority: 0.7 },
@@ -40,7 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }))
 
-  return articles.concat(LOCALIZED_PATHS.flatMap((path) => {
+  const pages: MetadataRoute.Sitemap = LOCALIZED_PATHS.flatMap((path) => {
     const languages = {
       en: `${SITE_URL}${localizedPath(path, "en")}`,
       es: `${SITE_URL}${localizedPath(path, "es")}`,
@@ -52,5 +53,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       ...HINTS[path],
       alternates: { languages },
     }))
-  }))
+  })
+
+  // Pages first, in priority order, then the articles — the file is read
+  // top-down, so the homepage should not sit below a blog post.
+  return [...pages, ...articles]
 }
