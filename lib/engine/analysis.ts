@@ -7,12 +7,16 @@ import {
   SET_CONTEXTS,
   SET_SCORE_WEIGHTS_V2,
   SHAPE_FIT_RULES_V2,
-  STANDARD_TRACK_DURATION_MINUTES,
   type CurveShape,
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
 import { assessSlot } from "@/lib/engine/slot"
+import {
+  assessSlotFit,
+  resolveSetTiming,
+  type SetTiming,
+} from "@/lib/engine/set-timing"
 import { buildTargetCurve, genreCurveCharacter } from "@/lib/engine/target-curve"
 import type {
   DetectedIssue,
@@ -630,7 +634,9 @@ function deriveEndingIssue(scored: ScoredCurve): DetectedIssue | null {
 
 function deriveInformationalHints(
   curve: number[],
-  breatherIndexes: Set<number>
+  breatherIndexes: Set<number>,
+  timing: SetTiming,
+  slotFit: ReturnType<typeof assessSlotFit>
 ): DetectedIssue[] {
   const issues: DetectedIssue[] = []
 
@@ -670,9 +676,21 @@ function deriveInformationalHints(
     })
   }
 
-  const durationMinutes = curve.length * STANDARD_TRACK_DURATION_MINUTES
-
-  if (durationMinutes < SET_DURATION_GUIDELINE_MINUTES.min) {
+  // Length advice, against the best reference point available. When the DJ declared
+  // a slot and the set's length is measured, that slot is the reference — comparing
+  // against a generic 45–150 minute guideline when we know the real one is strictly
+  // worse advice. Only one of the two pairs ever fires.
+  if (slotFit) {
+    if (slotFit.verdict !== "fits") {
+      issues.push({
+        type: slotFit.verdict === "short" ? "set_short_for_slot" : "set_over_slot",
+        severity: "info",
+        trackPositions: [],
+        penaltyApplied: 0,
+        penaltyCategory: null,
+      })
+    }
+  } else if (timing.totalMinutes < SET_DURATION_GUIDELINE_MINUTES.min) {
     issues.push({
       type: "set_too_short",
       severity: "info",
@@ -680,7 +698,7 @@ function deriveInformationalHints(
       penaltyApplied: 0,
       penaltyCategory: null,
     })
-  } else if (durationMinutes > SET_DURATION_GUIDELINE_MINUTES.max) {
+  } else if (timing.totalMinutes > SET_DURATION_GUIDELINE_MINUTES.max) {
     issues.push({
       type: "set_too_long",
       severity: "info",
@@ -703,7 +721,9 @@ function deriveIssues(
   scored: ScoredCurve,
   curve: number[],
   genre: SupportedGenre,
-  context: PlaylistContext
+  context: PlaylistContext,
+  timing: SetTiming,
+  slotFit: ReturnType<typeof assessSlotFit>
 ): DetectedIssue[] {
   const breatherIndexes = new Set(
     scored.dynamics.breathers.map((breather) => breather.index)
@@ -712,7 +732,7 @@ function deriveIssues(
   const issues = [
     ...deriveDynamicsIssues(scored),
     ...deriveShapeIssues(scored, curve, genre, context),
-    ...deriveInformationalHints(curve, breatherIndexes),
+    ...deriveInformationalHints(curve, breatherIndexes, timing, slotFit),
   ]
 
   const endingIssue = deriveEndingIssue(scored)
@@ -769,6 +789,7 @@ export function analyzePlaylist({
   genre,
   context,
   trackMeta,
+  durationsSeconds,
   slot,
   targetShape = null,
   targetAnchors = null,
@@ -781,8 +802,15 @@ export function analyzePlaylist({
     targetShape,
     targetAnchors
   )
-  const issues = deriveIssues(scored, curve, genre, context)
+  // One length per track, padded when the caller passed fewer than the curve has —
+  // a mismatched array is a caller bug, and silently scoring a partial set's length
+  // as the whole set's would be the wrong way to surface it.
+  const timing = resolveSetTiming(
+    curve.map((_, index) => durationsSeconds?.[index] ?? null)
+  )
   const slotAssessment = slot ? assessSlot(curve, slot) : null
+  const slotFit = slot ? assessSlotFit(timing, slot.durationMinutes) : null
+  const issues = deriveIssues(scored, curve, genre, context, timing, slotFit)
 
   // Appended after the scored issues and carrying zero penalty: timing is a
   // separate axis from curve quality, and the score must not move because a form
@@ -818,5 +846,7 @@ export function analyzePlaylist({
     contextScores,
     bestFitContext,
     slot: slotAssessment,
+    timing,
+    slotFit,
   }
 }

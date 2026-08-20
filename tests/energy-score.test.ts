@@ -4,7 +4,6 @@ import {
   correctBpmTagForGenre,
   energyScoreFromBpm,
   estimatedScoreFromPosition,
-  estimateSetDurationMinutes,
   resolveTrackEnergies,
 } from "@/lib/engine/energy-score"
 
@@ -321,9 +320,3 @@ describe("half/double-time BPM tag correction (B21)", () => {
   })
 })
 
-describe("estimateSetDurationMinutes", () => {
-  it("multiplies track count by the standard duration", () => {
-    expect(estimateSetDurationMinutes(0)).toBe(0)
-    expect(estimateSetDurationMinutes(10)).toBe(30)
-  })
-})

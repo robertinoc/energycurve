@@ -5,12 +5,12 @@ import { ArrowLeft } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
 import { PrintButton } from "@/components/playlists/print-button"
+import { resolveSetTiming } from "@/lib/engine/set-timing"
 import { SetSheet, type SetSheetRow } from "@/components/playlists/set-sheet"
 import { buttonVariants } from "@/components/ui/button"
 import { buildReturnToHref } from "@/lib/auth/return-to"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import {
-  estimateSetDurationMinutes,
   resolveTrackEnergies,
 } from "@/lib/engine/energy-score"
 import { clockAt, peakIndexOf, resolveSlot } from "@/lib/engine/slot"
@@ -141,7 +141,11 @@ export default async function SetSheetPage({
         slot={slot}
         rows={rows}
         peakPosition={rows[peakIndex]?.position ?? null}
-        estimatedMinutes={estimateSetDurationMinutes(playlist.tracks.length)}
+        estimatedMinutes={
+          resolveSetTiming(
+            playlist.tracks.map((track) => track.duration_seconds)
+          ).totalMinutes
+        }
         locale={locale}
       />
     </SheetShell>

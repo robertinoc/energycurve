@@ -1,7 +1,6 @@
 import {
   REORDER_HARMONY_V4,
   REORDER_MIN_IMPROVEMENT_V2,
-  STANDARD_TRACK_DURATION_MINUTES,
   type CurveShape,
   type PlaylistContext,
   type SupportedGenre,
@@ -74,9 +73,19 @@ function buildTemplateParams(
     threshold: roundToOneDecimal(target[target.length - 1] ?? targetMax),
     context: CONTEXT_DISPLAY_NAMES[analysis.context][locale],
     trackCount: analysis.curve.length,
-    duration: analysis.curve.length * STANDARD_TRACK_DURATION_MINUTES,
+    // Real playing time where the files carried it, the standard-track estimate
+    // where they didn't. This is the number the length advice quotes back, and it
+    // used to be trackCount × 3 for everyone — off by more than 2× for a set of
+    // seven-minute progressive tracks, which is exactly who got told "short set".
+    duration: analysis.timing.totalMinutes,
     minDuration: SET_DURATION_GUIDELINE_MINUTES.min,
     maxDuration: SET_DURATION_GUIDELINE_MINUTES.max,
+    // Read only by the declared-slot length pair, which can't be emitted without a
+    // fit. Zero rather than absent so a missing key can never render as braces.
+    slotMinutes: analysis.slotFit?.slotMinutes ?? 0,
+    gap: analysis.slotFit
+      ? formatGap(Math.abs(analysis.slotFit.differenceMinutes))
+      : "",
     // Empty rather than absent when no slot was declared: the two slot issues are
     // the only copy that reads these, and they can't be emitted without one — but
     // a missing key would render the literal braces if that ever changed.

@@ -392,3 +392,98 @@ describe("analyzePlaylist — slot awareness", () => {
     ).toBe(false)
   })
 })
+
+describe("set length from real track durations", () => {
+  /** A gentle 20-track ramp: no curve problems, so only length advice can fire. */
+  const curve = Array.from({ length: 20 }, (_, i) => 6 + (i / 19) * 3)
+  const seconds = (each: number) => curve.map(() => each)
+
+  it("stops calling a long set short because the tracks aren't 3 minutes", () => {
+    // 20 × 7 min = 140 minutes of music. The old guess (20 × 3 = 60) put this
+    // under the 45-minute floor's neighbour and fired "short set" at exactly the
+    // DJs whose tracks are longest.
+    const analysis = analyzePlaylist({
+      curve,
+      genre: "progressive",
+      context: "main",
+      durationsSeconds: seconds(7 * 60),
+    })
+
+    expect(analysis.timing.totalMinutes).toBe(140)
+    expect(analysis.timing.measured).toBe(true)
+    expect(analysis.issues.some((issue) => issue.type === "set_too_short")).toBe(
+      false
+    )
+  })
+
+  it("still warns on a set that really is short", () => {
+    const analysis = analyzePlaylist({
+      curve: curve.slice(0, 8),
+      genre: "house",
+      context: "opening",
+      durationsSeconds: Array(8).fill(3 * 60),
+    })
+
+    expect(analysis.timing.totalMinutes).toBe(24)
+    expect(analysis.issues.some((issue) => issue.type === "set_too_short")).toBe(
+      true
+    )
+  })
+
+  it("falls back to the estimate when no durations are supplied", () => {
+    // Every set imported before durations were read. Behaviour must not change.
+    const analysis = analyzePlaylist({ curve, genre: "house", context: "main" })
+
+    expect(analysis.timing.measured).toBe(false)
+    expect(analysis.timing.totalMinutes).toBe(60)
+  })
+
+  it("measures against the declared slot instead of the generic guideline", () => {
+    // 140 minutes of music, 240-minute slot: a full 100 minutes short. The generic
+    // pair would have said nothing — 140 sits inside 45–150.
+    const analysis = analyzePlaylist({
+      curve,
+      genre: "progressive",
+      context: "main",
+      durationsSeconds: seconds(7 * 60),
+      slot: resolveSlot(60, 300),
+    })
+
+    expect(analysis.slotFit?.verdict).toBe("short")
+    expect(analysis.issues.some((i) => i.type === "set_short_for_slot")).toBe(true)
+    // Only one of the two pairs fires, so the DJ isn't told the same thing twice
+    // against two different reference points.
+    expect(analysis.issues.some((i) => i.type === "set_too_short")).toBe(false)
+    expect(analysis.issues.some((i) => i.type === "set_too_long")).toBe(false)
+  })
+
+  it("flags more music than slot without calling it a problem", () => {
+    const analysis = analyzePlaylist({
+      curve,
+      genre: "techno",
+      context: "main",
+      durationsSeconds: seconds(7 * 60),
+      slot: resolveSlot(60, 150), // 90-minute slot, 140 minutes of music
+    })
+
+    expect(analysis.issues.some((i) => i.type === "set_over_slot")).toBe(true)
+    // Informational: timing is a separate axis and must not move the score.
+    expect(
+      analysis.issues.find((i) => i.type === "set_over_slot")!.penaltyApplied
+    ).toBe(0)
+  })
+
+  it("says nothing about fit when the length is only estimated", () => {
+    // No durations + a slot. Answering here would be a guess wearing a number, on
+    // a question someone acts on before a booking.
+    const analysis = analyzePlaylist({
+      curve,
+      genre: "house",
+      context: "main",
+      slot: resolveSlot(60, 180),
+    })
+
+    expect(analysis.slotFit).toBeNull()
+    expect(analysis.issues.some((i) => i.type.startsWith("set_"))).toBe(false)
+  })
+})
