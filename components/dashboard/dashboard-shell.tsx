@@ -3,7 +3,16 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Library, ListMusic, LogOut, Menu, X, type LucideIcon } from "lucide-react"
+import {
+  Home,
+  Library,
+  ListMusic,
+  LogOut,
+  Menu,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react"
 
 import { LocaleToggle } from "@/components/analysis/locale-toggle"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
@@ -29,6 +38,16 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/playlists",
     label: DASHBOARD_COPY.shell.playlists,
     icon: ListMusic,
+    match: "prefix",
+  },
+  {
+    // No plan gate: being shared *with* costs nothing and needs no plan — the
+    // person who pays is the one doing the sharing. Someone with no shared sets
+    // sees an empty state, which is also the only place that explains the
+    // feature exists.
+    href: "/dashboard/shared",
+    label: DASHBOARD_COPY.shell.shared,
+    icon: Users,
     match: "prefix",
   },
   {

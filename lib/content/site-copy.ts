@@ -947,13 +947,19 @@ const siteCopy: SiteCopySchema = {
       },
       {
         key: "b2b_sets",
+        /**
+         * Named as what it is rather than as "collaborative sets", which promises
+         * simultaneous editing this doesn't do. Someone who pays expecting to
+         * co-edit and finds a read-only view plus comments has been mis-sold, and
+         * the fix for that is the wording here, not a bigger feature.
+         */
         capability: {
-          en: "Collaborative B2B / B3B sets with other EnergyCurve users",
-          es: "Sets B2B / B3B colaborativos con otros usuarios de EnergyCurve",
+          en: "Share a set with another DJ — they see it and suggest changes",
+          es: "Compartir un set con otro DJ — lo ve y sugiere cambios",
         },
         free: "no",
         pro: "no",
-        proPlus: "soon",
+        proPlus: "yes",
       },
       {
         key: "set_comparator",

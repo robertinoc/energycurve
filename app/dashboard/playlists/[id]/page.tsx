@@ -18,6 +18,8 @@ import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
 import { TransitionList } from "@/components/playlists/transition-list"
 import { SaveShapeButton } from "@/components/playlists/save-shape-button"
 import { ShareCurveButton } from "@/components/playlists/share-curve-button"
+import { CollaboratorsPanel } from "@/components/playlists/collaborators-panel"
+import { SuggestionThread } from "@/components/playlists/suggestion-thread"
 import {
   VersionHistory,
   type VersionSummary,
@@ -46,6 +48,10 @@ import { getRequestLocale } from "@/lib/server-locale"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import { getProfileBilling } from "@/services/billing-service"
+import {
+  listCollaborators,
+  listSuggestions,
+} from "@/services/collaboration-service"
 import { listCurveTemplates } from "@/services/curve-template-service"
 import { listVersions } from "@/services/version-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
@@ -86,6 +92,17 @@ export default async function PlaylistDetailPage({
   }
 
   const locale = await getRequestLocale()
+  const canShareSet = can(billing.plan, billing.status, "b2b_sets")
+
+  // Both reads are gated the same way as the panel that renders them, so a
+  // non-PRO+ page load doesn't pay for a feature it won't show.
+  const [collaborators, suggestions] = canShareSet
+    ? await Promise.all([
+        listCollaborators(profile.id, id),
+        listSuggestions(id, profile.id),
+      ])
+    : [[], []]
+
   const copy = DASHBOARD_COPY.playlistDetail
   const canPrintSetSheet = can(
     billing.plan,
@@ -346,6 +363,31 @@ export default async function PlaylistDetailPage({
           </p>
         </section>
       ) : null}
+
+        {/* Sharing and the thread on it, next to each other: an owner who just
+            invited someone is the owner most likely to want to read what they
+            said. Not queried at all when the reader can't share — the thread is
+            empty by construction in that case. */}
+        {canShareSet ? (
+          <div className="flex flex-col gap-4">
+            <CollaboratorsPanel
+              playlistId={id}
+              collaborators={collaborators}
+              locale={locale}
+            />
+            {collaborators.length > 0 || suggestions.length > 0 ? (
+              <SuggestionThread
+                playlistId={id}
+                suggestions={suggestions}
+                trackPositions={Object.fromEntries(
+                  playlist.tracks.map((track, index) => [track.id, index + 1])
+                )}
+                canResolve
+                locale={locale}
+              />
+            ) : null}
+          </div>
+        ) : null}
 
         <VersionHistory
           playlistId={playlist.id}

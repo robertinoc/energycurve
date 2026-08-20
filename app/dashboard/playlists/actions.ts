@@ -42,6 +42,12 @@ import { can } from "@/lib/product/capabilities"
 import { restorableOrder } from "@/lib/playlists/versions"
 import { getProfileBilling } from "@/services/billing-service"
 import {
+  addSuggestion,
+  inviteCollaborator,
+  removeCollaborator,
+  resolveSuggestion,
+} from "@/services/collaboration-service"
+import {
   captureVersion,
   compareWithCurrent,
   getVersion,
@@ -1154,5 +1160,136 @@ export async function deleteCustomTaxonomyAction(
 
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/playlists")
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Shared sets (B2B/B3B, first slice): invite, revoke, suggest, resolve.
+// ---------------------------------------------------------------------------
+
+export interface CollaborationResult {
+  ok: boolean
+  message?: string
+}
+
+/**
+ * Shares a set with another DJ by email.
+ *
+ * The entitlement check lives in the service, not here — every reason this can
+ * fail is something the person typing needs to read, so the action's job is
+ * turning a reason code into their language.
+ */
+export async function inviteCollaboratorAction(
+  playlistId: string,
+  email: string
+): Promise<CollaborationResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message ?? undefined }
+  }
+
+  const result = await inviteCollaborator(
+    profile.id,
+    profile.email,
+    playlistId,
+    email
+  )
+
+  if (!result.ok) {
+    return {
+      ok: false,
+      message:
+        result.reason === "bad_email"
+          ? ACTION_COPY.inviteBadEmail[locale]
+          : result.reason === "self"
+            ? ACTION_COPY.inviteSelf[locale]
+            : result.reason === "not_entitled"
+              ? ACTION_COPY.inviteNotEntitled[locale]
+              : ACTION_COPY.genericError[locale],
+    }
+  }
+
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+
+  return { ok: true }
+}
+
+export async function removeCollaboratorAction(
+  playlistId: string,
+  collaboratorId: string
+): Promise<CollaborationResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  if (!(await removeCollaborator(profile.id, playlistId, collaboratorId))) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+
+  return { ok: true }
+}
+
+/**
+ * Leaves a suggestion on a set.
+ *
+ * Revalidates both the owner's page and the collaborator's view, because the two
+ * sides of one conversation are two routes and whichever one you're not on is the
+ * one that would go stale.
+ */
+export async function addSuggestionAction(
+  playlistId: string,
+  body: string,
+  trackId: string | null
+): Promise<CollaborationResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message ?? undefined }
+  }
+
+  const result = await addSuggestion(
+    profile.id,
+    profile.email,
+    playlistId,
+    body,
+    trackId
+  )
+
+  if (!result.ok) {
+    return {
+      ok: false,
+      message:
+        result.reason === "bad_body"
+          ? ACTION_COPY.suggestionEmpty[locale]
+          : ACTION_COPY.genericError[locale],
+    }
+  }
+
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+  revalidatePath(`/dashboard/shared/${playlistId}`)
+
+  return { ok: true }
+}
+
+export async function resolveSuggestionAction(
+  playlistId: string,
+  suggestionId: string
+): Promise<CollaborationResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  if (!(await resolveSuggestion(profile.id, playlistId, suggestionId))) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+  revalidatePath(`/dashboard/shared/${playlistId}`)
+
   return { ok: true }
 }

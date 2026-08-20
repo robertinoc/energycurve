@@ -102,7 +102,11 @@ export const CAPABILITIES = {
     status: "shipped",
     note: "Needs a venue on the playlist and a set marked as played at that same venue; without both it reports nothing. Gated in services/residency-service.ts, called from both the playlist page and the analysis workbench.",
   },
-  b2b_sets: { minPlan: "pro_plus", status: "planned" },
+  b2b_sets: {
+    minPlan: "pro_plus",
+    status: "shipped",
+    note: "First slice: share a set read-only with another DJ, who can leave suggestions. Not simultaneous editing. Gated on the OWNER's plan in services/collaboration-service.ts — a collaborator needs no plan, because requiring both parties to pay is a feature that mostly doesn't work.",
+  },
   gig_mode: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
   global_library: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
   /**

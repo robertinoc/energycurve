@@ -73,6 +73,7 @@ export const CURVE_SHAPE_COPY: Record<
 
 export const DASHBOARD_COPY = {
   shell: {
+    shared: { en: "Shared with me", es: "Compartidos conmigo" },
     workspace: { en: "Workspace", es: "Workspace" },
     home: { en: "Home", es: "Inicio" },
     playlists: { en: "Playlists", es: "Playlists" },
@@ -889,6 +890,22 @@ export const DASHBOARD_COPY = {
       en: " {count} line(s) were skipped.",
       es: " Se saltearon {count} línea(s).",
     },
+    inviteBadEmail: {
+      en: "That doesn't look like an email address.",
+      es: "Eso no parece una dirección de email.",
+    },
+    inviteSelf: {
+      en: "That's your own address — the set is already yours.",
+      es: "Esa es tu propia dirección — el set ya es tuyo.",
+    },
+    inviteNotEntitled: {
+      en: "Sharing a set with another DJ is a PRO+ feature.",
+      es: "Compartir un set con otro DJ es una función PRO+.",
+    },
+    suggestionEmpty: {
+      en: "Write something first.",
+      es: "Escribí algo primero.",
+    },
     importedSetName: {
       en: "Imported {source} set",
       es: "Set importado de {source}",
@@ -948,6 +965,60 @@ export const DASHBOARD_COPY = {
    * Plan state, shown on the dashboard. Every string here answers one question a
    * paying customer asks: what am I on, until when, and what do I do about it.
    */
+  /**
+   * Shared sets. The words are chosen to keep the read-only nature obvious: a
+   * collaborator who thinks they can reorder and then can't reads the feature as
+   * broken rather than as scoped.
+   */
+  collaboration: {
+    sectionLabel: { en: "Shared with", es: "Compartido con" },
+    intro: {
+      en: "They can see this set and leave suggestions. They can't reorder it, rename it or export it.",
+      es: "Pueden ver este set y dejar sugerencias. No pueden reordenarlo, renombrarlo ni exportarlo.",
+    },
+    emailPlaceholder: { en: "dj@email.com", es: "dj@email.com" },
+    invite: { en: "Share", es: "Compartir" },
+    inviting: { en: "Sharing…", es: "Compartiendo…" },
+    remove: { en: "Remove", es: "Quitar" },
+    empty: {
+      en: "Not shared with anyone yet.",
+      es: "Todavía no lo compartiste con nadie.",
+    },
+    /** Shown when the invite lands before the other DJ has an account. */
+    pendingHint: {
+      en: "If they don't have an account yet, the set appears for them the moment they sign up with that address.",
+      es: "Si todavía no tienen cuenta, el set les aparece en el momento en que se registran con esa dirección.",
+    },
+    suggestionsLabel: { en: "Suggestions", es: "Sugerencias" },
+    suggestionPlaceholder: {
+      en: "Swap 6 and 7 — that one's too much for 01:00.",
+      es: "Cambiá 6 y 7 — ese es demasiado para la 01:00.",
+    },
+    send: { en: "Send", es: "Enviar" },
+    sending: { en: "Sending…", es: "Enviando…" },
+    noSuggestions: {
+      en: "No suggestions yet.",
+      es: "Todavía no hay sugerencias.",
+    },
+    resolve: { en: "Mark as handled", es: "Marcar como resuelta" },
+    resolved: { en: "Handled", es: "Resuelta" },
+    aboutTrack: { en: "About track {position}", es: "Sobre el track {position}" },
+    sharedIndexTitle: { en: "Shared with me", es: "Compartidos conmigo" },
+    sharedIndexIntro: {
+      en: "Sets other DJs shared with you. Read-only — you can leave suggestions.",
+      es: "Sets que otros DJs compartieron con vos. Sólo lectura — podés dejar sugerencias.",
+    },
+    sharedIndexEmpty: {
+      en: "Nobody has shared a set with you yet.",
+      es: "Todavía nadie te compartió un set.",
+    },
+    sharedBy: { en: "Shared by {email}", es: "Compartido por {email}" },
+    readOnlyBanner: {
+      en: "You're viewing {owner}'s set. You can leave suggestions; only they can change the order.",
+      es: "Estás viendo el set de {owner}. Podés dejar sugerencias; sólo esa persona puede cambiar el orden.",
+    },
+  },
+
   billing: {
     sectionLabel: { en: "Your plan", es: "Tu plan" },
     planName: {
