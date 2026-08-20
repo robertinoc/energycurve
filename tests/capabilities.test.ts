@@ -428,3 +428,47 @@ describe("the landing loop section only advertises shipped capabilities", () => 
     }
   })
 })
+
+describe("sharing is gated on the owner, and only the owner", () => {
+  /**
+   * `/pricing` now states this out loud, twice: the matrix row says "(they don't
+   * need a plan)" and a FAQ entry answers "does my B2B partner need PRO+ too".
+   * Both are promises, and the thing that would quietly break them is someone
+   * adding a plan check to a collaborator-side route — at which point the page is
+   * lying and nothing says so.
+   *
+   * Scanned rather than reasoned about, because the failure mode is a `can()` call
+   * added in six months by someone who never read this file.
+   */
+  const OWNER_SIDE = [
+    "services/collaboration-service.ts",
+    "app/dashboard/playlists/[id]/page.tsx",
+  ]
+  const COLLABORATOR_SIDE = [
+    "app/dashboard/shared/page.tsx",
+    "app/dashboard/shared/[id]/page.tsx",
+  ]
+
+  it("checks b2b_sets on the owner's side", () => {
+    // Guards the inverse of the test below: if the gate disappeared entirely, the
+    // capability would be free for everyone and that test would still pass.
+    const gated = OWNER_SIDE.filter((file) =>
+      readFileSync(join(process.cwd(), file), "utf8").includes('"b2b_sets"')
+    )
+
+    expect(gated).toEqual(OWNER_SIDE)
+  })
+
+  it("never checks a plan on the collaborator's side", () => {
+    for (const file of COLLABORATOR_SIDE) {
+      const source = readFileSync(join(process.cwd(), file), "utf8")
+
+      expect(source, `${file} must not gate on b2b_sets`).not.toContain(
+        '"b2b_sets"'
+      )
+      // Any capability, not just this one: being shared *with* is free, and a
+      // gate on some other key would break the same promise.
+      expect(source, `${file} must not call can()`).not.toMatch(/\bcan\(/)
+    }
+  })
+})
