@@ -43,10 +43,15 @@ import { restorableOrder } from "@/lib/playlists/versions"
 import { getProfileBilling } from "@/services/billing-service"
 import {
   addSuggestion,
+  getLockState,
   inviteCollaborator,
+  releaseEditLock,
   removeCollaborator,
   resolveSuggestion,
+  takeEditLock,
+  touchEditLock,
 } from "@/services/collaboration-service"
+import { mayWrite } from "@/lib/playlists/edit-lock"
 import {
   captureVersion,
   compareWithCurrent,
@@ -63,6 +68,7 @@ import {
   moveTrack,
   removeTrack,
   reorderTracks,
+  reorderTracksAsLockHolder,
   replaceTracks,
   updatePlaylistDetails,
   updateTrack,
@@ -1290,6 +1296,106 @@ export async function resolveSuggestionAction(
 
   revalidatePath(`/dashboard/playlists/${playlistId}`)
   revalidatePath(`/dashboard/shared/${playlistId}`)
+
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Turn-based editing on a shared set.
+// ---------------------------------------------------------------------------
+
+export interface TurnResult {
+  ok: boolean
+  message?: string
+}
+
+/** Claims the pen on a shared set. */
+export async function takeEditTurnAction(
+  playlistId: string
+): Promise<TurnResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const result = await takeEditLock(profile.id, profile.email, playlistId)
+
+  if (!result.ok) {
+    return {
+      ok: false,
+      message:
+        result.reason === "held"
+          ? ACTION_COPY.turnHeld[locale]
+          : ACTION_COPY.genericError[locale],
+    }
+  }
+
+  revalidatePath(`/dashboard/shared/${playlistId}`)
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+
+  return { ok: true }
+}
+
+/** Hands it back. */
+export async function releaseEditTurnAction(
+  playlistId: string
+): Promise<TurnResult> {
+  const profile = await requireProfile()
+
+  await releaseEditLock(profile.id, playlistId)
+
+  revalidatePath(`/dashboard/shared/${playlistId}`)
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
+
+  return { ok: true }
+}
+
+/**
+ * Reorders a shared set, if the caller holds the turn.
+ *
+ * A separate action from `reorderTracksAction` rather than a branch inside it.
+ * That one is the owner's path and checks ownership; folding two authorisation
+ * models into one function is how the weaker of the two ends up applying to both.
+ *
+ * The lock is re-checked here rather than trusted from the render that drew the
+ * buttons: a page open since before the turn expired would otherwise write on a
+ * turn it no longer has.
+ */
+export async function reorderSharedTracksAction(
+  playlistId: string,
+  orderedTrackIds: string[]
+): Promise<ReorderResult> {
+  const profile = await requireProfile()
+  const locale = await getRequestLocale()
+
+  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  if (rateLimited) {
+    return { ok: false, message: rateLimited.message ?? undefined }
+  }
+
+  if (!Array.isArray(orderedTrackIds) || orderedTrackIds.length === 0) {
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  const state = await getLockState(profile.id, playlistId)
+
+  if (!mayWrite(state)) {
+    return { ok: false, message: ACTION_COPY.turnLost[locale] }
+  }
+
+  try {
+    await reorderTracksAsLockHolder(profile.id, playlistId, orderedTrackIds)
+  } catch (error) {
+    logError("playlist.shared_reorder_failed", error, {
+      profileId: profile.id,
+      playlistId,
+    })
+    return { ok: false, message: ACTION_COPY.genericError[locale] }
+  }
+
+  // Renewed after a successful write, so an active editor never hits the expiry.
+  await touchEditLock(profile.id, playlistId)
+
+  revalidatePath(`/dashboard/shared/${playlistId}`)
+  revalidatePath(`/dashboard/playlists/${playlistId}`)
 
   return { ok: true }
 }

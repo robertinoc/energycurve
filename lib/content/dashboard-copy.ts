@@ -832,6 +832,14 @@ export const DASHBOARD_COPY = {
 
   /** Messages returned by server actions (toasts / inline). */
   actions: {
+    turnHeld: {
+      en: "The other DJ has the set open right now. You'll be able to edit when they hand it back.",
+      es: "El otro DJ tiene el set abierto ahora. Vas a poder editar cuando lo devuelva.",
+    },
+    turnLost: {
+      en: "Your turn ran out. Take it again to keep editing — nothing was lost.",
+      es: "Se te terminó el turno. Tomalo de nuevo para seguir editando — no se perdió nada.",
+    },
     playlistLimit: {
       en: "You've reached {max} playlists on your plan. Delete one, or upgrade for unlimited.",
       es: "Llegaste a {max} playlists en tu plan. Borrá una, o pasá a ilimitadas.",
@@ -970,6 +978,34 @@ export const DASHBOARD_COPY = {
    * collaborator who thinks they can reorder and then can't reads the feature as
    * broken rather than as scoped.
    */
+  /**
+   * Turn-based editing. The words avoid "lock", which sounds like a failure — the
+   * DJ isn't locked out of anything, the other one is holding the pen.
+   */
+  editTurn: {
+    free: {
+      en: "Nobody is editing right now. Take a turn and you can move tracks.",
+      es: "Nadie está editando ahora. Tomá un turno y podés mover tracks.",
+    },
+    youHaveIt: {
+      en: "You have the set. Move tracks freely — your turn renews with every change and lapses after {minutes} minutes idle.",
+      es: "Tenés el set. Mové tracks libremente — tu turno se renueva con cada cambio y se vence a los {minutes} minutos sin actividad.",
+    },
+    theyHaveIt: {
+      en: "{owner} is editing right now. You'll be able to take a turn when they hand it back, or shortly after they stop.",
+      es: "{owner} está editando ahora. Vas a poder tomar un turno cuando lo devuelva, o poco después de que pare.",
+    },
+    expired: {
+      en: "The last turn lapsed. You can take it now.",
+      es: "El último turno se venció. Podés tomarlo ahora.",
+    },
+    take: { en: "Take a turn", es: "Tomar un turno" },
+    taking: { en: "Taking…", es: "Tomando…" },
+    handBack: { en: "Hand it back", es: "Devolverlo" },
+    moveUp: { en: "Move {track} up", es: "Subir {track}" },
+    moveDown: { en: "Move {track} down", es: "Bajar {track}" },
+  },
+
   collaboration: {
     sectionLabel: { en: "Shared with", es: "Compartido con" },
     intro: {

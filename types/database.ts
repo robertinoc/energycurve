@@ -276,6 +276,8 @@ export interface Database {
       }
       playlists: {
         Row: {
+          edit_lock_holder: string | null
+          edit_lock_taken_at: string | null
           id: string
           user_id: string
           name: string
@@ -294,6 +296,8 @@ export interface Database {
           updated_at: string
         }
         Insert: {
+          edit_lock_holder?: string | null
+          edit_lock_taken_at?: string | null
           id?: string
           user_id: string
           name: string
@@ -312,6 +316,8 @@ export interface Database {
           updated_at?: string
         }
         Update: {
+          edit_lock_holder?: string | null
+          edit_lock_taken_at?: string | null
           id?: string
           user_id?: string
           name?: string

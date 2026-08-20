@@ -6,6 +6,12 @@ import {
   normalizeSuggestionBody,
   sameInvitee,
 } from "@/lib/playlists/collaboration"
+import {
+  EDIT_LOCK_MINUTES,
+  mayTake,
+  resolveLock,
+  type LockState,
+} from "@/lib/playlists/edit-lock"
 import { can } from "@/lib/product/capabilities"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { getProfileBilling } from "@/services/billing-service"
@@ -399,4 +405,156 @@ export async function resolveSuggestion(
   }
 
   return true
+}
+
+// ---------------------------------------------------------------------------
+// Turn-based editing: one writer at a time on a shared set.
+// ---------------------------------------------------------------------------
+
+/** Everyone who may hold the pen: the owner, plus anyone it's shared with. */
+async function mayHoldLock(
+  profileId: string,
+  email: string,
+  playlistId: string
+): Promise<boolean> {
+  if (await getOwnedPlaylist(profileId, playlistId)) {
+    return true
+  }
+
+  return (await getSharedPlaylist(email, playlistId)) !== null
+}
+
+/** The stored lock, resolved against this reader and the clock. */
+export async function getLockState(
+  viewerId: string,
+  playlistId: string
+): Promise<LockState> {
+  const supabase = getSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("playlists")
+    .select("edit_lock_holder, edit_lock_taken_at")
+    .eq("id", playlistId)
+    .maybeSingle()
+
+  if (error || !data) {
+    // Fail towards nobody-can-write rather than everybody: an unreadable lock is
+    // a reason to stop, not a reason to let two people in.
+    return { kind: "held_by_other", holderId: "", expiresAt: new Date(0) }
+  }
+
+  return resolveLock(
+    {
+      holderId: data.edit_lock_holder,
+      takenAt: data.edit_lock_taken_at
+        ? new Date(data.edit_lock_taken_at)
+        : null,
+    },
+    viewerId
+  )
+}
+
+/**
+ * Claims the turn.
+ *
+ * The conditional UPDATE is the whole design. Reading the lock and then writing it
+ * would leave a window where two people both see it free and both take it — the
+ * one race a single-writer model has to not have. Instead the database decides:
+ * the update only matches a row whose lock is still the one we saw, so exactly one
+ * of two simultaneous claims changes a row and the other gets zero.
+ */
+export async function takeEditLock(
+  profileId: string,
+  email: string,
+  playlistId: string
+): Promise<{ ok: boolean; reason?: "no_access" | "held" }> {
+  if (!(await mayHoldLock(profileId, email, playlistId))) {
+    return { ok: false, reason: "no_access" }
+  }
+
+  const state = await getLockState(profileId, playlistId)
+
+  if (!mayTake(state) && state.kind !== "held_by_viewer") {
+    return { ok: false, reason: "held" }
+  }
+
+  const supabase = getSupabaseAdminClient()
+  const stale = new Date(Date.now() - EDIT_LOCK_MINUTES * 60_000).toISOString()
+
+  // Matches only if the lock is free, already ours, or older than a turn. Two
+  // claimants racing on the same free lock both pass the guard above; only one
+  // passes this.
+  const { data, error } = await supabase
+    .from("playlists")
+    .update({
+      edit_lock_holder: profileId,
+      edit_lock_taken_at: new Date().toISOString(),
+    })
+    .eq("id", playlistId)
+    .or(
+      `edit_lock_holder.is.null,edit_lock_holder.eq.${profileId},edit_lock_taken_at.lt.${stale}`
+    )
+    .select("id")
+
+  if (error) {
+    logError("collaboration.lock_take_failed", error, { playlistId })
+    return { ok: false, reason: "held" }
+  }
+
+  if (!data || data.length === 0) {
+    // Somebody else won the race between the read and the write.
+    return { ok: false, reason: "held" }
+  }
+
+  logInfo("collaboration.lock_taken", { playlistId })
+  return { ok: true }
+}
+
+/**
+ * Hands the turn back.
+ *
+ * Scoped to the holder, so a release can't clear someone else's turn — including
+ * by a stale tab whose owner took it, lost it to an expiry, and then clicked
+ * "done".
+ */
+export async function releaseEditLock(
+  profileId: string,
+  playlistId: string
+): Promise<boolean> {
+  const supabase = getSupabaseAdminClient()
+  const { error } = await supabase
+    .from("playlists")
+    .update({ edit_lock_holder: null, edit_lock_taken_at: null })
+    .eq("id", playlistId)
+    .eq("edit_lock_holder", profileId)
+
+  if (error) {
+    logError("collaboration.lock_release_failed", error, { playlistId })
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Renews the turn on a write, so an active editor never hits the expiry.
+ *
+ * Fire-and-forget by contract: the write it accompanies already succeeded, and
+ * failing to bump a timestamp is not a reason to tell the DJ their reorder didn't
+ * happen. The worst case is a turn that lapses early and has to be re-taken.
+ */
+export async function touchEditLock(
+  profileId: string,
+  playlistId: string
+): Promise<void> {
+  const supabase = getSupabaseAdminClient()
+
+  const { error } = await supabase
+    .from("playlists")
+    .update({ edit_lock_taken_at: new Date().toISOString() })
+    .eq("id", playlistId)
+    .eq("edit_lock_holder", profileId)
+
+  if (error) {
+    logError("collaboration.lock_touch_failed", error, { playlistId })
+  }
 }
