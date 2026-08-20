@@ -268,6 +268,20 @@ export const ISSUE_COPY: Record<IssueType, IssueCopy> = {
       es: "Mantenelo: la tensión y descarga es lo que hace que un pico se sienta merecido.",
     },
   },
+  energy_data_missing: {
+    title: {
+      en: "Part of this curve is our guess, not your music",
+      es: "Parte de esta curva es nuestra estimación, no tu música",
+    },
+    body: {
+      en: "{inventedCount} of {trackCount} tracks have no energy tag, no BPM and no audio analysis. For those we drew a value from where the track sits in the set — so the score partly grades a curve we generated, not your ordering.",
+      es: "{inventedCount} de {trackCount} tracks no tienen etiqueta de energía, ni BPM, ni análisis de audio. Para esos dibujamos un valor según dónde cae el track en el set — así que el score califica en parte una curva que generamos nosotros, no tu orden.",
+    },
+    recommendation: {
+      en: "Run the audio analysis, or import a version of the playlist that carries BPMs. Until then read the score as a sanity check on the shape you asked for, not as a verdict on your set.",
+      es: "Corré el análisis de audio, o importá una versión de la playlist que traiga BPMs. Hasta entonces leé el score como un chequeo de la forma que pediste, no como un veredicto sobre tu set.",
+    },
+  },
   low_energy_confidence: {
     title: {
       en: "Limited energy data",
@@ -564,6 +578,19 @@ export const ANALYSIS_UI = {
     en: "Claude didn't answer in time, so the automatic order was used: ascending energy with two deliberate breathers. You can keep editing by hand.",
     es: "Claude no respondió a tiempo, así que se usó el orden automático: energía ascendente con dos respiros intencionales. Podés seguir editando a mano.",
   },
+  /**
+   * Sits against the score itself, not in the issue list. An `info` issue below a
+   * 46-pixel "9.2" is information the reader never reaches, and the whole point of
+   * this caveat is that the number above it means less than it looks like.
+   */
+  coverageInventedAll: {
+    en: "No BPM or audio data — this curve is drawn from track positions, so the score reflects the shape you asked for, not your set.",
+    es: "Sin BPM ni datos de audio — esta curva sale de la posición de los tracks, así que el score refleja la forma que pediste, no tu set.",
+  },
+  coverageInventedSome: {
+    en: "{count} of {total} tracks have no BPM or audio data, so part of this curve is our estimate.",
+    es: "{count} de {total} tracks no tienen BPM ni datos de audio, así que parte de esta curva es nuestra estimación.",
+  },
   smartOrderError: {
     en: "Smart ordering is unavailable right now. Try again in a minute.",
     es: "La ordenación inteligente no está disponible ahora. Probá de nuevo en un minuto.",
@@ -609,6 +636,7 @@ export const MARKER_LABELS: Record<string, LocalizedLabel> = {
   no_climax: { en: "NO CLIMAX", es: "SIN CLÍMAX" },
   good_breather: { en: "BREATHER", es: "RESPIRO" },
   low_energy_confidence: { en: "THIN DATA", es: "POCOS DATOS" },
+  energy_data_missing: { en: "GUESSED DATA", es: "DATO ESTIMADO" },
   set_too_short: { en: "SHORT SET", es: "SET CORTO" },
   set_too_long: { en: "LONG SET", es: "SET LARGO" },
   set_short_for_slot: { en: "SHORT FOR SLOT", es: "FALTA MÚSICA" },

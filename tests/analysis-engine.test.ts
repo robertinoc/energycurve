@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
 import { analyzePlaylist, computeSetScore } from "@/lib/engine/analysis"
+import {
+  resolveTrackEnergies,
+  type TrackEnergyInput,
+} from "@/lib/engine/energy-score"
 import { resolveSlot } from "@/lib/engine/slot"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
 import type { TrackEnergyMeta } from "@/types/analysis"
@@ -390,6 +394,87 @@ describe("analyzePlaylist — slot awareness", () => {
     expect(
       analysis.issues.some((issue) => issue.type.endsWith("_for_slot"))
     ).toBe(false)
+  })
+})
+
+describe("saying how much of the curve is real", () => {
+  /** 20 tracks with nothing to go on: the case that scored 9.2 in silence. */
+  const noData: TrackEnergyInput[] = Array.from({ length: 20 }, (_, i) => ({
+    id: `t${i}`,
+    position: i + 1,
+    bpm: null,
+    energy_score: null,
+    musical_key: null,
+    genre: null,
+    comment: null,
+  }))
+
+  const analyzeTracks = (tracks: TrackEnergyInput[]) => {
+    const energies = resolveTrackEnergies(tracks, "main", "house")
+
+    return analyzePlaylist({
+      curve: energies.map((entry) => entry.score),
+      genre: "house",
+      context: "main",
+      trackMeta: energies.map((entry) => ({
+        source: entry.source,
+        bpm: entry.bpm,
+      })),
+    })
+  }
+
+  it("flags a set whose whole curve was drawn from track positions", () => {
+    const analysis = analyzeTracks(noData)
+
+    // The score itself is left alone — that's a product decision, not a bug fix —
+    // but it is no longer presented without the caveat. It reads ~9 because the
+    // curve being graded is the ideal ramp the engine drew from the context.
+    expect(analysis.setScore).toBeGreaterThan(8)
+    expect(analysis.coverage.verdict).toBe("invented")
+    expect(analysis.coverage.inventedCount).toBe(20)
+    expect(
+      analysis.issues.some((issue) => issue.type === "energy_data_missing")
+    ).toBe(true)
+  })
+
+  it("fires where low_energy_confidence structurally cannot", () => {
+    // The old rule needs the resolved curve to span < 1.5 points. An invented ramp
+    // spans the context's whole range by construction, so the flatness test could
+    // never see this case — which is why it went unreported.
+    const analysis = analyzeTracks(noData)
+    const range =
+      Math.max(...analysis.curve) - Math.min(...analysis.curve)
+
+    expect(range).toBeGreaterThan(1.5)
+    expect(
+      analysis.issues.some((issue) => issue.type === "low_energy_confidence")
+    ).toBe(false)
+    expect(
+      analysis.issues.some((issue) => issue.type === "energy_data_missing")
+    ).toBe(true)
+  })
+
+  it("stays quiet on a set with real BPMs throughout", () => {
+    const withBpm = noData.map((track, index) => ({
+      ...track,
+      bpm: 120 + index,
+    }))
+    const analysis = analyzeTracks(withBpm)
+
+    expect(analysis.coverage.inventedCount).toBe(0)
+    expect(analysis.coverage.verdict).toBe("inferred")
+    expect(
+      analysis.issues.some((issue) => issue.type === "energy_data_missing")
+    ).toBe(false)
+  })
+
+  it("costs no points — it's a caveat, not a penalty", () => {
+    const issue = analyzeTracks(noData).issues.find(
+      (entry) => entry.type === "energy_data_missing"
+    )
+
+    expect(issue!.severity).toBe("info")
+    expect(issue!.penaltyApplied).toBe(0)
   })
 })
 

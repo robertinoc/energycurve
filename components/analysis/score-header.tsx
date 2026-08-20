@@ -2,6 +2,10 @@ import { ArrowRight } from "lucide-react"
 
 import { ANALYSIS_UI, formatTemplate } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
+import {
+  INVENTED_SHARE_WARN,
+  type EnergyCoverage,
+} from "@/lib/engine/energy-coverage"
 
 interface ScoreHeaderProps {
   /** Score recalculated by the engine over the CURRENT derived order. */
@@ -19,6 +23,15 @@ interface ScoreHeaderProps {
   decidedCount: number
   /** True once the order came from the smart-order feature (zone 4). */
   smartOrdered?: boolean
+  /**
+   * How much of the curve behind these numbers came from the music.
+   *
+   * Rendered here rather than left to the issue list because the score is at its
+   * most flattering exactly when this is at its worst: a set with no data at all
+   * scores 9.2, since the curve the engine grades is the ideal ramp it drew itself.
+   * A caveat the reader has to scroll for is a caveat that doesn't work.
+   */
+  coverage?: EnergyCoverage
   locale: SiteLocale
 }
 
@@ -37,10 +50,21 @@ export function ScoreHeader({
   decidableCount,
   decidedCount,
   smartOrdered = false,
+  coverage,
   locale,
 }: ScoreHeaderProps) {
   const progress =
     totalPoints > 0 ? Math.min(1, Math.max(0, gainedPoints / totalPoints)) : 0
+
+  const caveat =
+    coverage && coverage.inventedShare >= INVENTED_SHARE_WARN
+      ? coverage.inventedShare === 1
+        ? ANALYSIS_UI.coverageInventedAll[locale]
+        : formatTemplate(ANALYSIS_UI.coverageInventedSome[locale], {
+            count: coverage.inventedCount,
+            total: coverage.trackCount,
+          })
+      : null
 
   const note = smartOrdered
     ? ANALYSIS_UI.claudeOrderNote[locale]
@@ -86,6 +110,12 @@ export function ScoreHeader({
           </p>
         ) : null}
       </div>
+
+      {caveat ? (
+        <p className="mt-4 rounded-xl border border-ec-amber/35 bg-ec-amber/[0.06] px-3.5 py-2.5 text-[12.5px] leading-5 text-white/80">
+          {caveat}
+        </p>
+      ) : null}
 
       <div className="mt-5 flex items-center gap-4">
         <div

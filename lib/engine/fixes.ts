@@ -397,6 +397,9 @@ function operationsForIssue(
     case "set_too_short":
     case "set_too_long":
     case "low_energy_confidence":
+    // No reorder answers a missing-data problem: whatever order you pick, the
+    // curve being scored is still partly drawn from the positions themselves.
+    case "energy_data_missing":
     case "good_breather":
       return []
     // Advice-only by *choice*, not by limitation — moving the peak would in fact

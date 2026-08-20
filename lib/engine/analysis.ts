@@ -11,6 +11,11 @@ import {
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
+import {
+  INVENTED_SHARE_WARN,
+  energyCoverageOf,
+  type EnergyCoverage,
+} from "@/lib/engine/energy-coverage"
 import { assessSlot } from "@/lib/engine/slot"
 import {
   assessSlotFit,
@@ -722,6 +727,7 @@ function deriveIssues(
   curve: number[],
   genre: SupportedGenre,
   context: PlaylistContext,
+  coverage: EnergyCoverage,
   timing: SetTiming,
   slotFit: ReturnType<typeof assessSlotFit>
 ): DetectedIssue[] {
@@ -747,6 +753,21 @@ function deriveIssues(
   if (scored.lowConfidence || scored.dynamics.suppressedFlatZoneCount > 0) {
     issues.push({
       type: "low_energy_confidence",
+      severity: "info",
+      trackPositions: [],
+      penaltyApplied: 0,
+      penaltyCategory: null,
+    })
+  }
+
+  // Separate from low_energy_confidence, and it has to be: that rule fires when
+  // missing signal shows up as a curve that barely moves, which is the right test
+  // for a BPM-only set. Invented values hide the opposite way — they're a clean ramp
+  // across the context's full range, so the flatness test can never see them, and a
+  // set with no data at all was scoring 9.2 with nothing on screen saying why.
+  if (coverage.inventedShare >= INVENTED_SHARE_WARN) {
+    issues.push({
+      type: "energy_data_missing",
       severity: "info",
       trackPositions: [],
       penaltyApplied: 0,
@@ -802,6 +823,7 @@ export function analyzePlaylist({
     targetShape,
     targetAnchors
   )
+  const coverage = energyCoverageOf(trackMeta)
   // One length per track, padded when the caller passed fewer than the curve has —
   // a mismatched array is a caller bug, and silently scoring a partial set's length
   // as the whole set's would be the wrong way to surface it.
@@ -810,7 +832,7 @@ export function analyzePlaylist({
   )
   const slotAssessment = slot ? assessSlot(curve, slot) : null
   const slotFit = slot ? assessSlotFit(timing, slot.durationMinutes) : null
-  const issues = deriveIssues(scored, curve, genre, context, timing, slotFit)
+  const issues = deriveIssues(scored, curve, genre, context, coverage, timing, slotFit)
 
   // Appended after the scored issues and carrying zero penalty: timing is a
   // separate axis from curve quality, and the score must not move because a form
@@ -846,6 +868,7 @@ export function analyzePlaylist({
     contextScores,
     bestFitContext,
     slot: slotAssessment,
+    coverage,
     timing,
     slotFit,
   }

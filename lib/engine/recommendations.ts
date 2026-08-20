@@ -73,6 +73,8 @@ function buildTemplateParams(
     threshold: roundToOneDecimal(target[target.length - 1] ?? targetMax),
     context: CONTEXT_DISPLAY_NAMES[analysis.context][locale],
     trackCount: analysis.curve.length,
+    // Read only by energy_data_missing, which can't fire at zero.
+    inventedCount: analysis.coverage.inventedCount,
     // Real playing time where the files carried it, the standard-track estimate
     // where they didn't. This is the number the length advice quotes back, and it
     // used to be trackCount × 3 for everyone — off by more than 2× for a set of

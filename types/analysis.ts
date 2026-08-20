@@ -1,3 +1,4 @@
+import type { EnergyCoverage } from "@/lib/engine/energy-coverage"
 import type { SetTiming, SlotFit } from "@/lib/engine/set-timing"
 import type { ResolvedSlot, SlotAssessment } from "@/lib/engine/slot"
 import type {
@@ -50,6 +51,7 @@ export type IssueType =
   | "no_climax"
   | "good_breather"
   | "low_energy_confidence"
+  | "energy_data_missing"
   | "no_progression"
   | "too_many_rests"
   | "set_too_short"
@@ -160,6 +162,14 @@ export interface PlaylistAnalysis {
    * slot issues are informational and cost zero points.
    */
   slot: SlotAssessment | null
+  /**
+   * How much of the curve came from the music rather than from track positions.
+   *
+   * On every analysis, not only the bad cases, because anything that displays the
+   * set score needs to be able to qualify it — and the score is at its most
+   * flattering exactly where this is at its worst. See lib/engine/energy-coverage.
+   */
+  coverage: EnergyCoverage
   /**
    * How much music the set actually holds, from real file lengths where they exist.
    *
