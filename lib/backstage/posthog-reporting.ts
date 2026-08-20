@@ -2,6 +2,7 @@ import "server-only"
 
 import {
   buildMetric,
+  buildRetention,
   zeroFillSeries,
   PERIOD_CONFIG,
   type AnalyticsPeriod,
@@ -123,6 +124,26 @@ export async function getBackstageAnalyticsSummary(
     WHERE ${scope}
   `
 
+  // Retention needs per-user membership in both windows, which the aggregate above
+  // can't express: uniq() over a union tells you how many distinct people appeared,
+  // not which of them appeared twice. Hence the grouped subquery. It reads the same
+  // two windows as the summary — no third window, so nothing here can be turned
+  // into a trend line out of two data points.
+  const retentionQuery = `
+    SELECT
+      countIf(in_current = 1 AND in_previous = 1) AS returning_users,
+      countIf(in_previous = 1) AS prior_active_users
+    FROM (
+      SELECT
+        distinct_id,
+        maxIf(1, ${ACTIVE_CONDITION_SQL} AND ${current}) AS in_current,
+        maxIf(1, ${ACTIVE_CONDITION_SQL} AND ${previous}) AS in_previous
+      FROM events
+      WHERE ${scope}
+      GROUP BY distinct_id
+    )
+  `
+
   // One multi-column pass over the current window feeds both the main
   // chart (analyses) and the per-metric sparklines on the KPI tiles.
   const seriesQuery = `
@@ -139,12 +160,14 @@ export async function getBackstageAnalyticsSummary(
   `
 
   try {
-    const [summaryRows, seriesRows] = await Promise.all([
+    const [summaryRows, seriesRows, retentionRows] = await Promise.all([
       runHogQLQuery(config, summaryQuery),
       runHogQLQuery(config, seriesQuery),
+      runHogQLQuery(config, retentionQuery),
     ])
 
     const row = summaryRows[0] ?? []
+    const retentionRow = retentionRows[0] ?? []
 
     const filledColumn = (columnIndex: number) =>
       zeroFillSeries(
@@ -180,6 +203,12 @@ export async function getBackstageAnalyticsSummary(
         toNumber(row[6]),
         toNumber(row[7]),
         sparkOf(filledColumn(4))
+      ),
+      retention: buildRetention(
+        toNumber(retentionRow[0]),
+        toNumber(retentionRow[1]),
+        toNumber(row[4]),
+        toNumber(row[0])
       ),
       series: analysesSeries,
     }

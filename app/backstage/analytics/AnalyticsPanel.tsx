@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Activity, ListMusic, UserPlus, Waves } from "lucide-react"
+import { Activity, ListMusic, Repeat, UserPlus, Waves } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import {
   type AnalyticsPeriod,
   type BackstageAnalyticsSummary,
   type MetricWithDelta,
+  type RetentionMetric,
 } from "@/lib/backstage/analytics"
 
 import {
@@ -60,6 +61,54 @@ function StatTile({
         <div className="min-w-0 flex-1">
           <Sparkline data={metric.spark} color={color} height={28} />
         </div>
+      </div>
+    </Bento>
+  )
+}
+
+/**
+ * Retention gets its own tile rather than a StatTile.
+ *
+ * A StatTile shows one count and its change against the previous window. Retention
+ * is already a comparison between two windows, so wrapping it in a second one would
+ * be a percent change of a percentage. This shows the rate, the two counts it came
+ * from, and the engagement number beside it — every figure a reader needs to check
+ * the rate themselves.
+ *
+ * An em dash where the rate is null. Nobody in the previous window means there was
+ * nobody to retain, and printing 0% there would read as total churn.
+ */
+function RetentionTile({ retention }: { retention: RetentionMetric }) {
+  const color = "#4ADE80"
+
+  return (
+    <Bento tone="panel" className="flex flex-col justify-between gap-3 p-5">
+      <div className="flex items-center gap-2">
+        <span
+          className="flex h-[22px] w-[22px] items-center justify-center rounded-md bg-white/[0.05]"
+          style={{ color }}
+        >
+          <Repeat className="size-3.5" />
+        </span>
+        <span className="text-[11.5px] font-medium text-white/70">
+          Returning users
+        </span>
+      </div>
+      <p className="font-heading text-[32px] font-bold leading-none text-white">
+        {retention.rate === null
+          ? "—"
+          : `${Math.round(retention.rate * 100)}%`}
+      </p>
+      <div className="space-y-1 text-[11px] leading-4 text-white/58">
+        <p>
+          {numberFormat.format(retention.returningUsers)} of{" "}
+          {numberFormat.format(retention.priorActiveUsers)} came back
+        </p>
+        <p>
+          {retention.analysesPerActiveUser === null
+            ? "No analyses yet"
+            : `${retention.analysesPerActiveUser} analyses per active user`}
+        </p>
       </div>
     </Bento>
   )
@@ -208,7 +257,7 @@ export function AnalyticsPanel({ embedUrls }: { embedUrls: string[] }) {
         {state.status === "loading" ? (
           <div className="space-y-4">
             <div className="h-56 animate-pulse rounded-[20px] bg-white/[0.04]" />
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
               {[0, 1, 2, 3].map((index) => (
                 <div
                   key={index}
@@ -270,6 +319,7 @@ export function AnalyticsPanel({ embedUrls }: { embedUrls: string[] }) {
                 color="#F5A524"
                 icon={<ListMusic className="size-3.5" />}
               />
+              <RetentionTile retention={state.summary.retention} />
             </div>
           </>
         ) : null}
