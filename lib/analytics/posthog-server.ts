@@ -29,6 +29,7 @@ export type AnalyticsEvent =
    * the only moment a paid plan is worth anything to them.
    */
   | "plan_limit_reached"
+  | "payment_failed"
 
 type AnalyticsProperties = Record<
   string,

@@ -16,8 +16,13 @@ import {
 /**
  * Stripe's `Subscription.status` values, mapped onto ours.
  *
- * `unpaid` folds into `past_due` (both mean "we haven't been paid, don't revoke
- * yet"), and `paused` folds into `canceled` (no access, subscription dormant).
+ * `past_due` and `unpaid` are kept apart, because they are opposite answers to
+ * "should this person still have access". `past_due` is Stripe retrying — a grace
+ * window measured in days, and revoking inside it punishes a customer for one
+ * declined card. `unpaid` is Stripe having given up. They used to be folded
+ * together here while `ENTITLED_STATUSES` excluded both, so a single failed
+ * payment silently dropped a paying customer to FREE limits with no email and no
+ * explanation. `paused` folds into `canceled` (no access, subscription dormant).
  * Anything unrecognised is treated as `incomplete` — deny paid access rather
  * than grant it on a value we don't understand.
  */
@@ -25,7 +30,7 @@ const STATUS_MAP: Record<string, PlanStatus> = {
   active: "active",
   trialing: "trialing",
   past_due: "past_due",
-  unpaid: "past_due",
+  unpaid: "unpaid",
   canceled: "canceled",
   paused: "canceled",
   incomplete: "incomplete",
@@ -230,6 +235,10 @@ export const HANDLED_EVENTS = [
   "customer.subscription.created",
   "customer.subscription.updated",
   "customer.subscription.deleted",
+  // Not authoritative about plan or status — the subscription events are. This is
+  // here purely so the customer hears about a failed payment from us, before they
+  // notice it as features quietly not working.
+  "invoice.payment_failed",
 ] as const
 
 export type HandledEvent = (typeof HANDLED_EVENTS)[number]

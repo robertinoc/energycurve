@@ -23,6 +23,7 @@ const TONE: Record<PlanNoticeKind, string> = {
   active: "border-white/10 bg-[#0C0917]",
   ending: "border-ec-amber/24 bg-ec-amber/[0.05]",
   pastDue: "border-ec-error/28 bg-ec-error/[0.06]",
+  unpaid: "border-ec-error/28 bg-ec-error/[0.06]",
   ended: "border-white/10 bg-[#0C0917]",
   incomplete: "border-ec-amber/24 bg-ec-amber/[0.05]",
 }

@@ -347,10 +347,27 @@ not shipped checkout yet, and stayed here for months after it did. Both are now
 corrected and pinned by `tests/doc-accuracy.test.ts` — a doc that describes the
 opposite of the code is worse than no doc, because someone acts on it.
 
-- **No dunning emails.** `invoice.payment_failed` isn't handled; Stripe's own
-  dunning emails cover the basics until there's a reason to do better.
 - **No proration UI.** The customer portal handles plan changes.
 
+### Dunning (added 2026-08-20)
+
+`invoice.payment_failed` is handled: it sends one email and captures a
+`payment_failed` event, and it writes neither plan nor status — the subscription
+events remain the single authority on both.
+
+The change worth knowing about is the entitlement, not the email. `past_due` and
+`unpaid` used to be folded into one status, and `ENTITLED_STATUSES` excluded it,
+so **a single declined card dropped a paying customer to FREE limits on the
+spot** — while Stripe was still retrying and would probably succeed, with no
+email and nothing on screen connecting the two. Three separate places in this
+codebase already described the intended behaviour and none of them matched the
+code: the status map's own comment ("we haven't been paid, don't revoke yet"),
+the dashboard copy for that state ("PRO still works for now"), and this file.
+
+Now: `past_due` is entitled (Stripe is retrying, days-long window), `unpaid` is
+not (Stripe gave up), and they are separate statuses so the split is expressible
+at all. `invoice.next_payment_attempt` is what tells the email which of the two
+messages to send.
 ### Corrected (was wrong here)
 
 - **UI shipped.** `/pricing` sells all three plans, and the schema.org offers in

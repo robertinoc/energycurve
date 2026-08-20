@@ -94,11 +94,27 @@ describe("entitlement", () => {
 
   it("falls back to free limits when a subscription lapses", () => {
     // The purchased plan is kept on the profile so the UI can explain the
-    // lapse; entitlement is what drops.
-    for (const status of ["past_due", "canceled", "incomplete"] as const) {
+    // lapse; entitlement is what drops. `past_due` is NOT in this list — see
+    // the test below.
+    for (const status of ["unpaid", "canceled", "incomplete"] as const) {
       expect(effectivePlan("pro_plus", status)).toBe("free")
       expect(limitsFor("pro_plus", status)).toEqual(PLAN_LIMITS.free)
     }
+  })
+
+  it("keeps a paying customer entitled while Stripe is still retrying", () => {
+    // The dunning decision, and the reason `past_due` and `unpaid` had to stop
+    // being the same status. `past_due` means one charge was declined and Stripe
+    // will try again over the next few days — usually successfully. Revoking
+    // inside that window punishes someone for their bank's fraud filter, and it
+    // contradicted both the status map's own comment ("don't revoke yet") and the
+    // dashboard copy, which already told them "PRO still works for now".
+    expect(effectivePlan("pro_plus", "past_due")).toBe("pro_plus")
+    expect(limitsFor("pro_plus", "past_due")).toEqual(PLAN_LIMITS.pro_plus)
+
+    // And the other side of it: once Stripe gives up, access does end. Without
+    // this, entitling past_due would have entitled a dead subscription forever.
+    expect(effectivePlan("pro_plus", "unpaid")).toBe("free")
   })
 
   it("does not grant anything on a missing status", () => {
@@ -119,9 +135,14 @@ describe("Stripe status mapping", () => {
     expect(mapStripeStatus("incomplete")).toBe("incomplete")
   })
 
-  it("folds unpaid into past_due and paused into canceled", () => {
-    // unpaid still means "don't revoke yet"; paused means no access.
-    expect(mapStripeStatus("unpaid")).toBe("past_due")
+  it("keeps unpaid and past_due apart, and folds paused into canceled", () => {
+    // These two used to be one status, and they are opposite answers to "should
+    // this person still have access": past_due is Stripe retrying, unpaid is
+    // Stripe having given up. Folding them meant either revoking during the
+    // retry window or granting access to a dead subscription — there was no
+    // third option while they shared a value.
+    expect(mapStripeStatus("past_due")).toBe("past_due")
+    expect(mapStripeStatus("unpaid")).toBe("unpaid")
     expect(mapStripeStatus("paused")).toBe("canceled")
     expect(mapStripeStatus("incomplete_expired")).toBe("canceled")
   })

@@ -60,6 +60,14 @@ interface DashboardShellProps {
   playlists: SidebarPlaylist[]
   locale: SiteLocale
   logoutAction: () => Promise<void>
+  /**
+   * Rendered above the page content when billing needs attention, or null.
+   *
+   * Passed in rather than read here because the shell is a client component and
+   * this needs a server-side billing read — and threading the snapshot through as
+   * data would put a billing type into the client bundle for no reason.
+   */
+  billingStrip?: React.ReactNode
   children: React.ReactNode
 }
 
@@ -69,6 +77,7 @@ export function DashboardShell({
   playlists,
   locale,
   logoutAction,
+  billingStrip = null,
   children,
 }: DashboardShellProps) {
   const pathname = usePathname()
@@ -210,6 +219,8 @@ export function DashboardShell({
             <Menu className="size-5" />
           </button>
         </div>
+
+        {billingStrip}
 
         <main className="flex-1">{children}</main>
       </div>

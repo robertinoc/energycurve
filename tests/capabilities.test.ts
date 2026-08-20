@@ -195,9 +195,16 @@ describe("can()", () => {
     // does not survive it.
     expect(can("pro", "active", "audio_analysis")).toBe(true)
     expect(can("pro", "trialing", "audio_analysis")).toBe(true)
-    expect(can("pro", "past_due", "audio_analysis")).toBe(false)
+    expect(can("pro", "unpaid", "audio_analysis")).toBe(false)
     expect(can("pro", "canceled", "audio_analysis")).toBe(false)
     expect(can("pro", null, "audio_analysis")).toBe(false)
+  })
+
+  it("does not revoke a feature mid-retry on a declined card", () => {
+    // A DJ mid-set does not need PRO to switch off because their bank declined a
+    // renewal an hour ago and Stripe will retry on Thursday. See the dunning note
+    // on ENTITLED_STATUSES.
+    expect(can("pro", "past_due", "audio_analysis")).toBe(true)
   })
 
   it("lets a boolean PlanLimits value win over the ladder", () => {
@@ -229,7 +236,13 @@ describe("quotaFor()", () => {
   })
 
   it("applies free quotas to a lapsed subscriber", () => {
-    expect(quotaFor("pro", "past_due", "active_playlists")).toBe(3)
+    expect(quotaFor("pro", "unpaid", "active_playlists")).toBe(3)
+  })
+
+  it("keeps paid quotas through the retry window", () => {
+    // Their playlists must not become un-openable because a charge bounced and
+    // Stripe hasn't finished retrying.
+    expect(quotaFor("pro", "past_due", "active_playlists")).toBeNull()
   })
 
   it("refuses to treat a switch as a quota", () => {

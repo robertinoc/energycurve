@@ -5,11 +5,13 @@ import {
   DashboardShell,
   type SidebarPlaylist,
 } from "@/components/dashboard/dashboard-shell"
+import { BillingAlertStrip } from "@/components/dashboard/billing-alert-strip"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
 import { getRequestLocale } from "@/lib/server-locale"
+import { getProfileBilling } from "@/services/billing-service"
 import { getProfileByWorkOSUserId } from "@/services/profile-service"
 import { listPlaylists } from "@/services/playlist-service"
 
@@ -46,6 +48,7 @@ export default async function DashboardLayout({
   const { workosConfigured, supabaseConfigured } = getInfrastructureStatus()
   let user: Awaited<ReturnType<typeof withAuth>>["user"] | null = null
   let playlists: SidebarPlaylist[] = []
+  let billing: Awaited<ReturnType<typeof getProfileBilling>> | null = null
 
   if (workosConfigured && supabaseConfigured) {
     let suspended = false
@@ -65,6 +68,12 @@ export default async function DashboardLayout({
             name: p.name,
             trackCount: p.trackCount,
           }))
+
+          // Read here so the alert strip can render above every dashboard page.
+          // Inside the same try as the rest of the bootstrap on purpose: a billing
+          // read that fails must not take the shell down, and a missing strip is a
+          // far smaller problem than a blank app.
+          billing = await getProfileBilling(profile.id)
         }
       }
     } catch (error) {
@@ -94,6 +103,11 @@ export default async function DashboardLayout({
         playlists={playlists}
         locale={locale}
         logoutAction={logoutAction}
+        billingStrip={
+          billing ? (
+            <BillingAlertStrip billing={billing} locale={locale} />
+          ) : null
+        }
       >
         {children}
       </DashboardShell>

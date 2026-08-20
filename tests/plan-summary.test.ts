@@ -85,8 +85,23 @@ describe("planNotice", () => {
 
     expect(notice.kind).toBe("pastDue")
     expect(notice.actionable).toBe(true)
-    // Entitlement is gone, but the purchased plan is still named so the message
-    // can say *which* subscription needs fixing.
+    expect(notice.plan).toBe("pro")
+    // Still entitled: Stripe is retrying, and the copy for this state already
+    // promised "PRO still works for now". It now tells the truth.
+    expect(notice.entitledPlan).toBe("pro")
+  })
+
+  it("separates the retry window from Stripe giving up", () => {
+    const notice = planNotice(
+      billing({ plan: "pro", status: "unpaid", currentPeriodEnd: NEXT_MONTH }),
+      NOW
+    )
+
+    // A distinct kind from `ended` on purpose: a cancellation is a decision, an
+    // unpaid invoice is recoverable by paying it, and "you're back on the free
+    // limits" would hide the way out.
+    expect(notice.kind).toBe("unpaid")
+    expect(notice.actionable).toBe(true)
     expect(notice.plan).toBe("pro")
     expect(notice.entitledPlan).toBe("free")
   })
