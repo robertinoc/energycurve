@@ -97,8 +97,12 @@ describe("StageLink LLC billing transparency", () => {
   it.each(supportedLocales)("states the billing name on the landing (%s)", (locale) => {
     const copy = getSiteCopy(locale)
 
-    expect(copy.suite.billingBody).toContain("StageLink LLC")
+    // The landing states it in the footer, which is on every marketing page;
+    // /pricing repeats it as a footnote beside the prices. The StageLink
+    // section used to carry a third copy of it — one panel explaining a
+    // non-problem — and dropping it must not drop the guarantee.
     expect(copy.footer.billing).toContain("StageLink LLC")
+    expect(copy.pricing.billingBody).toContain("StageLink LLC")
   })
 
   it.each(supportedLocales)("answers it in the FAQ (%s)", (locale) => {

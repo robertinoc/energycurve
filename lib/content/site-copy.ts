@@ -39,7 +39,9 @@ interface SiteCopySchema {
       energyScore: LocalizedLabel
       peakIntensity: LocalizedLabel
       setDuration: LocalizedLabel
-      tags: LocalizedLabel[]
+      /** The states the engine reports, in the brand kit's semantic colours. */
+      markers: { label: LocalizedLabel; tone: "peak" | "drop" | "flat" | "close" }[]
+      phases: LocalizedLabel[]
     }
     cta: {
       primary: LocalizedLabel
@@ -49,15 +51,34 @@ interface SiteCopySchema {
   features: {
     title: LocalizedLabel
     intro: LocalizedLabel
+    /**
+     * The section used to be five identical cards describing the product in
+     * prose. This is the product's own output instead: a flagged track, the
+     * move that fixes it, and the score before and after.
+     */
+    panel: {
+      orderLabel: LocalizedLabel
+      issuesBadge: LocalizedLabel
+      tracks: {
+        position: LocalizedLabel
+        title: LocalizedLabel
+        meta: LocalizedLabel
+        energy: number
+        score: LocalizedLabel
+        flagged?: boolean
+      }[]
+      dropChip: LocalizedLabel
+      dropWhere: LocalizedLabel
+      fixText: LocalizedLabel
+      applyLabel: LocalizedLabel
+      scoreBefore: LocalizedLabel
+      scoreAfter: LocalizedLabel
+    }
     energy: {
       title: LocalizedLabel
       desc: LocalizedLabel
     }
     transition: {
-      title: LocalizedLabel
-      desc: LocalizedLabel
-    }
-    track: {
       title: LocalizedLabel
       desc: LocalizedLabel
     }
@@ -90,6 +111,23 @@ interface SiteCopySchema {
     title: LocalizedLabel
     body: LocalizedLabel[]
   }
+  /**
+   * The product's position in one picture: the DJ picks the tracks, EnergyCurve
+   * reads what that selection is doing, the floor hears the result. Used twice —
+   * as the hero strip (compact) and as the differentiation diagram (full).
+   */
+  layer: {
+    eyebrow: LocalizedLabel
+    toolsHeading: LocalizedLabel
+    toolsItems: LocalizedLabel[]
+    toolsCaption: LocalizedLabel
+    engineHeading: LocalizedLabel
+    engineBody: LocalizedLabel
+    engineCaption: LocalizedLabel
+    stageHeading: LocalizedLabel
+    stageBody: LocalizedLabel
+    stageCaption: LocalizedLabel
+  }
   diff: {
     title: LocalizedLabel
     body: LocalizedLabel
@@ -98,8 +136,6 @@ interface SiteCopySchema {
     eyebrow: LocalizedLabel
     title: LocalizedLabel
     body: LocalizedLabel
-    billingTitle: LocalizedLabel
-    billingBody: LocalizedLabel
     link: LocalizedLabel
   }
   faq: {
@@ -109,6 +145,7 @@ interface SiteCopySchema {
     items: { q: LocalizedLabel; a: LocalizedLabel }[]
   }
   loop: {
+    navLabel: LocalizedLabel
     eyebrow: LocalizedLabel
     title: LocalizedLabel
     intro: LocalizedLabel
@@ -116,6 +153,9 @@ interface SiteCopySchema {
     cta: LocalizedLabel
     stages: {
       title: LocalizedLabel
+      /** What the stage already does on the free tier — every stage has one, so
+       *  the section can't read as "everything here costs money". */
+      freeNote: LocalizedLabel
       items: {
         // Joins lib/product/capabilities.ts — tests assert every item is a
         // shipped capability and the badge matches its real minPlan.
@@ -289,12 +329,20 @@ const siteCopy: SiteCopySchema = {
       energyScore: { en: "Energy score", es: "Nivel de energía" },
       peakIntensity: { en: "Peak intensity", es: "Intensidad pico" },
       setDuration: { en: "Set duration", es: "Duración del set" },
-      tags: [
-        { en: "Cold opening", es: "Inicio frío" },
-        { en: "Track rise", es: "Subida de track" },
-        { en: "Set arc %", es: "Arco del set %" },
-        { en: "Teaser", es: "Teaser" },
-        { en: "Stand easy", es: "Salida suave" },
+      // Wording mirrors ISSUE_MARKERS in lib/content/analysis-copy.ts, so the
+      // preview shows what the product actually returns.
+      markers: [
+        { label: { en: "▲ Peak at 7 · 9.7", es: "▲ Pico en el 7 · 9.7" }, tone: "peak" },
+        { label: { en: "Flat zone", es: "Zona plana" }, tone: "flat" },
+        { label: { en: "▼ Drop −3", es: "▼ Caída −3" }, tone: "drop" },
+        { label: { en: "Strong close", es: "Cierre fuerte" }, tone: "close" },
+      ],
+      // DJ jargon, kept in English in both locales — same as the app's x-axis.
+      phases: [
+        { en: "Opening", es: "Opening" },
+        { en: "Build-up", es: "Build-up" },
+        { en: "Peak time", es: "Peak time" },
+        { en: "Closing", es: "Closing" },
       ],
     },
     cta: {
@@ -314,57 +362,84 @@ const siteCopy: SiteCopySchema = {
       es: "Entendé qué está haciendo realmente tu set",
     },
     intro: {
-      en: "EnergyCurve reads BPM, musical key, and energy for every track, then analyzes the set as a whole: where momentum builds, where it stalls, and which moves fix it.",
-      es: "EnergyCurve lee el BPM, la tonalidad y la energía de cada track, y después analiza el set completo: dónde crece el momentum, dónde se estanca y qué movimientos lo arreglan.",
+      en: "Every issue comes with one concrete move and what it does to the score. You apply it, undo it, or ignore it — the last word is yours.",
+      es: "Cada problema viene con un movimiento concreto y su impacto en el score. Lo aplicás, lo deshacés o lo ignorás: la última palabra es tuya.",
+    },
+    panel: {
+      orderLabel: { en: "Current order", es: "Orden actual" },
+      issuesBadge: { en: "2 things to look at", es: "2 cosas para revisar" },
+      tracks: [
+        {
+          position: { en: "05", es: "05" },
+          title: { en: "Sara Landry — Pressure", es: "Sara Landry — Pressure" },
+          meta: { en: "146 BPM · 8A", es: "146 BPM · 8A" },
+          energy: 82,
+          score: { en: "8.2", es: "8.2" },
+        },
+        {
+          position: { en: "06", es: "06" },
+          title: { en: "Interlude", es: "Interludio" },
+          meta: { en: "128 BPM · 5A", es: "128 BPM · 5A" },
+          energy: 38,
+          score: { en: "3.8", es: "3.8" },
+          flagged: true,
+        },
+        {
+          position: { en: "07", es: "07" },
+          title: { en: "T78, Van Giessen — Emergency", es: "T78, Van Giessen — Emergency" },
+          meta: { en: "150 BPM · 8A", es: "150 BPM · 8A" },
+          energy: 97,
+          score: { en: "9.7", es: "9.7" },
+        },
+      ],
+      dropChip: { en: "▼ Drop −4.4", es: "▼ Caída −4.4" },
+      dropWhere: { en: "between 5 and 6", es: "entre el 5 y el 6" },
+      fixText: {
+        en: "You're building, and track 6 kills the momentum right before the peak. Move it to position 11, where the breather actually helps.",
+        es: "Venís subiendo y el tema 6 corta el envión justo antes del pico. Mandalo a la posición 11, donde el respiro sí suma.",
+      },
+      applyLabel: { en: "Apply the move", es: "Aplicar el movimiento" },
+      scoreBefore: { en: "7.1", es: "7,1" },
+      scoreAfter: { en: "8.5", es: "8,5" },
     },
     energy: {
       title: {
-        en: "See the full energy arc",
-        es: "Visualizá el arco completo de energía",
+        en: "The whole arc, not track by track",
+        es: "La curva completa, no tema por tema",
       },
       desc: {
-        en: "The energy flow of your whole set on one curve: warm-up, build, peak time, cool-down. Flat stretches and premature peaks stop being a feeling and become something you can point at.",
-        es: "El flujo de energía de todo tu set en una sola curva: warm-up, subida, peak time, bajada. Los tramos planos y los picos prematuros dejan de ser una sensación y pasan a ser algo que podés señalar.",
+        en: "Mixed In Key tells you what each track is. This tells you what the set is: where it builds, where it stalls, where you popped the balloon too early.",
+        es: "Mixed In Key te dice qué es cada tema; esto te dice qué es el conjunto: dónde crece, dónde se estanca, dónde pinchaste el globo antes de tiempo.",
       },
     },
     transition: {
       title: {
-        en: "Check harmony and transitions",
-        es: "Revisá armonía y transiciones",
+        en: "Harmony and the jumps between consecutive tracks",
+        es: "Armonía y saltos entre temas consecutivos",
       },
       desc: {
-        en: "Camelot key compatibility plus energy jumps between consecutive tracks, so you catch clashing keys and abrupt drops before the dancefloor does.",
-        es: "Compatibilidad de tonalidades en Camelot más los saltos de energía entre tracks consecutivos: detectás tonalidades que chocan y caídas bruscas antes de que las note la pista.",
-      },
-    },
-    track: {
-      title: {
-        en: "Break it down track by track",
-        es: "Analizá track por track",
-      },
-      desc: {
-        en: "Understand how each track shapes the structure, pacing, and emotional direction of the whole performance.",
-        es: "Entendé cómo cada track moldea la estructura, el pacing y la dirección emocional de toda la performance.",
+        en: "Keys that clash on the Camelot wheel and energy drops big enough to empty a floor, marked where they happen.",
+        es: "Tonalidades que chocan en la rueda Camelot y caídas de energía capaces de vaciar una pista, marcadas donde pasan.",
       },
     },
     compare: {
       title: {
-        en: "Fix it in one click",
-        es: "Arreglalo en un clic",
+        en: "The fixed order goes back to the booth",
+        es: "El orden corregido vuelve a la cabina",
       },
       desc: {
-        en: "Every issue comes with a concrete move — “send track 7 to position 3” — and shows the score before and after. Apply it, undo it, or let AI reorder the whole set.",
-        es: "Cada problema viene con un movimiento concreto — “mandá el track 7 a la posición 3” — y te muestra el score antes y después. Lo aplicás, lo deshacés, o dejás que la IA reordene todo el set.",
+        en: "Rekordbox XML, Traktor NML, M3U8, CSV or TXT — with BPM, key and energy. Free on every plan, permanently.",
+        es: "XML de Rekordbox, NML de Traktor, M3U8, CSV o TXT — con BPM, tonalidad y energía. Gratis en todos los planes, para siempre.",
       },
     },
     design: {
       title: {
-        en: "Export straight back to the booth",
-        es: "Exportá directo a la cabina",
+        en: "And when there's no data, we say so",
+        es: "Y si no hay dato, te lo decimos",
       },
       desc: {
-        en: "Send the fixed order back as Rekordbox XML, Traktor NML, M3U8, TXT, or CSV — BPM, key, and energy included, ready to load for the gig.",
-        es: "Devolvé el orden corregido como XML de Rekordbox, NML de Traktor, M3U8, TXT o CSV — con BPM, tonalidad y energía incluidos, listo para cargar en la fecha.",
+        en: "When a track's energy is estimated rather than measured, it's marked as estimated. We'd rather withhold a score than invent one.",
+        es: "Cuando la energía de un tema es estimada y no medida, la marcamos como estimada. Preferimos no darte un score antes que inventarte uno.",
       },
     },
   },
@@ -435,6 +510,40 @@ const siteCopy: SiteCopySchema = {
       },
     ],
   },
+  layer: {
+    eyebrow: {
+      en: "A layer between your selection and the floor",
+      es: "Una capa entre tu selección y la pista",
+    },
+    toolsHeading: { en: "What you pick", es: "Lo que vos elegís" },
+    toolsItems: [
+      { en: "rekordbox · Traktor · Serato", es: "rekordbox · Traktor · Serato" },
+      { en: "Mixed In Key, or your own files with no tags", es: "Mixed In Key, o tus archivos sin tags" },
+      { en: "your ear and your judgement", es: "tu oído y tu criterio" },
+    ],
+    toolsCaption: {
+      en: "they tell you what each track is",
+      es: "te dicen qué es cada tema",
+    },
+    engineHeading: { en: "EnergyCurve", es: "EnergyCurve" },
+    engineBody: {
+      en: "Reads the whole set, scores it, and tells you which track to move.",
+      es: "Lee el set completo, lo puntúa y te dice qué tema mover.",
+    },
+    engineCaption: {
+      en: "it tells you what the set is",
+      es: "te dice qué es el conjunto",
+    },
+    stageHeading: { en: "What happens on the floor", es: "Lo que pasa en la pista" },
+    stageBody: {
+      en: "Your set, in the order that actually works.",
+      es: "Tu set, en el orden que de verdad funciona.",
+    },
+    stageCaption: {
+      en: "the only thing the floor hears",
+      es: "lo único que la pista escucha",
+    },
+  },
   diff: {
     title: {
       en: "It doesn’t replace your DJ software. It reads what your set is doing.",
@@ -446,22 +555,18 @@ const siteCopy: SiteCopySchema = {
     },
   },
   suite: {
-    eyebrow: { en: "Part of the StageLink suite", es: "Parte de la suite StageLink" },
+    // "Family", not "suite": a suite implies products sold together. These are
+    // separate tools that share a team. The billing-transparency card that used
+    // to live here moved to where it's actually needed — the footer keeps the
+    // permanent line, /pricing carries the footnote next to the prices.
+    eyebrow: { en: "Part of the StageLink family", es: "Parte de la familia StageLink" },
     title: {
-      en: "EnergyCurve is part of the StageLink suite",
-      es: "EnergyCurve es parte de la suite StageLink",
+      en: "EnergyCurve is part of the StageLink family",
+      es: "EnergyCurve es parte de la familia StageLink",
     },
     body: {
       en: "StageLink builds tools for artists. EnergyCurve is the one built for a single craft — the DJ. Same team, same standards, same roadmap: what we learn from performers everywhere comes back into the booth.",
       es: "StageLink construye herramientas para artistas. EnergyCurve es la que está hecha para un oficio en particular: el del DJ. Mismo equipo, mismos estándares, mismo roadmap: lo que aprendemos de artistas de todo tipo vuelve a la cabina.",
-    },
-    billingTitle: {
-      en: "One thing to expect at checkout",
-      es: "Algo que vas a ver al pagar",
-    },
-    billingBody: {
-      en: "EnergyCurve is operated by StageLink LLC. Your card statement and receipts read “StageLink LLC” — not “EnergyCurve”. Same company, nothing to worry about; we’d rather tell you here than surprise you at checkout.",
-      es: "EnergyCurve es operado por StageLink LLC. En tu resumen de tarjeta y en los recibos vas a ver “StageLink LLC”, no “EnergyCurve”. Es la misma empresa, no hay nada de qué preocuparse: preferimos decirlo acá antes que sorprenderte al momento de pagar.",
     },
     link: { en: "Visit StageLink", es: "Conocé StageLink" },
   },
@@ -621,14 +726,15 @@ const siteCopy: SiteCopySchema = {
     ],
   },
   loop: {
+    navLabel: { en: "The loop", es: "El loop" },
     eyebrow: { en: "The full loop", es: "El loop completo" },
     title: {
-      en: "The set doesn't end when you export: plan it, play it, learn from it",
-      es: "El set no termina cuando exportás: planificá, tocá, aprendé",
+      en: "You build it, analyze it, fix it, play it — and what you learn comes back to the next set",
+      es: "Armás, analizás, arreglás, tocás — y lo que aprendés vuelve al próximo set",
     },
     intro: {
-      en: "PRO and PRO+ features cover the whole gig — before, during, and after — and what you learn from one night feeds the next.",
-      es: "Las funciones PRO y PRO+ acompañan la fecha completa — antes, durante y después — y lo que aprendés de una noche alimenta la siguiente.",
+      en: "The whole circle works on the free plan. PRO and PRO+ don't unlock it — they deepen it.",
+      es: "El círculo entero funciona con el plan gratis. PRO y PRO+ no lo desbloquean: lo profundizan.",
     },
     footNote: {
       en: "The analysis, the fixes, and native export stay free, permanently.",
@@ -638,6 +744,10 @@ const siteCopy: SiteCopySchema = {
     stages: [
       {
         title: { en: "Plan", es: "Planificá" },
+        freeNote: {
+          en: "Import from anywhere and get the score, the curve and every issue marked.",
+          es: "Importás de donde sea y ves el score, la curva y los problemas marcados.",
+        },
         items: [
           {
             capability: "slot_aware_planning",
@@ -661,6 +771,10 @@ const siteCopy: SiteCopySchema = {
       },
       {
         title: { en: "Play", es: "Tocá" },
+        freeNote: {
+          en: "The fixed order goes back to Rekordbox, Traktor or M3U8. Always free.",
+          es: "El orden corregido vuelve a Rekordbox, Traktor o M3U8. Siempre gratis.",
+        },
         items: [
           {
             capability: "gig_mode",
@@ -693,6 +807,10 @@ const siteCopy: SiteCopySchema = {
       },
       {
         title: { en: "Learn", es: "Aprendé" },
+        freeNote: {
+          en: "Unlimited applied fixes and automatic reordering, with no quota.",
+          es: "Arreglos ilimitados y reordenamiento automático, sin cuota.",
+        },
         items: [
           {
             capability: "planned_vs_played",
@@ -1185,13 +1303,16 @@ const siteCopy: SiteCopySchema = {
         proPlus: { en: "Priority + early access", es: "Prioritario + acceso anticipado" },
       },
     ],
+    // Rendered as a footnote marked with an asterisk beside the paid prices,
+    // not as its own panel: it repeats what the footer already says, and a full
+    // box for it read as a warning about something that isn't a problem.
     billingTitle: {
       en: "Who charges the card",
       es: "Quién cobra la tarjeta",
     },
     billingBody: {
-      en: "EnergyCurve is part of the StageLink suite and is operated by StageLink LLC. The charge is processed under that name, so your card statement, invoices, and receipts read “StageLink LLC” — not “EnergyCurve”. Same company. We’d rather you read it here than wonder about it later.",
-      es: "EnergyCurve es parte de la suite StageLink y está operado por StageLink LLC. El cargo se procesa bajo ese nombre, así que tu resumen de tarjeta, las facturas y los recibos van a decir “StageLink LLC”, no “EnergyCurve”. Es la misma empresa. Preferimos que lo leas acá antes que te queden dudas después.",
+      en: "EnergyCurve is part of the StageLink family and is operated by StageLink LLC: your card statement, invoices, and receipts read “StageLink LLC”, not “EnergyCurve”. Same company.",
+      es: "EnergyCurve es parte de la familia StageLink y lo opera StageLink LLC: en tu resumen de tarjeta, las facturas y los recibos vas a leer “StageLink LLC”, no “EnergyCurve”. Es la misma empresa.",
     },
     questionsTitle: {
       en: "Still deciding?",
@@ -1421,7 +1542,11 @@ export function getSiteCopy(locale: SiteLocale = "en") {
         energyScore: siteCopy.hero.visual.energyScore[locale],
         peakIntensity: siteCopy.hero.visual.peakIntensity[locale],
         setDuration: siteCopy.hero.visual.setDuration[locale],
-        tags: siteCopy.hero.visual.tags.map((entry) => entry[locale]),
+        markers: siteCopy.hero.visual.markers.map((marker) => ({
+          label: marker.label[locale],
+          tone: marker.tone,
+        })),
+        phases: siteCopy.hero.visual.phases.map((phase) => phase[locale]),
       },
       cta: {
         primary: siteCopy.hero.cta.primary[locale],
@@ -1431,6 +1556,24 @@ export function getSiteCopy(locale: SiteLocale = "en") {
     features: {
       title: siteCopy.features.title[locale],
       intro: siteCopy.features.intro[locale],
+      panel: {
+        orderLabel: siteCopy.features.panel.orderLabel[locale],
+        issuesBadge: siteCopy.features.panel.issuesBadge[locale],
+        tracks: siteCopy.features.panel.tracks.map((track) => ({
+          position: track.position[locale],
+          title: track.title[locale],
+          meta: track.meta[locale],
+          energy: track.energy,
+          score: track.score[locale],
+          flagged: track.flagged ?? false,
+        })),
+        dropChip: siteCopy.features.panel.dropChip[locale],
+        dropWhere: siteCopy.features.panel.dropWhere[locale],
+        fixText: siteCopy.features.panel.fixText[locale],
+        applyLabel: siteCopy.features.panel.applyLabel[locale],
+        scoreBefore: siteCopy.features.panel.scoreBefore[locale],
+        scoreAfter: siteCopy.features.panel.scoreAfter[locale],
+      },
       cards: [
         {
           title: siteCopy.features.energy.title[locale],
@@ -1441,11 +1584,6 @@ export function getSiteCopy(locale: SiteLocale = "en") {
           title: siteCopy.features.transition.title[locale],
           description: siteCopy.features.transition.desc[locale],
           key: "transition",
-        },
-        {
-          title: siteCopy.features.track.title[locale],
-          description: siteCopy.features.track.desc[locale],
-          key: "track",
         },
         {
           title: siteCopy.features.compare.title[locale],
@@ -1481,6 +1619,18 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       title: siteCopy.story.title[locale],
       paragraphs: siteCopy.story.body.map((entry) => entry[locale]),
     },
+    layer: {
+      eyebrow: siteCopy.layer.eyebrow[locale],
+      toolsHeading: siteCopy.layer.toolsHeading[locale],
+      toolsItems: siteCopy.layer.toolsItems.map((item) => item[locale]),
+      toolsCaption: siteCopy.layer.toolsCaption[locale],
+      engineHeading: siteCopy.layer.engineHeading[locale],
+      engineBody: siteCopy.layer.engineBody[locale],
+      engineCaption: siteCopy.layer.engineCaption[locale],
+      stageHeading: siteCopy.layer.stageHeading[locale],
+      stageBody: siteCopy.layer.stageBody[locale],
+      stageCaption: siteCopy.layer.stageCaption[locale],
+    },
     diff: {
       title: siteCopy.diff.title[locale],
       body: siteCopy.diff.body[locale],
@@ -1489,8 +1639,6 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       eyebrow: siteCopy.suite.eyebrow[locale],
       title: siteCopy.suite.title[locale],
       body: siteCopy.suite.body[locale],
-      billingTitle: siteCopy.suite.billingTitle[locale],
-      billingBody: siteCopy.suite.billingBody[locale],
       link: siteCopy.suite.link[locale],
     },
     faq: {
@@ -1503,6 +1651,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       })),
     },
     loop: {
+      navLabel: siteCopy.loop.navLabel[locale],
       eyebrow: siteCopy.loop.eyebrow[locale],
       title: siteCopy.loop.title[locale],
       intro: siteCopy.loop.intro[locale],
@@ -1510,6 +1659,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       cta: siteCopy.loop.cta[locale],
       stages: siteCopy.loop.stages.map((stage) => ({
         title: stage.title[locale],
+        freeNote: stage.freeNote[locale],
         items: stage.items.map((item) => ({
           capability: item.capability,
           plan: item.plan,

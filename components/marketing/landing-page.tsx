@@ -27,7 +27,14 @@ import { LOCALE_PREFIX } from "@/lib/content/locale-routing"
 import { getSiteCopy, SiteLocale } from "@/lib/content/site-copy"
 import { isStandaloneDisplayMode } from "@/lib/pwa"
 
-const SECTION_IDS = ["features", "how-it-works", "story", "pricing", "faq", "contact"]
+const SECTION_IDS = [
+  "features",
+  "how-it-works",
+  "loop",
+  "pricing",
+  "faq",
+  "contact",
+]
 
 /** Both addresses of the landing page — the installed app leaves either one. */
 const LANDING_PATHS = new Set(["/", LOCALE_PREFIX, `${LOCALE_PREFIX}/`])
@@ -95,7 +102,9 @@ export function LandingPage({ locale }: { locale: SiteLocale }) {
   const navItems = [
     { href: "#features", label: copy.nav.features },
     { href: "#how-it-works", label: copy.nav.how },
-    { href: "#story", label: copy.nav.story },
+    // The loop section shipped without a nav entry, so the only way to it was
+    // scrolling past it.
+    { href: "#loop", label: copy.loop.navLabel },
     { href: "#faq", label: copy.nav.faq },
     { href: "#pricing", label: copy.pricing.navLabel },
     { href: "#contact", label: copy.nav.contact },
