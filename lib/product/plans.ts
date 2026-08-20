@@ -25,14 +25,34 @@ export const PLAN_STATUSES = [
   "active",
   "trialing",
   "past_due",
+  "unpaid",
   "canceled",
   "incomplete",
 ] as const
 
 export type PlanStatus = (typeof PLAN_STATUSES)[number]
 
-/** Statuses that actually unlock paid features. */
-const ENTITLED_STATUSES: readonly PlanStatus[] = ["active", "trialing"]
+/**
+ * Statuses that actually unlock paid features.
+ *
+ * `past_due` is in here, and it is the whole point of the dunning change: it means
+ * a payment failed and **Stripe is still retrying**, over a window of days. Cutting
+ * a paying customer off the moment their bank declines once — while the retry is
+ * very likely to succeed — is punishing them for their card issuer's hiccup, and
+ * it was already contrary to the stated intent of the status map, which says in
+ * `subscription-state.ts` that past_due means "we haven't been paid, don't revoke
+ * yet". The code did revoke. Now it doesn't.
+ *
+ * `unpaid` is deliberately NOT in here, and is now a status of its own rather than
+ * folded into past_due. It means Stripe exhausted its retries: the grace window is
+ * over and access ends. Without that split, entitling past_due would have entitled
+ * a dead subscription forever.
+ */
+const ENTITLED_STATUSES: readonly PlanStatus[] = [
+  "active",
+  "trialing",
+  "past_due",
+]
 
 export interface PlanLimits {
   /** Playlists a user may keep. `null` = unlimited. */

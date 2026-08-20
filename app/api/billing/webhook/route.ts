@@ -26,6 +26,7 @@ import {
   findProfileIdByStripeCustomer,
   getProfileBilling,
 } from "@/services/billing-service"
+import { sendPaymentFailedNotice } from "@/services/payment-failed-email-service"
 import { sendPurchaseConfirmation } from "@/services/purchase-email-service"
 import type { Json } from "@/types/database"
 
@@ -132,6 +133,55 @@ export async function POST(request: Request) {
       }
 
       logInfo("billing.webhook.checkout_completed", { profileId })
+      return NextResponse.json({ received: true })
+    }
+
+    if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object as Stripe.Invoice
+      const customerId = customerIdOf(invoice.customer)
+
+      profileId = await resolveProfileId(undefined, customerId)
+
+      if (!profileId) {
+        // An invoice we can't attribute is not worth a retry loop: the
+        // subscription events carry the authority, and this branch only sends an
+        // email. Loud, then acknowledged.
+        logError(
+          "billing.webhook.unattributable",
+          new Error("invoice.payment_failed without a resolvable profile"),
+          { eventId: event.id }
+        )
+        return NextResponse.json({ received: true, unattributed: true })
+      }
+
+      if (!(await claimBillingEvent(event.id, event.type, profileId, event as unknown as Json))) {
+        return NextResponse.json({ received: true, duplicate: true })
+      }
+
+      const current = await getProfileBilling(profileId)
+      const purchased = isPlan(current.plan) ? current.plan : "free"
+
+      // `next_payment_attempt` is Stripe telling us whether it will try again. Null
+      // means it has given up, which is the difference between "nothing changes for
+      // you today" and "your plan is off" — the only question the reader has, and
+      // the one thing this email must not get wrong in either direction.
+      const retriesExhausted = invoice.next_payment_attempt === null
+
+      captureServerEvent(profileId, "payment_failed", {
+        plan: purchased,
+        retriesExhausted,
+      })
+
+      // Deliberately does NOT write plan or status. The subscription.updated event
+      // that accompanies this is the authority on both; two writers for one fact is
+      // how they end up disagreeing.
+      await sendPaymentFailedNotice(profileId, purchased, retriesExhausted)
+
+      logInfo("billing.webhook.payment_failed", {
+        profileId,
+        plan: purchased,
+        retriesExhausted,
+      })
       return NextResponse.json({ received: true })
     }
 

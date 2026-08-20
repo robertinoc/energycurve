@@ -27,6 +27,8 @@ export type PlanNoticeKind =
   | "ending"
   /** Payment failed. Still entitled, needs to fix a card. */
   | "pastDue"
+  /** Stripe ran out of retries. Access is gone, but paying still brings it back. */
+  | "unpaid"
   /** It's over. They keep the record so we can offer to bring them back. */
   | "ended"
   /** Checkout was started and never finished; nothing was charged. */
@@ -98,6 +100,17 @@ export function planNotice(
       return {
         ...base,
         kind: "pastDue",
+        date: billing.currentPeriodEnd,
+        actionable: true,
+      }
+
+    case "unpaid":
+      // Distinct from `ended`: a cancelled subscription is a decision, this is an
+      // unpaid invoice. The recovery is different — pay it and PRO comes back —
+      // so telling them "you're back on the free limits" would hide the way out.
+      return {
+        ...base,
+        kind: "unpaid",
         date: billing.currentPeriodEnd,
         actionable: true,
       }

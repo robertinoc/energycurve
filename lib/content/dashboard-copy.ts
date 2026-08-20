@@ -981,6 +981,16 @@ export const DASHBOARD_COPY = {
         es: "{plan} sigue funcionando por ahora. Actualizá tu tarjeta para no perderlo.",
       },
     },
+    unpaid: {
+      title: {
+        en: "We couldn't charge your card",
+        es: "No pudimos cobrar tu tarjeta",
+      },
+      body: {
+        en: "The retries ran out, so {plan} is off for now. Update your card and it comes straight back — nothing you made was touched.",
+        es: "Se agotaron los reintentos, así que {plan} está apagado por ahora. Actualizá tu tarjeta y vuelve en el momento — nada de lo que hiciste se tocó.",
+      },
+    },
     ended: {
       title: {
         en: "Your {plan} subscription ended",
