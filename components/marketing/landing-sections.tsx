@@ -757,6 +757,11 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
                 href: localizedPath("/install", copy.locale),
                 label: copy.install.footerLink,
               },
+              // Without this the blog is orphaned: only the sitemap reaches it.
+              {
+                href: localizedPath("/blog", copy.locale),
+                label: copy.footer.blog,
+              },
             ]}
           />
           <FooterColumn
