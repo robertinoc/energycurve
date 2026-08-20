@@ -750,6 +750,55 @@ export async function reorderTracks(
     throw new Error("Playlist not found.")
   }
 
+  return reorderAuthorized(profileId, playlistId, orderedTrackIds)
+}
+
+/**
+ * Reorders a set on behalf of whoever currently holds the edit lock.
+ *
+ * The lock check lives in the collaboration service, which is where locks are
+ * understood; this only exists so that check has something to call. Named for what
+ * it assumes, so nobody reaches for it thinking it authorises anything.
+ */
+export async function reorderTracksAsLockHolder(
+  profileId: string,
+  playlistId: string,
+  orderedTrackIds: string[]
+): Promise<void> {
+  return reorderAuthorized(profileId, playlistId, orderedTrackIds)
+}
+
+/**
+ * The reorder itself, with the authorisation already decided.
+ *
+ * Split out so turn-based editing can reuse it: a collaborator holding the edit
+ * lock is authorised to reorder without owning the set, and the alternative was
+ * either a second copy of the two-phase position rewrite or an `isOwner` boolean
+ * threaded through it — one duplicates the risky part, the other makes the guard
+ * a parameter, which is how a guard ends up being passed `true`.
+ *
+ * Not exported. Every caller comes through a function that decided the question
+ * first.
+ */
+async function reorderAuthorized(
+  profileId: string,
+  playlistId: string,
+  orderedTrackIds: string[]
+): Promise<void> {
+  // Genre and context only, for the version snapshot below. Read without an owner
+  // filter on purpose: the caller already decided who may write here, and adding a
+  // second, different authorisation check inside would be the one that's wrong.
+  const supabaseRead = getSupabaseAdminClient()
+  const { data: playlist } = await supabaseRead
+    .from("playlists")
+    .select("genre, context")
+    .eq("id", playlistId)
+    .maybeSingle()
+
+  if (!playlist) {
+    throw new Error("Playlist not found.")
+  }
+
   const current = await getOrderedTracks(playlistId)
 
   if (!isValidReorder(current.map((track) => track.id), orderedTrackIds)) {

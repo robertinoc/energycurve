@@ -9,7 +9,9 @@ import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { getRequestLocale } from "@/lib/server-locale"
+import { SharedSetEditor } from "@/components/playlists/shared-set-editor"
 import {
+  getLockState,
   getSharedPlaylist,
   listSuggestions,
 } from "@/services/collaboration-service"
@@ -50,21 +52,25 @@ export default async function SharedSetPage({
 
   const { playlist, ownerEmail } = shared
 
-  // Called for its side effect, not its return: a shared set is a plausible first
-  // page a DJ ever opens — the invite lands in their inbox before they have an
-  // account — and leaving a suggestion needs a profile row to attribute it to.
-  await syncProfileFromWorkOSUser({
+  // A shared set is a plausible first page a DJ ever opens — the invite lands in
+  // their inbox before they have an account — so this both ensures the row exists
+  // and gives us the id the edit turn is held by.
+  const { id: profileId } = await syncProfileFromWorkOSUser({
     id: user.id,
     email: user.email,
     firstName: user.firstName ?? null,
     lastName: user.lastName ?? null,
   })
 
-  const [suggestions, locale] = await Promise.all([
+  const [suggestions, locale, lock] = await Promise.all([
     // The owner id is only used to label who authored what; a collaborator
     // doesn't need it, so it isn't fetched.
     listSuggestions(id, null),
     getRequestLocale(),
+    // Resolved server-side so the buttons the page draws match what the actions
+    // will allow. Re-checked in the action anyway: a page open since before the
+    // turn expired would otherwise write on a turn it no longer has.
+    getLockState(profileId, id),
   ])
 
   const energies = resolveTrackEnergies(
@@ -97,24 +103,18 @@ export default async function SharedSetPage({
         </h1>
       </header>
 
-      <ol className="flex flex-col gap-1">
-        {playlist.tracks.map((track, index) => (
-          <li
-            key={track.id}
-            className="flex items-center gap-3 rounded-lg bg-ec-surface px-3 py-2"
-          >
-            <span className="w-6 shrink-0 font-mono text-xs tabular-nums text-white/32">
-              {index + 1}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-sm text-white/82">
-              <span className="text-white/50">{track.artist}</span> — {track.name}
-            </span>
-            <span className="shrink-0 font-mono text-xs tabular-nums text-white/40">
-              {energies[index]?.score.toFixed(1) ?? "—"}
-            </span>
-          </li>
-        ))}
-      </ol>
+      <SharedSetEditor
+        playlistId={id}
+        rows={playlist.tracks.map((track, index) => ({
+          id: track.id,
+          artist: track.artist,
+          name: track.name,
+          energy: energies[index]?.score ?? 0,
+        }))}
+        lock={lock}
+        ownerEmail={ownerEmail}
+        locale={locale}
+      />
 
       <SuggestionThread
         playlistId={id}
