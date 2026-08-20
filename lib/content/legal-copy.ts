@@ -68,6 +68,7 @@ const en: Record<LegalDocId, LegalDoc> = {
         body: [
           "WorkOS (authentication), Supabase (database, EU region), PostHog (product analytics), Resend (transactional email), and Vercel (hosting). Each processes data only to provide their part of the service.",
           "Anthropic, when you use AI-assisted set ordering. Only the track metadata described above is sent — never your audio. Anthropic does not train its models on this data.",
+          "GetSongBPM, only when you choose to look up a track by name. The artist and title are sent so they can return the BPM and key they hold for it. Never your audio — that feature exists precisely for tracks whose files you don't have.",
           "Stripe, if you subscribe to a paid plan. Stripe handles the payment and stores the card details; we never see your full card number. The charge is processed by StageLink LLC.",
         ],
       },
@@ -206,6 +207,7 @@ const es: Record<LegalDocId, LegalDoc> = {
         body: [
           "WorkOS (autenticación), Supabase (base de datos, región UE), PostHog (analítica de producto), Resend (email transaccional) y Vercel (hosting). Cada uno procesa datos solo para brindar su parte del servicio.",
           "Anthropic, cuando usás el ordenamiento de sets asistido por IA. Sólo se envía la metadata de los tracks descrita arriba — nunca tu audio. Anthropic no entrena sus modelos con estos datos.",
+          "GetSongBPM, sólo cuando elegís buscar un tema por nombre. Se manda el artista y el título para que devuelvan el BPM y la tonalidad que tengan. Nunca tu audio — esa función existe justamente para los temas de los que no tenés el archivo.",
           "Stripe, si contratás un plan pago. Stripe procesa el pago y guarda los datos de la tarjeta; nosotros nunca vemos el número completo. El cobro lo procesa StageLink LLC.",
         ],
       },

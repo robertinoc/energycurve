@@ -848,6 +848,10 @@ export const DASHBOARD_COPY = {
 
   /** Messages returned by server actions (toasts / inline). */
   actions: {
+    lookupUnavailable: {
+      en: "Looking tracks up by name isn't available right now.",
+      es: "Buscar temas por nombre no está disponible ahora.",
+    },
     turnHeld: {
       en: "The other DJ has the set open right now. You'll be able to edit when they hand it back.",
       es: "El otro DJ tiene el set abierto ahora. Vas a poder editar cuando lo devuelva.",
@@ -1005,6 +1009,36 @@ export const DASHBOARD_COPY = {
    * uses "analyse" for what it does to a *set*, and a DJ reading "analyse the
    * audio" next to "analyse the set" has no way to tell which is which.
    */
+  /**
+   * Title lookup. The copy names the recipient before the DJ clicks, because this
+   * is the one feature here that sends their data somewhere else — and "we look it
+   * up for you" would hide exactly the part they'd want to know.
+   */
+  titleLookup: {
+    title: { en: "Look them up by name", es: "Buscarlos por nombre" },
+    intro: {
+      en: "For the tracks you don't have the files for. We send the artist and title to GetSongBPM and write back whatever BPM and key they have. No audio is sent — we don't have it either.",
+      es: "Para los temas de los que no tenés el archivo. Mandamos artista y título a GetSongBPM y escribimos el BPM y la tonalidad que tengan. No se manda audio — tampoco lo tenemos.",
+    },
+    /** Shown on the button, so the count is the last thing read before clicking. */
+    lookUp: {
+      en: "Look up {count} tracks",
+      es: "Buscar {count} tracks",
+    },
+    looking: { en: "Looking up…", es: "Buscando…" },
+    /** Both numbers, because a partial result reads as a bug otherwise. */
+    doneCount: {
+      en: "{written} of {asked} found. The rest aren't in their database — measuring the audio is the other way.",
+      es: "{written} de {asked} encontrados. El resto no están en su base — medir el audio es el otro camino.",
+    },
+    nothingMissing: {
+      en: "Every track already has a BPM. Nothing to look up.",
+      es: "Todos los temas ya tienen BPM. No hay nada que buscar.",
+    },
+    /** The attribution their terms require, and which we'd owe them anyway. */
+    credit: { en: "BPM and key data by", es: "Datos de BPM y tonalidad por" },
+  },
+
   audioEnrich: {
     title: { en: "Measure the audio", es: "Medir el audio" },
     intro: {

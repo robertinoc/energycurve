@@ -302,3 +302,26 @@ test.describe("blog", () => {
     expect(body).toContain("/es/blog")
   })
 })
+
+test.describe("third-party disclosure", () => {
+  test("the privacy policy names GetSongBPM and repeats the audio promise", async ({
+    page,
+  }) => {
+    // Title lookup sends artist and title to a third party. The policy has to
+    // name them, and it has to keep saying what is NOT sent — the audio promise
+    // is the thing a DJ is deciding on.
+    await page.goto("/privacy")
+
+    await expect(page.locator("body")).toContainText("GetSongBPM")
+    await expect(page.locator("body")).toContainText(/never your audio/i)
+  })
+
+  test("the Spanish policy names it too", async ({ page }) => {
+    // A disclosure that only exists in one language isn't a disclosure for the
+    // audience the Spanish content was written to reach.
+    await page.goto("/es/privacy")
+
+    await expect(page.locator("body")).toContainText("GetSongBPM")
+    await expect(page.locator("body")).toContainText(/nunca tu audio/i)
+  })
+})
