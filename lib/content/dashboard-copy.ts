@@ -251,6 +251,14 @@ export const DASHBOARD_COPY = {
     eyebrow: { en: "The shape of a set", es: "La forma de un set" },
     scoreLabel: { en: "Set score", es: "Puntaje del set" },
     trackCount: { en: "{count} tracks", es: "{count} tracks" },
+    /**
+     * Named on the page a DJ sends to other people. The reader has no idea what
+     * was imported, so the hollow rings need a sentence or they're just decoration.
+     */
+    estimatedNote: {
+      en: "{count} of {total} points are estimated from the track's position — those tracks carried no BPM or audio data. The hollow rings mark them.",
+      es: "{count} de {total} puntos están estimados por la posición del track — esos temas no traían BPM ni datos de audio. Los anillos huecos los marcan.",
+    },
     privacyNote: {
       en: "The tracklist stays private — this page only shows the shape.",
       es: "El tracklist queda privado — esta página solo muestra la forma.",
@@ -433,6 +441,14 @@ export const DASHBOARD_COPY = {
   },
 
   workspace: {
+    /**
+     * The legend for the hollow rings. Short: the chart is the message, this is
+     * just the key to it.
+     */
+    estimatedPoints: {
+      en: "Hollow points are estimated from the track's position — those tracks carry no BPM or audio data.",
+      es: "Los puntos huecos están estimados por la posición del track — esos temas no tienen BPM ni datos de audio.",
+    },
     curveEyebrow: { en: "Set energy curve", es: "Curva de energía del set" },
     curveTitle: { en: "The shape of the night", es: "La forma de la noche" },
     legendYourSet: { en: "your set", es: "tu set" },

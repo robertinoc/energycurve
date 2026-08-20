@@ -7,6 +7,10 @@ import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { computeSetScore } from "@/lib/engine/analysis"
 import {
+  estimatedPointIndices,
+  shouldMarkEstimated,
+} from "@/lib/charts/estimated-points"
+import {
   energyCoverageOf,
   scoreIsMeaningful,
 } from "@/lib/engine/energy-coverage"
@@ -83,6 +87,15 @@ export default async function PublicCurvePage({
    * positions and the target comes from the same context. The curve itself still
    * renders: its *shape* is the DJ's ordering, which is the thing worth sharing.
    */
+  // Marked on the chart when some points are invented and some aren't; when all of
+  // them are, the missing score already says it louder.
+  const estimatedIndices = shouldMarkEstimated(
+    estimatedPointIndices(meta.map((entry) => entry.source)).length,
+    curve.length
+  )
+    ? estimatedPointIndices(meta.map((entry) => entry.source))
+    : []
+
   const score =
     playlist.genre &&
     playlist.context &&
@@ -107,7 +120,16 @@ export default async function PublicCurvePage({
         </p>
       </header>
 
-      <Curve values={curve} />
+      <Curve values={curve} estimatedIndices={estimatedIndices} />
+
+      {estimatedIndices.length > 0 ? (
+        <p className="text-xs leading-5 text-white/35">
+          {formatTemplate(copy.estimatedNote[locale], {
+            count: estimatedIndices.length,
+            total: curve.length,
+          })}
+        </p>
+      ) : null}
 
       <p className="text-xs leading-5 text-white/35">
         {copy.privacyNote[locale]}
@@ -127,7 +149,20 @@ export default async function PublicCurvePage({
 }
 
 /** The curve, large, on the same cropped-but-honest axis used everywhere else. */
-function Curve({ values }: { values: number[] }) {
+function Curve({
+  values,
+  estimatedIndices,
+}: {
+  values: number[]
+  /**
+   * Points interpolated from the track's position rather than measured.
+   *
+   * This page matters most of the three curve surfaces: it is the one a DJ sends
+   * to other people, and the reader has no idea what was imported. A smooth arc
+   * reads as a measurement whatever the caption says.
+   */
+  estimatedIndices: readonly number[]
+}) {
   if (values.length < 2) {
     return null
   }
@@ -137,14 +172,14 @@ function Curve({ values }: { values: number[] }) {
   const pad = 12
   const { min, max } = curveDomain(values)
 
-  const points = values
-    .map((energy, index) => {
-      const x = (index / (values.length - 1)) * width
-      const y = pad + (1 - (energy - min) / (max - min)) * (height - pad * 2)
-
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
+  const coords = values.map((energy, index) => ({
+    x: (index / (values.length - 1)) * width,
+    y: pad + (1 - (energy - min) / (max - min)) * (height - pad * 2),
+  }))
+  const points = coords
+    .map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`)
     .join(" ")
+  const estimated = new Set(estimatedIndices)
 
   return (
     <svg
@@ -173,6 +208,22 @@ function Curve({ values }: { values: number[] }) {
         strokeLinejoin="round"
         strokeLinecap="round"
       />
+      {/* Only the invented points get a marker. There are no other dots on this
+          chart, so a hollow ring can't be mistaken for anything else. */}
+      {coords.map((point, index) =>
+        estimated.has(index) ? (
+          <circle
+            key={index}
+            cx={point.x}
+            cy={point.y}
+            r={4}
+            fill="#08050F"
+            stroke="currentColor"
+            className="text-ec-cyan"
+            strokeWidth={1.5}
+          />
+        ) : null
+      )}
     </svg>
   )
 }

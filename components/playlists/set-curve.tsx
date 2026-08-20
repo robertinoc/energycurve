@@ -21,11 +21,22 @@ interface SetCurveProps {
   target: number[] | null
   /** Index of the track to highlight (hovered in the table), or null. */
   hoveredIndex: number | null
+  /**
+   * Points whose value was interpolated from the track's position rather than
+   * measured. Drawn hollow, so filled means "this came from the music".
+   */
+  estimatedIndices?: readonly number[]
 }
 
 const DOMAIN = { min: ENERGY_SCORE_RANGE.min, max: ENERGY_SCORE_RANGE.max }
 
-export function SetCurve({ scores, target, hoveredIndex }: SetCurveProps) {
+export function SetCurve({
+  scores,
+  target,
+  hoveredIndex,
+  estimatedIndices = [],
+}: SetCurveProps) {
+  const estimated = useMemo(() => new Set(estimatedIndices), [estimatedIndices])
   const points = useMemo(
     () => mapValuesToCurvePoints(scores, WIDTH, HEIGHT, PADDING, DOMAIN),
     [scores]
@@ -119,15 +130,31 @@ export function SetCurve({ scores, target, hoveredIndex }: SetCurveProps) {
         />
       ) : null}
 
-      {points.map((point, i) => (
-        <circle
-          key={i}
-          cx={point.x}
-          cy={point.y}
-          r={3}
-          fill={energyColor(scores[i])}
-        />
-      ))}
+      {/* Hollow where the number came from the position rather than the track.
+          The shape of the curve is still the DJ's ordering — worth showing — but a
+          smooth arc reads as a measurement whatever the caption says, so the
+          points that aren't one say so. */}
+      {points.map((point, i) =>
+        estimated.has(i) ? (
+          <circle
+            key={i}
+            cx={point.x}
+            cy={point.y}
+            r={3.5}
+            fill="#08050F"
+            stroke={energyColor(scores[i])}
+            strokeWidth={1.5}
+          />
+        ) : (
+          <circle
+            key={i}
+            cx={point.x}
+            cy={point.y}
+            r={3}
+            fill={energyColor(scores[i])}
+          />
+        )
+      )}
 
       {highlight ? (
         <circle
