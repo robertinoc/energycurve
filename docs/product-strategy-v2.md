@@ -138,7 +138,13 @@ The audio-files import already opens local files for tag reading; the same
 10. USB/export research (rekordbox device-library format).
 
 ### H3 — Later (5+ months)
-11. Server-side batch analysis (only if browser-first proves insufficient).
+11. ~~Server-side batch analysis~~ — **declined 20 Aug 2026**. Its own
+    condition (*only if browser-first proves insufficient*) was tested and came
+    back negative: 30 s per playlist locally, against an upload of ~2 GB for the
+    same set. And it would make "your audio never leaves your computer" false,
+    which is the one structural claim no web competitor can copy. Written up in
+    [research-server-side-batch.md](research-server-side-batch.md) with the four
+    signals that would reopen it.
 12. Title-lookup enrichment API (PRO+, per-request cost).
 13. Beatport / Lexicon partnerships.
 14. **Public set curves** (share a read-only "shape of my set" page — the

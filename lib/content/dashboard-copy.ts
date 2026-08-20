@@ -1077,6 +1077,12 @@ export const DASHBOARD_COPY = {
       en: "Nothing could be measured from those files.",
       es: "No se pudo medir nada de esos archivos.",
     },
+    // Results are stored in batches of five, so a failure can land after some
+    // are already saved. Naming that beats an error that implies nothing worked.
+    partiallySaved: {
+      en: "Some tracks were saved and some couldn't be. Run it again to finish the rest.",
+      es: "Algunos tracks se guardaron y otros no. Volvé a correrlo para terminar el resto.",
+    },
   },
 
   /**
