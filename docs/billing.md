@@ -1,9 +1,18 @@
 # Billing
 
-Stripe Checkout + webhooks. **Nothing is wired to the UI yet** — the endpoints
-exist and work, but `/pricing` still shows "Tell me when it's ready" on the paid
-cards. Flipping that is a separate change, and it should only happen after the
-test-mode run below succeeds.
+Stripe Checkout + webhooks, **live and selling**. `/pricing` opens a real
+Checkout session for PRO and PRO+, the schema.org offers in `lib/seo.ts` are all
+`InStock`, and every counted quota has an enforcement site.
+
+This paragraph used to say the opposite — that nothing was wired to the UI and
+the paid cards still carried a waitlist prompt — and it kept saying it for months
+after checkout shipped. `tests/doc-accuracy.test.ts` now fails on those sentences.
+It found this instance; reading the file had only turned up the other one.
+
+The forbidden phrases are matched as plain substrings, so this file must
+*describe* the retired claims rather than quote them — a canary can't tell a claim
+from a description of one, and the fix for that is to keep the canary dumb and the
+prose careful, not to teach the test to parse English.
 
 ## The one non-obvious thing
 
@@ -86,15 +95,19 @@ Two caveats found while setting this up:
 
 The product `description` is what Stripe shows on the Checkout page and in the
 portal's plan picker — i.e. on the screen where someone enters a card. Keep it to
-what actually ships. As of 2026-08-13 PRO's description is accurate, but PRO+
-still promises collaborative B2B sets, residency mode and Gig Mode, none of
-which exist yet. **Fix before enabling live mode.**
+what actually ships. Re-checked 2026-08-20: PRO's description is accurate, and of
+the three things PRO+ promises, Gig Mode and residency mode have both shipped.
+**Collaborative B2B sets have not** — that one is still a promise on the screen
+where someone enters a card, and it is the last remaining inaccuracy here.
 
-## Production status (2026-08-14)
+## Production status (updated 2026-08-20)
 
-Stripe is **live-configured and verified**, and deliberately **not selling yet** —
-the paid cards on `/pricing` still say "Tell me when it's ready", and there are
-zero references to `/api/billing/checkout` in the served HTML.
+Stripe is **live-configured, verified, and selling**. `/pricing` opens a real
+Checkout session for PRO and PRO+.
+
+This section previously recorded the opposite — live-configured but deliberately
+not selling, with a waitlist prompt on the paid cards — and was left behind when
+selling was switched on. It is one of three places in this file that said so.
 
 Verified in production:
 
@@ -329,14 +342,25 @@ the response says `duplicate: true`.
 
 ## What's deliberately not here
 
-- **No UI.** `/pricing` paid cards still say "Tell me when it's ready", the
-  schema.org offers are still `PreOrder`, and exactly one plan is marked live.
-  AGENTS.md ties flipping those to the change that ships working checkout.
-- **No quota enforcement.** `PLAN_LIMITS` exists and is tested, but nothing reads
-  it yet — applying the limits per feature is the next task.
+Two of the four entries this section used to carry described a product that had
+not shipped checkout yet, and stayed here for months after it did. Both are now
+corrected and pinned by `tests/doc-accuracy.test.ts` — a doc that describes the
+opposite of the code is worse than no doc, because someone acts on it.
+
 - **No dunning emails.** `invoice.payment_failed` isn't handled; Stripe's own
   dunning emails cover the basics until there's a reason to do better.
 - **No proration UI.** The customer portal handles plan changes.
+
+### Corrected (was wrong here)
+
+- **UI shipped.** `/pricing` sells all three plans, and the schema.org offers in
+  `lib/seo.ts` are all `InStock`. This section claimed the paid cards still showed
+  a waitlist prompt and that the offers had not been flipped off pre-order.
+- **Quotas are enforced.** Every counted limit has a call site — active playlists
+  in `services/playlist-service.ts`, AI orderings in the smart-order route, custom
+  taxonomies in `services/taxonomy-service.ts` — and `tests/capabilities.test.ts`
+  fails when a numeric limit is declared with no code that could apply it. This
+  section claimed nothing read `PLAN_LIMITS` yet.
 
 ## Conversion and churn events
 
