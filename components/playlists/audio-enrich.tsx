@@ -163,13 +163,49 @@ export function AudioEnrich({
     setProgress({ done: 0, total: chosen.length })
     setError(null)
 
-    const updates = []
+    // Flushed in chunks rather than accumulated to the end. Analysing forty
+    // tracks takes about thirty seconds, and the previous version wrote once
+    // afterwards — so a closed lid at track thirty-nine saved nothing at all.
+    // Five rather than one because forty round-trips to store forty numbers is
+    // its own kind of rude: five bounds the loss to roughly four seconds of
+    // work while cutting the writes to eight.
+    const FLUSH_EVERY = 5
+
+    // Named because `pending` is reassigned on every flush, and TypeScript can
+    // only infer an array's element type from a `const` it watches being filled.
+    type MeasuredUpdate = {
+      trackId: string
+      bpm: number | null
+      musicalKey: string | null
+      features: ReturnType<typeof toTrackAudioFeatures> | null
+    }
+
+    let pending: MeasuredUpdate[] = []
+    let saved = 0
+    let flushFailed = false
+
+    const flush = async () => {
+      if (pending.length === 0) return
+      const batch = pending
+      pending = []
+      const applied = await applyMeasuredAudioAction({
+        playlistId,
+        updates: batch,
+      })
+      if (applied.ok) {
+        saved += applied.written ?? 0
+      } else {
+        // Remembered rather than thrown: the remaining tracks can still be
+        // measured and stored, and the count at the end is what the DJ reads.
+        flushFailed = true
+      }
+    }
 
     for (const [index, pair] of chosen.entries()) {
       try {
         const measured = await analyzeAudioFile(pair.file)
 
-        updates.push({
+        pending.push({
           trackId: pair.trackId,
           bpm: measured.bpm,
           musicalKey: measured.detectedKey,
@@ -185,23 +221,23 @@ export function AudioEnrich({
       }
 
       setProgress({ done: index + 1, total: chosen.length })
+
+      if (pending.length >= FLUSH_EVERY) await flush()
     }
 
-    if (updates.length === 0) {
+    await flush()
+
+    if (saved === 0) {
       setError(COPY.nothingMeasured[locale])
       setPhase("review")
       return
     }
 
-    const applied = await applyMeasuredAudioAction({ playlistId, updates })
+    // Some landed and some didn't. Showing the count and staying on the review
+    // step is more useful than an error that hides what did get stored.
+    if (flushFailed) setError(COPY.partiallySaved[locale])
 
-    if (!applied.ok) {
-      setError(applied.message ?? COPY.nothingMeasured[locale])
-      setPhase("review")
-      return
-    }
-
-    setWritten(applied.written ?? 0)
+    setWritten(saved)
     setPhase("done")
   }
 

@@ -237,7 +237,8 @@ Energy Model v3, FREE/PRO/PRO+ plans at $5.99/$11.99).
 - **H2 (next)**: Gig Mode (offline PWA) · global track library + insights ·
   set comparator · per-transition suggestions (B20 expansion) · USB export
   research.
-- **H3 (later)**: server-side batch analysis (if demanded) · title-lookup
+- **H3 (later)**: ~~server-side batch analysis~~ (declined 20 Aug — see
+  `docs/research-server-side-batch.md`) · title-lookup
   enrichment API (PRO+) · Beatport/Lexicon partnerships · public set curves
   (growth loop).
 
