@@ -252,6 +252,7 @@ interface SiteCopySchema {
     family: LocalizedLabel
     billing: LocalizedLabel
     resources: LocalizedLabel
+    stagelink: LocalizedLabel
     blog: LocalizedLabel
     legal: LocalizedLabel
     privacy: LocalizedLabel
@@ -295,7 +296,7 @@ const siteCopy: SiteCopySchema = {
     features: { en: "Features", es: "Características" },
     how: { en: "How it Works", es: "Cómo funciona" },
     story: { en: "Story", es: "Historia" },
-    faq: { en: "FAQ", es: "Preguntas" },
+    faq: { en: "FAQ", es: "FAQ" },
     contact: { en: "Contact", es: "Contacto" },
     cta: { en: "Create your account", es: "Creá tu cuenta" },
   },
@@ -1365,6 +1366,7 @@ const siteCopy: SiteCopySchema = {
       es: "Operado por StageLink LLC. Los pagos y recibos aparecen como “StageLink LLC”.",
     },
     resources: { en: "Resources", es: "Recursos" },
+    stagelink: { en: "StageLink", es: "StageLink" },
     // Both languages call it Blog; the EN index has its own honest empty state.
     blog: { en: "Blog", es: "Blog" },
     legal: { en: "Legal", es: "Legal" },
@@ -1733,6 +1735,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       family: siteCopy.footer.family[locale],
       billing: siteCopy.footer.billing[locale],
       resources: siteCopy.footer.resources[locale],
+      stagelink: siteCopy.footer.stagelink[locale],
       blog: siteCopy.footer.blog[locale],
       legal: siteCopy.footer.legal[locale],
       privacy: siteCopy.footer.privacy[locale],

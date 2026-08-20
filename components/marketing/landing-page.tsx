@@ -6,7 +6,10 @@ import {
   AmbientGlow,
   EnergyWaveBackdrop,
 } from "@/components/marketing/ambient-decor"
-import { LandingNavbar } from "@/components/marketing/landing-navbar"
+import {
+  LandingNavbar,
+  type NavEntry,
+} from "@/components/marketing/landing-navbar"
 import {
   ContactSection,
   DifferentiationSection,
@@ -23,7 +26,7 @@ import {
 } from "@/components/marketing/landing-sections"
 import { InstallBanner } from "@/components/marketing/install-banner"
 import { useSiteLocale } from "@/components/marketing/use-site-locale"
-import { LOCALE_PREFIX } from "@/lib/content/locale-routing"
+import { LOCALE_PREFIX, localizedPath } from "@/lib/content/locale-routing"
 import { getSiteCopy, SiteLocale } from "@/lib/content/site-copy"
 import { isStandaloneDisplayMode } from "@/lib/pwa"
 
@@ -31,6 +34,7 @@ const SECTION_IDS = [
   "features",
   "how-it-works",
   "loop",
+  "story",
   "pricing",
   "faq",
   "contact",
@@ -99,15 +103,30 @@ export function LandingPage({ locale }: { locale: SiteLocale }) {
 
   const copy = getSiteCopy(locale)
   const signupHref = "/signup?returnTo=%2Fdashboard"
-  const navItems = [
-    { href: "#features", label: copy.nav.features },
-    { href: "#how-it-works", label: copy.nav.how },
-    // The loop section shipped without a nav entry, so the only way to it was
-    // scrolling past it.
-    { href: "#loop", label: copy.loop.navLabel },
-    { href: "#faq", label: copy.nav.faq },
-    { href: "#pricing", label: copy.pricing.navLabel },
-    { href: "#contact", label: copy.nav.contact },
+  // Grouped to match the footer: what the product is, and everything around it.
+  const navEntries: NavEntry[] = [
+    {
+      kind: "group",
+      label: copy.footer.product,
+      items: [
+        { href: "#features", label: copy.nav.features },
+        { href: "#how-it-works", label: copy.nav.how },
+        { href: "#loop", label: copy.loop.navLabel },
+        { href: "#story", label: copy.nav.story },
+      ],
+    },
+    {
+      kind: "group",
+      label: copy.footer.resources,
+      items: [
+        { href: "#faq", label: copy.nav.faq },
+        { href: localizedPath("/pricing", locale), label: copy.pricing.navLabel },
+        { href: localizedPath("/blog", locale), label: copy.footer.blog },
+        { href: localizedPath("/install", locale), label: copy.install.footerLink },
+        { href: "https://stagelink.art", label: copy.footer.stagelink, external: true },
+      ],
+    },
+    { kind: "link", href: "#contact", label: copy.nav.contact },
   ]
 
   return (
@@ -140,7 +159,7 @@ export function LandingPage({ locale }: { locale: SiteLocale }) {
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-4 pt-28 lg:px-10 lg:pt-34">
         <LandingNavbar
-          items={navItems}
+          entries={navEntries}
           activeSection={activeSection}
           scrolled={scrolled}
           locale={locale}
