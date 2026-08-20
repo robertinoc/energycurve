@@ -374,6 +374,39 @@ export function createTracklistImportSchema(locale: SiteLocale) {
   })
 }
 
+/**
+ * What the browser sends after a DJ reviewed which audio file goes with which
+ * track.
+ *
+ * `features` is `unknown` on purpose: the shape is owned by
+ * lib/audio/track-features.ts and re-validated there on arrival. Restating it as
+ * a zod object here would be a second definition of one thing, and the two would
+ * drift the first time the feature set changes — which it will, since that set is
+ * the part still under research.
+ */
+export function createMeasuredAudioSchema() {
+  return z.object({
+    playlistId: z.string().uuid(),
+    updates: z
+      .array(
+        z.object({
+          trackId: z.string().uuid(),
+          // Bounded to what a track can plausibly be, so a detector that returns
+          // 0 or 4,000 writes nothing rather than a curve-wrecking number.
+          bpm: z.number().min(40).max(220).nullable(),
+          musicalKey: z.string().max(8).nullable(),
+          features: z.unknown().nullable(),
+        })
+      )
+      .min(1)
+      .max(AUDIO_IMPORT_MAX_TRACKS),
+  })
+}
+
+export type MeasuredAudioPayload = z.input<
+  ReturnType<typeof createMeasuredAudioSchema>
+>
+
 export type PlaylistCreateInput = z.infer<
   ReturnType<typeof createPlaylistSchema>
 >

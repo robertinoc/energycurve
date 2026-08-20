@@ -476,6 +476,77 @@ export async function updateTrack(
   return data
 }
 
+/** One track's measured audio, as the enrichment flow produces it. */
+export interface TrackAudioUpdate {
+  trackId: string
+  bpm: number | null
+  musicalKey: string | null
+  /** The persisted feature shape, already validated by the caller. */
+  audioFeatures: Json | null
+}
+
+/**
+ * Writes measured audio onto tracks that already exist.
+ *
+ * Separate from `updateTrack` on purpose. That one takes a whole
+ * `TrackWriteInput` — artist, name, comment, genre — because it backs a form
+ * where a person edits those fields. This writes only what a measurement
+ * produced, so an enrichment run can never blank a title the DJ typed by
+ * omitting it from a payload.
+ *
+ * Ownership is checked once for the playlist rather than per track, and every
+ * update is scoped by `playlist_id`, so a track id from someone else's set can't
+ * ride along in the array.
+ */
+export async function applyMeasuredAudio(
+  profileId: string,
+  playlistId: string,
+  updates: readonly TrackAudioUpdate[]
+): Promise<number> {
+  if (updates.length === 0) {
+    return 0
+  }
+
+  const playlist = await getOwnedPlaylist(profileId, playlistId)
+
+  if (!playlist) {
+    throw new Error("Playlist not found.")
+  }
+
+  const supabase = getSupabaseAdminClient()
+  let written = 0
+
+  for (const update of updates) {
+    const { error } = await supabase
+      .from("tracks")
+      .update({
+        bpm: update.bpm,
+        musical_key: update.musicalKey,
+        audio_features: update.audioFeatures,
+      })
+      .eq("id", update.trackId)
+      .eq("playlist_id", playlistId)
+
+    if (error) {
+      // One bad row doesn't abandon the rest: the DJ picked a folder and waited
+      // through the analysis, and losing twenty good measurements to one failure
+      // would be the worst possible use of that.
+      logError("track.audio_apply_failed", error, {
+        profileId,
+        playlistId,
+        trackId: update.trackId,
+      })
+      continue
+    }
+
+    written += 1
+  }
+
+  logInfo("track.audio_applied", { profileId, playlistId, written })
+
+  return written
+}
+
 export async function removeTrack(
   profileId: string,
   playlistId: string,

@@ -722,6 +722,7 @@ export function AnalysisWorkbench({
         decidedCount={decidedCount}
         smartOrdered={smartStatus === "done"}
         coverage={coverage}
+        playlistHref={`/dashboard/playlists/${playlistId}`}
         locale={locale}
       />
 

@@ -597,8 +597,21 @@ export const ANALYSIS_UI = {
     es: "{count} de {total} tracks no tienen etiqueta de energía, ni BPM, ni análisis de audio, así que la curva de abajo sale de dónde cae cada track en la lista — no de tu música. Un score encima de eso sería calificar nuestro propio dibujo.",
   },
   scoreUnavailableFix: {
-    en: "Run the audio analysis on this playlist, or re-import it from a source that carries BPMs. The reordering tools below still work — they just can't be scored yet.",
-    es: "Corré el análisis de audio en esta playlist, o reimportala desde una fuente que traiga BPMs. Las herramientas de reordenamiento de abajo siguen funcionando — sólo que todavía no se pueden puntuar.",
+    en: "The reordering tools below still work — they just can't be scored yet.",
+    es: "Las herramientas de reordenamiento de abajo siguen funcionando — sólo que todavía no se pueden puntuar.",
+  },
+  /**
+   * The link this state was missing.
+   *
+   * It used to say "run the audio analysis on this playlist" as prose — advice the
+   * product couldn't take, since measuring only ever happened while *creating* a
+   * playlist from files. Now it can, and the sentence is a link to it: naming a fix
+   * on the screen that reports the problem, without a way to reach it, is how a
+   * fix goes untaken.
+   */
+  scoreUnavailableCta: {
+    en: "Measure the audio for this set",
+    es: "Medir el audio de este set",
   },
   coverageInventedAll: {
     en: "No BPM or audio data — this curve is drawn from track positions, so the score reflects the shape you asked for, not your set.",
