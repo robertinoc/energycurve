@@ -367,6 +367,22 @@ So the order to work in is: measure both profile sets on a tagged library, then
 decide whether HPSS is still needed. `key_detection` stays `status: "planned"` and
 the pricing matrix keeps saying "Soon" until a number justifies otherwise.
 
+### HPSS, built but not adopted — 20 Aug 2026
+
+Full separation now exists as a fifth harness variant (`hpss`, see
+`lib/audio/hpss.ts`): a median along time keeps what is sustained, a median along
+frequency keeps what is broadband, and a soft mask splits each bin between them.
+The `banded` variant was only the cheap half of this.
+
+This does not jump the queue above the five-tracks-by-ear check. Building it
+doesn't need that measurement; **adopting** it does, and it hasn't been adopted —
+the default is still `meyda`. What changes is that one harness run now measures
+five variants instead of four, so when the ear check happens there is a number for
+this too instead of a reason to run the folder again.
+
+The order the list above argues for still holds. The reason to build ahead of it
+is only that a single run is the scarce thing here, not the code.
+
 Useful side-effect: the tags in this library are **Open Key** notation
 (`7m`, `4d`), and the existing `toCamelot()` already converts them — so the
 accuracy comparison works against a real corpus with no new parsing.
