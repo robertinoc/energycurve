@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next"
 
 import { LOCALIZED_PATHS, localizedPath } from "@/lib/content/locale-routing"
+import { allPublishedPosts } from "@/lib/blog/posts"
 import { SITE_URL } from "@/lib/seo"
 
 /**
@@ -13,6 +14,7 @@ const HINTS: Record<
 > = {
   "/": { changeFrequency: "weekly", priority: 1 },
   "/pricing": { changeFrequency: "monthly", priority: 0.9 },
+  "/blog": { changeFrequency: "weekly", priority: 0.7 },
   "/install": { changeFrequency: "monthly", priority: 0.5 },
   "/privacy": { changeFrequency: "yearly", priority: 0.3 },
   "/terms": { changeFrequency: "yearly", priority: 0.3 },
@@ -29,7 +31,16 @@ const HINTS: Record<
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date("2026-08-17")
 
-  return LOCALIZED_PATHS.flatMap((path) => {
+  // Articles, each in the one language it was written in. No `alternates` block:
+  // there is no translation, and claiming one would point a crawler at a 404.
+  const articles: MetadataRoute.Sitemap = allPublishedPosts().map((post) => ({
+    url: `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}`,
+    lastModified: new Date(post.publishedAt!),
+    changeFrequency: "yearly",
+    priority: 0.6,
+  }))
+
+  return articles.concat(LOCALIZED_PATHS.flatMap((path) => {
     const languages = {
       en: `${SITE_URL}${localizedPath(path, "en")}`,
       es: `${SITE_URL}${localizedPath(path, "es")}`,
@@ -41,5 +52,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       ...HINTS[path],
       alternates: { languages },
     }))
-  })
+  }))
 }

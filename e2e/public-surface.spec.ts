@@ -248,3 +248,57 @@ test.describe("the login wall", () => {
     ).toBeVisible()
   })
 })
+
+test.describe("blog", () => {
+  test("the Spanish index lists the articles", async ({ page }) => {
+    await page.goto("/es/blog")
+
+    await expect(page.locator("html")).toHaveAttribute("lang", "es")
+    // Five seed articles, each written against a measured gap in the AEO baseline.
+    await expect(page.locator("main ul li")).toHaveCount(5)
+  })
+
+  test("an article renders its markdown, not its markdown source", async ({
+    page,
+  }) => {
+    await page.goto("/es/blog/esta-bien-el-orden-de-mi-set")
+
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /está bien el orden/i
+    )
+    // Headings became headings and bold became bold, rather than reaching the
+    // page as literal ## and ** — the failure mode of a renderer that silently
+    // does nothing.
+    await expect(page.locator(".ec-prose h2").first()).toBeVisible()
+    await expect(page.locator(".ec-prose strong").first()).toBeVisible()
+    await expect(page.locator(".ec-prose")).not.toContainText("**")
+  })
+
+  test("an article claims no translation it doesn't have", async ({ page }) => {
+    await page.goto("/es/blog/esta-bien-el-orden-de-mi-set")
+
+    // Self-canonical and no hreflang pair: the article exists in Spanish only, and
+    // advertising an English twin would point a crawler at a 404.
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      /\/es\/blog\/esta-bien-el-orden-de-mi-set$/
+    )
+    await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0)
+  })
+
+  test("the English index says where the writing is", async ({ page }) => {
+    await page.goto("/blog")
+
+    // No English articles yet, and the empty state names the reason rather than
+    // promising a "coming soon".
+    await expect(page.locator("main")).toContainText(/in Spanish for now/i)
+    await expect(page.locator('a[href="/es/blog"]')).toBeVisible()
+  })
+
+  test("the sitemap lists the articles", async ({ request }) => {
+    const body = await (await request.get("/sitemap.xml")).text()
+
+    expect(body).toContain("/es/blog/esta-bien-el-orden-de-mi-set")
+    expect(body).toContain("/es/blog")
+  })
+})

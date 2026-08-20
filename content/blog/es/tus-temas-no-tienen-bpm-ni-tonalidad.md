@@ -4,7 +4,7 @@ description: "Casi todas las guías para preparar un set asumen que tu librería
 slug: tus-temas-no-tienen-bpm-ni-tonalidad
 locale: es
 targetQuery: "temas sin BPM ni tonalidad"
-publishedAt: null
+publishedAt: 2026-08-20
 ---
 
 Todas las guías sobre mezcla armónica y curvas de energía empiezan igual: "tomá tu

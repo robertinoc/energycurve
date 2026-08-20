@@ -272,6 +272,103 @@
 }
 
 @layer utilities {
+  /*
+   * Article body, for the HTML that lib/blog/markdown.ts emits.
+   *
+   * Element selectors rather than classes on purpose: the renderer produces bare
+   * tags, and threading a class through it would couple the markdown layer to a
+   * stylesheet for no gain. Scoped under .ec-prose so nothing here leaks into the
+   * app, where bare h2 and p are styled by their own components.
+   *
+   * Only the elements the renderer can emit are covered. If that subset grows, the
+   * new element needs a rule here too — its absence is a visible bug, not a silent
+   * one, which is the same trade the renderer itself makes.
+   */
+  .ec-prose {
+    color: rgb(255 255 255 / 0.64);
+    font-size: 0.9375rem;
+    line-height: 1.75;
+  }
+  .ec-prose > * + * {
+    margin-top: 1.15em;
+  }
+  .ec-prose h2,
+  .ec-prose h3,
+  .ec-prose h4 {
+    color: #fff;
+    font-family: var(--font-heading, inherit);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    /* More space above a heading than below it, so it reads as belonging to what
+       follows rather than floating between two blocks. */
+    margin-top: 2.1em;
+    margin-bottom: -0.35em;
+  }
+  .ec-prose h2 {
+    font-size: 1.3rem;
+  }
+  .ec-prose h3 {
+    font-size: 1.1rem;
+  }
+  .ec-prose strong {
+    color: #fff;
+    font-weight: 600;
+  }
+  .ec-prose a {
+    color: var(--ec-cyan);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .ec-prose ul,
+  .ec-prose ol {
+    padding-left: 1.35em;
+  }
+  .ec-prose ul {
+    list-style: disc;
+  }
+  .ec-prose ol {
+    list-style: decimal;
+  }
+  .ec-prose li + li {
+    margin-top: 0.4em;
+  }
+  .ec-prose li::marker {
+    color: rgb(255 255 255 / 0.32);
+  }
+  .ec-prose pre {
+    background: var(--ec-sunken);
+    border: 1px solid var(--ec-border);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    /* A pasted tracklist can carry a long title; it scrolls inside its own box so
+       the page body never scrolls sideways. */
+    overflow-x: auto;
+    font-size: 0.83rem;
+    line-height: 1.7;
+    color: rgb(255 255 255 / 0.78);
+  }
+  .ec-prose table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    display: block;
+    overflow-x: auto;
+  }
+  .ec-prose th,
+  .ec-prose td {
+    border-bottom: 1px solid var(--ec-border);
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  .ec-prose th {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
   /* Signature gradient as text fill — key numbers, wordmark "ENERGY" */
   .ec-gradient-text {
     background: var(--ec-gradient);
