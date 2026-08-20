@@ -105,7 +105,7 @@ export const CAPABILITIES = {
   b2b_sets: {
     minPlan: "pro_plus",
     status: "shipped",
-    note: "First slice: share a set read-only with another DJ, who can leave suggestions. Not simultaneous editing. Gated on the OWNER's plan in services/collaboration-service.ts — a collaborator needs no plan, because requiring both parties to pay is a feature that mostly doesn't work.",
+    note: "Share a set with another DJ: they read it, leave suggestions, and can reorder it while holding the edit turn (one writer at a time, passed by hand — not real-time co-editing). Gated on the OWNER's plan in services/collaboration-service.ts — a collaborator needs no plan, because requiring both parties to pay is a feature that mostly doesn't work.",
   },
   gig_mode: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
   global_library: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
