@@ -85,6 +85,10 @@ export interface WorkerRequest {
  *   to 90 Hz instead of 362 and so keeps the bass where this genre puts its harmony.
  *   The `banded` result argued for this: cutting the unresolvable band made accuracy
  *   worse, which says the band held signal and what was missing was resolution.
+ * - **hpss** — full harmonic/percussive separation before the band: a median along
+ *   time keeps what is sustained, a median along frequency keeps what is
+ *   broadband, and a soft mask splits each bin between them. The banded variant was
+ *   only the cheap half of this. See lib/audio/hpss.ts.
  * - **banded-tuned** — the same band, plus a tuning correction estimated over the
  *   whole track before folding to twelve classes. See lib/audio/tuning.ts. Held
  *   separate from `banded` so a run can tell whether the band helped, whether the
@@ -95,6 +99,7 @@ export const CHROMA_METHODS = [
   "banded",
   "banded-tuned",
   "wide",
+  "hpss",
 ] as const
 
 /** Derived from the list so the harness picker and the type can't drift apart. */

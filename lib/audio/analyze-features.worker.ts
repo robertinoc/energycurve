@@ -35,6 +35,7 @@ import {
   type WorkerRequest,
   type WorkerResponse,
 } from "./analysis-types"
+import { HarmonicWindow } from "./hpss"
 import { planSampleWindows } from "./sample-windows"
 import {
   averageChroma,
@@ -97,7 +98,9 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
     const meydaSegments: number[][] = []
     const meydaFrames: number[][] = []
     const bandedSegments: number[][] = []
+    const segmentsHpss: number[][] = []
     const bandedFrames: number[][] = []
+    const hpssFrames: number[][] = []
     /** Fine profiles per window, for the tuned variant. */
     const fineSegments: number[][][] = []
     /**
@@ -115,6 +118,11 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       const segmentFlux: number[] = []
       const segmentMeyda: number[][] = []
       const segmentBanded: number[][] = []
+      const segmentHpss: number[][] = []
+      // One window per segment, not per track: the windows are sampled from
+      // different points in the file, so carrying frames across a boundary would
+      // separate a frame against neighbours that are minutes away from it.
+      const harmonicWindow = new HarmonicWindow()
       const segmentFine: number[][] = []
       // Reset per window: the first frame after a jump has no valid predecessor.
       let previousFrame: Float32Array | null = null
@@ -164,6 +172,21 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
             segmentBanded.push(banded)
             bandedFrames.push(banded)
 
+            // Full HPSS: the harmonic part of this frame, separated against a
+            // rolling window of its neighbours. Null while the window fills, and
+            // at the start of every sampled segment — those frames contribute
+            // nothing rather than being separated against mostly themselves,
+            // which yields a ~0.5 mask and passes the drums straight through.
+            const harmonic = harmonicWindow.push(spectrum)
+
+            if (harmonic) {
+              const separated = chromaFromSpectrum(harmonic, sampleRate, {
+                frameSize: FRAME_SIZE,
+              })
+              segmentHpss.push(separated)
+              hpssFrames.push(separated)
+            }
+
             segmentFine.push(
               fineChromaFromSpectrum(spectrum, sampleRate, {
                 frameSize: FRAME_SIZE,
@@ -184,6 +207,10 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       if (segmentMeyda.length > 0) {
         meydaSegments.push(aggregate("meyda", segmentMeyda))
       }
+      if (segmentHpss.length > 0) {
+        segmentsHpss.push(medianChroma(segmentHpss))
+      }
+
       if (segmentBanded.length > 0) {
         bandedSegments.push(aggregate("banded", segmentBanded))
       }
@@ -268,6 +295,13 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       wide: {
         chroma: medianChroma(wideFrames),
         chromaSegments: wideSegments,
+      },
+      hpss: {
+        // Median-filtered on both axes with a soft mask, then the same band and
+        // temporal aggregation as `banded` — so a run comparing the two isolates
+        // the separation itself rather than a bundle of changes.
+        chroma: medianChroma(hpssFrames),
+        chromaSegments: segmentsHpss,
       },
       "banded-tuned": {
         chroma: foldFineChroma(pooledFine, BINS_PER_SEMITONE, tuningOffset),
