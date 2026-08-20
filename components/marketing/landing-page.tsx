@@ -10,6 +10,7 @@ import { LandingNavbar } from "@/components/marketing/landing-navbar"
 import {
   ContactSection,
   DifferentiationSection,
+  LoopSection,
   FaqSection,
   FeaturesSection,
   FinalCTASection,
@@ -142,6 +143,7 @@ export function LandingPage({ locale }: { locale: SiteLocale }) {
         <HeroSection copy={copy} signupHref={signupHref} />
         <FeaturesSection copy={copy} />
         <HowItWorksSection copy={copy} signupHref={signupHref} />
+        <LoopSection copy={copy} />
         <DifferentiationSection copy={copy} />
         <StorySection copy={copy} />
         <SuiteSection copy={copy} />

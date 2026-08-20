@@ -1,14 +1,21 @@
 import {
   ArrowRight,
   BarChart3,
+  CalendarClock,
   ChevronDown,
   CreditCard,
   GitBranch,
+  GitCompareArrows,
+  History,
   Layers,
+  Library,
   LineChart,
   Mail,
+  MapPin,
+  Printer,
   Sparkles,
   Waves,
+  WifiOff,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -354,6 +361,105 @@ export function SuiteSection({ copy }: { copy: ResolvedSiteCopy }) {
               {copy.suite.billingBody}
             </p>
           </div>
+        </div>
+      </SectionContainer>
+    </SectionReveal>
+  )
+}
+
+/**
+ * One icon per capability shown in the loop section. Keyed by capability (not
+ * position) so reordering the copy can't silently shuffle the icons.
+ */
+const loopIcons = {
+  slot_aware_planning: CalendarClock,
+  named_curve_shapes: Waves,
+  gig_mode: WifiOff,
+  printable_set_sheet: Printer,
+  residency_mode: MapPin,
+  planned_vs_played: GitCompareArrows,
+  version_history: History,
+  global_library: Library,
+} as const
+
+const loopPlanBadge = {
+  pro: "border border-[#A24DE0]/55 bg-[#A24DE0]/13 text-[#D9C2F5]",
+  pro_plus: "ec-gradient-bg text-white",
+} as const
+
+export function LoopSection({ copy }: { copy: ResolvedSiteCopy }) {
+  return (
+    <SectionReveal delay={70}>
+      <SectionContainer id="loop" className="p-8 sm:p-10">
+        <AmbientGlow
+          tone="cyan"
+          className="ambient-drift-slow right-[-7rem] top-[-5rem] h-[20rem] w-[20rem] opacity-30"
+        />
+
+        <p className="text-[0.72rem] uppercase tracking-[0.24em] text-white/34">
+          {copy.loop.eyebrow}
+        </p>
+        <h2 className="mt-3 max-w-3xl text-balance text-3xl font-heading font-semibold text-white sm:text-4xl">
+          {copy.loop.title}
+        </h2>
+        <p className="mt-4 max-w-2xl text-base leading-7 text-white/68">
+          {copy.loop.intro}
+        </p>
+
+        <div className="mt-8 grid gap-5 lg:grid-cols-3">
+          {copy.loop.stages.map((stage, stageIndex) => (
+            <div key={stage.title}>
+              <div className="flex items-baseline gap-2.5">
+                <span className="font-heading text-[0.68rem] uppercase tracking-[0.2em] text-white/28">
+                  {String(stageIndex + 1).padStart(2, "0")}
+                </span>
+                <h3 className="text-lg font-heading font-semibold text-white">
+                  {stage.title}
+                </h3>
+              </div>
+              <div
+                className="ec-gradient-bg mt-2.5 mb-4 h-0.5 rounded-full"
+                style={{ opacity: 0.5 + stageIndex * 0.25 }}
+                aria-hidden
+              />
+              <div className="grid gap-3">
+                {stage.items.map((item) => {
+                  const Icon = loopIcons[item.capability as keyof typeof loopIcons]
+                  return (
+                    <div
+                      key={item.capability}
+                      className="rounded-[22px] border border-white/10 bg-black/20 p-5 transition hover:border-white/16"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="flex items-center gap-2.5 text-[0.98rem] font-heading font-semibold text-white">
+                          {Icon ? (
+                            <Icon aria-hidden className="size-4 shrink-0 text-[#22d3ee]/90" />
+                          ) : null}
+                          {item.title}
+                        </h4>
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-full px-2.5 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.14em]",
+                            loopPlanBadge[item.plan]
+                          )}
+                        >
+                          {item.plan === "pro" ? "PRO" : "PRO+"}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-white/64">{item.desc}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-7 flex flex-wrap items-center gap-5">
+          <CTAButton href={localizedPath("/pricing", copy.locale)}>
+            {copy.loop.cta}
+          </CTAButton>
+          <p className="text-sm text-white/46">{copy.loop.footNote}</p>
         </div>
       </SectionContainer>
     </SectionReveal>
