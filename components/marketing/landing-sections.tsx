@@ -712,7 +712,7 @@ function FooterColumn({
   links,
 }: {
   heading: string
-  links: { href: string; label: string }[]
+  links: { href: string; label: string; external?: boolean }[]
 }) {
   return (
     <div className="flex flex-col gap-3">
@@ -722,6 +722,7 @@ function FooterColumn({
           <a
             key={link.label}
             href={link.href}
+            {...(link.external ? { target: "_blank", rel: "noreferrer" } : {})}
             className="text-sm font-medium text-white/64 transition hover:text-white"
           >
             {link.label}
@@ -762,6 +763,9 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
 
         {/* Link columns */}
         <div className="flex flex-col gap-8 sm:flex-row sm:gap-14">
+          {/* Product is what EnergyCurve is; Resources is everything around it.
+              The FAQ answers questions about the product but it is a place you
+              go to look something up, so it belongs here. */}
           <FooterColumn
             heading={copy.footer.product}
             links={[
@@ -769,25 +773,29 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
               { href: "#how-it-works", label: copy.nav.how },
               { href: "#loop", label: copy.loop.navLabel },
               { href: "#story", label: copy.nav.story },
-              { href: "#faq", label: copy.nav.faq },
               { href: "#contact", label: copy.nav.contact },
             ]}
           />
           <FooterColumn
             heading={copy.footer.resources}
             links={[
+              { href: "#faq", label: copy.nav.faq },
               {
                 href: localizedPath("/pricing", copy.locale),
                 label: copy.pricing.navLabel,
               },
+              // Without this the blog is orphaned: only the sitemap reaches it.
+              { href: localizedPath("/blog", copy.locale), label: copy.footer.blog },
               {
                 href: localizedPath("/install", copy.locale),
                 label: copy.install.footerLink,
               },
-              // Without this the blog is orphaned: only the sitemap reaches it.
+              // The sister product, as a resource: someone preparing sets is a
+              // candidate for the rest of the family, and the traffic runs both ways.
               {
-                href: localizedPath("/blog", copy.locale),
-                label: copy.footer.blog,
+                href: "https://stagelink.art",
+                label: copy.footer.stagelink,
+                external: true,
               },
             ]}
           />
