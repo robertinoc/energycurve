@@ -350,6 +350,22 @@ server needed**, with two corrections to the plan.
   blocked on a labelled run over a tagged library — the same run key detection
   needs, so one session of tagged files unblocks both. Collaborative B2B/B3B sets
   are now the one remaining planned PRO+ capability.
+
+### What is not built yet
+
+<!-- planned-capabilities:start -->
+- `key_detection`
+- `energy_model_v3`
+- `b2b_sets`
+<!-- planned-capabilities:end -->
+
+Generated from `CAPABILITIES` in `lib/product/capabilities.ts` and checked by
+`tests/doc-accuracy.test.ts`, which fails when this list and the registry
+disagree. The prose in this file is prose and rots like prose — three claims in
+`docs/billing.md` were still describing a pre-checkout product months after
+checkout shipped, and residency mode was listed here as planned after it had
+shipped. That is what the marked block is for: the one part of the roadmap that
+cannot quietly go stale.
 - **Essentia.js is out** — AGPL-3.0, unusable in a closed-source paid product.
 - **Direct USB export researched and declined** — writing the database is
   solved, but a CDJ needs per-track ANLZ analysis files that only rekordbox
