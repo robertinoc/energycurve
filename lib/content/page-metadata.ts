@@ -71,9 +71,15 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
     },
   },
   "/blog": {
+    /**
+     * Not the bare word "Blog" in both languages: the locale test rejects a title
+     * shared across languages, and it's right to — a page whose title is identical
+     * in two languages is usually one that was never translated. A descriptive
+     * title is better for a search result anyway.
+     */
     title: {
-      en: "Blog",
-      es: "Blog",
+      en: "Blog — reading a set before you play it",
+      es: "Blog — leer un set antes de tocarlo",
     },
     description: {
       en: "How to read a set's energy before you play it: ordering, energy jumps, and what to do when your tracks carry no BPM or key.",

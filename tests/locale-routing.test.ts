@@ -142,8 +142,17 @@ describe("page metadata", () => {
 describe("sitemap", () => {
   const entries = sitemap()
 
+  /**
+   * Blog articles are in the sitemap too, and they are not localized pages: each
+   * exists in the one language it was written in. Split here so the assertions
+   * about localized pages stay exact instead of being loosened to accommodate them.
+   */
+  const isArticle = (url: string) => /\/blog\/[^/]+$/.test(url)
+  const pageEntries = entries.filter((entry) => !isArticle(entry.url))
+  const articleEntries = entries.filter((entry) => isArticle(entry.url))
+
   it("lists both languages of every localized page", () => {
-    expect(entries).toHaveLength(LOCALIZED_PATHS.length * 2)
+    expect(pageEntries).toHaveLength(LOCALIZED_PATHS.length * 2)
 
     for (const path of LOCALIZED_PATHS) {
       for (const locale of ["en", "es"] as const) {
@@ -153,11 +162,21 @@ describe("sitemap", () => {
     }
   })
 
-  it("gives every entry the alternates block, in both directions", () => {
-    for (const entry of entries) {
+  it("gives every localized page the alternates block, in both directions", () => {
+    for (const entry of pageEntries) {
       expect(entry.alternates?.languages).toBeDefined()
       const languages = entry.alternates!.languages as Record<string, string>
       expect(Object.keys(languages).sort()).toEqual(["en", "es"])
+    }
+  })
+
+  it("gives an article no alternates at all", () => {
+    // The inversion of the rule above, and the reason the split exists: an article
+    // has no translation, and advertising one would point a crawler at a 404.
+    expect(articleEntries.length).toBeGreaterThan(0)
+
+    for (const entry of articleEntries) {
+      expect(entry.alternates?.languages, entry.url).toBeUndefined()
     }
   })
 
@@ -175,6 +194,7 @@ describe("route files exist for both languages", () => {
   const ROUTE_FILE: Record<string, string> = {
     "/": "page.tsx",
     "/pricing": "pricing/page.tsx",
+    "/blog": "blog/page.tsx",
     "/install": "install/page.tsx",
     "/privacy": "privacy/page.tsx",
     "/terms": "terms/page.tsx",
