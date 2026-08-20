@@ -354,11 +354,14 @@ server needed**, with two corrections to the plan.
 - **Still open and worth naming**: Energy Model v3 is specified but unfitted and
   blocked on a labelled run over a tagged library — the same run key detection
   needs, so one session of tagged files unblocks both. Collaborative B2B/B3B sets
-  shipped its first slice on 20 Aug 2026 — sharing a set read-only with another DJ,
-  who can leave suggestions. Deliberately not simultaneous editing: two DJs
-  reordering one tracklist needs conflict resolution, presence and a merge story,
-  and none of that is what a B2B pair actually does the week before. There are now
-  no planned PRO+ capabilities left.
+  shipped on 20 Aug 2026, in two steps. First: sharing a set read-only with another
+  DJ who can leave suggestions. Then turn-based editing — the collaborator can
+  reorder the set while holding the edit turn, which expires after twenty minutes
+  idle so a closed laptop can't freeze the other person out. Deliberately **not**
+  real-time co-editing: two DJs reordering one tracklist at the same instant needs
+  conflict resolution, presence and a merge story, and none of that is what a B2B
+  pair actually does the week before — they pass a draft back and forth, which is
+  what a turn is. There are now no planned PRO+ capabilities left.
 
 ### What is not built yet
 
