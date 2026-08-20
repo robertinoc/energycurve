@@ -598,6 +598,26 @@ const siteCopy: SiteCopySchema = {
           es: "Sí. Después de la fecha, marcá qué tocaste de verdad y en qué orden, y EnergyCurve (PRO) pone la curva planificada al lado de la real. Ése es el sentido del loop: el próximo set arranca de lo que la pista recibió de verdad, no de la memoria.",
         },
       },
+      {
+        /**
+         * The assumption this exists to kill: that sharing a set needs two paid
+         * accounts. Nothing said otherwise, and the matrix puts the row in the
+         * PRO+ column — so a reader concludes their B2B partner has to pay too.
+         * That stops the person who *would* have paid from paying, and means the
+         * collaborator who'd have arrived on FREE never hears the feature exists.
+         *
+         * Phrased as the question someone actually types, because this table is
+         * also the FAQPage structured data an answer engine reads.
+         */
+        q: {
+          en: "Does my B2B partner need PRO+ too, to see a set I share?",
+          es: "¿Mi compañero de B2B también necesita PRO+ para ver un set que le comparto?",
+        },
+        a: {
+          en: "No. Only the person sharing needs PRO+. Whoever you share with opens the set and leaves suggestions on any plan, including the free one — they don't even need an account when you send the invite, since the set appears for them the moment they sign up with that address. Requiring both sides to pay would make the feature only work between two subscribers, which isn't much of a feature.",
+          es: "No. Sólo necesita PRO+ quien comparte. La persona con la que compartís abre el set y deja sugerencias con cualquier plan, incluido el gratuito — de hecho no necesita ni tener cuenta cuando le mandás la invitación, porque el set le aparece en el momento en que se registra con esa dirección. Pedir que paguen los dos haría que la función sólo sirva entre dos suscriptores, que no es mucha función.",
+        },
+      },
     ],
   },
   loop: {
@@ -1110,8 +1130,8 @@ const siteCopy: SiteCopySchema = {
          * the fix for that is the wording here, not a bigger feature.
          */
         capability: {
-          en: "Share a set with another DJ — they see it and suggest changes",
-          es: "Compartir un set con otro DJ — lo ve y sugiere cambios",
+          en: "Share a set with another DJ — they see it and suggest changes (they don't need a plan)",
+          es: "Compartir un set con otro DJ — lo ve y sugiere cambios (no necesita plan)",
         },
         free: "no",
         pro: "no",
