@@ -4,6 +4,7 @@ import { analyzePlaylist } from "@/lib/engine/analysis"
 import {
   deriveFixes,
   deriveOrder,
+  partitionFixes,
   potentialScore,
   scoreOrder,
   type SetFix,
@@ -125,6 +126,85 @@ describe("scoreOrder", () => {
     const descending = scoreOrder(reversed, ids, energies, "hard-techno", "main")
 
     expect(descending).toBeLessThan(ascending)
+  })
+})
+
+describe("partitionFixes", () => {
+  const a = fix({ id: "a", markerPosition: 3 })
+  const b = fix({ id: "b", markerPosition: 1 })
+  const c = fix({ id: "c", markerPosition: 2 })
+
+  it("keeps undecided fixes pending", () => {
+    const { pending, decided } = partitionFixes([a, b], new Set(), new Set())
+
+    expect(pending.map((f) => f.id)).toEqual(["b", "a"])
+    expect(decided).toEqual([])
+  })
+
+  it("moves an applied fix out of the pending list", () => {
+    // The reported bug: an applied fix stayed in the carousel, so the "FIX i OF
+    // N" counter never moved and the fix kept offering points already banked
+    // into the live score.
+    const { pending, decided } = partitionFixes(
+      [a, b, c],
+      new Set(["a"]),
+      new Set()
+    )
+
+    expect(pending.map((f) => f.id)).toEqual(["b", "c"])
+    expect(decided.map((f) => f.id)).toEqual(["a"])
+  })
+
+  it("moves a discarded fix out too", () => {
+    const { pending, decided } = partitionFixes([a, b], new Set(), new Set(["b"]))
+
+    expect(pending.map((f) => f.id)).toEqual(["a"])
+    expect(decided.map((f) => f.id)).toEqual(["b"])
+  })
+
+  it("puts every fix in exactly one list", () => {
+    // The invariant that makes undo reachable: anything leaving the carousel
+    // has to turn up in the decided strip, or the decision becomes permanent.
+    const all = [a, b, c]
+    const { pending, decided } = partitionFixes(
+      all,
+      new Set(["a"]),
+      new Set(["c"])
+    )
+
+    expect(pending.length + decided.length).toBe(all.length)
+    expect([...pending, ...decided].map((f) => f.id).sort()).toEqual([
+      "a",
+      "b",
+      "c",
+    ])
+  })
+
+  it("counts a fix that is somehow both applied and discarded once, as applied", () => {
+    const { pending, decided } = partitionFixes(
+      [a],
+      new Set(["a"]),
+      new Set(["a"])
+    )
+
+    expect(pending).toEqual([])
+    expect(decided.map((f) => f.id)).toEqual(["a"])
+  })
+
+  it("leaves positive findings out of both lists", () => {
+    // They report what is working. Nothing to decide, so nothing to count in a
+    // "3 left to review" total either.
+    const good = fix({ id: "good", severity: "positive", markerPosition: 5 })
+    const { pending, decided } = partitionFixes([good, a], new Set(), new Set())
+
+    expect(pending.map((f) => f.id)).toEqual(["a"])
+    expect(decided).toEqual([])
+  })
+
+  it("orders both lists along the curve, not by decision time", () => {
+    const { pending } = partitionFixes([a, b, c], new Set(), new Set())
+
+    expect(pending.map((f) => f.markerPosition)).toEqual([1, 2, 3])
   })
 })
 

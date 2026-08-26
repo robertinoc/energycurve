@@ -514,6 +514,22 @@ export const ANALYSIS_UI = {
     es: "El set ya sigue la curva. Nada que corregir.",
   },
 
+  // Decided fixes. Applied and discarded fixes leave the carousel, so this
+  // strip is where an earlier decision goes to be reversed.
+  allDecidedTitle: {
+    en: "Every suggestion has been decided",
+    es: "Ya decidiste todas las sugerencias",
+  },
+  allDecidedBody: {
+    en: "The score above reflects what you applied. Reverse any decision below.",
+    es: "El score de arriba refleja lo que aplicaste. Podés revertir cualquier decisión acá abajo.",
+  },
+  decidedEyebrow: { en: "Already decided", es: "Ya decididas" },
+  decidedAppliedTag: { en: "Applied", es: "Aplicado" },
+  decidedDiscardedTag: { en: "Left as is", es: "Dejado así" },
+  decidedUndo: { en: "Undo", es: "Deshacer" },
+  decidedReconsider: { en: "Reconsider", es: "Reconsiderar" },
+
   // Live tracklist (redesign zone 3)
   liveOrderEyebrow: { en: "Live tracklist", es: "Tracklist en vivo" },
   liveOrderTitle: {
