@@ -25,6 +25,14 @@ import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 export const dynamic = "force-dynamic"
 
 /**
+ * Without this the platform decides, and its default (10-15s) is far below what
+ * a reorder actually costs — so the function was being killed mid-flight and
+ * every request fell back to the heuristic. 60s is the ceiling on every Vercel
+ * plan including Hobby, so it needs no plan-specific tuning.
+ */
+export const maxDuration = 60
+
+/**
  * Zone 4 of the analysis redesign: smart ordering. Calls the Claude API from
  * the server (the key never reaches the client), asks for a strict-JSON
  * reorder of the playlist, validates it against the exact track-id set, and
@@ -42,6 +50,13 @@ interface SmartOrderResult {
 // Per-playlist cache: the same tracklist (+ genre/context) always returns the
 // same answer, so repeated clicks don't burn tokens. In-memory — resets on
 // deploy, which is fine for a cost cap.
+/**
+ * Deliberately below `maxDuration`. The platform killing the function returns a
+ * 504 with no body, which the client can only report as "unavailable"; aborting
+ * ourselves first means we still return the heuristic order and can say why.
+ */
+const CLAUDE_TIMEOUT_MS = 45_000
+
 const cache = new Map<string, SmartOrderResult>()
 const CACHE_MAX_ENTRIES = 200
 
@@ -190,7 +205,7 @@ async function claudeOrder(
         },
       ],
     },
-    { timeout: 55_000 }
+    { timeout: CLAUDE_TIMEOUT_MS }
   )
 
   if (onPlaced) {
