@@ -153,6 +153,49 @@ export function scoreOrder(
 }
 
 /** `potencial = base + Σ pts de los arreglos no descartados`, capped at 10. */
+/**
+ * Splits the issue list into what still needs a decision and what has had one.
+ *
+ * Pure and here rather than inline in the workbench because the invariant is
+ * worth a test: a fix must appear in exactly one of the two lists. The bug this
+ * replaces had applied fixes staying in the carousel, so "FIX 4 OF 6" never
+ * moved and an already-applied fix kept advertising points that were, by then,
+ * already counted in the live score.
+ *
+ * Positive findings are in neither list — they are observations about what is
+ * working, with nothing to decide.
+ */
+export function partitionFixes(
+  fixes: readonly SetFix[],
+  appliedIds: ReadonlySet<string>,
+  discardedIds: ReadonlySet<string>
+): { pending: SetFix[]; decided: SetFix[] } {
+  const pending: SetFix[] = []
+  const decided: SetFix[] = []
+
+  for (const fix of fixes) {
+    if (fix.severity === "positive") {
+      continue
+    }
+
+    // Applied wins a fix that is somehow in both sets: it changed the order, so
+    // it is the one with a visible effect to undo.
+    if (appliedIds.has(fix.id) || discardedIds.has(fix.id)) {
+      decided.push(fix)
+    } else {
+      pending.push(fix)
+    }
+  }
+
+  const byCurvePosition = (a: SetFix, b: SetFix) =>
+    a.markerPosition - b.markerPosition
+
+  return {
+    pending: pending.sort(byCurvePosition),
+    decided: decided.sort(byCurvePosition),
+  }
+}
+
 export function potentialScore(
   baseScore: number,
   fixes: SetFix[],

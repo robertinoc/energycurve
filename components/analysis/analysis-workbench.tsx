@@ -36,6 +36,7 @@ import {
   potentialScore,
   scoreOrder,
   type SetFix,
+  partitionFixes,
 } from "@/lib/engine/fixes"
 import type {
   PlaylistContext,
@@ -370,22 +371,27 @@ export function AnalysisWorkbench({
   const gainedPoints = Math.max(0, currentScore - baseScore)
   const totalPoints = Math.max(0, potential - baseScore)
 
-  // Navigable fixes (panel + arrows): every non-positive issue, curve order.
-  const navigable = useMemo(
-    () =>
-      fixes
-        .filter((fix) => fix.severity !== "positive")
-        .sort((a, b) => a.markerPosition - b.markerPosition),
-    [fixes]
+  /**
+   * The panel carousel: non-positive issues still awaiting a decision, in curve
+   * order. Applied and discarded fixes leave the list — a fix you already acted
+   * on is not an observation any more, and counting it kept "FIX 4 OF 6" frozen
+   * while the set actually improved underneath.
+   *
+   * Undo doesn't disappear with them: decided fixes move to their own strip
+   * below, which is where you go looking for something you want to reverse.
+   */
+  const { pending: navigable, decided } = useMemo(
+    () => partitionFixes(fixes, applied, discarded),
+    [fixes, applied, discarded]
   )
 
+  /**
+   * Only ever a pending fix. Holding a decided one here is what kept an applied
+   * fix on screen still advertising its own "+0.3 recoverable" — points already
+   * banked into the live score, offered a second time.
+   */
   const selectedFix =
-    fixes.find((fix) => fix.id === selectedId) ??
-    navigable.find(
-      (fix) => !applied.has(fix.id) && !discarded.has(fix.id)
-    ) ??
-    navigable[0] ??
-    null
+    navigable.find((fix) => fix.id === selectedId) ?? navigable[0] ?? null
 
   const navigate = useCallback(
     (direction: 1 | -1) => {
@@ -753,7 +759,17 @@ export function AnalysisWorkbench({
             onNavigate={navigate}
             locale={locale}
           />
-          {selectedFix && panelCopy ? (
+          {!selectedFix ? (
+            <div className="flex flex-col gap-2 rounded-2xl border border-ec-cyan/30 bg-ec-cyan/[0.06] p-5">
+              <p className="flex items-center gap-2 font-heading text-base font-semibold text-ec-text">
+                <CircleCheck className="size-4 shrink-0 text-ec-cyan" />
+                {ANALYSIS_UI.allDecidedTitle[locale]}
+              </p>
+              <p className="text-[13px] leading-6 text-ec-text-muted">
+                {ANALYSIS_UI.allDecidedBody[locale]}
+              </p>
+            </div>
+          ) : panelCopy ? (
             <FixPanel
               fix={selectedFix}
               title={panelCopy.title}
@@ -776,6 +792,52 @@ export function AnalysisWorkbench({
           ) : null}
         </div>
       )}
+
+      {decided.length > 0 ? (
+        <section className="rounded-2xl border border-ec-border bg-ec-surface p-5">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ec-text-dim">
+            {ANALYSIS_UI.decidedEyebrow[locale]}
+          </p>
+          <ul className="mt-3 flex flex-col gap-1.5">
+            {decided.map((fix) => {
+              const wasApplied = applied.has(fix.id)
+
+              return (
+                <li
+                  key={fix.id}
+                  className="flex flex-wrap items-center gap-2 rounded-xl border border-ec-border bg-ec-sunken px-3 py-2"
+                >
+                  <span
+                    className={
+                      wasApplied
+                        ? "shrink-0 rounded-md border border-ec-cyan/40 bg-ec-cyan/[0.08] px-1.5 py-px font-mono text-[9.5px] font-bold uppercase tracking-[0.12em] text-ec-cyan"
+                        : "shrink-0 rounded-md border border-white/14 px-1.5 py-px font-mono text-[9.5px] font-bold uppercase tracking-[0.12em] text-white/50"
+                    }
+                  >
+                    {wasApplied
+                      ? ANALYSIS_UI.decidedAppliedTag[locale]
+                      : ANALYSIS_UI.decidedDiscardedTag[locale]}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[13px] text-ec-text-muted">
+                    {recsById.get(fix.id)?.title ?? fix.issueType}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      wasApplied ? undoFix(fix.id) : reconsiderFix(fix.id)
+                    }
+                    className="shrink-0 rounded-lg border border-white/14 px-2.5 py-1 text-[12px] text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+                  >
+                    {wasApplied
+                      ? ANALYSIS_UI.decidedUndo[locale]
+                      : ANALYSIS_UI.decidedReconsider[locale]}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ) : null}
 
       {/* Zone 4 banners: violet while Claude thinks, cyan with the result. */}
       {smartStatus === "thinking" ? (
