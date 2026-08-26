@@ -16,6 +16,7 @@ import {
   type ExportFormat,
   type ExportPlaylist,
 } from "@/lib/playlists/export"
+import { saveTextFile } from "@/lib/playlists/save-file"
 
 const COPY = DASHBOARD_COPY.exportMenu
 
@@ -39,18 +40,6 @@ const MENU_ITEMS: MenuItem[] = [
   { format: "txt", label: COPY.textFile, ext: ".txt", group: "plain" },
 ]
 
-function downloadFile(filename: string, mimeType: string, content: string) {
-  const blob = new Blob([content], { type: `${mimeType};charset=utf-8` })
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement("a")
-  anchor.href = url
-  anchor.download = filename
-  document.body.appendChild(anchor)
-  anchor.click()
-  anchor.remove()
-  URL.revokeObjectURL(url)
-}
-
 export function PlaylistExportButton({
   playlist,
   locale,
@@ -64,7 +53,11 @@ export function PlaylistExportButton({
     setOpen(false)
     const content = serializePlaylist(format, playlist)
     const { mimeType } = EXPORT_FORMAT_META[format]
-    downloadFile(exportFilename(format, playlist.name), mimeType, content)
+
+    // Not awaited: this runs inside the click handler so the user gesture is
+    // still live for the share sheet, and there is nothing to do with the
+    // outcome — the OS reports success or the user dismissed it on purpose.
+    void saveTextFile(exportFilename(format, playlist.name), mimeType, content)
   }
 
   const djItems = MENU_ITEMS.filter((i) => i.group === "dj")
