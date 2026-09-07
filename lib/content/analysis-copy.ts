@@ -482,12 +482,26 @@ export const ANALYSIS_UI = {
     es: "si aplicás los {count} que faltan",
   },
   claudeOrderNote: {
-    en: "Order generated with Claude",
-    es: "Orden generado con Claude",
+    en: "Order generated with AI",
+    es: "Orden generado con IA",
   },
   decidedCounter: {
     en: "{done} of {total} decided",
     es: "{done} de {total} decididos",
+  },
+  /**
+   * Applies every fix still pending, in one click.
+   *
+   * Sits beside the potential score rather than in the fix panel because that
+   * number is the promise it delivers: "9.2 if you apply the 3 fixes" had no
+   * button, so the only way to collect it was three trips through the panel.
+   * Deliberately does NOT touch fixes the DJ already left as-is — those are
+   * decisions, and a bulk action that overrides them is a trap.
+   */
+  applyAllCta: { en: "Apply all {count}", es: "Aplicar los {count}" },
+  applyAllHint: {
+    en: "Applies the {count} you haven't decided on. Reversible.",
+    es: "Aplica los {count} que no decidiste. Reversible.",
   },
 
   // Fix map + panel (redesign zone 2)
@@ -567,10 +581,10 @@ export const ANALYSIS_UI = {
   // Smart ordering (redesign zone 4)
   smartOrderCta: { en: "Smart ordering", es: "Ordenación inteligente" },
   smartOrderThinking: { en: "Thinking the order…", es: "Pensando el orden…" },
-  smartOrderDone: { en: "Reordered with Claude", es: "Reordenado con Claude" },
+  smartOrderDone: { en: "Reordered with AI", es: "Reordenado con IA" },
   smartThinkingBanner: {
-    en: "Claude is testing orders against the ideal {context} curve and the Camelot wheel…",
-    es: "Claude está probando órdenes contra la curva ideal de {context} y la rueda de Camelot…",
+    en: "Testing orders against the ideal {context} curve and the Camelot wheel…",
+    es: "Probando órdenes contra la curva ideal de {context} y la rueda de Camelot…",
   },
   /**
    * Shown once the model starts committing track ids, which is the only part
@@ -592,34 +606,42 @@ export const ANALYSIS_UI = {
   },
   /**
    * One banner per reason, because the old single string asserted a cause the
-   * server had not established: "Claude didn't answer in time" was shown for a
+   * server had not established: "didn't answer in time" was shown for a
    * missing API key, an invalid answer and a thrown error alike. Every variant
    * ends on the same fact — the local order is real and editable — so a
    * fallback never reads as a dead end.
+   *
+   * Which model does the ordering is deliberately not named. It is a supplier,
+   * it can change, and a DJ has no use for the information — "the AI service"
+   * is both the honest description and the one that stays true.
    */
   smartFallbackBanner: {
     en: "The automatic order was used instead: ascending energy with two deliberate breathers. You can keep editing by hand.",
     es: "Se usó el orden automático: energía ascendente con dos respiros intencionales. Podés seguir editando a mano.",
   },
   smartFallbackTimeout: {
-    en: "Claude didn't answer in time.",
-    es: "Claude no respondió a tiempo.",
+    en: "The AI service is busy right now.",
+    es: "El servicio de IA está ocupado en este momento.",
   },
   smartFallbackNotConfigured: {
-    en: "Smart ordering isn't switched on for this deployment yet.",
-    es: "El orden inteligente todavía no está activado en este despliegue.",
+    en: "AI ordering isn't switched on here yet.",
+    es: "El orden con IA todavía no está activado acá.",
   },
   smartFallbackInvalid: {
-    en: "Claude's answer didn't include every track exactly once, so it was discarded.",
-    es: "La respuesta de Claude no incluía cada track exactamente una vez, así que se descartó.",
+    en: "The AI service left tracks out of its order, so we threw it away.",
+    es: "El servicio de IA se olvidó tracks en su orden, así que lo descartamos.",
+  },
+  smartFallbackTruncated: {
+    en: "The AI service started an order and lost the plot halfway.",
+    es: "El servicio de IA arrancó un orden y se perdió a mitad de camino.",
   },
   smartFallbackRefusal: {
-    en: "Claude declined this request.",
-    es: "Claude rechazó este pedido.",
+    en: "The AI service declined this one.",
+    es: "El servicio de IA rechazó este pedido.",
   },
   smartFallbackError: {
-    en: "Smart ordering hit an error.",
-    es: "El orden inteligente falló.",
+    en: "The AI service is having a moment.",
+    es: "El servicio de IA está teniendo un mal día.",
   },
   /**
    * Sits against the score itself, not in the issue list. An `info` issue below a

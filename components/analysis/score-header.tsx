@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight, AudioLines } from "lucide-react"
+import { ArrowRight, AudioLines, Zap } from "lucide-react"
 
 import { ANALYSIS_UI, formatTemplate } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -39,6 +39,14 @@ interface ScoreHeaderProps {
    * no link is offered — the no-score state still explains itself.
    */
   playlistHref?: string
+  /**
+   * Applies every fix still pending. Absent when there is nothing to bulk
+   * apply — one pending fix already has a button of its own in the panel, and a
+   * second one next to it would just be two names for the same click.
+   */
+  onApplyAll?: () => void
+  /** How many fixes `onApplyAll` would apply. */
+  pendingCount?: number
   locale: SiteLocale
 }
 
@@ -57,6 +65,8 @@ export function ScoreHeader({
   decidableCount,
   decidedCount,
   smartOrdered = false,
+  onApplyAll,
+  pendingCount = 0,
   coverage,
   playlistHref,
   locale,
@@ -201,6 +211,26 @@ export function ScoreHeader({
           })}
         </span>
       </div>
+
+      {onApplyAll && pendingCount > 1 ? (
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <button
+            type="button"
+            onClick={onApplyAll}
+            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#A24DE0] to-[#22D3EE] px-4 py-1.5 text-[12.5px] font-semibold text-white transition hover:brightness-110"
+          >
+            <Zap aria-hidden className="size-3.5" />
+            {formatTemplate(ANALYSIS_UI.applyAllCta[locale], {
+              count: pendingCount,
+            })}
+          </button>
+          <span className="text-[11px] text-ec-text-dim">
+            {formatTemplate(ANALYSIS_UI.applyAllHint[locale], {
+              count: pendingCount,
+            })}
+          </span>
+        </div>
+      ) : null}
     </section>
   )
 }

@@ -157,6 +157,7 @@ const FALLBACK_REASON_COPY: Record<
   timeout: ANALYSIS_UI.smartFallbackTimeout,
   not_configured: ANALYSIS_UI.smartFallbackNotConfigured,
   invalid_answer: ANALYSIS_UI.smartFallbackInvalid,
+  truncated: ANALYSIS_UI.smartFallbackTruncated,
   refusal: ANALYSIS_UI.smartFallbackRefusal,
   error: ANALYSIS_UI.smartFallbackError,
 }
@@ -316,6 +317,24 @@ export function AnalysisWorkbench({
     setApplied((current) => {
       const next = new Set(current)
       next.delete(fixId)
+      return next
+    })
+  }, [])
+
+  /**
+   * Applies every fix the DJ hasn't ruled on yet, in one click.
+   *
+   * Pending only: a fix they left as-is is a decision, and a bulk action that
+   * silently overrides it would make "It's fine — leave it" mean nothing. Same
+   * sequential derivation as clicking each one, so the result is identical to
+   * the trip through the panel it replaces — and just as reversible.
+   */
+  const applyAllFixes = useCallback((fixIds: string[]) => {
+    setApplied((current) => {
+      const next = new Set(current)
+      for (const id of fixIds) {
+        next.add(id)
+      }
       return next
     })
   }, [])
@@ -765,6 +784,8 @@ export function AnalysisWorkbench({
       <ScoreHeader
         currentScore={currentScore}
         potentialScore={potential}
+        onApplyAll={() => applyAllFixes(navigable.map((fix) => fix.id))}
+        pendingCount={navigable.length}
         gainedPoints={gainedPoints}
         totalPoints={totalPoints}
         remainingCount={remainingCount}

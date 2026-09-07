@@ -378,3 +378,62 @@ describe("deriveFixes", () => {
     expect(derive(issues)[0].id).toBe("abrupt_drop-4.5")
   })
 })
+
+/**
+ * "Apply all": the DJ collects the potential score in one click instead of
+ * three trips through the fix panel.
+ *
+ * The invariant that makes it safe to offer is that it changes nothing about
+ * how fixes compose — it is the same sequential derivation, with a bigger set.
+ * If applying all ever diverged from applying each in turn, the button would be
+ * promising a score the panel can't reproduce.
+ */
+describe("applying every pending fix at once", () => {
+  const original = ["a", "b", "c", "d", "e"]
+  const fixes = [
+    fix({ id: "f1", operations: [{ trackId: "e", toIndex: 0 }] }),
+    fix({ id: "f2", operations: [{ trackId: "b", toIndex: 4 }] }),
+    fix({ id: "f3", operations: [{ trackId: "c", toIndex: 1 }] }),
+  ]
+
+  it("lands on the same order as applying them one at a time", () => {
+    let stepwise = original
+    for (const single of fixes) {
+      stepwise = deriveOrder(stepwise, [single], new Set([single.id]))
+    }
+
+    const atOnce = deriveOrder(original, fixes, new Set(["f1", "f2", "f3"]))
+
+    expect(atOnce).toEqual(stepwise)
+  })
+
+  it("leaves a fix the DJ decided against alone", () => {
+    // The whole reason "apply all" applies only PENDING fixes: overriding an
+    // explicit "It's fine — leave it" would make that button mean nothing.
+    const { pending } = partitionFixes(fixes, new Set(), new Set(["f2"]))
+
+    expect(pending.map((f) => f.id)).toEqual(["f1", "f3"])
+
+    const applied = new Set(pending.map((f) => f.id))
+    expect(deriveOrder(original, fixes, applied)).toEqual(
+      deriveOrder(original, fixes, new Set(["f1", "f3"]))
+    )
+  })
+
+  it("keeps fixes already applied applied", () => {
+    const { pending } = partitionFixes(fixes, new Set(["f1"]), new Set())
+    const after = new Set(["f1", ...pending.map((f) => f.id)])
+
+    expect([...after].sort()).toEqual(["f1", "f2", "f3"])
+  })
+
+  it("is a no-op when nothing is pending", () => {
+    const { pending } = partitionFixes(
+      fixes,
+      new Set(["f1"]),
+      new Set(["f2", "f3"])
+    )
+
+    expect(pending).toEqual([])
+  })
+})

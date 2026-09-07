@@ -1077,7 +1077,7 @@ const siteCopy: SiteCopySchema = {
       },
       {
         key: "ai_ordering",
-        capability: { en: "AI ordering (Claude)", es: "Ordenamiento con IA (Claude)" },
+        capability: { en: "AI ordering", es: "Ordenamiento con IA" },
         free: { en: "1 / month", es: "1 / mes" },
         pro: { en: "3 / month", es: "3 / mes" },
         proPlus: { en: "Unlimited", es: "Ilimitado" },

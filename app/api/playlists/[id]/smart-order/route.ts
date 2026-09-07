@@ -63,6 +63,8 @@ export type FallbackReason =
   | "timeout"
   /** It answered, but not with every track id exactly once. */
   | "invalid_answer"
+  /** It ran out of output budget mid-answer, so the JSON is incomplete. */
+  | "truncated"
   /** Safety classifiers declined the request. */
   | "refusal"
   /** Anything else — logged with the real error. */
@@ -212,7 +214,15 @@ async function claudeOrder(
   const stream = client.messages.stream(
     {
       model: process.env.SMART_ORDER_MODEL || "claude-opus-5",
-      max_tokens: 16000,
+      /**
+       * Reasoning tokens are output tokens, so they draw from this budget too —
+       * and on this model thinking is on by default. At 16000 a long think plus
+       * a 26-id array plus the rationale could reach the cap, and a truncated
+       * answer is not a JSON document: it hit `JSON.parse` and surfaced as a
+       * generic error. There is no per-request cost to a ceiling that isn't
+       * reached, and this call streams, so nothing here risks an HTTP timeout.
+       */
+      max_tokens: 64000,
       /**
        * `effort` matters here, and its absence was the other half of the
        * timeouts. On Claude Opus 5 thinking is ON by default and the default
@@ -284,16 +294,40 @@ async function claudeOrder(
     return { ok: false, reason: "refusal" }
   }
 
+  // A capped or context-exceeded answer is a partial JSON document. Named
+  // rather than parsed: feeding it to JSON.parse throws, and a thrown parse
+  // error reported as "something went wrong" is how this failure hid.
+  if (
+    response.stop_reason === "max_tokens" ||
+    response.stop_reason === "model_context_window_exceeded"
+  ) {
+    logInfo("smart_order.answer_truncated", {
+      stopReason: response.stop_reason,
+      maxTokens: 64000,
+      outputTokens: response.usage?.output_tokens ?? null,
+    })
+
+    return { ok: false, reason: "truncated" }
+  }
+
   const text = response.content.find((block) => block.type === "text")?.text
 
   if (!text) {
     return { ok: false, reason: "invalid_answer" }
   }
 
-  const parsed = JSON.parse(text) as {
+  let parsed: {
     order?: unknown
     rationale?: unknown
     breathers?: unknown
+  }
+
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    // Structured outputs make this close to impossible, which is exactly why it
+    // must not be the branch that swallows every other failure.
+    return { ok: false, reason: "invalid_answer" }
   }
 
   const ids = new Set(tracks.map((track) => track.id))
@@ -493,6 +527,10 @@ export async function POST(
           logError("smart_order.claude_failed", error, {
             profileId: profile.id,
             playlistId: playlist.id,
+            // The two fields that name the cause without a debugger: a 400 is
+            // a request we built wrong, a 401 is a bad key, a 529 is upstream.
+            status: error instanceof Anthropic.APIError ? error.status : null,
+            errorName: error instanceof Error ? error.name : null,
           })
         }
 
