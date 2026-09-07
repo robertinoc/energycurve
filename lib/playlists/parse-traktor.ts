@@ -1,13 +1,18 @@
 import { XMLParser } from "fast-xml-parser"
 
 import { musicalKeyValueToOpenKey } from "@/lib/music/camelot"
+import { readEnergyTag } from "@/lib/playlists/energy-tag"
 import {
-  extractEnergyFromComment,
   parseBpm,
   parseDurationSeconds,
   type ImportedTrack,
   type ParsedImport,
 } from "@/lib/playlists/imported-track"
+import {
+  extractCollectionElements,
+  extractSourceHeader,
+  payloadsByIndex,
+} from "@/lib/playlists/source-entry"
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -22,6 +27,17 @@ interface RawEntry {
   INFO?: {
     "@_GENRE"?: string
     "@_COMMENT"?: string
+    /** Traktor's second comment field, shown as "Comment 2" in the browser. */
+    "@_COMMENT2"?: string
+    /**
+     * Real 3.5.1 fields, and the two the alpha user guessed at when he asked
+     * where to put an energy value ("comment o Lyrics o Producer …"). Present
+     * on 78 and 32 entries respectively in the collection this was measured
+     * against, so they are used, and worth reading.
+     */
+    "@_KEY_LYRICS"?: string
+    "@_PRODUCER"?: string
+    "@_LABEL"?: string
     "@_KEY"?: string
     "@_PLAYTIME"?: string
     "@_PERCEIVED_DB"?: string
@@ -89,10 +105,20 @@ function resolveKey(raw: RawEntry): string | null {
   return musicalKeyValueToOpenKey(Number.parseInt(String(numeric), 10))
 }
 
-function toImportedTrack(raw: RawEntry): ImportedTrack {
+function toImportedTrack(
+  raw: RawEntry,
+  sourcePayload: string | null
+): ImportedTrack {
   const artist = (raw["@_ARTIST"] ?? "").trim()
   const name = (raw["@_TITLE"] ?? "").trim()
   const comment = raw.INFO?.["@_COMMENT"] ?? null
+  const energy = readEnergyTag({
+    comment,
+    comment2: raw.INFO?.["@_COMMENT2"],
+    lyrics: raw.INFO?.["@_KEY_LYRICS"],
+    producer: raw.INFO?.["@_PRODUCER"],
+    label: raw.INFO?.["@_LABEL"],
+  })
 
   return {
     artist,
@@ -100,11 +126,14 @@ function toImportedTrack(raw: RawEntry): ImportedTrack {
     bpm: parseBpm(raw.TEMPO?.["@_BPM"]),
     key: resolveKey(raw),
     genre: (raw.INFO?.["@_GENRE"] ?? "").trim() || null,
-    energy: extractEnergyFromComment(comment),
+    energy: energy?.value ?? null,
+    energySource: energy?.field ?? null,
     sourceUri: locationKey(raw.LOCATION),
     comment: (comment ?? "").trim() || null,
     durationSeconds: parseDurationSeconds(raw.INFO?.["@_PLAYTIME"]),
     perceivedDb: parsePerceivedDb(raw.INFO?.["@_PERCEIVED_DB"]),
+    sourcePayload,
+    sourcePayloadFormat: sourcePayload ? "traktor_nml" : null,
   }
 }
 
@@ -161,6 +190,18 @@ export function parseTraktor(xml: string): ParsedImport {
     }
   }
 
+  // The verbatim <ENTRY> slices, paired to the parsed entries by document
+  // order (see source-entry.ts for why order and not key matching).
+  const payloadAt = payloadsByIndex(
+    collectionEntries.length,
+    extractCollectionElements(xml, "ENTRY")
+  )
+  const positionOf = new Map<RawEntry, number>()
+
+  collectionEntries.forEach((entry, index) => {
+    positionOf.set(entry, index)
+  })
+
   let ordered: RawEntry[] = []
   let playlistName: string | null = null
 
@@ -182,12 +223,24 @@ export function parseTraktor(xml: string): ParsedImport {
   const source = ordered.length > 0 ? ordered : collectionEntries
 
   const tracks = source
-    .map(toImportedTrack)
+    .map((entry) => {
+      const position = positionOf.get(entry)
+
+      return toImportedTrack(
+        entry,
+        position === undefined ? null : payloadAt(position)
+      )
+    })
     .filter((t) => t.artist || t.name)
 
   if (tracks.length === 0) {
     throw new Error("No tracks found in the Traktor export.")
   }
 
-  return { source: "traktor", playlistName, tracks }
+  return {
+    source: "traktor",
+    playlistName,
+    tracks,
+    sourceHeader: extractSourceHeader(xml, "traktor_nml"),
+  }
 }

@@ -1,5 +1,5 @@
+import { readEnergyTag } from "@/lib/playlists/energy-tag"
 import {
-  extractEnergyFromComment,
   parseBpm,
   parseDurationSeconds,
   type ImportedTrack,
@@ -83,10 +83,26 @@ export interface AudioTagSource {
     key?: string
     genre?: string[]
     comment?: Array<{ text?: string } | string>
+    /**
+     * The other fields DJs put an energy value in. Lexicon DJ can write to any
+     * of them, and the alpha user who asked "which tag?" was using Lexicon —
+     * so reading only the comment answered his question with "the wrong one".
+     */
+    grouping?: string
+    composer?: string[]
+    lyrics?: Array<{ text?: string } | string>
   }
   format: {
     duration?: number
   }
+  /**
+   * Container-native frames, keyed by format ("ID3v2.4", "vorbis", "iTunes").
+   * Read for a dedicated ENERGY field: ID3 `TXXX:ENERGY`, the Vorbis `ENERGY`
+   * comment, and the iTunes `----:com.apple.iTunes:ENERGY` atom. `common`
+   * doesn't surface any of them, so a file tagged the tidy way — a field named
+   * for the job, holding just the number — looked untagged.
+   */
+  native?: Record<string, Array<{ id?: string; value?: unknown }>>
 }
 
 /**
@@ -126,20 +142,58 @@ export function splitFilenameToArtistTitle(fileName: string): {
   return { artist: "", name: stem }
 }
 
-/** Flattens music-metadata's comment field (string[] or IComment[]) to text. */
-function commentText(
-  comment: AudioTagSource["common"]["comment"]
+/** Flattens music-metadata's comment/lyrics fields (string[] or {text}[]). */
+function joinTextEntries(
+  entries: Array<{ text?: string } | string> | undefined
 ): string | null {
-  if (!comment || comment.length === 0) {
+  if (!entries || entries.length === 0) {
     return null
   }
 
-  const parts = comment
+  const parts = entries
     .map((entry) => (typeof entry === "string" ? entry : (entry.text ?? "")))
     .map((text) => text.trim())
     .filter(Boolean)
 
   return parts.length > 0 ? parts.join(" ") : null
+}
+
+/** Reads a frame whose own name says "energy", whatever the container calls it. */
+function energyFrameText(tags: AudioTagSource | null): string | null {
+  for (const frames of Object.values(tags?.native ?? {})) {
+    for (const frame of frames) {
+      const id = String(frame.id ?? "")
+      const value = frame.value
+
+      // A TXXX frame carries its real name in the value's description, so the
+      // id alone ("TXXX") doesn't say what it holds.
+      const described =
+        value && typeof value === "object"
+          ? String((value as { description?: unknown }).description ?? "")
+          : ""
+
+      if (!/energy/i.test(id) && !/energy/i.test(described)) {
+        continue
+      }
+
+      const text =
+        typeof value === "string"
+          ? value
+          : value && typeof value === "object"
+            ? String(
+                (value as { text?: unknown }).text ??
+                  (value as { value?: unknown }).value ??
+                  ""
+              )
+            : String(value ?? "")
+
+      if (text.trim()) {
+        return text
+      }
+    }
+  }
+
+  return null
 }
 
 /**
@@ -161,7 +215,14 @@ export function audioTagsToImportedTrack(
     tags?.common.artists?.[0]?.trim() ||
     fallback.artist
   const name = tags?.common.title?.trim() || fallback.name
-  const comment = commentText(tags?.common.comment)
+  const comment = joinTextEntries(tags?.common.comment)
+  const energy = readEnergyTag({
+    energy_frame: energyFrameText(tags),
+    comment,
+    grouping: tags?.common.grouping,
+    lyrics: joinTextEntries(tags?.common.lyrics),
+    composer: tags?.common.composer?.[0],
+  })
 
   return {
     artist,
@@ -169,7 +230,8 @@ export function audioTagsToImportedTrack(
     bpm: parseBpm(tags?.common.bpm ?? null),
     key: tags?.common.key?.trim() || null,
     genre: tags?.common.genre?.[0]?.trim() || null,
-    energy: extractEnergyFromComment(comment),
+    energy: energy?.value ?? null,
+    energySource: energy?.field ?? null,
     sourceUri: relativePath?.trim() || fileName,
     comment,
     durationSeconds: parseDurationSeconds(tags?.format.duration),

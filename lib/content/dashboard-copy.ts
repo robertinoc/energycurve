@@ -486,8 +486,22 @@ export const DASHBOARD_COPY = {
     headerArtist: { en: "Artist", es: "Artista" },
     headerTitle: { en: "Title", es: "Título" },
     headerBpm: { en: "BPM", es: "BPM" },
-    headerCamelot: { en: "Camelot", es: "Camelot" },
     headerKey: { en: "Key", es: "Key" },
+    /**
+     * One Key column in the notation the DJ reads, switched from its own
+     * header. Was two columns — Camelot and the raw imported string — which
+     * showed the same key twice and still made an Open Key reader translate.
+     */
+    keyNotationAria: {
+      en: "Change key notation (currently {current})",
+      es: "Cambiar la notación de key (ahora {current})",
+    },
+    keyNotationCamelot: { en: "Camelot", es: "Camelot" },
+    keyNotationOpenKey: { en: "Open Key", es: "Open Key" },
+    keyNotationMusical: { en: "Musical", es: "Musical" },
+    keyNotationAsImported: { en: "As imported", es: "Como se importó" },
+    /** Tooltip on a cell, so the DJ can always see their own value. */
+    keyAsImported: { en: "In your library: {value}", es: "En tu librería: {value}" },
     headerComment: { en: "Comment", es: "Comentario" },
     fieldArtist: { en: "Artist", es: "Artista" },
     fieldTrack: { en: "Track", es: "Track" },
@@ -552,7 +566,20 @@ export const DASHBOARD_COPY = {
     readsLabel: { en: "We read for you", es: "Leemos por vos" },
     readKey: { en: "Key → Camelot", es: "Key → Camelot" },
     readGenres: { en: "Genre tags", es: "Tags de género" },
-    readMik: { en: "Mixed In Key energy", es: "Energía de Mixed In Key" },
+    /**
+     * Was "Mixed In Key energy", which was both too narrow and the reason an
+     * alpha user had to ask which tag we read: he tags with Lexicon DJ.
+     */
+    readEnergy: { en: "Energy tags", es: "Tags de energía" },
+    readEnergyHelp: {
+      en: "Which tag, and in what format",
+      es: "En qué tag y con qué formato",
+    },
+    /** Said before the upload, not after: M3U8 carries almost nothing. */
+    m3u8Heads: {
+      en: "Rekordbox XML, Traktor NML and the .txt export carry all of this. An M3U8 carries only file paths and track lengths — no BPM, key, genre or energy.",
+      es: "El XML de Rekordbox, el NML de Traktor y el export .txt traen todo esto. Un M3U8 sólo trae rutas de archivo y duraciones — sin BPM, key, género ni energía.",
+    },
     setContext: { en: "Set context", es: "Contexto del set" },
     genre: { en: "Genre", es: "Género" },
     autoDetect: { en: "Auto-detect from file", es: "Auto-detectar del archivo" },
@@ -833,6 +860,81 @@ export const DASHBOARD_COPY = {
       en: "Tracks will show as missing in this format",
       es: "Los tracks van a aparecer como missing en este formato",
     },
+    /**
+     * Shown when we still hold the library entries this playlist was imported
+     * from, so the native export can hand them back untouched. Said out loud
+     * because the previous behaviour cost people hotcues, and someone who has
+     * been burned once needs to see that it changed.
+     */
+    preservedTitle: {
+      en: "Your track data comes back untouched",
+      es: "Tus datos de los tracks vuelven intactos",
+    },
+    preservedBody: {
+      en: "Only the order changes. Hotcues, cue points, comments, ratings, album and label tags and the analysis are written back exactly as they came out of your library.",
+      es: "Sólo cambia el orden. Hotcues, cue points, comentarios, ratings, tags de álbum y sello y el análisis se escriben tal como salieron de tu librería.",
+    },
+    /** The one write into the DJ's library we offer, and never by default. */
+    writeEnergyLabel: {
+      en: "Also write energy into the comment tag",
+      es: "Escribir también la energía en el tag de comentario",
+    },
+    writeEnergyHint: {
+      en: "Off by default — this changes a tag in your library. With it on, an existing \"Energy N\" is updated in place and any other comment text is kept.",
+      es: "Apagado por defecto — esto cambia un tag en tu librería. Si lo activás, un \"Energy N\" existente se actualiza en el lugar y el resto del comentario se conserva.",
+    },
+  },
+
+  /**
+   * Shown once, right after an import: what came through, what didn't, and
+   * whether the file format could have carried it.
+   *
+   * Exists because an alpha user imported an M3U8, got no BPM, key, genre or
+   * duration, and reasonably concluded the reader was broken. Extended M3U
+   * carries a path and a duration and nothing else — the product knew that and
+   * said nothing, which is the actual defect.
+   */
+  importSummary: {
+    title: { en: "What we read from your file", es: "Qué leímos de tu archivo" },
+    tracks: { en: "{count} tracks", es: "{count} tracks" },
+    ofTracks: { en: "{count} of {total}", es: "{count} de {total}" },
+    all: { en: "all {total}", es: "las {total}" },
+    none: { en: "none", es: "ninguno" },
+    bpm: { en: "BPM", es: "BPM" },
+    key: { en: "Key", es: "Key" },
+    genre: { en: "Genre", es: "Género" },
+    energy: { en: "Energy", es: "Energía" },
+    duration: { en: "Length", es: "Duración" },
+    /** Said instead of a count when the format can't express the field at all. */
+    unsupported: {
+      en: "not in this format",
+      es: "no existe en este formato",
+    },
+    m3u8Note: {
+      en: "An M3U8 only carries file paths and track lengths — there is no BPM, key, genre or energy in the format itself, so there was nothing for us to read. To bring those across, export the same playlist as Rekordbox XML or Traktor NML, or import the audio files directly.",
+      es: "Un M3U8 sólo lleva rutas de archivo y duraciones — el formato no tiene BPM, key, género ni energía, así que no había nada que leer. Para traer todo eso, exportá la misma playlist como XML de Rekordbox o NML de Traktor, o importá los archivos de audio directamente.",
+    },
+    energyFrom: {
+      en: "Energy read from the {field} tag.",
+      es: "La energía se leyó del tag {field}.",
+    },
+    energyFromMixed: {
+      en: "Energy read from more than one tag: {fields}.",
+      es: "La energía se leyó de más de un tag: {fields}.",
+    },
+    noEnergyTitle: {
+      en: "No energy values found in your tags",
+      es: "No encontramos valores de energía en tus tags",
+    },
+    noEnergyBody: {
+      en: "We look in a field named ENERGY, then the comment, grouping, lyrics, producer and composer fields. The analysis still works — it estimates from BPM, genre and position — but real values make it sharper.",
+      es: "Buscamos en un campo llamado ENERGY, y después en comentario, grouping, lyrics, producer y composer. El análisis funciona igual — estima por BPM, género y posición — pero con valores reales es más preciso.",
+    },
+    energyDocsLink: {
+      en: "Where to put your energy values",
+      es: "Dónde poner la energía",
+    },
+    dismiss: { en: "Got it", es: "Entendido" },
   },
 
   deleteButton: {

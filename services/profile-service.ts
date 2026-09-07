@@ -1,6 +1,11 @@
 import "server-only"
 
 import { toSiteLocale } from "@/lib/analysis-locale"
+import {
+  DEFAULT_KEY_NOTATION,
+  isKeyNotation,
+  type KeyNotation,
+} from "@/lib/music/camelot"
 import { logError } from "@/lib/observability/logger"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
@@ -114,4 +119,50 @@ export async function getLocaleByEmail(email: string): Promise<SiteLocale> {
     .maybeSingle()
 
   return toSiteLocale(data?.preferred_locale ?? undefined)
+}
+
+/**
+ * Which key notation this DJ reads.
+ *
+ * A display preference, written only when they pick one from the tracklist
+ * header. Failures are swallowed for the same reason `updatePreferredLocale`
+ * swallows its own: the switcher's job is to change what the column shows, and
+ * making it look broken because a write failed is the worse outcome. Their
+ * choice already took effect on screen before this ran.
+ */
+export async function updateKeyNotation(
+  profileId: string,
+  notation: KeyNotation
+): Promise<void> {
+  const supabase = getSupabaseAdminClient()
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ key_notation: notation })
+    .eq("id", profileId)
+
+  if (error) {
+    logError("profile.key_notation_update_failed", error, { profileId })
+  }
+}
+
+/**
+ * The notation to render keys in for this DJ.
+ *
+ * Camelot when they never chose, which is what the product showed before the
+ * preference existed — so nobody's tracklist changes underneath them on the
+ * day this ships.
+ */
+export async function getProfileKeyNotation(
+  profileId: string
+): Promise<KeyNotation> {
+  const supabase = getSupabaseAdminClient()
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("key_notation")
+    .eq("id", profileId)
+    .maybeSingle()
+
+  return isKeyNotation(data?.key_notation) ? data.key_notation : DEFAULT_KEY_NOTATION
 }

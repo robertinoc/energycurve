@@ -69,6 +69,15 @@ export interface TrackWriteInput {
   /** Perceived loudness in dB (Traktor PERCEIVED_DB) — energy signal (B19). */
   perceivedDb?: number | null
   /**
+   * The verbatim library entry this track was imported from, re-emitted on
+   * export so a re-import can't strip hotcues, loops, the analysis fingerprint
+   * or any other field we don't model. See lib/playlists/source-entry.ts.
+   */
+  sourcePayload?: string | null
+  sourcePayloadFormat?: string | null
+  /** Which tag the energy was read from, so the UI can attribute the number. */
+  energySource?: string | null
+  /**
    * Spectral measurements taken from the track's own audio, when it was analysed
    * in the browser. Null/absent means never analysed — which the energy scorer
    * has to distinguish from "analysed and quiet".

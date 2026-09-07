@@ -29,6 +29,11 @@ export interface PlaylistCreateData {
   context: PlaylistContext
   /** How the playlist was imported, so exports can default to that format. */
   importSource?: string | null
+  /**
+   * The source file's root/header elements, kept verbatim so a re-export
+   * declares the version that came in rather than a hardcoded one.
+   */
+  sourceHeader?: unknown
   /** Display-only custom taxonomy links ("behaves like" model). */
   customContextId?: string | null
   customGenreId?: string | null
@@ -130,6 +135,7 @@ export async function createPlaylist(
       genre: input.genre,
       context: input.context,
       import_source: input.importSource ?? null,
+      source_header: (input.sourceHeader ?? null) as Json,
       custom_context_id: input.customContextId ?? null,
       custom_genre_id: input.customGenreId ?? null,
     })
@@ -416,6 +422,9 @@ export async function addTrack(
       comment: input.comment ?? null,
       duration_seconds: input.durationSeconds ?? null,
       perceived_db: input.perceivedDb ?? null,
+      source_payload: input.sourcePayload ?? null,
+      source_payload_format: input.sourcePayloadFormat ?? null,
+      energy_source: input.energySource ?? null,
       // Cast at the jsonb boundary, same as `anchors` in curve-template-service:
       // a structured interface has no index signature, so it isn't `Json` by
       // assignment. It was validated by parseTrackAudioFeatures on the way in.
@@ -710,8 +719,11 @@ export async function replaceTracks(
       genre: track.genre ?? null,
       comment: track.comment ?? null,
       duration_seconds: track.durationSeconds ?? null,
-        perceived_db: track.perceivedDb ?? null,
-        audio_features: (track.audioFeatures ?? null) as unknown as Json,
+      perceived_db: track.perceivedDb ?? null,
+      source_payload: track.sourcePayload ?? null,
+      source_payload_format: track.sourcePayloadFormat ?? null,
+      energy_source: track.energySource ?? null,
+      audio_features: (track.audioFeatures ?? null) as unknown as Json,
     }))
   )
 

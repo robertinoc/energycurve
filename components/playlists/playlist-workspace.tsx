@@ -9,6 +9,7 @@ import { TrackTable, type TrackEnergyView } from "@/components/playlists/track-t
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/ui/toast"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import type { KeyNotation } from "@/lib/music/camelot"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   estimatedPointIndices,
@@ -36,6 +37,8 @@ interface PlaylistWorkspaceProps {
   targetShape: CurveShape | null
   tracks: Track[]
   locale: SiteLocale
+  /** The key notation this DJ reads, from their profile. */
+  keyNotation?: KeyNotation
 }
 
 function sameOrder(a: Track[], b: Track[]): boolean {
@@ -49,6 +52,7 @@ export function PlaylistWorkspace({
   targetShape,
   tracks,
   locale,
+  keyNotation,
 }: PlaylistWorkspaceProps) {
   const copy = DASHBOARD_COPY.workspace
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
@@ -226,6 +230,7 @@ export function PlaylistWorkspace({
         onHover={setHoveredIndex}
         onReorder={handleReorder}
         locale={locale}
+        keyNotation={keyNotation}
       />
 
       {/* Set stats moved to the page header, next to the genre/context badges

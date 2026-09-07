@@ -13,6 +13,7 @@ import { notFound, redirect } from "next/navigation"
 
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
 import { PlaylistHeaderEdit } from "@/components/playlists/playlist-header-edit"
+import { ImportSummary } from "@/components/playlists/import-summary"
 import { PlaylistStatsPills } from "@/components/playlists/playlist-stats-pills"
 import { PlaylistWorkspace } from "@/components/playlists/playlist-workspace"
 import { TransitionList } from "@/components/playlists/transition-list"
@@ -35,6 +36,11 @@ import {
   DASHBOARD_COPY,
 } from "@/lib/content/dashboard-copy"
 import type { ExportPlaylist } from "@/lib/playlists/export"
+import { importCoverage } from "@/lib/playlists/import-coverage"
+import {
+  isSourcePayloadFormat,
+  parseSourceHeader,
+} from "@/lib/playlists/source-entry"
 import {
   GENRE_LABELS,
   parseCurveShape,
@@ -48,7 +54,10 @@ import { can } from "@/lib/product/capabilities"
 import { SITE_URL } from "@/lib/seo"
 import { getRequestLocale } from "@/lib/server-locale"
 import { cn } from "@/lib/utils"
-import { syncProfileFromWorkOSUser } from "@/services/profile-service"
+import {
+  getProfileKeyNotation,
+  syncProfileFromWorkOSUser,
+} from "@/services/profile-service"
 import { getProfileBilling } from "@/services/billing-service"
 import { isTitleLookupConfigured } from "@/services/title-lookup-service"
 import {
@@ -68,10 +77,16 @@ export const dynamic = "force-dynamic"
 
 export default async function PlaylistDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ imported?: string }>
 }) {
   const { id } = await params
+  // Set by the import redirect. The summary is shown once, on arrival, rather
+  // than living on the page forever — it answers "what just happened", and a
+  // week later that is no longer the question.
+  const justImported = (await searchParams).imported === "1"
   const { user } = await withAuth()
 
   if (!user) {
@@ -85,9 +100,10 @@ export default async function PlaylistDetailPage({
     lastName: user.lastName ?? null,
   })
 
-  const [playlist, billing] = await Promise.all([
+  const [playlist, billing, keyNotation] = await Promise.all([
     getOwnedPlaylistWithTracks(profile.id, id),
     getProfileBilling(profile.id),
+    getProfileKeyNotation(profile.id),
   ])
 
   if (!playlist) {
@@ -184,6 +200,7 @@ export default async function PlaylistDetailPage({
   const exportPlaylist: ExportPlaylist = {
     name: playlist.name,
     importSource: playlist.import_source,
+    sourceHeader: parseSourceHeader(playlist.source_header),
     tracks: playlist.tracks.map((track) => ({
       position: track.position,
       artist: track.artist,
@@ -195,6 +212,10 @@ export default async function PlaylistDetailPage({
       genre: track.genre,
       comment: track.comment,
       durationSeconds: track.duration_seconds,
+      sourcePayload: track.source_payload,
+      sourcePayloadFormat: isSourcePayloadFormat(track.source_payload_format)
+        ? track.source_payload_format
+        : null,
     })),
   }
 
@@ -342,6 +363,26 @@ export default async function PlaylistDetailPage({
           </div>
         </header>
 
+        {/* Not for pasted tracklists: a paste has no tags to have read, so
+            "no energy found in your tags" would be an answer to a question
+            nobody asked. */}
+        {justImported && playlist.import_source !== "text" ? (
+          <ImportSummary
+            coverage={importCoverage(
+              playlist.tracks.map((track) => ({
+                bpm: track.bpm,
+                musicalKey: track.musical_key,
+                genre: track.genre,
+                energyScore: track.energy_score,
+                durationSeconds: track.duration_seconds,
+                energySource: track.energy_source,
+              }))
+            )}
+            importSource={playlist.import_source}
+            locale={locale}
+          />
+        ) : null}
+
       {/* Residency warnings, right under the header: they change what the DJ does
           with this set, so they belong above the tracklist rather than below it. */}
       {residency.repeats.length > 0 ? (
@@ -401,6 +442,7 @@ export default async function PlaylistDetailPage({
               name: track.name,
               position: index + 1,
               hasBpm: track.bpm !== null,
+              sourceUri: track.source_uri,
             }))}
             locale={locale}
           />
@@ -468,6 +510,7 @@ export default async function PlaylistDetailPage({
           targetShape={parseCurveShape(playlist.target_shape)}
           tracks={playlist.tracks}
           locale={locale}
+          keyNotation={keyNotation}
         />
     </div>
   )

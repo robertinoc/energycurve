@@ -694,6 +694,7 @@ export async function importPlaylistAction(
       genre,
       context: contextChoice.base,
       importSource: parsed.source,
+      sourceHeader: parsed.sourceHeader ?? null,
       customContextId: contextChoice.customId,
       customGenreId: genreChoice?.customId ?? null,
     })
@@ -713,6 +714,9 @@ export async function importPlaylistAction(
         comment: track.comment,
         durationSeconds: track.durationSeconds,
         perceivedDb: track.perceivedDb ?? null,
+        sourcePayload: track.sourcePayload ?? null,
+        sourcePayloadFormat: track.sourcePayloadFormat ?? null,
+        energySource: track.energySource ?? null,
       }))
     )
   } catch (error) {
@@ -746,7 +750,11 @@ export async function importPlaylistAction(
 
   revalidatePath("/dashboard/playlists")
   revalidatePath("/dashboard")
-  redirect(`/dashboard/playlists/${playlistId}`)
+  // `imported=1` makes the detail page state, once, what the file actually
+  // carried. A format that cannot express BPM or energy has to say so — a wall
+  // of blanks with no explanation reads as a broken reader, which is exactly
+  // how an alpha user read his M3U8 import.
+  redirect(`/dashboard/playlists/${playlistId}?imported=1`)
 }
 
 export interface AudioImportResult {
@@ -804,6 +812,7 @@ export async function importAudioFilesAction(
     key: track.key,
     genre: track.genre,
     energy: track.energy,
+    energySource: track.energySource,
     sourceUri: track.sourceUri,
     comment: track.comment,
     durationSeconds: track.durationSeconds,

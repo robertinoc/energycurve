@@ -128,6 +128,9 @@ export function AudioEnrich({
         key,
         artist: parsedTrack.artist,
         title: parsedTrack.name,
+        // Lets the matcher pair a track by the file it was imported from,
+        // which is the only strong key an M3U8 import has.
+        path: file.webkitRelativePath || file.name,
       })
 
       setProgress({ done: index + 1, total: kept.length })
@@ -146,7 +149,11 @@ export function AudioEnrich({
         reason: match.reason,
         // Title-only matches start unchecked: they're the weaker key, and the
         // whole point of this screen is that the DJ decides on those.
-        included: match.reason === "artist_and_title",
+        // Filename and artist+title matches are both identity-grade, so they
+        // start included. A title-only match is a judgement call and starts
+        // unchecked for the DJ to confirm.
+        included:
+          match.reason === "artist_and_title" || match.reason === "file_path",
       }))
     )
     setPhase("review")

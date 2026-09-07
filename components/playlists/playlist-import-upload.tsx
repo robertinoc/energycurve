@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useRef, useState } from "react"
+import Link from "next/link"
 import { CheckCircle2, UploadCloud } from "lucide-react"
 
 import {
@@ -15,6 +16,7 @@ import {
   type TaxonomyCustomOption,
 } from "@/components/playlists/taxonomy-select"
 import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
+import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { cn } from "@/lib/utils"
 import {
@@ -243,10 +245,10 @@ export function PlaylistImportUpload({
               {COPY.readsLabel[locale]}
             </span>
             {[
-              { label: "BPM", mik: false },
-              { label: COPY.readKey[locale], mik: false },
-              { label: COPY.readGenres[locale], mik: false },
-              { label: COPY.readMik[locale], mik: true },
+              { label: "BPM", energy: false },
+              { label: COPY.readKey[locale], energy: false },
+              { label: COPY.readGenres[locale], energy: false },
+              { label: COPY.readEnergy[locale], energy: true },
             ].map((item) => (
               <span
                 key={item.label}
@@ -255,13 +257,27 @@ export function PlaylistImportUpload({
                 <span
                   className={cn(
                     "size-[5px] rounded-full",
-                    item.mik ? "bg-ec-violet" : "bg-ec-cyan"
+                    item.energy ? "bg-ec-violet" : "bg-ec-cyan"
                   )}
                 />
                 {item.label}
               </span>
             ))}
+            <Link
+              href={localizedPath("/energy-tags", locale)}
+              target="_blank"
+              className="ml-auto text-[11.5px] text-ec-text-dim underline decoration-white/20 underline-offset-2 transition hover:text-white"
+            >
+              {COPY.readEnergyHelp[locale]} →
+            </Link>
           </div>
+
+          {/* Before the upload, not after. Someone who exports an M3U8 and then
+              finds four empty columns concludes the reader is broken — which is
+              exactly what happened to the alpha user who reported it. */}
+          <p className="text-[11.5px] leading-5 text-ec-text-dim">
+            {COPY.m3u8Heads[locale]}
+          </p>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">

@@ -20,6 +20,7 @@ import {
   formatTemplate,
 } from "@/lib/content/analysis-copy"
 import { buildReturnToHref } from "@/lib/auth/return-to"
+import { parseSourceHeader } from "@/lib/playlists/source-entry"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -179,6 +180,7 @@ export default async function PlaylistAnalysisPage({
           playlistId={playlist.id}
           playlistName={playlist.name}
           importSource={playlist.import_source}
+          sourceHeader={parseSourceHeader(playlist.source_header)}
           tracks={playlist.tracks.map((track) => ({
             id: track.id,
             artist: track.artist,
@@ -190,6 +192,8 @@ export default async function PlaylistAnalysisPage({
             genre: track.genre,
             comment: track.comment,
             durationSeconds: track.duration_seconds,
+            sourcePayload: track.source_payload,
+            sourcePayloadFormat: track.source_payload_format,
           }))}
           energies={energies}
           fixes={fixes}

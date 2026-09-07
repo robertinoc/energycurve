@@ -22,7 +22,14 @@ import { energyBarGradient, energyColor } from "@/lib/charts/energy-colors"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
-import { toCamelot } from "@/lib/music/camelot"
+import { rememberKeyNotationAction } from "@/app/dashboard/key-notation-actions"
+import {
+  DEFAULT_KEY_NOTATION,
+  formatKey,
+  keySortIndex,
+  KEY_NOTATIONS,
+  type KeyNotation,
+} from "@/lib/music/camelot"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
 import {
   COLUMN_PREFS_STORAGE_KEY,
@@ -45,7 +52,6 @@ type SortKey =
   | "artist"
   | "title"
   | "bpm"
-  | "camelot"
   | "key"
   | "genre"
   | "duration"
@@ -58,6 +64,11 @@ interface TrackTableProps {
   /** Called with the new track order after a drag or a column sort. */
   onReorder: (tracks: Track[]) => void
   locale: SiteLocale
+  /**
+   * The notation this DJ reads keys in, from their profile. Held as state here
+   * so the header switcher takes effect at once; the write back is best-effort.
+   */
+  keyNotation?: KeyNotation
 }
 
 function formatDuration(seconds: number | null): string {
@@ -335,12 +346,14 @@ function TrackRow({
   onDrop,
   onDragEnd,
   locale,
+  keyNotation,
 }: {
   playlistId: string
   track: Track
   index: number
   energy: TrackEnergyView
   optional: OptionalColumn[]
+  keyNotation: KeyNotation
   colSpan: number
   onHover: (index: number | null) => void
   isDragOver: boolean
@@ -369,7 +382,7 @@ function TrackRow({
     )
   }
 
-  const camelot = toCamelot(track.musical_key)
+  const renderedKey = formatKey(track.musical_key, keyNotation)
 
   return (
     <tr
@@ -429,18 +442,20 @@ function TrackRow({
         {track.bpm !== null ? track.bpm.toFixed(2) : "—"}
       </td>
       <td className="px-3 py-1.5 text-center">
-        {camelot ? (
-          <span className="inline-block min-w-[40px] rounded-md border border-white/14 bg-white/[0.03] px-1.5 py-px text-center font-mono text-[11.5px] font-semibold text-white">
-            {camelot}
-          </span>
-        ) : (
-          <span className="text-white/28">—</span>
-        )}
-      </td>
-      <td className="px-3 py-1.5 text-center">
-        {track.musical_key ? (
-          <span className="inline-block min-w-[40px] rounded-md border border-white/14 bg-white/[0.03] px-1.5 py-px text-center font-mono text-[11.5px] font-semibold text-white">
-            {track.musical_key}
+        {renderedKey ? (
+          <span
+            // The DJ's own string stays reachable on hover, so a converted
+            // value never hides what is actually in their library.
+            title={
+              keyNotation === "as_imported" || renderedKey === track.musical_key
+                ? undefined
+                : formatTemplate(COPY.keyAsImported[locale], {
+                    value: track.musical_key ?? "",
+                  })
+            }
+            className="inline-block min-w-[40px] rounded-md border border-white/14 bg-white/[0.03] px-1.5 py-px text-center font-mono text-[11.5px] font-semibold text-white"
+          >
+            {renderedKey}
           </span>
         ) : (
           <span className="text-white/28">—</span>
@@ -611,12 +626,10 @@ function sortTracks(
         cmp = str(a.track.genre).localeCompare(str(b.track.genre))
         break
       case "key":
-        cmp = str(a.track.musical_key).localeCompare(str(b.track.musical_key))
-        break
-      case "camelot":
-        cmp = str(toCamelot(a.track.musical_key)).localeCompare(
-          str(toCamelot(b.track.musical_key))
-        )
+        // By wheel position, not by the rendered string: "10A" sorts before
+        // "2A" as text, and sorting by key exists to group tracks that mix
+        // together. Same order whatever notation is on screen.
+        cmp = keySortIndex(a.track.musical_key) - keySortIndex(b.track.musical_key)
         break
     }
     return cmp * dir
@@ -626,33 +639,88 @@ function sortTracks(
 }
 
 function SortHeader({
-  label,
-  sortKey,
-  active,
-  dir,
-  onSort,
   className,
-}: {
+  ...props
+}: SortHeaderButtonProps & { className?: string }) {
+  return (
+    <th className={className}>
+      <SortHeaderButton {...props} />
+    </th>
+  )
+}
+
+interface SortHeaderButtonProps {
   label: string
   sortKey: SortKey
   active: boolean
   dir: 1 | -1
   onSort: (key: SortKey) => void
-  className?: string
-}) {
+}
+
+/** The button on its own, for the Key header which also carries the notation
+ * switcher and therefore owns its own <th>. */
+function SortHeaderButton({
+  label,
+  sortKey,
+  active,
+  dir,
+  onSort,
+}: SortHeaderButtonProps) {
   return (
-    <th className={className}>
-      <button
-        type="button"
-        onClick={() => onSort(sortKey)}
-        className="inline-flex items-center gap-1 uppercase tracking-[0.13em] hover:text-white/70"
-      >
-        {label}
-        {active ? (
-          <span className="text-[#A24DE0]">{dir > 0 ? "▲" : "▼"}</span>
-        ) : null}
-      </button>
-    </th>
+    <button
+      type="button"
+      onClick={() => onSort(sortKey)}
+      className="inline-flex items-center gap-1 uppercase tracking-[0.13em] hover:text-white/70"
+    >
+      {label}
+      {active ? (
+        <span className="text-[#A24DE0]">{dir > 0 ? "▲" : "▼"}</span>
+      ) : null}
+    </button>
+  )
+}
+
+/** Human name for each notation, for the button face and its aria-label. */
+const NOTATION_LABELS: Record<KeyNotation, keyof typeof COPY> = {
+  camelot: "keyNotationCamelot",
+  open_key: "keyNotationOpenKey",
+  musical: "keyNotationMusical",
+  as_imported: "keyNotationAsImported",
+}
+
+/**
+ * Cycles the key notation, from the header of the column it changes.
+ *
+ * Put here rather than in a settings screen because this is where someone
+ * notices they can't read the column. It shows the notation it is currently in,
+ * so the button doubles as the label for what you're looking at.
+ */
+function KeyNotationToggle({
+  notation,
+  onChange,
+  locale,
+}: {
+  notation: KeyNotation
+  onChange: (next: KeyNotation) => void
+  locale: SiteLocale
+}) {
+  const current = COPY[NOTATION_LABELS[notation]][locale]
+
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        onChange(
+          KEY_NOTATIONS[
+            (KEY_NOTATIONS.indexOf(notation) + 1) % KEY_NOTATIONS.length
+          ]
+        )
+      }
+      aria-label={formatTemplate(COPY.keyNotationAria[locale], { current })}
+      className="rounded border border-white/12 px-1 py-px text-[8.5px] font-medium uppercase tracking-[0.1em] text-white/38 transition hover:border-white/25 hover:text-white/70"
+    >
+      {current}
+    </button>
   )
 }
 
@@ -665,8 +733,10 @@ export function TrackTable({
   onHover,
   onReorder,
   locale,
+  keyNotation: initialKeyNotation = DEFAULT_KEY_NOTATION,
 }: TrackTableProps) {
   const [optional, setOptional] = useState<OptionalColumn[]>([])
+  const [keyNotation, setNotation] = useState<KeyNotation>(initialKeyNotation)
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
@@ -693,6 +763,18 @@ export function TrackTable({
     })
   }
 
+  /**
+   * Switch the column now, remember it in the background.
+   *
+   * Not awaited and not error-handled here: the notation is already on screen,
+   * and a failed write costs the preference on the next page load rather than
+   * the change the DJ just made.
+   */
+  function setKeyNotation(next: KeyNotation) {
+    setNotation(next)
+    void rememberKeyNotationAction(next)
+  }
+
   function handleSort(key: SortKey) {
     const dir: 1 | -1 = sort && sort.key === key && sort.dir === 1 ? -1 : 1
     setSort({ key, dir })
@@ -714,8 +796,8 @@ export function TrackTable({
     onReorder(next)
   }
 
-  // base columns: handle, #, energy, artist, title, bpm, camelot, key = 8
-  const colSpan = 8 + optional.length + 1
+  // base columns: handle, #, energy, artist, title, bpm, key = 7
+  const colSpan = 7 + optional.length + 1
 
   return (
     <div className="overflow-hidden rounded-[16px] border border-ec-border bg-[#0C0917]">
@@ -751,8 +833,16 @@ export function TrackTable({
                 <SortHeader label={COPY.headerArtist[locale]} sortKey="artist" active={sort?.key === "artist"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
                 <SortHeader label={COPY.headerTitle[locale]} sortKey="title" active={sort?.key === "title"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
                 <SortHeader label={COPY.headerBpm[locale]} sortKey="bpm" active={sort?.key === "bpm"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-right" />
-                <SortHeader label={COPY.headerCamelot[locale]} sortKey="camelot" active={sort?.key === "camelot"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-center" />
-                <SortHeader label={COPY.headerKey[locale]} sortKey="key" active={sort?.key === "key"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2 text-center" />
+                <th className="px-3 py-2 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <SortHeaderButton label={COPY.headerKey[locale]} sortKey="key" active={sort?.key === "key"} dir={sort?.dir ?? 1} onSort={handleSort} />
+                    <KeyNotationToggle
+                      notation={keyNotation}
+                      onChange={setKeyNotation}
+                      locale={locale}
+                    />
+                  </div>
+                </th>
                 {optional.includes("genre") ? (
                   <SortHeader label={DASHBOARD_COPY.columnLabels.genre[locale]} sortKey="genre" active={sort?.key === "genre"} dir={sort?.dir ?? 1} onSort={handleSort} className="px-3 py-2" />
                 ) : null}
@@ -780,6 +870,7 @@ export function TrackTable({
                   onDragStart={setDragIndex}
                   onDragOver={setDragOverIndex}
                   onDrop={handleDrop}
+                  keyNotation={keyNotation}
                   onDragEnd={() => {
                     setDragIndex(null)
                     setDragOverIndex(null)

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, Download, TriangleAlert } from "lucide-react"
+import { ChevronDown, Download, ShieldCheck, TriangleAlert } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -10,6 +10,7 @@ import type { SiteLocale } from "@/lib/content/site-copy"
 import {
   defaultExportFormat,
   exportFilename,
+  hasPreservedEntries,
   nativeExportWillMissTracks,
   serializePlaylist,
   EXPORT_FORMAT_META,
@@ -45,13 +46,20 @@ export function PlaylistExportButton({
   locale,
 }: PlaylistExportButtonProps) {
   const [open, setOpen] = useState(false)
+  // Default off, and deliberately not remembered across opens: it writes into
+  // the DJ's library, so it should be a decision each time rather than a
+  // setting that quietly stays on.
+  const [writeEnergy, setWriteEnergy] = useState(false)
   const disabled = playlist.tracks.length === 0
   const defaultFormat = defaultExportFormat(playlist.importSource)
   const fromFiles = playlist.importSource === "files"
+  const preserved = hasPreservedEntries(playlist)
 
   function handleExport(format: ExportFormat) {
     setOpen(false)
-    const content = serializePlaylist(format, playlist)
+    const content = serializePlaylist(format, playlist, {
+      writeEnergyToComment: writeEnergy,
+    })
     const { mimeType } = EXPORT_FORMAT_META[format]
 
     // Not awaited: this runs inside the click handler so the user gesture is
@@ -92,6 +100,20 @@ export function PlaylistExportButton({
             <p className="px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/40">
               {COPY.djSoftware[locale]}
             </p>
+            {preserved && !fromFiles ? (
+              // Named before the click, next to the formats it applies to. The
+              // people who need to read this are the ones a previous export
+              // already cost hotcues.
+              <div className="mx-1 mb-1 rounded-lg border border-[#4ADE80]/24 bg-[#4ADE80]/[0.07] px-2.5 py-2">
+                <p className="flex items-start gap-1.5 text-[11px] font-medium leading-4 text-[#86EFAC]">
+                  <ShieldCheck aria-hidden className="mt-px size-3 shrink-0" />
+                  {COPY.preservedTitle[locale]}
+                </p>
+                <p className="mt-1 text-[10.5px] leading-4 text-white/58">
+                  {COPY.preservedBody[locale]}
+                </p>
+              </div>
+            ) : null}
             {fromFiles ? (
               // Said here rather than after the click: once the file is
               // downloaded, a warning is too late to be useful.
@@ -129,6 +151,24 @@ export function PlaylistExportButton({
                 {COPY.soon[locale]}
               </span>
             </button>
+
+            <div className="my-1 h-px bg-white/[0.08]" />
+            <label className="mx-1 flex cursor-pointer items-start gap-2 rounded-lg px-2 py-2 hover:bg-white/[0.04]">
+              <input
+                type="checkbox"
+                checked={writeEnergy}
+                onChange={(event) => setWriteEnergy(event.target.checked)}
+                className="mt-0.5 size-3.5 shrink-0 accent-[#A24DE0]"
+              />
+              <span>
+                <span className="block text-[11.5px] leading-4 text-white/78">
+                  {COPY.writeEnergyLabel[locale]}
+                </span>
+                <span className="mt-0.5 block text-[10px] leading-4 text-white/48">
+                  {COPY.writeEnergyHint[locale]}
+                </span>
+              </span>
+            </label>
 
             <div className="my-1 h-px bg-white/[0.08]" />
             <p className="px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/40">

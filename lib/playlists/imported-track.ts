@@ -1,4 +1,12 @@
 import type { TrackAudioFeatures } from "@/lib/audio/track-features"
+import {
+  extractEnergyValue,
+  type EnergyTagField,
+} from "@/lib/playlists/energy-tag"
+import type {
+  SourceHeader,
+  SourcePayloadFormat,
+} from "@/lib/playlists/source-entry"
 
 /**
  * A track parsed from a DJ-software library/playlist export. Richer than the
@@ -15,8 +23,14 @@ export interface ImportedTrack {
   key: string | null
   /** Genre tag from the track, verbatim (not yet mapped to SUPPORTED_GENRES). */
   genre: string | null
-  /** Energy 1–10 when derivable (Mixed In Key tag); null otherwise. */
+  /** Energy 1–10 when derivable from the track's tags; null otherwise. */
   energy: number | null
+  /**
+   * Which tag the energy was read from, so the UI can say so rather than
+   * presenting the number as if it had no provenance. Null when there is no
+   * energy, or when it was typed in by hand.
+   */
+  energySource?: EnergyTagField | null
   /**
    * Native file reference from the source export, kept verbatim so a same-format
    * export relinks to the DJ's library. Rekordbox: the `Location` file URL.
@@ -30,6 +44,14 @@ export interface ImportedTrack {
   durationSeconds: number | null
   /** Perceived loudness in dB (Traktor PERCEIVED_DB); an energy signal (B19). */
   perceivedDb?: number | null
+  /**
+   * The verbatim library entry this track came from — a Traktor `<ENTRY>` or a
+   * Rekordbox `<TRACK>`. Re-emitted byte-for-byte on export so a re-import
+   * cannot strip the fields we don't model (hotcues, loops, the analysis
+   * fingerprint, loudness, album/label, play counts). See `source-entry.ts`.
+   */
+  sourcePayload?: string | null
+  sourcePayloadFormat?: SourcePayloadFormat | null
   /**
    * Spectral measurements from the file's own audio. Only ever present on the
    * `files` import path, and only for files that were actually analysed — a
@@ -45,33 +67,23 @@ export interface ParsedImport {
   /** Playlist name from the file, when present. */
   playlistName: string | null
   tracks: ImportedTrack[]
+  /** Root/header elements of the source file, preserved for re-export. */
+  sourceHeader?: SourceHeader | null
 }
 
 /**
- * Extracts a Mixed In Key style "Energy N" (1–10) from a free-text comment
- * field. MIK writes values like "8A - Energy 7" or "Energy 7" into the
- * comment/grouping tag. Returns null when no energy token is present.
+ * Extracts an energy value (1–10) from a free-text comment field.
+ *
+ * Kept as a named function because "the comment field" is the one place every
+ * import path has; the accepted written forms live in `energy-tag.ts`, which is
+ * also what reads the other fields DJs use (grouping, lyrics, producer, a
+ * dedicated ENERGY frame). A bare number is not accepted here — in a comment it
+ * is a comment.
  */
 export function extractEnergyFromComment(
   comment: string | null | undefined
 ): number | null {
-  if (!comment) {
-    return null
-  }
-
-  const match = comment.match(/energy\s*(\d{1,2})/i)
-
-  if (!match) {
-    return null
-  }
-
-  const value = Number.parseInt(match[1], 10)
-
-  if (!Number.isFinite(value) || value < 1 || value > 10) {
-    return null
-  }
-
-  return value
+  return extractEnergyValue(comment)
 }
 
 /**

@@ -401,3 +401,35 @@ cannot quietly go stale.
   whole. Flux is segmented per window so no seam reads as an onset. Re-run the
   harness on a real library to quote the new wall-clock; the `Sampled` column
   reports what each row actually examined.
+
+## Alpha feedback round 1 — Traktor fidelity, M3U8, key notation, energy tags (7 Sep 2026)
+
+One alpha user's e-mail turned into four changes, one of which was a data-loss
+bug in a live product. Full write-up, including the measurement that pinned it:
+[docs/feedback-2026-09-alpha-traktor-keys-energy.md](feedback-2026-09-alpha-traktor-keys-energy.md).
+
+- **Native exports now hand the DJ's library entries back verbatim.** The NML
+  writer used to rebuild each collection entry from the eleven fields we model;
+  a real Traktor 3.5.1 entry carries around twenty-five, so hotcues
+  (`<CUE_V2>`), saved loops, the analysis fingerprint (`AUDIO_ID` +
+  `INFO@FLAGS`), loudness, album/label, play counts and `LOCATION@VOLUMEID` were
+  dropped on every export. Each source entry is now captured at import
+  (`tracks.source_payload`) and re-emitted byte-for-byte; only the playlist
+  node's order changes. Same for Rekordbox XML and its `<POSITION_MARK>` cues.
+  Nothing is written into a DJ's library that did not come out of it — the
+  synthesised "Energy N" comment is now opt-in per export.
+- **Imports say what the file actually carried.** A per-field coverage summary
+  on arrival, which distinguishes an absent value from a format that cannot
+  express one (M3U8 carries a path and a duration, nothing else). Plus a more
+  tolerant `#EXTINF` reader and filename-based matching so an M3U8 import can be
+  enriched from the audio files afterwards.
+- **One key column, in the notation the DJ reads** — Camelot, Open Key, musical
+  or as-imported, switched from the column header and stored on the profile
+  (`profiles.key_notation`). Key sorting moved to wheel position.
+- **Energy is no longer assumed to be Mixed In Key's.** Read from a dedicated
+  ENERGY frame, comment, grouping, lyrics, producer, composer or label, in every
+  written form DJs actually use, with the source recorded per track. Documented
+  publicly at `/energy-tags` — which was the user's actual question.
+
+Migrations `0025_source_payload.sql` and `0026_profile_key_notation.sql` must be
+applied before this deploys.

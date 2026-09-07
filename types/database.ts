@@ -49,6 +49,7 @@ export interface Database {
           workos_user_id: string
           email: string
           preferred_locale: string | null
+          key_notation: string | null
           suspended_at: string | null
           plan: string
           plan_status: string | null
@@ -65,6 +66,7 @@ export interface Database {
           workos_user_id: string
           email: string
           preferred_locale?: string | null
+          key_notation?: string | null
           suspended_at?: string | null
           plan?: string
           plan_status?: string | null
@@ -81,6 +83,7 @@ export interface Database {
           workos_user_id?: string
           email?: string
           preferred_locale?: string | null
+          key_notation?: string | null
           suspended_at?: string | null
           plan?: string
           plan_status?: string | null
@@ -285,6 +288,7 @@ export interface Database {
           genre: Database["public"]["Enums"]["playlist_genre"] | null
           context: Database["public"]["Enums"]["playlist_context"] | null
           import_source: string | null
+          source_header: Json | null
           slot_start_minutes: number | null
           slot_end_minutes: number | null
           target_shape: string | null
@@ -305,6 +309,7 @@ export interface Database {
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
           import_source?: string | null
+          source_header?: Json | null
           slot_start_minutes?: number | null
           slot_end_minutes?: number | null
           target_shape?: string | null
@@ -325,6 +330,7 @@ export interface Database {
           genre?: Database["public"]["Enums"]["playlist_genre"] | null
           context?: Database["public"]["Enums"]["playlist_context"] | null
           import_source?: string | null
+          source_header?: Json | null
           slot_start_minutes?: number | null
           slot_end_minutes?: number | null
           target_shape?: string | null
@@ -360,6 +366,9 @@ export interface Database {
           duration_seconds: number | null
           perceived_db: number | null
           audio_features: Json | null
+          source_payload: string | null
+          source_payload_format: string | null
+          energy_source: string | null
           created_at: string
         }
         Insert: {
@@ -377,6 +386,9 @@ export interface Database {
           duration_seconds?: number | null
           perceived_db?: number | null
           audio_features?: Json | null
+          source_payload?: string | null
+          source_payload_format?: string | null
+          energy_source?: string | null
           created_at?: string
         }
         Update: {
@@ -394,6 +406,9 @@ export interface Database {
           duration_seconds?: number | null
           perceived_db?: number | null
           audio_features?: Json | null
+          source_payload?: string | null
+          source_payload_format?: string | null
+          energy_source?: string | null
           created_at?: string
         }
         Relationships: [

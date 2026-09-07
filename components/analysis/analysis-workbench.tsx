@@ -7,6 +7,10 @@ import { CircleCheck, History, Loader2, Sparkles } from "lucide-react"
 import { reorderTracksAction } from "@/app/dashboard/playlists/actions"
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
 import type { ExportPlaylist } from "@/lib/playlists/export"
+import {
+  isSourcePayloadFormat,
+  type SourceHeader,
+} from "@/lib/playlists/source-entry"
 import { FixMapCurve, type FixMarkerDatum } from "@/components/analysis/fix-map-curve"
 import { FixPanel, type FixStatus } from "@/components/analysis/fix-panel"
 import {
@@ -131,6 +135,10 @@ export interface WorkbenchTrack {
   genre: string | null
   comment: string | null
   durationSeconds: number | null
+  /** The verbatim library entry, so exporting from this screen preserves the
+   * DJ's hotcues and tags exactly as the detail page does. */
+  sourcePayload: string | null
+  sourcePayloadFormat: string | null
 }
 
 /** Localized, already-interpolated copy per fix id (from the engine's
@@ -146,6 +154,8 @@ export interface AnalysisWorkbenchProps {
   playlistId: string
   playlistName: string
   importSource: string | null
+  /** The source file's header, preserved for a faithful native re-export. */
+  sourceHeader?: SourceHeader | null
   /**
    * Tracks already played recently at this venue, keyed by ORIGINAL position.
    *
@@ -183,6 +193,7 @@ export function AnalysisWorkbench({
   playlistId,
   playlistName,
   importSource,
+  sourceHeader,
   tracks,
   energies,
   fixes,
@@ -473,6 +484,7 @@ export function AnalysisWorkbench({
     () => ({
       name: playlistName,
       importSource,
+      sourceHeader: sourceHeader ?? null,
       tracks: order
         .map((id) => tracksById.get(id))
         .filter((track): track is WorkbenchTrack => Boolean(track))
@@ -487,9 +499,13 @@ export function AnalysisWorkbench({
           genre: track.genre,
           comment: track.comment,
           durationSeconds: track.durationSeconds,
+          sourcePayload: track.sourcePayload,
+          sourcePayloadFormat: isSourcePayloadFormat(track.sourcePayloadFormat)
+            ? track.sourcePayloadFormat
+            : null,
         })),
     }),
-    [order, tracksById, playlistName, importSource]
+    [order, tracksById, playlistName, importSource, sourceHeader]
   )
 
   const movedCount = tracklistRows.filter(

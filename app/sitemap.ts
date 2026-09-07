@@ -17,6 +17,9 @@ const HINTS: Record<
   "/pricing": { changeFrequency: "monthly", priority: 0.9 },
   "/blog": { changeFrequency: "weekly", priority: 0.7 },
   "/install": { changeFrequency: "monthly", priority: 0.5 },
+  // A reference page a DJ lands on from the import screen or a search for
+  // "where does <tool> write energy" — it changes when a tag format is added.
+  "/energy-tags": { changeFrequency: "monthly", priority: 0.5 },
   "/privacy": { changeFrequency: "yearly", priority: 0.3 },
   "/terms": { changeFrequency: "yearly", priority: 0.3 },
   "/cookie-policy": { changeFrequency: "yearly", priority: 0.3 },

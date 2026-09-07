@@ -50,6 +50,16 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
       es: "Agregá EnergyCurve a tu pantalla de inicio y usala como una app nativa — sin pasar por ninguna tienda.",
     },
   },
+  "/energy-tags": {
+    title: {
+      en: "Where to put your energy values",
+      es: "Dónde poner la energía",
+    },
+    description: {
+      en: "Which tag EnergyCurve reads a track's energy from, and in exactly which format — for Mixed In Key, Lexicon DJ, Serato, Rekordbox and hand-written tags.",
+      es: "De qué tag lee EnergyCurve la energía de un track, y con qué formato exacto — para Mixed In Key, Lexicon DJ, Serato, Rekordbox y tags escritos a mano.",
+    },
+  },
   "/privacy": {
     title: {
       en: "Privacy Policy",
