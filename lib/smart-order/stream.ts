@@ -11,13 +11,46 @@
  * framing beyond `split("\n")`.
  */
 
+/**
+ * Why the local heuristic was used instead of the model.
+ *
+ * Carried to the client so the banner can say what actually happened. It used
+ * to say "Claude didn't answer in time" for every fallback, including a
+ * deployment with no API key configured — an assertion the server had no
+ * grounds for, and the reason a real bug report couldn't be acted on.
+ */
+export type SmartOrderFallbackReason =
+  | "not_configured"
+  | "timeout"
+  | "invalid_answer"
+  | "refusal"
+  | "error"
+
+export function isFallbackReason(
+  value: unknown
+): value is SmartOrderFallbackReason {
+  return (
+    value === "not_configured" ||
+    value === "timeout" ||
+    value === "invalid_answer" ||
+    value === "refusal" ||
+    value === "error"
+  )
+}
+
 export type SmartOrderEvent =
   /** Sent once, before the model call, so the client can size the bar. */
   | { type: "start"; total: number }
   /** `placed` track ids have been emitted so far. Monotonic. */
   | { type: "progress"; placed: number; total: number }
   /** Terminal. `source` mirrors the non-streaming response. */
-  | { type: "done"; order: string[]; source: "claude" | "fallback" }
+  | {
+      type: "done"
+      order: string[]
+      source: "claude" | "fallback"
+      /** Present only when `source` is "fallback". */
+      reason?: SmartOrderFallbackReason
+    }
   /** Terminal. The client keeps whatever order it already had. */
   | { type: "error" }
 

@@ -4,6 +4,7 @@ import {
   countPlacedIds,
   decodeSmartOrderEvents,
   encodeSmartOrderEvent,
+  isFallbackReason,
   type SmartOrderEvent,
 } from "@/lib/smart-order/stream"
 
@@ -89,5 +90,53 @@ describe("smart order event framing", () => {
     expect(events).toEqual([
       { type: "done", order: ["a"], source: "fallback" },
     ])
+  })
+})
+
+/**
+ * The fallback banner used to say "Claude didn't answer in time" for every
+ * fallback — including a deployment with no API key, an answer that failed
+ * validation, and a thrown error. That is the product asserting a cause it
+ * hasn't established, and it made a real bug report impossible to act on.
+ */
+describe("fallback reason", () => {
+  it("survives the wire", () => {
+    const event: SmartOrderEvent = {
+      type: "done",
+      order: ["a", "b"],
+      source: "fallback",
+      reason: "not_configured",
+    }
+
+    const { events } = decodeSmartOrderEvents(encodeSmartOrderEvent(event))
+    expect(events[0]).toEqual(event)
+  })
+
+  it("is optional, so a Claude-sourced done event stays as it was", () => {
+    const event: SmartOrderEvent = {
+      type: "done",
+      order: ["a"],
+      source: "claude",
+    }
+
+    const { events } = decodeSmartOrderEvents(encodeSmartOrderEvent(event))
+    expect(events[0]).toEqual(event)
+  })
+
+  it("recognises exactly the reasons the server can send", () => {
+    for (const reason of [
+      "not_configured",
+      "timeout",
+      "invalid_answer",
+      "refusal",
+      "error",
+    ]) {
+      expect(isFallbackReason(reason), reason).toBe(true)
+    }
+
+    // An unknown reason must not reach the banner as a lookup miss.
+    for (const value of ["", "slow", null, undefined, 7, {}]) {
+      expect(isFallbackReason(value)).toBe(false)
+    }
   })
 })

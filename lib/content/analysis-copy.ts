@@ -590,9 +590,36 @@ export const ANALYSIS_UI = {
     en: "New order ready. The shape now follows the {context} curve — and you can keep editing by hand.",
     es: "Orden nuevo listo. La forma ahora sigue la curva de {context} — y podés seguir editando a mano.",
   },
+  /**
+   * One banner per reason, because the old single string asserted a cause the
+   * server had not established: "Claude didn't answer in time" was shown for a
+   * missing API key, an invalid answer and a thrown error alike. Every variant
+   * ends on the same fact — the local order is real and editable — so a
+   * fallback never reads as a dead end.
+   */
   smartFallbackBanner: {
-    en: "Claude didn't answer in time, so the automatic order was used: ascending energy with two deliberate breathers. You can keep editing by hand.",
-    es: "Claude no respondió a tiempo, así que se usó el orden automático: energía ascendente con dos respiros intencionales. Podés seguir editando a mano.",
+    en: "The automatic order was used instead: ascending energy with two deliberate breathers. You can keep editing by hand.",
+    es: "Se usó el orden automático: energía ascendente con dos respiros intencionales. Podés seguir editando a mano.",
+  },
+  smartFallbackTimeout: {
+    en: "Claude didn't answer in time.",
+    es: "Claude no respondió a tiempo.",
+  },
+  smartFallbackNotConfigured: {
+    en: "Smart ordering isn't switched on for this deployment yet.",
+    es: "El orden inteligente todavía no está activado en este despliegue.",
+  },
+  smartFallbackInvalid: {
+    en: "Claude's answer didn't include every track exactly once, so it was discarded.",
+    es: "La respuesta de Claude no incluía cada track exactamente una vez, así que se descartó.",
+  },
+  smartFallbackRefusal: {
+    en: "Claude declined this request.",
+    es: "Claude rechazó este pedido.",
+  },
+  smartFallbackError: {
+    en: "Smart ordering hit an error.",
+    es: "El orden inteligente falló.",
   },
   /**
    * Sits against the score itself, not in the issue list. An `info` issue below a

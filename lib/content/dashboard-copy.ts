@@ -874,6 +874,25 @@ export const DASHBOARD_COPY = {
       en: "Only the order changes. Hotcues, cue points, comments, ratings, album and label tags and the analysis are written back exactly as they came out of your library.",
       es: "Sólo cambia el orden. Hotcues, cue points, comentarios, ratings, tags de álbum y sello y el análisis se escriben tal como salieron de tu librería.",
     },
+    /**
+     * Said when we hold no source entry for a playlist that came from DJ
+     * software — every set imported before preservation shipped. The export
+     * still works; it just carries the fields we model instead of the DJ's own
+     * bytes, which in Traktor looks like the metadata went missing.
+     */
+    staleImportTitle: {
+      en: "This set was imported before we started preserving your track data",
+      es: "Este set se importó antes de que empezáramos a preservar tus datos",
+    },
+    staleImportBody: {
+      en: "So this export rebuilds each track from what we store, and your hotcues, comments and album tags won't be in it. Import the same file again and they will be — nothing else about the set changes.",
+      es: "Así que este export reconstruye cada track con lo que guardamos, y tus hotcues, comentarios y tags de álbum no van a estar. Importá el mismo archivo de nuevo y sí van a estar — no cambia nada más del set.",
+    },
+    /** Partial: some tracks preserved, some added by hand afterwards. */
+    partialPreservedBody: {
+      en: "{preserved} of {total} tracks come back untouched. The rest were added by hand, so we rebuild those from what we store.",
+      es: "{preserved} de {total} tracks vuelven intactos. El resto se agregaron a mano, así que esos los reconstruimos con lo que guardamos.",
+    },
     /** The one write into the DJ's library we offer, and never by default. */
     writeEnergyLabel: {
       en: "Also write energy into the comment tag",

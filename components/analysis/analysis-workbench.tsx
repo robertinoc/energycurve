@@ -26,7 +26,11 @@ import {
   formatTemplate,
 } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
-import { decodeSmartOrderEvents } from "@/lib/smart-order/stream"
+import {
+  decodeSmartOrderEvents,
+  isFallbackReason,
+  type SmartOrderFallbackReason,
+} from "@/lib/smart-order/stream"
 import {
   scoreIsMeaningful,
   type EnergyCoverage,
@@ -141,6 +145,22 @@ export interface WorkbenchTrack {
   sourcePayloadFormat: string | null
 }
 
+/**
+ * What to say before the "the automatic order was used" sentence. Keyed by the
+ * reason the server actually reported, so the banner stops claiming a timeout
+ * for every kind of fallback.
+ */
+const FALLBACK_REASON_COPY: Record<
+  SmartOrderFallbackReason,
+  (typeof ANALYSIS_UI)["smartFallbackTimeout"]
+> = {
+  timeout: ANALYSIS_UI.smartFallbackTimeout,
+  not_configured: ANALYSIS_UI.smartFallbackNotConfigured,
+  invalid_answer: ANALYSIS_UI.smartFallbackInvalid,
+  refusal: ANALYSIS_UI.smartFallbackRefusal,
+  error: ANALYSIS_UI.smartFallbackError,
+}
+
 /** Localized, already-interpolated copy per fix id (from the engine's
  * recommendations) — the fallback when FIX_COPY has no short template. */
 export interface FixRecommendationCopy {
@@ -227,6 +247,8 @@ export function AnalysisWorkbench({
   const [applied, setApplied] = useState<Set<string>>(new Set())
   const [discarded, setDiscarded] = useState<Set<string>>(new Set())
   const [smartOrder, setSmartOrder] = useState<string[] | null>(null)
+  const [smartReason, setSmartReason] =
+    useState<SmartOrderFallbackReason | null>(null)
   const [smartSource, setSmartSource] = useState<"claude" | "fallback" | null>(
     null
   )
@@ -493,7 +515,10 @@ export function AnalysisWorkbench({
           artist: track.artist,
           name: track.name,
           bpm: track.bpm,
-          energyScore: track.energyScore,
+          // The resolved energy — the number in the row the DJ is looking at —
+          // not the raw imported tag, which is null for any library that never
+          // had one. Writing that back was writing nothing.
+          energyScore: energiesById.get(track.id)?.score ?? track.energyScore,
           sourceUri: track.sourceUri,
           musicalKey: track.musicalKey,
           genre: track.genre,
@@ -505,7 +530,7 @@ export function AnalysisWorkbench({
             : null,
         })),
     }),
-    [order, tracksById, playlistName, importSource, sourceHeader]
+    [order, tracksById, energiesById, playlistName, importSource, sourceHeader]
   )
 
   const movedCount = tracklistRows.filter(
@@ -541,6 +566,7 @@ export function AnalysisWorkbench({
       let buffer = ""
       let ids: string[] = []
       let source: "claude" | "fallback" = "claude"
+      let reason: SmartOrderFallbackReason | null = null
 
       for (;;) {
         const { done, value } = await reader.read()
@@ -561,6 +587,7 @@ export function AnalysisWorkbench({
           } else if (event.type === "done") {
             ids = event.order
             source = event.source
+            reason = isFallbackReason(event.reason) ? event.reason : null
           } else {
             throw new Error("smart-order stream error")
           }
@@ -580,6 +607,7 @@ export function AnalysisWorkbench({
       setApplied(new Set())
       setSmartOrder(ids)
       setSmartSource(source)
+      setSmartReason(source === "fallback" ? reason : null)
       setSmartStatus(source === "fallback" ? "fallback" : "done")
     } catch {
       setSmartStatus(smartOrder ? (smartSource === "fallback" ? "fallback" : "done") : "idle")
@@ -910,6 +938,11 @@ export function AnalysisWorkbench({
         </div>
       ) : smartStatus === "fallback" ? (
         <div className="rounded-xl border border-ec-cyan/35 bg-ec-cyan/[0.06] px-4 py-3 text-sm text-white/80">
+          {smartReason ? (
+            <span className="font-medium text-white">
+              {FALLBACK_REASON_COPY[smartReason][locale]}{" "}
+            </span>
+          ) : null}
           {ANALYSIS_UI.smartFallbackBanner[locale]}
         </div>
       ) : null}
