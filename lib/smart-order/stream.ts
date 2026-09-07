@@ -23,6 +23,7 @@ export type SmartOrderFallbackReason =
   | "not_configured"
   | "timeout"
   | "invalid_answer"
+  | "truncated"
   | "refusal"
   | "error"
 
@@ -33,6 +34,7 @@ export function isFallbackReason(
     value === "not_configured" ||
     value === "timeout" ||
     value === "invalid_answer" ||
+    value === "truncated" ||
     value === "refusal" ||
     value === "error"
   )

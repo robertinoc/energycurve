@@ -140,3 +140,21 @@ describe("fallback reason", () => {
     }
   })
 })
+
+describe("truncated answers", () => {
+  it("is a reason of its own, not a generic error", () => {
+    // An answer capped mid-array is a partial JSON document. It used to reach
+    // JSON.parse, throw, and surface as "something went wrong" — which hid the
+    // one failure that has an obvious fix (raise the output budget).
+    expect(isFallbackReason("truncated")).toBe(true)
+
+    const event: SmartOrderEvent = {
+      type: "done",
+      order: ["a"],
+      source: "fallback",
+      reason: "truncated",
+    }
+    const { events } = decodeSmartOrderEvents(encodeSmartOrderEvent(event))
+    expect(events[0]).toEqual(event)
+  })
+})
