@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { DASHBOARD_COPY, type LocalizedLabel } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
+import { formatTemplate } from "@/lib/content/analysis-copy"
 import {
   defaultExportFormat,
   exportFilename,
   hasPreservedEntries,
   nativeExportWillMissTracks,
+  preservationSummary,
   serializePlaylist,
   EXPORT_FORMAT_META,
   type ExportFormat,
@@ -54,6 +56,7 @@ export function PlaylistExportButton({
   const defaultFormat = defaultExportFormat(playlist.importSource)
   const fromFiles = playlist.importSource === "files"
   const preserved = hasPreservedEntries(playlist)
+  const preservation = preservationSummary(playlist)
 
   function handleExport(format: ExportFormat) {
     setOpen(false)
@@ -100,6 +103,21 @@ export function PlaylistExportButton({
             <p className="px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/40">
               {COPY.djSoftware[locale]}
             </p>
+            {preservation.importedBeforePreservation ? (
+              // The set predates entry preservation, so the export is rebuilt
+              // rather than round-tripped. Said here because the file looks
+              // identical from the outside and the difference only shows up
+              // once it is back in Traktor, with the tags gone.
+              <div className="mx-1 mb-1 rounded-lg border border-[#F5A524]/28 bg-[#F5A524]/10 px-2.5 py-2">
+                <p className="flex items-start gap-1.5 text-[11px] font-medium leading-4 text-[#F5C15E]">
+                  <TriangleAlert aria-hidden className="mt-px size-3 shrink-0" />
+                  {COPY.staleImportTitle[locale]}
+                </p>
+                <p className="mt-1 text-[10.5px] leading-4 text-white/58">
+                  {COPY.staleImportBody[locale]}
+                </p>
+              </div>
+            ) : null}
             {preserved && !fromFiles ? (
               // Named before the click, next to the formats it applies to. The
               // people who need to read this are the ones a previous export
@@ -110,7 +128,12 @@ export function PlaylistExportButton({
                   {COPY.preservedTitle[locale]}
                 </p>
                 <p className="mt-1 text-[10.5px] leading-4 text-white/58">
-                  {COPY.preservedBody[locale]}
+                  {preservation.rebuildsSome
+                    ? formatTemplate(COPY.partialPreservedBody[locale], {
+                        preserved: preservation.preserved,
+                        total: preservation.total,
+                      })
+                    : COPY.preservedBody[locale]}
                 </p>
               </div>
             ) : null}

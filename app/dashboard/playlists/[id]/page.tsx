@@ -197,16 +197,30 @@ export default async function PlaylistDetailPage({
     isCurrent: sameOrder(version.tracks, currentOrder),
   }))
 
+  /**
+   * The energies the tracklist renders, computed here too so an export carries
+   * the number the DJ is looking at.
+   *
+   * `tracks.energy_score` is only the raw imported tag, and it is null for
+   * every library that never had one — so "write energy into the comment tag"
+   * wrote nothing at all for exactly the people who ticked it.
+   */
+  const resolvedEnergies = resolveTrackEnergies(
+    playlist.tracks,
+    playlist.context,
+    playlist.genre
+  )
+
   const exportPlaylist: ExportPlaylist = {
     name: playlist.name,
     importSource: playlist.import_source,
     sourceHeader: parseSourceHeader(playlist.source_header),
-    tracks: playlist.tracks.map((track) => ({
+    tracks: playlist.tracks.map((track, index) => ({
       position: track.position,
       artist: track.artist,
       name: track.name,
       bpm: track.bpm,
-      energyScore: track.energy_score,
+      energyScore: resolvedEnergies[index]?.score ?? track.energy_score,
       sourceUri: track.source_uri,
       musicalKey: track.musical_key,
       genre: track.genre,

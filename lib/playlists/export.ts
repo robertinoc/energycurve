@@ -35,6 +35,15 @@ export interface ExportTrack {
   artist: string
   name: string
   bpm: number | null
+  /**
+   * The energy to write when `writeEnergyToComment` is on: the **resolved**
+   * value the DJ is looking at, not the raw tag we imported.
+   *
+   * This distinction was a bug. Callers passed `tracks.energy_score`, which is
+   * null for every track whose library carried no energy tag — which is the
+   * whole population the option exists for. Ticking "write energy into the
+   * comment tag" on such a set silently wrote nothing at all.
+   */
   energyScore: number | null
   sourceUri: string | null
   musicalKey: string | null
@@ -185,6 +194,48 @@ export function hasPreservedEntries(playlist: ExportPlaylist): boolean {
   return playlist.tracks.some((track) => Boolean(track.sourcePayload))
 }
 
+export interface PreservationSummary {
+  /** Tracks whose source library entry we still hold. */
+  preserved: number
+  total: number
+  /** True when a native export of this playlist rebuilds at least one entry. */
+  rebuildsSome: boolean
+  /**
+   * True when this playlist came from DJ software but we hold no entry for any
+   * of it — the shape of every set imported before preservation shipped.
+   */
+  importedBeforePreservation: boolean
+}
+
+/**
+ * How much of a native export will be the DJ's own bytes, and how much we have
+ * to rebuild.
+ *
+ * Worth surfacing because the difference is invisible in the file name and very
+ * visible in Traktor: a playlist imported before preservation existed has no
+ * stored entries, so its export carries only the handful of fields we model and
+ * lands in the library looking stripped. That is not a bug to fix silently —
+ * the data is genuinely gone from our side — but it is a thing to say, with the
+ * one action that fixes it (re-import the file).
+ */
+export function preservationSummary(
+  playlist: ExportPlaylist
+): PreservationSummary {
+  const total = playlist.tracks.length
+  const preserved = playlist.tracks.filter((track) =>
+    Boolean(track.sourcePayload)
+  ).length
+  const native =
+    playlist.importSource === "traktor" || playlist.importSource === "rekordbox"
+
+  return {
+    preserved,
+    total,
+    rebuildsSome: preserved < total,
+    importedBeforePreservation: native && preserved === 0 && total > 0,
+  }
+}
+
 // --- CSV -------------------------------------------------------------------
 
 function csvCell(value: string): string {
@@ -312,15 +363,19 @@ function trackComment(
     return existing
   }
 
+  // Tags are written on a 1-10 integer scale, which is what every reader of
+  // this field expects; the resolved energy carries a decimal.
+  const value = Math.min(10, Math.max(1, Math.round(energy)))
+
   if (!existing) {
-    return `Energy ${energy}`
+    return `Energy ${value}`
   }
 
   if (ENERGY_TOKEN.test(existing)) {
-    return existing.replace(ENERGY_TOKEN, `Energy ${energy}`)
+    return existing.replace(ENERGY_TOKEN, `Energy ${value}`)
   }
 
-  return `${existing} Energy ${energy}`
+  return `${existing} Energy ${value}`
 }
 
 const ENERGY_TOKEN = /energy\s*\d{1,2}/i

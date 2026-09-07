@@ -45,17 +45,44 @@ interface SmartOrderResult {
   rationale: string
   breathers: string[]
   source: "claude" | "fallback"
+  /**
+   * Why the heuristic was used, when it was.
+   *
+   * The banner used to say "Claude didn't answer in time" for *every* fallback
+   * — a missing key, an invalid answer and a thrown error all rendered as a
+   * timeout. That is the product asserting a cause it doesn't know, and it made
+   * the one bug a user actually hit impossible to report accurately.
+   */
+  reason?: FallbackReason
 }
+
+export type FallbackReason =
+  /** No ANTHROPIC_API_KEY on this deployment. */
+  | "not_configured"
+  /** The model ran past the budget this request has. */
+  | "timeout"
+  /** It answered, but not with every track id exactly once. */
+  | "invalid_answer"
+  /** Safety classifiers declined the request. */
+  | "refusal"
+  /** Anything else — logged with the real error. */
+  | "error"
 
 // Per-playlist cache: the same tracklist (+ genre/context) always returns the
 // same answer, so repeated clicks don't burn tokens. In-memory — resets on
 // deploy, which is fine for a cost cap.
 /**
- * Deliberately below `maxDuration`. The platform killing the function returns a
- * 504 with no body, which the client can only report as "unavailable"; aborting
- * ourselves first means we still return the heuristic order and can say why.
+ * Deliberately below `maxDuration`, with room for what happens after the model
+ * returns (quota write, cache, closing the stream). The platform killing the
+ * function returns a 504 with no body, which the client can only report as
+ * "unavailable"; aborting ourselves first means we still return the heuristic
+ * order and can say why.
+ *
+ * 45s left no headroom at all: paired with the SDK's retry it could reach 90s
+ * of wall clock against a 60s ceiling, so a single slow attempt guaranteed the
+ * platform kill this constant exists to avoid. See `maxRetries` below.
  */
-const CLAUDE_TIMEOUT_MS = 45_000
+const CLAUDE_TIMEOUT_MS = 40_000
 
 const cache = new Map<string, SmartOrderResult>()
 const CACHE_MAX_ENTRIES = 200
@@ -164,18 +191,44 @@ async function claudeOrder(
    * discarded and fall back to the heuristic.
    */
   onPlaced?: (placed: number) => void
-): Promise<Omit<SmartOrderResult, "source"> | null> {
+): Promise<
+  | { ok: true; value: Omit<SmartOrderResult, "source" | "reason"> }
+  | { ok: false; reason: FallbackReason }
+> {
   if (!process.env.ANTHROPIC_API_KEY) {
-    return null
+    return { ok: false, reason: "not_configured" }
   }
 
-  const client = new Anthropic({ maxRetries: 1 })
+  /**
+   * No retry. The SDK retries timeouts, so with a 40s per-request budget one
+   * retry can spend 80s of wall clock against this function's 60s ceiling —
+   * the platform then kills us mid-flight and the caller gets a bodiless 504
+   * instead of the heuristic order we were holding all along. We already have a
+   * fallback; a second attempt inside the same request is strictly worse than
+   * using it.
+   */
+  const client = new Anthropic({ maxRetries: 0 })
 
   const stream = client.messages.stream(
     {
       model: process.env.SMART_ORDER_MODEL || "claude-opus-5",
       max_tokens: 16000,
-      output_config: { format: { type: "json_schema", schema: RESPONSE_SCHEMA } },
+      /**
+       * `effort` matters here, and its absence was the other half of the
+       * timeouts. On Claude Opus 5 thinking is ON by default and the default
+       * effort is `high` — this route was written against the previous
+       * generation, where omitting `thinking` meant no thinking at all. So a
+       * 26-track reorder was silently running the deepest reasoning setting
+       * available, for a task whose hard part is a constraint shuffle rather
+       * than a chain of inference.
+       *
+       * `medium` keeps the judgement that matters (harmonic transitions, where
+       * the breathers land) and gets the answer back inside the request budget.
+       */
+      output_config: {
+        effort: "medium",
+        format: { type: "json_schema", schema: RESPONSE_SCHEMA },
+      },
       system:
         "You are an expert DJ set architect. You reorder tracklists to follow " +
         "an ideal energy curve while keeping transitions mixable. Rules: " +
@@ -228,13 +281,13 @@ async function claudeOrder(
   const response = await stream.finalMessage()
 
   if (response.stop_reason === "refusal") {
-    return null
+    return { ok: false, reason: "refusal" }
   }
 
   const text = response.content.find((block) => block.type === "text")?.text
 
   if (!text) {
-    return null
+    return { ok: false, reason: "invalid_answer" }
   }
 
   const parsed = JSON.parse(text) as {
@@ -247,7 +300,7 @@ async function claudeOrder(
 
   // Discard the whole answer if any id is missing, duplicated, or unknown.
   if (!isValidOrder(parsed.order, ids)) {
-    return null
+    return { ok: false, reason: "invalid_answer" }
   }
 
   const breathers = Array.isArray(parsed.breathers)
@@ -257,9 +310,12 @@ async function claudeOrder(
     : []
 
   return {
-    order: parsed.order,
-    rationale: typeof parsed.rationale === "string" ? parsed.rationale : "",
-    breathers,
+    ok: true,
+    value: {
+      order: parsed.order,
+      rationale: typeof parsed.rationale === "string" ? parsed.rationale : "",
+      breathers,
+    },
   }
 }
 
@@ -416,13 +472,34 @@ export async function POST(
           analysis.targetCurve,
           (placed) => send({ type: "progress", placed, total })
         )
-        result = claude ? { ...claude, source: "claude" } : heuristicOrder(tracks)
+        result = claude.ok
+          ? { ...claude.value, source: "claude" }
+          : { ...heuristicOrder(tracks), reason: claude.reason }
       } catch (error) {
-        logError("smart_order.claude_failed", error, {
-          profileId: profile.id,
-          playlistId: playlist.id,
-        })
-        result = heuristicOrder(tracks)
+        // An aborted request is the budget doing its job, not a fault — it is
+        // logged at info so a genuinely broken key or a schema change stays
+        // visible in the error stream instead of drowning in timeouts.
+        const timedOut =
+          error instanceof Anthropic.APIConnectionTimeoutError ||
+          (error instanceof Error && error.name === "AbortError")
+
+        if (timedOut) {
+          logInfo("smart_order.claude_timed_out", {
+            profileId: profile.id,
+            playlistId: playlist.id,
+            budgetMs: CLAUDE_TIMEOUT_MS,
+          })
+        } else {
+          logError("smart_order.claude_failed", error, {
+            profileId: profile.id,
+            playlistId: playlist.id,
+          })
+        }
+
+        result = {
+          ...heuristicOrder(tracks),
+          reason: timedOut ? "timeout" : "error",
+        }
       }
 
       // Charged on the Claude path only. A fallback to the local heuristic still
@@ -436,6 +513,10 @@ export async function POST(
         profileId: profile.id,
         playlistId: playlist.id,
         source: result.source,
+        // The field that makes a fallback report actionable: "not_configured"
+        // is a deploy problem, "timeout" is a budget problem, and they were
+        // indistinguishable from the outside until now.
+        reason: result.reason ?? null,
         trackCount: total,
         quotaCharged: result.source === "claude",
       })
@@ -448,7 +529,12 @@ export async function POST(
       }
       cache.set(key, result)
 
-      send({ type: "done", order: result.order, source: result.source })
+      send({
+        type: "done",
+        order: result.order,
+        source: result.source,
+        reason: result.reason,
+      })
       controller.close()
     },
   })
