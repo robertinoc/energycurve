@@ -196,6 +196,7 @@ describe("route files exist for both languages", () => {
     "/pricing": "pricing/page.tsx",
     "/blog": "blog/page.tsx",
     "/install": "install/page.tsx",
+    "/energy-tags": "energy-tags/page.tsx",
     "/privacy": "privacy/page.tsx",
     "/terms": "terms/page.tsx",
     "/cookie-policy": "cookie-policy/page.tsx",

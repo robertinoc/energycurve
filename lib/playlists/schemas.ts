@@ -10,6 +10,7 @@ import {
   SET_CONTEXTS,
   SUPPORTED_GENRES,
 } from "@/lib/product/strategy"
+import { isEnergyTagField } from "@/lib/playlists/energy-tag"
 import { TRACKLIST_FORMATS } from "@/lib/playlists/parse-tracklist"
 
 export const BPM_INPUT_RANGE = { min: 60, max: 220 } as const
@@ -331,6 +332,19 @@ export function createAudioImportSchema(locale: SiteLocale) {
       max: ENERGY_SCORE_RANGE.max,
       integer: true,
     }),
+    /**
+     * Which tag the browser read the energy from. Client-supplied like
+     * everything on this path, so it is checked against the known field set
+     * rather than stored as free text — this string is shown to the DJ as an
+     * assertion about their own library, and an unrecognised value would make
+     * the product claim something it can't back up.
+     */
+    energySource: z
+      .unknown()
+      .optional()
+      .transform((value) =>
+        typeof value === "string" && isEnergyTagField(value) ? value : null
+      ),
     comment: lenientText(TRACK_FIELD_MAX_LENGTH).transform(
       (value) => value || null
     ),

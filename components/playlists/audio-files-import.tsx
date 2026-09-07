@@ -334,7 +334,10 @@ export function AudioFilesImport({
     })
 
     if (result.ok && result.playlistId) {
-      router.push(`/dashboard/playlists/${result.playlistId}`)
+      // Same "what we read" summary the file-import path shows: tag coverage
+      // varies wildly between libraries, and a set that arrived with no energy
+      // should say so rather than leaving the column blank.
+      router.push(`/dashboard/playlists/${result.playlistId}?imported=1`)
       return
     }
 

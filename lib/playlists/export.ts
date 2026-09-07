@@ -7,9 +7,26 @@
  * track's stored `sourceUri` (the original file reference) so the playlist
  * relinks to the DJ's library on re-import; manual playlists have no file
  * references and fall back to CSV/TXT.
+ *
+ * **The reorder is the product; the track metadata is the DJ's.** A native
+ * export re-emits each track's source library entry verbatim (`sourcePayload`,
+ * captured at import — see `source-entry.ts`) and changes only the order of the
+ * playlist node. Rebuilding those entries from the fields we happen to model is
+ * what cost an alpha user his hotcues, comments and album tags, and forced a
+ * re-analysis: a real Traktor entry carries around twenty-five fields and this
+ * writer modelled eleven. Nothing is written into the DJ's library that did not
+ * come out of it, unless they ask for it (`writeEnergyToComment`).
  */
 
 import { musicalKeyToTraktorValue } from "@/lib/music/camelot"
+import {
+  getOwnAttribute,
+  hasChildElement,
+  setAttribute,
+  setOwnAttribute,
+  type SourceHeader,
+  type SourcePayloadFormat,
+} from "@/lib/playlists/source-entry"
 
 export type ExportFormat = "rekordbox" | "traktor" | "m3u8" | "csv" | "txt"
 
@@ -24,12 +41,38 @@ export interface ExportTrack {
   genre: string | null
   comment: string | null
   durationSeconds: number | null
+  /** The verbatim library entry this track was imported from, when there is one. */
+  sourcePayload?: string | null
+  sourcePayloadFormat?: SourcePayloadFormat | null
 }
 
 export interface ExportPlaylist {
   name: string
   importSource: string | null
   tracks: ExportTrack[]
+  /** The source file's root/header elements, so a re-export declares what came in. */
+  sourceHeader?: SourceHeader | null
+}
+
+export interface ExportOptions {
+  /**
+   * Write the resolved energy into the track's comment tag. Off by default:
+   * the comment field belongs to the DJ, and a synthesised "Energy 7" landing
+   * in their library is a write they did not ask for. Only affects entries that
+   * already have an `<INFO>` element to carry it.
+   */
+  writeEnergyToComment?: boolean
+  /**
+   * Emit the playlist without any collection entries, so importing it cannot
+   * modify the library at all — there is nothing for the DJ software to merge.
+   *
+   * Not exposed in the UI yet: an empty collection may make the imported
+   * playlist resolve as empty in some Traktor versions, and that has to be
+   * verified against a real install before it can be offered to someone
+   * mid-gig. Serialiser support and tests land first so the verification has
+   * something to run against.
+   */
+  playlistOnly?: boolean
 }
 
 interface FormatMeta {
@@ -120,13 +163,14 @@ export function exportFilename(format: ExportFormat, playlistName: string): stri
 
 export function serializePlaylist(
   format: ExportFormat,
-  playlist: ExportPlaylist
+  playlist: ExportPlaylist,
+  options: ExportOptions = {}
 ): string {
   switch (format) {
     case "rekordbox":
-      return toRekordbox(playlist)
+      return toRekordbox(playlist, options)
     case "traktor":
-      return toTraktor(playlist)
+      return toTraktor(playlist, options)
     case "m3u8":
       return toM3u8(playlist)
     case "csv":
@@ -134,6 +178,11 @@ export function serializePlaylist(
     case "txt":
       return toTxt(playlist)
   }
+}
+
+/** True when this playlist can be exported without rebuilding library entries. */
+export function hasPreservedEntries(playlist: ExportPlaylist): boolean {
+  return playlist.tracks.some((track) => Boolean(track.sourcePayload))
 }
 
 // --- CSV -------------------------------------------------------------------
@@ -243,57 +292,212 @@ function bpmFixed(bpm: number | null): string | null {
 }
 
 /**
- * Comment tag to emit: the track's real comment when present (it may already
- * carry a Mixed In Key "Energy N" token), otherwise a synthesized "Energy N"
- * from the resolved score so energy survives a native round-trip.
+ * Comment tag to emit for a track.
+ *
+ * The DJ's own comment, verbatim — and nothing else unless they opted in.
+ * This used to synthesise "Energy N" into any empty comment field, which meant
+ * every export wrote a value into the DJ's library that they never put there.
+ * With `writeEnergyToComment` on, the energy is merged *into* the existing
+ * comment rather than replacing it, and an existing energy token is updated in
+ * place so repeated exports don't stack "Energy 7 Energy 8".
  */
 function trackComment(
   comment: string | null,
-  energy: number | null
+  energy: number | null,
+  options: ExportOptions
 ): string | null {
-  if (comment && comment.trim()) {
-    return comment
+  const existing = comment && comment.trim() ? comment.trim() : null
+
+  if (!options.writeEnergyToComment || energy == null) {
+    return existing
   }
-  return energy == null ? null : `Energy ${energy}`
+
+  if (!existing) {
+    return `Energy ${energy}`
+  }
+
+  if (ENERGY_TOKEN.test(existing)) {
+    return existing.replace(ENERGY_TOKEN, `Energy ${energy}`)
+  }
+
+  return `${existing} Energy ${energy}`
+}
+
+const ENERGY_TOKEN = /energy\s*\d{1,2}/i
+
+// --- Shared: preserved library entries -------------------------------------
+
+/**
+ * The verbatim source entry for this track, when it came from the format being
+ * exported. Cross-format is deliberately excluded: a Rekordbox `<TRACK>` is not
+ * a Traktor `<ENTRY>`, and pasting one into the other produces a file that
+ * parses and then means nothing.
+ */
+function preservedEntry(
+  track: ExportTrack,
+  format: SourcePayloadFormat
+): string | null {
+  if (!track.sourcePayload || track.sourcePayloadFormat !== format) {
+    return null
+  }
+
+  return track.sourcePayload
+}
+
+/**
+ * Collects one collection entry per distinct track, in first-appearance order.
+ *
+ * Deduplicated because a collection is a set: a track played twice in a set is
+ * two playlist references to one entry, and emitting the entry twice asks the
+ * DJ software to merge a track with itself.
+ */
+function collectionEntries<T>(
+  tracks: ExportTrack[],
+  keyOf: (track: ExportTrack) => string,
+  render: (track: ExportTrack, key: string) => T
+): T[] {
+  const seen = new Set<string>()
+  const out: T[] = []
+
+  for (const track of tracks) {
+    const key = keyOf(track)
+
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    out.push(render(track, key))
+  }
+
+  return out
 }
 
 // --- Rekordbox XML ---------------------------------------------------------
 
-function toRekordbox(playlist: ExportPlaylist): string {
-  const { tracks } = playlist
+const DEFAULT_REKORDBOX_ROOT_ATTRS = 'Version="1.0.0"'
+const DEFAULT_REKORDBOX_PREFIX =
+  '<PRODUCT Name="rekordbox" Version="6.0.0" Company="AlphaTheta"/>'
 
-  const collection = tracks
-    .map((track, index) => {
-      const bpm = bpmFixed(track.bpm)
-      const comment = trackComment(track.comment, track.energyScore)
-      const attrs = [
-        `TrackID="${index + 1}"`,
-        `Name="${xmlAttr(track.name)}"`,
-        `Artist="${xmlAttr(track.artist)}"`,
-        bpm ? `AverageBpm="${bpm}"` : "",
-        track.musicalKey ? `Tonality="${xmlAttr(track.musicalKey)}"` : "",
-        track.genre ? `Genre="${xmlAttr(track.genre)}"` : "",
-        track.durationSeconds != null
-          ? `TotalTime="${track.durationSeconds}"`
-          : "",
-        track.sourceUri ? `Location="${xmlAttr(track.sourceUri)}"` : "",
-        comment ? `Comments="${xmlAttr(comment)}"` : "",
-      ]
-        .filter(Boolean)
-        .join(" ")
-      return `    <TRACK ${attrs}/>`
-    })
-    .join("\n")
+function rekordboxHeader(playlist: ExportPlaylist): {
+  rootAttrs: string
+  prefix: string
+} {
+  const header = playlist.sourceHeader
+
+  if (header?.format !== "rekordbox_xml") {
+    return {
+      rootAttrs: DEFAULT_REKORDBOX_ROOT_ATTRS,
+      prefix: DEFAULT_REKORDBOX_PREFIX,
+    }
+  }
+
+  return {
+    rootAttrs: header.rootAttrs || DEFAULT_REKORDBOX_ROOT_ATTRS,
+    prefix: header.prefix || DEFAULT_REKORDBOX_PREFIX,
+  }
+}
+
+/** Rekordbox matches a collection track to a playlist reference by TrackID. */
+function rekordboxKey(track: ExportTrack): string {
+  return track.sourceUri ?? `${track.position}-${track.artist}-${track.name}`
+}
+
+function synthesizedRekordboxTrack(
+  track: ExportTrack,
+  trackId: number,
+  options: ExportOptions
+): string {
+  const bpm = bpmFixed(track.bpm)
+  const comment = trackComment(track.comment, track.energyScore, options)
+  const attrs = [
+    `TrackID="${trackId}"`,
+    `Name="${xmlAttr(track.name)}"`,
+    `Artist="${xmlAttr(track.artist)}"`,
+    bpm ? `AverageBpm="${bpm}"` : "",
+    track.musicalKey ? `Tonality="${xmlAttr(track.musicalKey)}"` : "",
+    track.genre ? `Genre="${xmlAttr(track.genre)}"` : "",
+    track.durationSeconds != null ? `TotalTime="${track.durationSeconds}"` : "",
+    track.sourceUri ? `Location="${xmlAttr(track.sourceUri)}"` : "",
+    comment ? `Comments="${xmlAttr(comment)}"` : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
+  return `    <TRACK ${attrs}/>`
+}
+
+function toRekordbox(
+  playlist: ExportPlaylist,
+  options: ExportOptions
+): string {
+  const { tracks } = playlist
+  const { rootAttrs, prefix } = rekordboxHeader(playlist)
+
+  // TrackIDs: a preserved entry keeps its own, so its <POSITION_MARK> cues and
+  // rating stay attached to the id rekordbox already knows. Synthesised entries
+  // get ids above every preserved one, so the two can never collide.
+  const preservedIds = new Set<number>()
+
+  for (const track of tracks) {
+    const entry = preservedEntry(track, "rekordbox_xml")
+    const id = entry ? Number(getOwnAttribute(entry, "TrackID")) : NaN
+
+    if (Number.isInteger(id)) {
+      preservedIds.add(id)
+    }
+  }
+
+  let nextId = Math.max(0, ...preservedIds) + 1
+  const idByKey = new Map<string, number>()
+
+  const entries = collectionEntries(tracks, rekordboxKey, (track, key) => {
+    const preserved = preservedEntry(track, "rekordbox_xml")
+    const preservedId = preserved
+      ? Number(getOwnAttribute(preserved, "TrackID"))
+      : NaN
+
+    if (preserved && Number.isInteger(preservedId)) {
+      idByKey.set(key, preservedId)
+
+      const comment = trackComment(track.comment, track.energyScore, options)
+
+      return `    ${
+        options.writeEnergyToComment && comment
+          ? setOwnAttribute(preserved, "Comments", comment)
+          : preserved
+      }`
+    }
+
+    const id = preserved && Number.isInteger(preservedId) ? preservedId : nextId++
+    idByKey.set(key, id)
+
+    if (preserved) {
+      // A preserved entry with no usable TrackID: keep every other field and
+      // stamp on the one rekordbox needs to resolve the reference.
+      return `    ${setOwnAttribute(preserved, "TrackID", String(id))}`
+    }
+
+    return synthesizedRekordboxTrack(track, id, options)
+  })
 
   const refs = tracks
-    .map((_, index) => `        <TRACK Key="${index + 1}"/>`)
+    .map((track) => {
+      const id = idByKey.get(rekordboxKey(track))
+      return id === undefined
+        ? ""
+        : `        <TRACK Key="${id}"/>`
+    })
+    .filter(Boolean)
     .join("\n")
 
+  const collection = options.playlistOnly ? [] : entries
+
   return `<?xml version="1.0" encoding="UTF-8"?>
-<DJ_PLAYLISTS Version="1.0.0">
-  <PRODUCT Name="rekordbox" Version="6.0.0" Company="AlphaTheta"/>
-  <COLLECTION Entries="${tracks.length}">
-${collection}
+<DJ_PLAYLISTS ${rootAttrs}>
+  ${prefix}
+  <COLLECTION Entries="${collection.length}">
+${collection.join("\n")}
   </COLLECTION>
   <PLAYLISTS>
     <NODE Type="0" Name="ROOT" Count="1">
@@ -308,10 +512,44 @@ ${refs}
 
 // --- Traktor NML -----------------------------------------------------------
 
+const DEFAULT_TRAKTOR_ROOT_ATTRS = 'VERSION="19"'
+const DEFAULT_TRAKTOR_PREFIX =
+  '<HEAD COMPANY="www.native-instruments.com" PROGRAM="Traktor"/>'
+
+/**
+ * The NML header to emit. Taken from the source file when we have it: our
+ * hardcoded `VERSION="19"` handed a file from any other Traktor version back
+ * mislabelled, which is a lie about the document even when nothing breaks.
+ */
+function traktorHeader(playlist: ExportPlaylist): {
+  rootAttrs: string
+  prefix: string
+} {
+  const header = playlist.sourceHeader
+
+  if (header?.format !== "traktor_nml") {
+    return {
+      rootAttrs: DEFAULT_TRAKTOR_ROOT_ATTRS,
+      prefix: DEFAULT_TRAKTOR_PREFIX,
+    }
+  }
+
+  return {
+    rootAttrs: header.rootAttrs || DEFAULT_TRAKTOR_ROOT_ATTRS,
+    prefix: header.prefix || DEFAULT_TRAKTOR_PREFIX,
+  }
+}
+
 /**
  * Splits a Traktor location key (VOLUME + DIR + FILE, joined by "/:" segments,
  * e.g. "Macintosh HD/:Users/:dj/:Music/:track.mp3") back into its LOCATION
  * parts. Inverse of the parser's `locationKey` concatenation.
+ *
+ * Only reached for tracks with no preserved entry: when we have the source
+ * entry, its LOCATION is re-emitted untouched and nothing is split or rejoined.
+ * (Verified against a real 3017-entry collection: the split round-trips
+ * 3023/3023 locations, so this is correct — it is just no longer on the path
+ * that matters.)
  */
 function splitTraktorLocation(key: string): {
   volume: string
@@ -348,53 +586,86 @@ function traktorLocationKey(track: ExportTrack): string {
 
 /**
  * Traktor links a playlist ENTRY to a collection ENTRY by the exact
- * VOLUME+DIR+FILE concatenation of the collection entry's LOCATION. So the
- * PRIMARYKEY must be derived from the SAME split location we emit — not from
- * the raw sourceUri. For real Traktor keys the two are identical, but for
- * bare filenames (audio-files imports: the browser never exposes real paths)
- * the location gets synthesized as VOLUME="EnergyCurve" DIR="/:", and a raw
- * filename key would match nothing → Traktor showed the playlist as EMPTY.
+ * VOLUME+DIR+FILE concatenation of the collection entry's LOCATION.
+ *
+ * With a preserved entry that concatenation is exactly the `sourceUri` we
+ * stored at import — the parser built one from the other — so it is used
+ * directly and no split/rejoin can perturb it. Without one, the key has to be
+ * derived from the SAME split we emit: for bare filenames (audio-file imports,
+ * where the browser never exposes a real path) the location is synthesized as
+ * VOLUME="EnergyCurve" DIR="/:", and a raw filename key would match nothing →
+ * Traktor showed the playlist as EMPTY.
  */
 function canonicalTraktorKey(track: ExportTrack): string {
+  if (preservedEntry(track, "traktor_nml") && track.sourceUri) {
+    return track.sourceUri
+  }
+
   const location = splitTraktorLocation(traktorLocationKey(track))
   return `${location.volume}${location.dir}${location.file}`
 }
 
-function toTraktor(playlist: ExportPlaylist): string {
-  const { tracks } = playlist
+function synthesizedTraktorEntry(
+  track: ExportTrack,
+  options: ExportOptions
+): string {
+  const loc = splitTraktorLocation(traktorLocationKey(track))
+  const comment = trackComment(track.comment, track.energyScore, options)
+  const bpm = track.bpm == null ? null : track.bpm.toFixed(6)
+  const infoAttrs = [
+    track.genre ? `GENRE="${xmlAttr(track.genre)}"` : "",
+    comment ? `COMMENT="${xmlAttr(comment)}"` : "",
+    track.musicalKey ? `KEY="${xmlAttr(track.musicalKey)}"` : "",
+    track.durationSeconds != null ? `PLAYTIME="${track.durationSeconds}"` : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+  const info = infoAttrs ? `<INFO ${infoAttrs}/>` : ""
+  const tempo = bpm ? `<TEMPO BPM="${bpm}"/>` : ""
+  // Traktor's Key COLUMN reads the numeric MUSICAL_KEY, not the INFO KEY
+  // text — without this element exported keys were invisible in Traktor.
+  const keyValue = musicalKeyToTraktorValue(track.musicalKey)
+  const musicalKey =
+    keyValue !== null ? `<MUSICAL_KEY VALUE="${keyValue}"/>` : ""
 
-  const entries = tracks
-    .map((track) => {
-      const key = traktorLocationKey(track)
-      const loc = splitTraktorLocation(key)
-      const comment = trackComment(track.comment, track.energyScore)
-      const bpm = track.bpm == null ? null : track.bpm.toFixed(6)
-      const infoAttrs = [
-        track.genre ? `GENRE="${xmlAttr(track.genre)}"` : "",
-        comment ? `COMMENT="${xmlAttr(comment)}"` : "",
-        track.musicalKey ? `KEY="${xmlAttr(track.musicalKey)}"` : "",
-        track.durationSeconds != null
-          ? `PLAYTIME="${track.durationSeconds}"`
-          : "",
-      ]
-        .filter(Boolean)
-        .join(" ")
-      const info = infoAttrs ? `<INFO ${infoAttrs}/>` : ""
-      const tempo = bpm ? `<TEMPO BPM="${bpm}"/>` : ""
-      // Traktor's Key COLUMN reads the numeric MUSICAL_KEY, not the INFO KEY
-      // text — without this element exported keys were invisible in Traktor.
-      const keyValue = musicalKeyToTraktorValue(track.musicalKey)
-      const musicalKey =
-        keyValue !== null ? `<MUSICAL_KEY VALUE="${keyValue}"/>` : ""
-
-      return `    <ENTRY TITLE="${xmlAttr(track.name)}" ARTIST="${xmlAttr(track.artist)}">
+  return `    <ENTRY TITLE="${xmlAttr(track.name)}" ARTIST="${xmlAttr(track.artist)}">
       <LOCATION DIR="${xmlAttr(loc.dir)}" FILE="${xmlAttr(loc.file)}" VOLUME="${xmlAttr(loc.volume)}"/>
       ${info}
       ${musicalKey}
       ${tempo}
     </ENTRY>`
-    })
-    .join("\n")
+}
+
+function toTraktor(playlist: ExportPlaylist, options: ExportOptions): string {
+  const { tracks } = playlist
+  const { rootAttrs, prefix } = traktorHeader(playlist)
+
+  const entries = collectionEntries(tracks, canonicalTraktorKey, (track) => {
+    const preserved = preservedEntry(track, "traktor_nml")
+
+    if (!preserved) {
+      return synthesizedTraktorEntry(track, options)
+    }
+
+    if (!options.writeEnergyToComment) {
+      return `    ${preserved}`
+    }
+
+    const comment = trackComment(track.comment, track.energyScore, options)
+
+    // An entry with no <INFO> element has nowhere to carry a comment, and
+    // inventing structure inside someone's library entry is exactly the class
+    // of write this whole change exists to stop. Leave it alone.
+    const carries = hasChildElement(preserved, "INFO")
+
+    return `    ${
+      comment && carries
+        ? setAttribute(preserved, "INFO", "COMMENT", comment)
+        : preserved
+    }`
+  })
+
+  const collection = options.playlistOnly ? [] : entries
 
   const refs = tracks
     .map((track) => {
@@ -404,10 +675,10 @@ function toTraktor(playlist: ExportPlaylist): string {
     .join("\n")
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<NML VERSION="19">
-  <HEAD COMPANY="www.native-instruments.com" PROGRAM="Traktor"/>
-  <COLLECTION ENTRIES="${tracks.length}">
-${entries}
+<NML ${rootAttrs}>
+  ${prefix}
+  <COLLECTION ENTRIES="${collection.length}">
+${collection.join("\n")}
   </COLLECTION>
   <PLAYLISTS>
     <NODE TYPE="FOLDER" NAME="$ROOT">

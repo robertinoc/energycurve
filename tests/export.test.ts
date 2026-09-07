@@ -13,6 +13,9 @@ import { parseM3u8 } from "@/lib/playlists/parse-m3u8"
 import { parseRekordbox } from "@/lib/playlists/parse-rekordbox"
 import { parseRekordboxTxt } from "@/lib/playlists/parse-rekordbox-txt"
 import { parseTraktor } from "@/lib/playlists/parse-traktor"
+import { extractCollectionElements } from "@/lib/playlists/source-entry"
+
+import { REAL_SHAPE_NML } from "./fixtures-traktor-nml"
 
 function makeTrack(overrides: Partial<ExportTrack> = {}): ExportTrack {
   return {
@@ -216,7 +219,7 @@ describe("M3U8 export", () => {
 })
 
 describe("Rekordbox export round-trips through the parser", () => {
-  it("preserves order, metadata, energy, key, genre, duration, and location", () => {
+  it("preserves order, metadata, key, genre, duration, and location", () => {
     const xml = serializePlaylist("rekordbox", samplePlaylist())
     const parsed = parseRekordbox(xml)
 
@@ -226,12 +229,28 @@ describe("Rekordbox export round-trips through the parser", () => {
     expect(parsed.tracks[0]).toMatchObject({
       artist: "Mira Phase",
       bpm: 130,
-      energy: 8,
       key: "9A",
       genre: "Hard Techno",
       durationSeconds: 317,
       sourceUri: "file://localhost/Music/peak.mp3",
     })
+  })
+
+  it("leaves the comment tag empty unless the DJ asked for the energy", () => {
+    // This writer used to synthesise "Energy 8" into every empty comment, so a
+    // round-trip appeared to carry energy — by writing a tag into the DJ's
+    // library that they never set. The absence is the fix, not a regression.
+    const parsed = parseRekordbox(serializePlaylist("rekordbox", samplePlaylist()))
+    expect(parsed.tracks[0].energy).toBeNull()
+    expect(parsed.tracks[0].comment).toBeNull()
+
+    const optedIn = parseRekordbox(
+      serializePlaylist("rekordbox", samplePlaylist(), {
+        writeEnergyToComment: true,
+      })
+    )
+    expect(optedIn.tracks[0].energy).toBe(8)
+    expect(optedIn.tracks[0].comment).toBe("Energy 8")
   })
 })
 
@@ -371,12 +390,18 @@ describe("Traktor export round-trips through the parser", () => {
     expect(parsed.tracks[0]).toMatchObject({
       artist: "Mira Phase",
       bpm: 130,
-      energy: 8,
       key: "9A",
       genre: "Hard Techno",
       durationSeconds: 317,
       sourceUri: "Macintosh HD/:Users/:dj/:Music/:peak.mp3",
     })
+    // Same contract as Rekordbox: no comment is written unless asked.
+    expect(parsed.tracks[0].energy).toBeNull()
+
+    const optedIn = parseTraktor(
+      serializePlaylist("traktor", playlist, { writeEnergyToComment: true })
+    )
+    expect(optedIn.tracks[0].energy).toBe(8)
   })
 })
 
@@ -402,5 +427,361 @@ describe("warning about native exports from local files", () => {
     expect(nativeExportWillMissTracks("traktor", "traktor")).toBe(false)
     expect(nativeExportWillMissTracks("m3u8", "traktor")).toBe(false)
     expect(nativeExportWillMissTracks(null, "rekordbox")).toBe(false)
+  })
+})
+
+/**
+ * The reported bug, as a test.
+ *
+ * An alpha user reordered a Traktor playlist through EnergyCurve and lost the
+ * hotcues, comments and album tags on the tracks — and had to re-analyse them.
+ * Confirmed against his own 3017-entry Traktor 3.5.1 collection: of the 26
+ * tracks that entered it through us, 0% had an <ALBUM> against a 73%
+ * collection-wide baseline, 0% an IMPORT_DATE against 96%, and 0% a COMMENT
+ * against 40%, while INFO@KEY sat at 100% against 54% — our writer's
+ * fingerprint.
+ *
+ * So the assertion is not "the fields we thought of survive". It is that the
+ * entry comes back byte-identical, which also covers the fields nobody here has
+ * heard of yet.
+ */
+describe("native export round-trips the source library entry", () => {
+  function reorderedNml(options?: Parameters<typeof serializePlaylist>[2]) {
+    const parsed = parseTraktor(REAL_SHAPE_NML)
+
+    return serializePlaylist(
+      "traktor",
+      {
+        name: "Night One (reordered)",
+        importSource: "traktor",
+        sourceHeader: parsed.sourceHeader,
+        // Reversed: the export exists to change the order and nothing else.
+        tracks: [...parsed.tracks].reverse().map((track, index) => ({
+          position: index + 1,
+          artist: track.artist,
+          name: track.name,
+          bpm: track.bpm,
+          energyScore: track.energy,
+          sourceUri: track.sourceUri,
+          musicalKey: track.key,
+          genre: track.genre,
+          comment: track.comment,
+          durationSeconds: track.durationSeconds,
+          sourcePayload: track.sourcePayload,
+          sourcePayloadFormat: track.sourcePayloadFormat,
+        })),
+      },
+      options
+    )
+  }
+
+  it("hands every source entry back byte-for-byte", () => {
+    const out = reorderedNml()
+
+    for (const entry of extractCollectionElements(REAL_SHAPE_NML, "ENTRY")) {
+      expect(out).toContain(entry)
+    }
+  })
+
+  it("keeps the fields that were being dropped", () => {
+    const out = reorderedNml()
+
+    for (const field of [
+      "<CUE_V2",
+      "<LOOPINFO",
+      "<LOUDNESS",
+      "<ALBUM",
+      "<MODIFICATION_INFO",
+      'AUDIO_ID="',
+      'VOLUMEID="',
+      'FLAGS="',
+      'PLAYCOUNT="',
+      'LAST_PLAYED="',
+      'LABEL="',
+      'COVERARTID="',
+      'BPM_QUALITY="',
+      'IMPORT_DATE="',
+      'LOCK="',
+    ]) {
+      expect(out, field).toContain(field)
+    }
+
+    // Both hotcues on the first track, not just one.
+    expect(out.match(/<CUE_V2/g)).toHaveLength(2)
+  })
+
+  it("changes the order and only the order", () => {
+    const out = reorderedNml()
+    const keys = [...out.matchAll(/<PRIMARYKEY TYPE="TRACK" KEY="([^"]*)"/g)].map(
+      (m) => m[1]
+    )
+
+    expect(keys).toEqual([
+      "ROBERT HD2/:Users/:dj/:Music/:intro.mp3",
+      "Macintosh HD/:Users/:dj/:Music/:peak.mp3",
+    ])
+  })
+
+  it("keys every playlist reference to a collection entry that exists", () => {
+    // The failure this guards against is the one that makes Traktor create a
+    // second, empty entry for a track it already has: a PRIMARYKEY that matches
+    // no LOCATION in the file. It is the likeliest cause of the "once every
+    // 20-30 tracks" report, since his library spans three volumes.
+    const out = reorderedNml()
+    const locations = [...out.matchAll(/<LOCATION ([^>]*?)\/?>/g)].map((m) => {
+      const attrs = Object.fromEntries(
+        [...m[1].matchAll(/(\w+)="([^"]*)"/g)].map((a) => [a[1], a[2]])
+      )
+      return `${attrs.VOLUME ?? ""}${attrs.DIR ?? ""}${attrs.FILE ?? ""}`
+    })
+    const keys = [...out.matchAll(/<PRIMARYKEY TYPE="TRACK" KEY="([^"]*)"/g)].map(
+      (m) => m[1]
+    )
+
+    expect(keys).toHaveLength(2)
+    for (const key of keys) {
+      expect(locations).toContain(key)
+    }
+  })
+
+  it("declares the version the source file declared, not a hardcoded one", () => {
+    const parsed = parseTraktor(
+      REAL_SHAPE_NML.replace('<NML VERSION="19">', '<NML VERSION="20">')
+    )
+    const out = serializePlaylist("traktor", {
+      name: "Set",
+      importSource: "traktor",
+      sourceHeader: parsed.sourceHeader,
+      tracks: parsed.tracks.map((track, index) => ({
+        position: index + 1,
+        artist: track.artist,
+        name: track.name,
+        bpm: track.bpm,
+        energyScore: track.energy,
+        sourceUri: track.sourceUri,
+        musicalKey: track.key,
+        genre: track.genre,
+        comment: track.comment,
+        durationSeconds: track.durationSeconds,
+        sourcePayload: track.sourcePayload,
+        sourcePayloadFormat: track.sourcePayloadFormat,
+      })),
+    })
+
+    expect(out).toContain('<NML VERSION="20">')
+  })
+
+  it("writes no comment into a library that didn't have one", () => {
+    // The old writer synthesised "Energy N" into any empty comment field, so
+    // every export wrote a tag the DJ never set. The second fixture entry has
+    // no COMMENT; it must still have none.
+    const out = reorderedNml()
+    const second = out.slice(out.indexOf('TITLE="Intro Bloom"'))
+
+    expect(second.slice(0, second.indexOf("</ENTRY>"))).not.toContain("COMMENT=")
+  })
+
+  it("merges energy into the existing comment only when asked", () => {
+    const out = reorderedNml({ writeEnergyToComment: true })
+
+    // Fixture comment is "peak hour" and the parsed energy is null (no token),
+    // so nothing to merge on entry one; entry two has neither. Set an energy
+    // explicitly to exercise the merge.
+    expect(out).toContain('COMMENT="peak hour"')
+  })
+
+  it("updates an existing energy token in place instead of stacking", () => {
+    const withEnergy = REAL_SHAPE_NML.replace(
+      'COMMENT="peak hour"',
+      'COMMENT="peak hour Energy 4"'
+    )
+    const parsed = parseTraktor(withEnergy)
+    const out = serializePlaylist(
+      "traktor",
+      {
+        name: "Set",
+        importSource: "traktor",
+        sourceHeader: parsed.sourceHeader,
+        tracks: parsed.tracks.map((track, index) => ({
+          position: index + 1,
+          artist: track.artist,
+          name: track.name,
+          bpm: track.bpm,
+          energyScore: index === 0 ? 9 : null,
+          sourceUri: track.sourceUri,
+          musicalKey: track.key,
+          genre: track.genre,
+          comment: track.comment,
+          durationSeconds: track.durationSeconds,
+          sourcePayload: track.sourcePayload,
+          sourcePayloadFormat: track.sourcePayloadFormat,
+        })),
+      },
+      { writeEnergyToComment: true }
+    )
+
+    expect(out).toContain('COMMENT="peak hour Energy 9"')
+    expect(out).not.toContain("Energy 4")
+    expect(out).not.toContain("Energy 4 Energy 9")
+    // The patch touches the comment and nothing else.
+    expect(out).toContain("<CUE_V2")
+    expect(out).toContain('AUDIO_ID="AIQBQyERRBAAEhAA"')
+  })
+
+  it("emits one collection entry per track even when a track repeats", () => {
+    const parsed = parseTraktor(REAL_SHAPE_NML)
+    const twice = [parsed.tracks[0], parsed.tracks[0], parsed.tracks[1]]
+    const out = serializePlaylist("traktor", {
+      name: "Set",
+      importSource: "traktor",
+      sourceHeader: parsed.sourceHeader,
+      tracks: twice.map((track, index) => ({
+        position: index + 1,
+        artist: track.artist,
+        name: track.name,
+        bpm: track.bpm,
+        energyScore: track.energy,
+        sourceUri: track.sourceUri,
+        musicalKey: track.key,
+        genre: track.genre,
+        comment: track.comment,
+        durationSeconds: track.durationSeconds,
+        sourcePayload: track.sourcePayload,
+        sourcePayloadFormat: track.sourcePayloadFormat,
+      })),
+    })
+
+    // A collection is a set: two plays of one track are two references to one
+    // entry, and emitting it twice asks Traktor to merge a track with itself.
+    expect(out).toContain('<COLLECTION ENTRIES="2">')
+    expect(out.match(/<PRIMARYKEY/g)).toHaveLength(3)
+    expect(out.match(/<PLAYLIST ENTRIES="3"/g)).toHaveLength(1)
+  })
+
+  it("can emit the playlist with no collection at all", () => {
+    // Nothing to merge means nothing can be overwritten. Not offered in the UI
+    // until it is verified against a real Traktor, but the serialiser is what
+    // that verification runs against.
+    const out = reorderedNml({ playlistOnly: true })
+
+    expect(out).toContain('<COLLECTION ENTRIES="0">')
+    expect(out).not.toContain("<CUE_V2")
+    expect(out.match(/<PRIMARYKEY/g)).toHaveLength(2)
+  })
+
+  it("still synthesizes an entry for a track that has no source entry", () => {
+    // Manual adds and audio-file imports have no library entry to preserve;
+    // they must not silently vanish from the collection.
+    const parsed = parseTraktor(REAL_SHAPE_NML)
+    const out = serializePlaylist("traktor", {
+      name: "Set",
+      importSource: "traktor",
+      sourceHeader: parsed.sourceHeader,
+      tracks: [
+        {
+          position: 1,
+          artist: "Hand Added",
+          name: "No Payload",
+          bpm: 128,
+          energyScore: 6,
+          sourceUri: null,
+          musicalKey: "8A",
+          genre: null,
+          comment: null,
+          durationSeconds: 300,
+          sourcePayload: null,
+          sourcePayloadFormat: null,
+        },
+      ],
+    })
+
+    expect(out).toContain('<COLLECTION ENTRIES="1">')
+    expect(out).toContain('TITLE="No Payload"')
+    expect(out).toContain('VOLUME="EnergyCurve"')
+  })
+
+  it("never pastes a Rekordbox track into an NML", () => {
+    const out = serializePlaylist("traktor", {
+      name: "Set",
+      importSource: "rekordbox",
+      tracks: [
+        {
+          position: 1,
+          artist: "A",
+          name: "B",
+          bpm: 128,
+          energyScore: null,
+          sourceUri: "file://localhost/Music/a.mp3",
+          musicalKey: null,
+          genre: null,
+          comment: null,
+          durationSeconds: null,
+          sourcePayload: '<TRACK TrackID="7" Name="B" Rating="204"/>',
+          sourcePayloadFormat: "rekordbox_xml",
+        },
+      ],
+    })
+
+    expect(out).not.toContain("<TRACK")
+    expect(out).not.toContain('Rating="204"')
+    expect(out).toContain('TITLE="B"')
+  })
+})
+
+describe("Rekordbox export round-trips its source track", () => {
+  const RB_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<DJ_PLAYLISTS Version="1.0.0">
+  <PRODUCT Name="rekordbox" Version="6.7.7" Company="AlphaTheta"/>
+  <COLLECTION Entries="2">
+    <TRACK TrackID="41" Name="Peak Freq" Artist="Mira Phase" AverageBpm="130.00" Tonality="9A" Genre="Hard Techno" TotalTime="317" Location="file://localhost/Music/peak.mp3" Comments="peak hour" Rating="204" Colour="0xFF007F" PlayCount="14" DateAdded="2024-01-02">
+      <TEMPO Inizio="0.025" Bpm="130.00" Metro="4/4" Battito="1"/>
+      <POSITION_MARK Name="in" Type="0" Start="12.5" Num="0"/>
+      <POSITION_MARK Name="drop" Type="0" Start="55.4" Num="1"/>
+    </TRACK>
+    <TRACK TrackID="42" Name="Intro Bloom" Artist="Nova Relay" AverageBpm="120.00" Location="file://localhost/Music/intro.mp3"/>
+  </COLLECTION>
+  <PLAYLISTS>
+    <NODE Type="0" Name="ROOT" Count="1">
+      <NODE Name="Night One" Type="1" KeyType="0" Entries="2">
+        <TRACK Key="41"/>
+        <TRACK Key="42"/>
+      </NODE>
+    </NODE>
+  </PLAYLISTS>
+</DJ_PLAYLISTS>`
+
+  it("keeps memory cues, rating, colour and play count, and reorders", () => {
+    const parsed = parseRekordbox(RB_XML)
+    const out = serializePlaylist("rekordbox", {
+      name: "Night One (reordered)",
+      importSource: "rekordbox",
+      sourceHeader: parsed.sourceHeader,
+      tracks: [...parsed.tracks].reverse().map((track, index) => ({
+        position: index + 1,
+        artist: track.artist,
+        name: track.name,
+        bpm: track.bpm,
+        energyScore: track.energy,
+        sourceUri: track.sourceUri,
+        musicalKey: track.key,
+        genre: track.genre,
+        comment: track.comment,
+        durationSeconds: track.durationSeconds,
+        sourcePayload: track.sourcePayload,
+        sourcePayloadFormat: track.sourcePayloadFormat,
+      })),
+    })
+
+    expect(out.match(/<POSITION_MARK/g)).toHaveLength(2)
+    expect(out).toContain('Rating="204"')
+    expect(out).toContain('Colour="0xFF007F"')
+    expect(out).toContain('PlayCount="14"')
+    expect(out).toContain('DateAdded="2024-01-02"')
+    expect(out).toContain("<TEMPO Inizio=")
+    expect(out).toContain('Version="6.7.7"')
+
+    // Preserved TrackIDs, referenced in the new order.
+    const refs = [...out.matchAll(/<TRACK Key="(\d+)"\/>/g)].map((m) => m[1])
+    expect(refs).toEqual(["42", "41"])
   })
 })

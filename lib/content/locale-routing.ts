@@ -44,6 +44,7 @@ export const LOCALIZED_PATHS = [
   "/pricing",
   "/blog",
   "/install",
+  "/energy-tags",
   "/privacy",
   "/terms",
   "/cookie-policy",

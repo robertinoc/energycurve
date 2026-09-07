@@ -151,3 +151,95 @@ describe("matchAudioToTracks", () => {
     expect(matchAudioToTracks([track(1, "A", "B")], []).unmatchedTracks).toHaveLength(1)
   })
 })
+
+/**
+ * Enriching an M3U8 import.
+ *
+ * An M3U8 carries a path and a duration, so the artist and title on those
+ * tracks were *guessed from the filename* — matching a guess against a real tag
+ * is the weakest key there is, while the path the guess came from is the
+ * strongest. This pass is what makes "import an m3u8, then add the files"
+ * actually work.
+ */
+describe("matching by file path", () => {
+  const target = (overrides: Partial<MatchTarget> = {}): MatchTarget => ({
+    id: "t1",
+    artist: "",
+    name: "01 track",
+    position: 1,
+    hasBpm: false,
+    ...overrides,
+  })
+
+  it("pairs a track to the file it was imported from, tags notwithstanding", () => {
+    const result = matchAudioToTracks(
+      [target({ sourceUri: "/Users/dj/Music/peak.mp3" })],
+      [
+        {
+          key: "0-peak.mp3",
+          artist: "Mira Phase",
+          title: "Peak Freq",
+          path: "peak.mp3",
+        },
+      ]
+    )
+
+    expect(result.matched).toHaveLength(1)
+    expect(result.matched[0].reason).toBe("file_path")
+    expect(result.unmatchedTracks).toHaveLength(0)
+  })
+
+  it("decodes percent-encoded paths and folds case", () => {
+    const result = matchAudioToTracks(
+      [target({ sourceUri: "file:///Users/dj/Music/Peak%20Freq.mp3" })],
+      [{ key: "0", artist: "", title: "", path: "Sets/peak freq.MP3" }]
+    )
+
+    expect(result.matched[0]?.reason).toBe("file_path")
+  })
+
+  it("beats a competing artist+title match on a different file", () => {
+    const result = matchAudioToTracks(
+      [target({ artist: "Mira Phase", name: "Peak Freq", sourceUri: "/m/a.mp3" })],
+      [
+        { key: "0", artist: "Other", title: "Other", path: "a.mp3" },
+        { key: "1", artist: "Mira Phase", title: "Peak Freq", path: "b.mp3" },
+      ]
+    )
+
+    expect(result.matched[0].candidate.key).toBe("0")
+    expect(result.matched[0].reason).toBe("file_path")
+  })
+
+  it("reports two same-named files in different folders as ambiguous", () => {
+    const result = matchAudioToTracks(
+      [target({ sourceUri: "/m/peak.mp3" })],
+      [
+        { key: "0", artist: "", title: "", path: "2023/peak.mp3" },
+        { key: "1", artist: "", title: "", path: "2024/peak.mp3" },
+      ]
+    )
+
+    expect(result.matched).toHaveLength(0)
+    expect(result.ambiguous).toHaveLength(1)
+    expect(result.ambiguous[0].candidates).toHaveLength(2)
+  })
+
+  it("falls back to the title passes when the paths don't line up", () => {
+    const result = matchAudioToTracks(
+      [target({ artist: "Mira Phase", name: "Peak Freq", sourceUri: "/m/gone.mp3" })],
+      [{ key: "0", artist: "Mira Phase", title: "Peak Freq", path: "renamed.mp3" }]
+    )
+
+    expect(result.matched[0].reason).toBe("artist_and_title")
+  })
+
+  it("changes nothing for tracks with no imported path", () => {
+    const result = matchAudioToTracks(
+      [target({ artist: "Mira Phase", name: "Peak Freq" })],
+      [{ key: "0", artist: "Mira Phase", title: "Peak Freq", path: "x.mp3" }]
+    )
+
+    expect(result.matched[0].reason).toBe("artist_and_title")
+  })
+})

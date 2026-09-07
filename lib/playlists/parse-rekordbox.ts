@@ -1,12 +1,17 @@
 import { XMLParser } from "fast-xml-parser"
 
+import { readEnergyTag } from "@/lib/playlists/energy-tag"
 import {
-  extractEnergyFromComment,
   parseBpm,
   parseDurationSeconds,
   type ImportedTrack,
   type ParsedImport,
 } from "@/lib/playlists/imported-track"
+import {
+  extractCollectionElements,
+  extractSourceHeader,
+  payloadsByIndex,
+} from "@/lib/playlists/source-entry"
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -24,6 +29,11 @@ interface RawTrack {
   "@_AverageBpm"?: string
   "@_Tonality"?: string
   "@_Comments"?: string
+  /** Rekordbox's "Grouping" / "Composer" / "Label" columns — where a DJ who
+   * doesn't want energy in their comments tends to put it instead. */
+  "@_Grouping"?: string
+  "@_Composer"?: string
+  "@_Label"?: string
   "@_Location"?: string
   "@_TotalTime"?: string
 }
@@ -40,10 +50,19 @@ export function isRekordboxXml(xml: string): boolean {
   return xml.includes("<DJ_PLAYLISTS")
 }
 
-function toImportedTrack(raw: RawTrack): ImportedTrack {
+function toImportedTrack(
+  raw: RawTrack,
+  sourcePayload: string | null
+): ImportedTrack {
   const artist = (raw["@_Artist"] ?? "").trim()
   const name = (raw["@_Name"] ?? "").trim()
   const comment = raw["@_Comments"] ?? null
+  const energy = readEnergyTag({
+    comment,
+    grouping: raw["@_Grouping"],
+    composer: raw["@_Composer"],
+    label: raw["@_Label"],
+  })
 
   return {
     artist,
@@ -51,10 +70,13 @@ function toImportedTrack(raw: RawTrack): ImportedTrack {
     bpm: parseBpm(raw["@_AverageBpm"]),
     key: (raw["@_Tonality"] ?? "").trim() || null,
     genre: (raw["@_Genre"] ?? "").trim() || null,
-    energy: extractEnergyFromComment(comment),
+    energy: energy?.value ?? null,
+    energySource: energy?.field ?? null,
     sourceUri: (raw["@_Location"] ?? "").trim() || null,
     comment: (comment ?? "").trim() || null,
     durationSeconds: parseDurationSeconds(raw["@_TotalTime"]),
+    sourcePayload,
+    sourcePayloadFormat: sourcePayload ? "rekordbox_xml" : null,
   }
 }
 
@@ -108,6 +130,19 @@ export function parseRekordbox(xml: string): ParsedImport {
     }
   }
 
+  // The verbatim <TRACK> slices, paired by document order — this is what keeps
+  // <POSITION_MARK> cues, Rating, Colour and PlayCount alive through a
+  // reorder. See source-entry.ts.
+  const payloadAt = payloadsByIndex(
+    collectionTracks.length,
+    extractCollectionElements(xml, "TRACK")
+  )
+  const positionOf = new Map<RawTrack, number>()
+
+  collectionTracks.forEach((track, index) => {
+    positionOf.set(track, index)
+  })
+
   // Resolve the first playlist node's ordered references, if any.
   let ordered: RawTrack[] = []
   let playlistName: string | null = null
@@ -130,12 +165,24 @@ export function parseRekordbox(xml: string): ParsedImport {
   const source = ordered.length > 0 ? ordered : collectionTracks
 
   const tracks = source
-    .map(toImportedTrack)
+    .map((track) => {
+      const position = positionOf.get(track)
+
+      return toImportedTrack(
+        track,
+        position === undefined ? null : payloadAt(position)
+      )
+    })
     .filter((t) => t.artist || t.name)
 
   if (tracks.length === 0) {
     throw new Error("No tracks found in the Rekordbox export.")
   }
 
-  return { source: "rekordbox", playlistName, tracks }
+  return {
+    source: "rekordbox",
+    playlistName,
+    tracks,
+    sourceHeader: extractSourceHeader(xml, "rekordbox_xml"),
+  }
 }

@@ -74,6 +74,15 @@ export interface MatchTarget {
   position: number
   /** True when this track already carries a real BPM. */
   hasBpm: boolean
+  /**
+   * The file reference the track was imported with, when it has one.
+   *
+   * This is the whole reason enriching an M3U8 import works well: an M3U8
+   * carries a path and nothing else, so the track's artist and title were
+   * guessed from that path — and matching a guessed title against a tag is the
+   * weakest key available, while the path it was guessed from is the strongest.
+   */
+  sourceUri?: string | null
 }
 
 /** A file the DJ picked, with whatever its tags said. */
@@ -82,9 +91,13 @@ export interface MatchCandidate {
   key: string
   artist: string
   title: string
+  /** The file's own name or folder-relative path, for filename matching. */
+  path?: string | null
 }
 
 export type MatchReason =
+  /** The track's imported file path and the file's own name are the same file. */
+  | "file_path"
   /** Artist and title both matched, and only one file did. */
   | "artist_and_title"
   /** Only the title matched, but exactly one file had it. */
@@ -114,10 +127,38 @@ const keyOf = (artist: string, title: string) =>
   `${normalizeForMatch(artist)}|${normalizeForMatch(title)}`
 
 /**
+ * A path's filename, decoded and lowercased.
+ *
+ * Deliberately not normalised through `normalizeForMatch`: this is an identity
+ * comparison between two references to the same file on disk, not a fuzzy
+ * comparison between two human-typed strings. Percent-encoding is decoded
+ * because an M3U8 written by some tools escapes spaces, and case is folded
+ * because macOS and Windows filesystems do.
+ */
+function fileNameKey(path: string | null | undefined): string | null {
+  if (!path) {
+    return null
+  }
+
+  const base = path.split(/[?#]/)[0].split(/[/\\]/).pop() ?? ""
+  let decoded = base
+
+  try {
+    decoded = decodeURIComponent(base)
+  } catch {
+    // Not valid percent-encoding — compare the raw basename.
+  }
+
+  return decoded.trim().toLowerCase() || null
+}
+
+/**
  * Pairs tracks with files, conservatively.
  *
- * Two passes, in order of confidence. Artist+title first: if exactly one file has
- * both, that's the match. Then title alone, for the very common case of a tag
+ * Three passes, in order of confidence. Filename first, where both sides know
+ * one: two references to `peak.mp3` are the same file, and no amount of tag
+ * disagreement changes that. Then artist+title: if exactly one file has both,
+ * that's the match. Then title alone, for the very common case of a tag
  * crediting "Artist A & Artist B" where the playlist says only "Artist A" — but
  * only when exactly one file has that title, since a title alone is a weak key
  * and two files sharing it is precisely when guessing goes wrong.
@@ -131,8 +172,18 @@ export function matchAudioToTracks(
 ): MatchResult {
   const byArtistTitle = new Map<string, MatchCandidate[]>()
   const byTitle = new Map<string, MatchCandidate[]>()
+  const byFileName = new Map<string, MatchCandidate[]>()
 
   for (const candidate of candidates) {
+    const fileName = fileNameKey(candidate.path ?? candidate.key)
+
+    if (fileName) {
+      byFileName.set(fileName, [
+        ...(byFileName.get(fileName) ?? []),
+        candidate,
+      ])
+    }
+
     const full = keyOf(candidate.artist, candidate.title)
     const title = normalizeForMatch(candidate.title)
 
@@ -152,6 +203,26 @@ export function matchAudioToTracks(
   for (const target of targets) {
     const full = keyOf(target.artist, target.name)
     const title = normalizeForMatch(target.name)
+
+    const fileName = fileNameKey(target.sourceUri)
+    const byPath = fileName
+      ? (byFileName.get(fileName) ?? []).filter(
+          (candidate) => !taken.has(candidate.key)
+        )
+      : []
+
+    if (byPath.length === 1) {
+      taken.add(byPath[0].key)
+      matched.push({ target, candidate: byPath[0], reason: "file_path" })
+      continue
+    }
+
+    if (byPath.length > 1) {
+      // Two files with the same name in different folders. A person can tell
+      // which one they meant; this function cannot.
+      ambiguous.push({ target, candidates: byPath })
+      continue
+    }
 
     const exact = (byArtistTitle.get(full) ?? []).filter(
       (candidate) => !taken.has(candidate.key)

@@ -90,6 +90,7 @@ describe("audioTagsToImportedTrack", () => {
       key: "9A",
       genre: "Hard Techno",
       energy: 7,
+      energySource: "comment",
       sourceUri: "Promos/peak.mp3",
       comment: "9A - Energy 7",
       durationSeconds: 317,
@@ -193,5 +194,103 @@ describe("system junk files", () => {
     expect(isAudioFileName("cover.jpg")).toBe(false)
     expect(isSystemJunkFile("._real.mp3")).toBe(true)
     expect(isAudioFileName("._real.mp3")).toBe(true)
+  })
+})
+
+/**
+ * Not everyone tags with Mixed In Key. The alpha user who reported this uses
+ * Lexicon DJ, which can write the energy to any of several fields — and asked,
+ * reasonably, which one we read. The answer used to be "the comment, in one
+ * exact shape". These cover the rest of the answer.
+ */
+describe("audioTagsToImportedTrack — energy beyond Mixed In Key", () => {
+  function energyOf(
+    common: Partial<AudioTagSource["common"]>,
+    native?: AudioTagSource["native"]
+  ) {
+    const source = tags(common, 300)
+    const track = audioTagsToImportedTrack("t.mp3", null, {
+      ...source,
+      native,
+    })
+    return { energy: track.energy, from: track.energySource }
+  }
+
+  it("reads a dedicated ID3 TXXX:ENERGY frame", () => {
+    expect(
+      energyOf({}, { "ID3v2.4": [{ id: "TXXX:ENERGY", value: "8" }] })
+    ).toEqual({ energy: 8, from: "energy_frame" })
+  })
+
+  it("reads a TXXX frame that names itself in its description", () => {
+    expect(
+      energyOf({}, {
+        "ID3v2.3": [
+          { id: "TXXX", value: { description: "EnergyLevel", text: "6" } },
+        ],
+      })
+    ).toEqual({ energy: 6, from: "energy_frame" })
+  })
+
+  it("reads a Vorbis ENERGY comment and an iTunes atom", () => {
+    expect(energyOf({}, { vorbis: [{ id: "ENERGY", value: "4" }] })).toEqual({
+      energy: 4,
+      from: "energy_frame",
+    })
+    expect(
+      energyOf({}, {
+        iTunes: [
+          { id: "----:com.apple.iTunes:ENERGY", value: "Energy 9" },
+        ],
+      })
+    ).toEqual({ energy: 9, from: "energy_frame" })
+  })
+
+  it("reads the grouping, lyrics and composer fields", () => {
+    expect(energyOf({ grouping: "Energy 5" })).toEqual({
+      energy: 5,
+      from: "grouping",
+    })
+    expect(energyOf({ lyrics: [{ text: "Energy 3" }] })).toEqual({
+      energy: 3,
+      from: "lyrics",
+    })
+    expect(energyOf({ composer: ["Energy 2"] })).toEqual({
+      energy: 2,
+      from: "composer",
+    })
+  })
+
+  it("takes a bare number from lyrics or composer but not from the grouping", () => {
+    expect(energyOf({ lyrics: [{ text: "7" }] })).toEqual({
+      energy: 7,
+      from: "lyrics",
+    })
+    // A grouping of "7" is plausibly a group called 7.
+    expect(energyOf({ grouping: "7" })).toEqual({ energy: null, from: null })
+  })
+
+  it("lets the dedicated frame win over a comment", () => {
+    expect(
+      energyOf(
+        { comment: [{ text: "Energy 2" }] },
+        { "ID3v2.4": [{ id: "TXXX:ENERGY", value: "9" }] }
+      )
+    ).toEqual({ energy: 9, from: "energy_frame" })
+  })
+
+  it("ignores a frame that merely mentions energy in its value", () => {
+    expect(
+      energyOf({}, { "ID3v2.4": [{ id: "TIT2", value: "Energy 5" }] })
+    ).toEqual({ energy: null, from: null })
+  })
+
+  it("reads the value-first forms the user asked about", () => {
+    for (const written of ["01 Energy", "1 Energy", "1.0 Energy"]) {
+      expect(energyOf({ comment: [{ text: written }] })).toEqual({
+        energy: 1,
+        from: "comment",
+      })
+    }
   })
 })

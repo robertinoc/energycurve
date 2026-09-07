@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest"
 
-import { isCamelot, toCamelot,
+import {
+  camelotToMusical,
+  camelotToOpenKey,
+  detectKeyNotation,
+  formatKey,
+  isCamelot,
+  isKeyNotation,
+  KEY_NOTATIONS,
+  keySortIndex,
   musicalKeyToTraktorValue,
+  musicalKeyValueToOpenKey,
+  toCamelot,
 } from "@/lib/music/camelot"
 
 describe("toCamelot", () => {
@@ -112,5 +122,149 @@ describe("musicalKeyToTraktorValue", () => {
     expect(musicalKeyToTraktorValue(null)).toBeNull()
     expect(musicalKeyToTraktorValue("")).toBeNull()
     expect(musicalKeyToTraktorValue("not-a-key")).toBeNull()
+  })
+})
+
+/**
+ * The notation converter an alpha user asked for: "selección de modelo de Key
+ * (CAMELOT, Open Key, Musical) o conversor interno". Before this the module
+ * converted only INTO Camelot, so a DJ who reads Open Key — which is what
+ * Traktor displays — had to translate every row by hand.
+ */
+describe("notation conversion", () => {
+  /** The full wheel, in all three notations. One row per key, no exceptions. */
+  const WHEEL: Array<[camelot: string, openKey: string, musical: string]> = [
+    ["1A", "6m", "Abm"],
+    ["2A", "7m", "Ebm"],
+    ["3A", "8m", "Bbm"],
+    ["4A", "9m", "Fm"],
+    ["5A", "10m", "Cm"],
+    ["6A", "11m", "Gm"],
+    ["7A", "12m", "Dm"],
+    ["8A", "1m", "Am"],
+    ["9A", "2m", "Em"],
+    ["10A", "3m", "Bm"],
+    ["11A", "4m", "F#m"],
+    ["12A", "5m", "Dbm"],
+    ["1B", "6d", "B"],
+    ["2B", "7d", "F#"],
+    ["3B", "8d", "Db"],
+    ["4B", "9d", "Ab"],
+    ["5B", "10d", "Eb"],
+    ["6B", "11d", "Bb"],
+    ["7B", "12d", "F"],
+    ["8B", "1d", "C"],
+    ["9B", "2d", "G"],
+    ["10B", "3d", "D"],
+    ["11B", "4d", "A"],
+    ["12B", "5d", "E"],
+  ]
+
+  it.each(WHEEL)(
+    "converts %s / %s / %s to every other notation",
+    (camelot, openKey, musical) => {
+      // Every input notation reaches every output notation.
+      for (const input of [camelot, openKey, musical]) {
+        expect(formatKey(input, "camelot"), input).toBe(camelot)
+        expect(formatKey(input, "open_key"), input).toBe(openKey)
+        expect(formatKey(input, "musical"), input).toBe(musical)
+      }
+    }
+  )
+
+  it("agrees with the existing Camelot→Traktor mapping on Open Key", () => {
+    // camelotToOpenKey and musicalKeyValueToOpenKey were derived separately;
+    // they have to land on the same string or one of them is wrong.
+    for (let value = 0; value <= 23; value++) {
+      const openKey = musicalKeyValueToOpenKey(value)!
+      expect(camelotToOpenKey(toCamelot(openKey))).toBe(openKey)
+    }
+  })
+
+  it("round-trips through every notation without drift", () => {
+    for (const [camelot] of WHEEL) {
+      const viaOpen = formatKey(formatKey(camelot, "open_key"), "camelot")
+      const viaMusical = formatKey(formatKey(camelot, "musical"), "camelot")
+
+      expect(viaOpen).toBe(camelot)
+      expect(viaMusical).toBe(camelot)
+    }
+  })
+
+  it("prefers the flat spelling, as Rekordbox and Mixed In Key display it", () => {
+    expect(camelotToMusical("3A")).toBe("Bbm")
+    expect(camelotToMusical("6B")).toBe("Bb")
+    // Both spellings still read back to the same code.
+    expect(toCamelot("A#m")).toBe("3A")
+  })
+
+  it("returns the DJ's own string when it can't be mapped", () => {
+    // Losing a value to tidy a column is not an improvement.
+    expect(formatKey("Ionian?", "camelot")).toBe("Ionian?")
+    expect(formatKey("Ionian?", "musical")).toBe("Ionian?")
+  })
+
+  it("hands back exactly what was imported when asked to", () => {
+    expect(formatKey("11m", "as_imported")).toBe("11m")
+    expect(formatKey("  Am  ", "as_imported")).toBe("Am")
+  })
+
+  it("has nothing to show for an absent key", () => {
+    for (const notation of KEY_NOTATIONS) {
+      expect(formatKey(null, notation)).toBeNull()
+      expect(formatKey("", notation)).toBeNull()
+      expect(formatKey("   ", notation)).toBeNull()
+    }
+  })
+})
+
+describe("detectKeyNotation", () => {
+  it("names the notation a stored string is written in", () => {
+    expect(detectKeyNotation("8A")).toBe("camelot")
+    expect(detectKeyNotation("11m")).toBe("open_key")
+    expect(detectKeyNotation("Am")).toBe("musical")
+    expect(detectKeyNotation("A minor")).toBe("musical")
+    expect(detectKeyNotation("nonsense")).toBeNull()
+    expect(detectKeyNotation(null)).toBeNull()
+  })
+})
+
+describe("keySortIndex", () => {
+  it("orders by wheel position, not by string", () => {
+    // "10A" sorts before "2A" as text, which is why sorting the rendered
+    // column was wrong: sorting by key exists to group compatible tracks.
+    const sorted = ["10A", "2A", "1B", "1A"].sort(
+      (a, b) => keySortIndex(a) - keySortIndex(b)
+    )
+
+    expect(sorted).toEqual(["1A", "1B", "2A", "10A"])
+  })
+
+  it("gives one order regardless of the notation each key is written in", () => {
+    const camelot = ["9A", "1A", "5B"]
+    const openKey = camelot.map((key) => camelotToOpenKey(key)!)
+
+    expect(
+      openKey
+        .slice()
+        .sort((a, b) => keySortIndex(a) - keySortIndex(b))
+        .map((key) => toCamelot(key))
+    ).toEqual(camelot.slice().sort((a, b) => keySortIndex(a) - keySortIndex(b)))
+  })
+
+  it("sorts unreadable keys last, where they can be found and fixed", () => {
+    expect(keySortIndex("what")).toBeGreaterThan(keySortIndex("12B"))
+    expect(keySortIndex(null)).toBeGreaterThan(keySortIndex("12B"))
+  })
+})
+
+describe("isKeyNotation", () => {
+  it("accepts the four notations and nothing else", () => {
+    expect(isKeyNotation("camelot")).toBe(true)
+    expect(isKeyNotation("open_key")).toBe(true)
+    expect(isKeyNotation("musical")).toBe(true)
+    expect(isKeyNotation("as_imported")).toBe(true)
+    expect(isKeyNotation("traktor")).toBe(false)
+    expect(isKeyNotation(null)).toBe(false)
   })
 })

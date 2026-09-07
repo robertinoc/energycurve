@@ -244,3 +244,148 @@ export function toCamelot(musicalKey: string | null | undefined): string | null 
 
   return MUSICAL_TO_CAMELOT[normalizeMusicalKey(raw)] ?? null
 }
+
+// --- Notation the DJ actually reads ----------------------------------------
+
+/**
+ * The three notations DJ software writes keys in.
+ *
+ * An alpha user asked for exactly this — "selección de modelo de Key (CAMELOT,
+ * Open Key, Musical) o conversor interno" — and he was right that the second
+ * half was missing. This file only ever converted *into* Camelot: it could read
+ * any notation and show one. So a DJ who reads Open Key (what Traktor displays)
+ * or musical notation had to translate every row in their head.
+ *
+ * `as_imported` is a real answer, not a cop-out: someone whose library is
+ * already consistent may want to see their own strings back rather than ours.
+ */
+export type KeyNotation = "camelot" | "open_key" | "musical" | "as_imported"
+
+export const KEY_NOTATIONS: KeyNotation[] = [
+  "camelot",
+  "open_key",
+  "musical",
+  "as_imported",
+]
+
+export const DEFAULT_KEY_NOTATION: KeyNotation = "camelot"
+
+export function isKeyNotation(
+  value: string | null | undefined
+): value is KeyNotation {
+  return KEY_NOTATIONS.includes(value as KeyNotation)
+}
+
+/**
+ * Camelot → Open Key. Inverse of `openKeyToCamelot`, and derived by the same
+ * rotation so the two can't disagree: Camelot 8 = Open Key 1.
+ */
+export function camelotToOpenKey(camelot: string | null | undefined): string | null {
+  const position = parseCamelot(toCamelot(camelot))
+
+  if (!position) {
+    return null
+  }
+
+  const openNumber = ((position.num + 4) % 12) + 1
+
+  return `${openNumber}${position.ring === "A" ? "m" : "d"}`
+}
+
+/**
+ * Camelot → musical, built by inverting MUSICAL_TO_CAMELOT.
+ *
+ * Where two spellings share a Camelot code (Bbm and A#m are one key), the first
+ * one declared wins, which is the flat spelling throughout — the convention
+ * both Rekordbox and Mixed In Key display.
+ */
+const CAMELOT_TO_MUSICAL: Record<string, string> = (() => {
+  const map: Record<string, string> = {}
+
+  for (const [musical, camelot] of Object.entries(MUSICAL_TO_CAMELOT)) {
+    if (!(camelot in map)) {
+      map[camelot] = musical
+    }
+  }
+
+  return map
+})()
+
+export function camelotToMusical(camelot: string | null | undefined): string | null {
+  const normalized = toCamelot(camelot)
+
+  return normalized ? (CAMELOT_TO_MUSICAL[normalized] ?? null) : null
+}
+
+/** Which notation a stored key string is written in. */
+export function detectKeyNotation(
+  value: string | null | undefined
+): Exclude<KeyNotation, "as_imported"> | null {
+  if (!value) {
+    return null
+  }
+
+  const raw = value.trim()
+
+  if (isCamelot(raw)) {
+    return "camelot"
+  }
+
+  if (OPEN_KEY_PATTERN.test(raw)) {
+    return "open_key"
+  }
+
+  return MUSICAL_TO_CAMELOT[normalizeMusicalKey(raw)] ? "musical" : null
+}
+
+/**
+ * Renders a stored key in the notation the reader asked for.
+ *
+ * Returns the raw string unchanged when it can't be mapped — a key we don't
+ * recognise is still the DJ's data, and blanking it would lose information to
+ * make a column tidier. `as_imported` short-circuits to exactly that.
+ */
+export function formatKey(
+  value: string | null | undefined,
+  notation: KeyNotation
+): string | null {
+  if (!value?.trim()) {
+    return null
+  }
+
+  const raw = value.trim()
+
+  if (notation === "as_imported") {
+    return raw
+  }
+
+  const converted =
+    notation === "camelot"
+      ? toCamelot(raw)
+      : notation === "open_key"
+        ? camelotToOpenKey(raw)
+        : camelotToMusical(raw)
+
+  return converted ?? raw
+}
+
+/**
+ * A sortable index for a key: wheel position, then ring.
+ *
+ * Sorting the rendered strings would order "10A" before "2A" and put Open Key
+ * and Camelot in different orders for the same set of tracks. Sorting by
+ * position means "sort by key" groups harmonically compatible tracks together
+ * in every notation, which is the only reason anyone sorts by key.
+ *
+ * Unmappable keys sort last rather than first: they are the rows a DJ wants to
+ * find and fix, not the rows they want at the top of every sort.
+ */
+export function keySortIndex(value: string | null | undefined): number {
+  const position = parseCamelot(toCamelot(value))
+
+  if (!position) {
+    return Number.MAX_SAFE_INTEGER
+  }
+
+  return position.num * 2 + (position.ring === "B" ? 1 : 0)
+}
