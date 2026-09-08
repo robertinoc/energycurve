@@ -8,6 +8,8 @@ import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { CONTEXT_DISPLAY_NAMES } from "@/lib/content/analysis-copy"
 import { analyzePlaylist } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
+import { classifyFailure } from "@/lib/smart-order/classify-failure"
+import type { SmartOrderFallbackReason } from "@/lib/smart-order/stream"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { GENRE_LABELS } from "@/lib/product/strategy"
@@ -53,26 +55,9 @@ interface SmartOrderResult {
    * timeout. That is the product asserting a cause it doesn't know, and it made
    * the one bug a user actually hit impossible to report accurately.
    */
-  reason?: FallbackReason
+  reason?: SmartOrderFallbackReason
 }
 
-export type FallbackReason =
-  /** No ANTHROPIC_API_KEY on this deployment. */
-  | "not_configured"
-  /** The model ran past the budget this request has. */
-  | "timeout"
-  /** It answered, but not with every track id exactly once. */
-  | "invalid_answer"
-  /** It ran out of output budget mid-answer, so the JSON is incomplete. */
-  | "truncated"
-  /** Safety classifiers declined the request. */
-  | "refusal"
-  /** Anything else — logged with the real error. */
-  | "error"
-
-// Per-playlist cache: the same tracklist (+ genre/context) always returns the
-// same answer, so repeated clicks don't burn tokens. In-memory — resets on
-// deploy, which is fine for a cost cap.
 /**
  * Deliberately below `maxDuration`, with room for what happens after the model
  * returns (quota write, cache, closing the stream). The platform killing the
@@ -195,7 +180,7 @@ async function claudeOrder(
   onPlaced?: (placed: number) => void
 ): Promise<
   | { ok: true; value: Omit<SmartOrderResult, "source" | "reason"> }
-  | { ok: false; reason: FallbackReason }
+  | { ok: false; reason: SmartOrderFallbackReason }
 > {
   if (!process.env.ANTHROPIC_API_KEY) {
     return { ok: false, reason: "not_configured" }
@@ -513,11 +498,9 @@ export async function POST(
         // An aborted request is the budget doing its job, not a fault — it is
         // logged at info so a genuinely broken key or a schema change stays
         // visible in the error stream instead of drowning in timeouts.
-        const timedOut =
-          error instanceof Anthropic.APIConnectionTimeoutError ||
-          (error instanceof Error && error.name === "AbortError")
+        const reason = classifyFailure(error)
 
-        if (timedOut) {
+        if (reason === "timeout") {
           logInfo("smart_order.claude_timed_out", {
             profileId: profile.id,
             playlistId: playlist.id,
@@ -527,17 +510,13 @@ export async function POST(
           logError("smart_order.claude_failed", error, {
             profileId: profile.id,
             playlistId: playlist.id,
-            // The two fields that name the cause without a debugger: a 400 is
-            // a request we built wrong, a 401 is a bad key, a 529 is upstream.
+            reason,
             status: error instanceof Anthropic.APIError ? error.status : null,
             errorName: error instanceof Error ? error.name : null,
           })
         }
 
-        result = {
-          ...heuristicOrder(tracks),
-          reason: timedOut ? "timeout" : "error",
-        }
+        result = { ...heuristicOrder(tracks), reason }
       }
 
       // Charged on the Claude path only. A fallback to the local heuristic still

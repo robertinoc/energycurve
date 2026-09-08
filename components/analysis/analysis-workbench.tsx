@@ -158,6 +158,11 @@ const FALLBACK_REASON_COPY: Record<
   not_configured: ANALYSIS_UI.smartFallbackNotConfigured,
   invalid_answer: ANALYSIS_UI.smartFallbackInvalid,
   truncated: ANALYSIS_UI.smartFallbackTruncated,
+  not_authorized: ANALYSIS_UI.smartFallbackNotAuthorized,
+  rate_limited: ANALYSIS_UI.smartFallbackRateLimited,
+  bad_request: ANALYSIS_UI.smartFallbackBadRequest,
+  model_unavailable: ANALYSIS_UI.smartFallbackModelUnavailable,
+  upstream_down: ANALYSIS_UI.smartFallbackUpstreamDown,
   refusal: ANALYSIS_UI.smartFallbackRefusal,
   error: ANALYSIS_UI.smartFallbackError,
 }

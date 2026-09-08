@@ -644,6 +644,31 @@ export const ANALYSIS_UI = {
     es: "El servicio de IA está teniendo un mal día.",
   },
   /**
+   * The four failures that have an owner. Worded so that reading one back
+   * names the HTTP status behind it, without showing a status code to someone
+   * who came here to order a set.
+   */
+  smartFallbackNotAuthorized: {
+    en: "AI ordering is misconfigured on our side — the key was rejected.",
+    es: "El orden con IA está mal configurado de nuestro lado — la key fue rechazada.",
+  },
+  smartFallbackRateLimited: {
+    en: "The AI service is rate-limiting us. Give it a minute.",
+    es: "El servicio de IA nos está limitando. Dale un minuto.",
+  },
+  smartFallbackBadRequest: {
+    en: "We asked the AI service for something it wouldn't accept — that one's on us.",
+    es: "Le pedimos al servicio de IA algo que no aceptó — esa es nuestra.",
+  },
+  smartFallbackModelUnavailable: {
+    en: "The AI model we ask for isn't available on our account — we need to sort that out.",
+    es: "El modelo de IA que pedimos no está disponible en nuestra cuenta — eso lo tenemos que resolver nosotros.",
+  },
+  smartFallbackUpstreamDown: {
+    en: "The AI service is down right now. Not much either of us can do.",
+    es: "El servicio de IA está caído. Poco podemos hacer los dos.",
+  },
+  /**
    * Sits against the score itself, not in the issue list. An `info` issue below a
    * 46-pixel "9.2" is information the reader never reaches, and the whole point of
    * this caveat is that the number above it means less than it looks like.
