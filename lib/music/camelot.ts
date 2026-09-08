@@ -42,9 +42,16 @@ const MUSICAL_TO_CAMELOT: Record<string, string> = {
   "E": "12B",
 }
 
-/** True when a value is already Camelot notation (e.g. "8A", "12B"). */
+/**
+ * True when a value is already Camelot notation (e.g. "8A", "12B", "8 A").
+ *
+ * The optional space is deliberate: taggers write "8 A" and this used to fall
+ * through to the raw string. Spotted by comparing against an alpha user's own
+ * `key_normalizer.py`, whose regexes allowed `\s*` between the number and the
+ * mode where ours did not.
+ */
 export function isCamelot(value: string): boolean {
-  return /^(?:[1-9]|1[0-2])[AB]$/i.test(value.trim())
+  return /^(?:[1-9]|1[0-2])\s*[AB]$/i.test(value.trim())
 }
 
 /**
@@ -52,10 +59,10 @@ export function isCamelot(value: string): boolean {
  * major), e.g. "11m", "9d". Same wheel as Camelot, rotated by 7: Open Key 1d
  * = C major = Camelot 8B, Open Key 1m = A minor = Camelot 8A.
  */
-const OPEN_KEY_PATTERN = /^(?:[1-9]|1[0-2])[md]$/i
+const OPEN_KEY_PATTERN = /^(?:[1-9]|1[0-2])\s*[md]$/i
 
 function openKeyToCamelot(value: string): string | null {
-  const match = value.trim().match(/^([1-9]|1[0-2])([md])$/i)
+  const match = value.trim().match(/^([1-9]|1[0-2])\s*([md])$/i)
 
   if (!match) {
     return null
@@ -69,23 +76,34 @@ function openKeyToCamelot(value: string): string | null {
 }
 
 /**
- * Normalizes a musical key string ("A minor", "Am", "AMin", "F#m") to the
- * compact form used by the lookup ("Am", "F#m").
+ * Normalizes a musical key string ("A minor", "Am", "AMin", "Amin", "AB MINOR",
+ * "F#m") to the compact form used by the lookup ("Am", "F#m").
+ *
+ * Works on the space-free form rather than on word boundaries. The previous
+ * version anchored the mode suffix with `\b`, so "A min" resolved and "Amin"
+ * did not — there is no boundary inside a single word. Both spellings are in
+ * the wild, and a DJ who writes one has no way to know we only read the other.
  */
 function normalizeMusicalKey(raw: string): string {
-  let key = raw.trim().replace(/\s+/g, " ")
-  // "A minor" / "A min" / "Amin" → "Am"; "A major" / "A maj" → "A"
-  const minor = /\b(minor|min|m)\b/i.test(key) || /m$/i.test(key.replace(/\s/g, ""))
-  key = key
-    .replace(/\b(minor|min|major|maj)\b/gi, "")
-    .replace(/\s+/g, "")
-  // Strip a trailing lowercase "m" (we re-add it via the minor flag)
-  key = key.replace(/m$/i, "")
-  // Canonical case: note letter uppercase, accidental as-is
-  if (key.length > 0) {
-    key = key[0].toUpperCase() + key.slice(1)
-  }
-  return minor ? key + "m" : key
+  const compact = raw.trim().replace(/\s+/g, "")
+  const suffix = compact.match(/(minor|min|major|maj)$/i)
+
+  const isMinor = suffix
+    ? /^min/i.test(suffix[1])
+    : // No spelled-out mode: a trailing "m" is the compact minor marker.
+      /m$/i.test(compact)
+
+  const stem = suffix
+    ? compact.slice(0, -suffix[1].length)
+    : compact.replace(/m$/i, "")
+
+  // Canonical case for a note plus optional accidental: "AB" → "Ab", "bb" →
+  // "Bb". Lowercasing the tail is safe because a stem is at most two
+  // characters, and "#" is unaffected by case.
+  const key =
+    stem.length > 0 ? stem[0].toUpperCase() + stem.slice(1).toLowerCase() : stem
+
+  return isMinor ? key + "m" : key
 }
 
 /**
@@ -166,7 +184,7 @@ export function parseCamelot(value: string | null | undefined): CamelotPosition 
     return null
   }
 
-  const match = value.trim().match(/^([1-9]|1[0-2])([AB])$/i)
+  const match = value.trim().match(/^([1-9]|1[0-2])\s*([AB])$/i)
 
   if (!match) {
     return null
@@ -235,7 +253,11 @@ export function toCamelot(musicalKey: string | null | undefined): string | null 
   }
 
   if (isCamelot(raw)) {
-    return raw.toUpperCase()
+    // Rebuilt rather than uppercased, so an accepted "8 a" comes back as "8A"
+    // instead of carrying its space into every comparison downstream.
+    const position = parseCamelot(raw)
+
+    return position ? `${position.num}${position.ring}` : null
   }
 
   if (OPEN_KEY_PATTERN.test(raw)) {

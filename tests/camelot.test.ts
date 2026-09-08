@@ -5,6 +5,7 @@ import {
   camelotToOpenKey,
   detectKeyNotation,
   formatKey,
+  harmonicTier,
   isCamelot,
   isKeyNotation,
   KEY_NOTATIONS,
@@ -266,5 +267,81 @@ describe("isKeyNotation", () => {
     expect(isKeyNotation("as_imported")).toBe(true)
     expect(isKeyNotation("traktor")).toBe(false)
     expect(isKeyNotation(null)).toBe(false)
+  })
+})
+
+/**
+ * Spellings found by diffing our parser against an alpha user's own
+ * `key_normalizer.py`, run side by side over 81 real-world key strings.
+ *
+ * He handled two shapes we rejected (a space before the mode letter) and we
+ * handled fourteen he silently mapped to "1A" (every compact accidental
+ * spelling — `Bb`, `Abm`, `Ebm` — which is exactly what Rekordbox and Mixed In
+ * Key write). Four more shapes neither of us read. This closes all of them.
+ */
+describe("key spellings in the wild", () => {
+  it.each([
+    // A space before the mode letter — his regexes allowed it, ours didn't.
+    ["8 A", "8A"],
+    ["8 b", "8B"],
+    ["1 m", "8A"],
+    ["10 d", "5B"],
+    // A mode suffix with no space to anchor a word boundary on.
+    ["Amin", "8A"],
+    ["Amaj", "11B"],
+    ["Cmin", "5A"],
+    ["Cmaj", "8B"],
+    ["Bbmin", "3A"],
+    // Case we don't control, on either half.
+    ["AB MINOR", "1A"],
+    ["ab minor", "1A"],
+    ["bbm", "3A"],
+    ["f#M", "11A"],
+    ["8a", "8A"],
+    ["1D", "8B"],
+  ])("reads %s as %s", (input, expected) => {
+    expect(toCamelot(input)).toBe(expected)
+  })
+
+  it("reads every compact accidental spelling, sharp and flat", () => {
+    // The fourteen his table was missing. A library tagged in flats would have
+    // collapsed to a single key, and the failure is invisible: his fallback is
+    // "1A", and `Abm` genuinely IS 1A — so a test containing it passes while
+    // the code underneath is broken.
+    const compact: Record<string, string> = {
+      Db: "3B", "C#": "3B", Eb: "5B", "D#": "5B", Gb: "2B", "F#": "2B",
+      Ab: "4B", "G#": "4B", Bb: "6B", "A#": "6B",
+      Dbm: "12A", "C#m": "12A", Ebm: "2A", "D#m": "2A", Gbm: "11A",
+      "F#m": "11A", Abm: "1A", "G#m": "1A", Bbm: "3A", "A#m": "3A",
+    }
+
+    for (const [input, expected] of Object.entries(compact)) {
+      expect(toCamelot(input), input).toBe(expected)
+    }
+  })
+
+  it("still refuses to invent a key from something that isn't one", () => {
+    // The design split with his normalizer, and the reason not to adopt its
+    // other half: it wraps out-of-range Camelot (13B → 1B, 99A → 3A) and
+    // returns "1A" for anything it can't read. Both produce a confident wrong
+    // key from garbage, and a wrong key silently reshapes a set.
+    for (const junk of [
+      "0A", "13B", "99A", "8C", "", "   ", "invalid", "Ionian?", "None", "-", "7",
+    ]) {
+      expect(toCamelot(junk), junk).toBeNull()
+    }
+  })
+
+  it("hands an unreadable key back untouched instead of guessing", () => {
+    expect(formatKey("Ionian?", "camelot")).toBe("Ionian?")
+    expect(formatKey("13B", "open_key")).toBe("13B")
+  })
+
+  it("normalizes an accepted space out of the result", () => {
+    // Otherwise the space travels into every downstream comparison.
+    expect(toCamelot("8 a")).toBe("8A")
+    expect(formatKey("8 a", "camelot")).toBe("8A")
+    expect(keySortIndex("8 a")).toBe(keySortIndex("8A"))
+    expect(harmonicTier("8 A", "8A")).toBe("perfect")
   })
 })
