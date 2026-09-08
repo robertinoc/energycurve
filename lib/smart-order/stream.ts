@@ -21,6 +21,10 @@
  */
 export type SmartOrderFallbackReason =
   | "not_configured"
+  | "not_authorized"
+  | "rate_limited"
+  | "bad_request"
+  | "upstream_down"
   | "timeout"
   | "invalid_answer"
   | "truncated"
@@ -32,6 +36,10 @@ export function isFallbackReason(
 ): value is SmartOrderFallbackReason {
   return (
     value === "not_configured" ||
+    value === "not_authorized" ||
+    value === "rate_limited" ||
+    value === "bad_request" ||
+    value === "upstream_down" ||
     value === "timeout" ||
     value === "invalid_answer" ||
     value === "truncated" ||

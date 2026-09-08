@@ -8,6 +8,7 @@ import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { CONTEXT_DISPLAY_NAMES } from "@/lib/content/analysis-copy"
 import { analyzePlaylist } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
+import { classifyFailure } from "@/lib/smart-order/classify-failure"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { GENRE_LABELS } from "@/lib/product/strategy"
@@ -67,6 +68,18 @@ export type FallbackReason =
   | "truncated"
   /** Safety classifiers declined the request. */
   | "refusal"
+  /**
+   * The key was rejected (401/403). An operator problem, and distinct from
+   * `not_configured`, which only fires when there is no key at all — a key that
+   * is present but wrong looked identical to a crash until now.
+   */
+  | "not_authorized"
+  /** We are being rate-limited or are out of quota (429). */
+  | "rate_limited"
+  /** The request itself was rejected (400). Ours to fix. */
+  | "bad_request"
+  /** The service is failing on its own side (5xx). */
+  | "upstream_down"
   /** Anything else — logged with the real error. */
   | "error"
 
@@ -513,11 +526,9 @@ export async function POST(
         // An aborted request is the budget doing its job, not a fault — it is
         // logged at info so a genuinely broken key or a schema change stays
         // visible in the error stream instead of drowning in timeouts.
-        const timedOut =
-          error instanceof Anthropic.APIConnectionTimeoutError ||
-          (error instanceof Error && error.name === "AbortError")
+        const reason = classifyFailure(error)
 
-        if (timedOut) {
+        if (reason === "timeout") {
           logInfo("smart_order.claude_timed_out", {
             profileId: profile.id,
             playlistId: playlist.id,
@@ -527,17 +538,13 @@ export async function POST(
           logError("smart_order.claude_failed", error, {
             profileId: profile.id,
             playlistId: playlist.id,
-            // The two fields that name the cause without a debugger: a 400 is
-            // a request we built wrong, a 401 is a bad key, a 529 is upstream.
+            reason,
             status: error instanceof Anthropic.APIError ? error.status : null,
             errorName: error instanceof Error ? error.name : null,
           })
         }
 
-        result = {
-          ...heuristicOrder(tracks),
-          reason: timedOut ? "timeout" : "error",
-        }
+        result = { ...heuristicOrder(tracks), reason }
       }
 
       // Charged on the Claude path only. A fallback to the local heuristic still
