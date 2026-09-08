@@ -9,6 +9,7 @@ import { CONTEXT_DISPLAY_NAMES } from "@/lib/content/analysis-copy"
 import { analyzePlaylist } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { classifyFailure } from "@/lib/smart-order/classify-failure"
+import type { SmartOrderFallbackReason } from "@/lib/smart-order/stream"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { GENRE_LABELS } from "@/lib/product/strategy"
@@ -54,38 +55,9 @@ interface SmartOrderResult {
    * timeout. That is the product asserting a cause it doesn't know, and it made
    * the one bug a user actually hit impossible to report accurately.
    */
-  reason?: FallbackReason
+  reason?: SmartOrderFallbackReason
 }
 
-export type FallbackReason =
-  /** No ANTHROPIC_API_KEY on this deployment. */
-  | "not_configured"
-  /** The model ran past the budget this request has. */
-  | "timeout"
-  /** It answered, but not with every track id exactly once. */
-  | "invalid_answer"
-  /** It ran out of output budget mid-answer, so the JSON is incomplete. */
-  | "truncated"
-  /** Safety classifiers declined the request. */
-  | "refusal"
-  /**
-   * The key was rejected (401/403). An operator problem, and distinct from
-   * `not_configured`, which only fires when there is no key at all — a key that
-   * is present but wrong looked identical to a crash until now.
-   */
-  | "not_authorized"
-  /** We are being rate-limited or are out of quota (429). */
-  | "rate_limited"
-  /** The request itself was rejected (400). Ours to fix. */
-  | "bad_request"
-  /** The service is failing on its own side (5xx). */
-  | "upstream_down"
-  /** Anything else — logged with the real error. */
-  | "error"
-
-// Per-playlist cache: the same tracklist (+ genre/context) always returns the
-// same answer, so repeated clicks don't burn tokens. In-memory — resets on
-// deploy, which is fine for a cost cap.
 /**
  * Deliberately below `maxDuration`, with room for what happens after the model
  * returns (quota write, cache, closing the stream). The platform killing the
@@ -208,7 +180,7 @@ async function claudeOrder(
   onPlaced?: (placed: number) => void
 ): Promise<
   | { ok: true; value: Omit<SmartOrderResult, "source" | "reason"> }
-  | { ok: false; reason: FallbackReason }
+  | { ok: false; reason: SmartOrderFallbackReason }
 > {
   if (!process.env.ANTHROPIC_API_KEY) {
     return { ok: false, reason: "not_configured" }

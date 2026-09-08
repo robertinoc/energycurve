@@ -35,6 +35,7 @@ describe("classifying a smart-order failure", () => {
     ["a forbidden key", Anthropic.PermissionDeniedError, 403, "not_authorized"],
     ["a rate limit", Anthropic.RateLimitError, 429, "rate_limited"],
     ["a request we built wrong", Anthropic.BadRequestError, 400, "bad_request"],
+    ["a model this account can't use", Anthropic.NotFoundError, 404, "model_unavailable"],
     ["an overloaded service", Anthropic.InternalServerError, 529, "upstream_down"],
     ["a server error", Anthropic.InternalServerError, 500, "upstream_down"],
   ] as const)("names %s", (_label, Cls, status, expected) => {
@@ -64,6 +65,7 @@ describe("classifying a smart-order failure", () => {
       not_authorized: ANALYSIS_UI.smartFallbackNotAuthorized,
       rate_limited: ANALYSIS_UI.smartFallbackRateLimited,
       bad_request: ANALYSIS_UI.smartFallbackBadRequest,
+      model_unavailable: ANALYSIS_UI.smartFallbackModelUnavailable,
       upstream_down: ANALYSIS_UI.smartFallbackUpstreamDown,
       timeout: ANALYSIS_UI.smartFallbackTimeout,
       invalid_answer: ANALYSIS_UI.smartFallbackInvalid,

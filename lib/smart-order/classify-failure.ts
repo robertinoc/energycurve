@@ -41,6 +41,14 @@ export function classifyFailure(error: unknown): SmartOrderFallbackReason {
     return "bad_request"
   }
 
+  // A 404 from the Messages API means the model we asked for isn't available to
+  // this account — not that a URL is wrong. Its own reason because the fix is
+  // specific and nothing else in this list points at it: change the model, or
+  // get the account access to it.
+  if (error instanceof Anthropic.NotFoundError) {
+    return "model_unavailable"
+  }
+
   if (error instanceof Anthropic.APIError) {
     // Includes 529 (overloaded), which is the service's own problem and the one
     // case where "try again shortly" is real advice rather than a brush-off.
