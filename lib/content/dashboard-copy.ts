@@ -991,6 +991,16 @@ export const DASHBOARD_COPY = {
       en: "Bugs, missing formats, a tag we don't read, an idea — all of it is useful, and none of it needs to be polished. EnergyCurve is in alpha and this is how it gets better.",
       es: "Bugs, formatos que faltan, un tag que no leemos, una idea — todo sirve, y nada tiene que venir prolijo. EnergyCurve está en alfa y así es como mejora.",
     },
+    dataHeading: { en: "Your data", es: "Tus datos" },
+    dataBody: {
+      en: "Everything we hold about your account, as one JSON file: your sets and their tracks, your saved orders and analyses, your own shapes and labels, and your plan. The file also names what is held by Stripe, WorkOS and PostHog rather than by us, so you know where the rest is.",
+      es: "Todo lo que tenemos de tu cuenta, en un solo archivo JSON: tus sets y sus temas, los órdenes y análisis que guardaste, tus formas y etiquetas propias, y tu plan. El archivo además dice qué guardan Stripe, WorkOS y PostHog en vez de nosotros, así sabés dónde está el resto.",
+    },
+    dataDownload: { en: "Download my data", es: "Descargar mis datos" },
+    dataAudioNote: {
+      en: "Your audio files are not in it because they never leave your device — only what your tags say about them does.",
+      es: "Tus archivos de audio no están porque nunca salen de tu dispositivo — solo viaja lo que dicen sus tags.",
+    },
   },
 
   deleteButton: {

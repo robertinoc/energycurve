@@ -131,6 +131,9 @@ export const config = {
     // authenticates by signature instead.
     "/api/billing/checkout",
     "/api/billing/portal",
+    // "Download my data" reads the signed-in user's whole account, so it needs
+    // the session the same way the billing routes do.
+    "/api/account/:path*",
     "/login",
     "/signup",
     // Backstage subdomain: every request must run through authkit because
