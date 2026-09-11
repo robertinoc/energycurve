@@ -107,6 +107,15 @@ export const CAPABILITIES = {
     status: "shipped",
     note: "Share a set with another DJ: they read it, leave suggestions, and can reorder it while holding the edit turn (one writer at a time, passed by hand — not real-time co-editing). Gated on the OWNER's plan in services/collaboration-service.ts — a collaborator needs no plan, because requiring both parties to pay is a feature that mostly doesn't work.",
   },
+  /**
+   * PRO+ rather than PRO, decided 11 Sep 2026. It first shipped reusing
+   * `audio_analysis` on the reasoning that both fill the same two fields — true,
+   * but the tier rule is about what a feature costs us, not what it produces.
+   * Every lookup is a request against a third party's rate limit, and variable
+   * cost is what PRO+ exists to hold. It is also what docs/product-strategy-v2.md
+   * specified from the start.
+   */
+  title_lookup: { minPlan: "pro_plus", status: "shipped" },
   gig_mode: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
   global_library: { minPlan: "pro_plus", status: "shipped", limit: "proWorkflow" },
   /**
