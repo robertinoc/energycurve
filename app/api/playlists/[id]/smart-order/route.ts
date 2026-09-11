@@ -11,6 +11,7 @@ import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { classifyFailure } from "@/lib/smart-order/classify-failure"
 import type { SmartOrderFallbackReason } from "@/lib/smart-order/stream"
 import { logError, logInfo } from "@/lib/observability/logger"
+import { isSuspended, SUSPENDED_RESPONSE } from "@/lib/auth/suspension"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { quotaFor } from "@/lib/product/capabilities"
@@ -355,6 +356,15 @@ export async function POST(
     firstName: user.firstName ?? null,
     lastName: user.lastName ?? null,
   })
+
+  // Suspension is checked here and not only at the dashboard shell: this is the
+  // one route that costs real money per call, and a page gate does not stop a
+  // live session from calling an API. `profile` already carries the flag.
+  if (isSuspended(profile)) {
+    return NextResponse.json(SUSPENDED_RESPONSE.body, {
+      status: SUSPENDED_RESPONSE.status,
+    })
+  }
 
   const playlist = await getOwnedPlaylistWithTracks(profile.id, id)
 
