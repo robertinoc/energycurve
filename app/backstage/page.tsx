@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { getRecentAdminActions } from "@/services/admin-audit-service"
 import {
   getBackstageUsersSnapshot,
   getRecentAnalyses,
@@ -25,9 +26,10 @@ const KPI_LABELS: Array<{
 ]
 
 export default async function BackstageUsersPage() {
-  const [{ users, kpis }, recentAnalyses] = await Promise.all([
+  const [{ users, kpis }, recentAnalyses, adminActions] = await Promise.all([
     getBackstageUsersSnapshot(),
     getRecentAnalyses(),
+    getRecentAdminActions(),
   ])
 
   return (
@@ -54,7 +56,11 @@ export default async function BackstageUsersPage() {
         <div className="min-w-0 xl:col-span-2">
           <UsersTable users={users} />
         </div>
-        <ActivityFeed users={users} recentAnalyses={recentAnalyses} />
+        <ActivityFeed
+          users={users}
+          recentAnalyses={recentAnalyses}
+          adminActions={adminActions}
+        />
       </div>
     </div>
   )

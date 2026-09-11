@@ -97,6 +97,39 @@ export interface Database {
         }
         Relationships: []
       }
+      // Migration 0027. No Relationships entry, and that is not an omission:
+      // `target_profile_id` is deliberately not a foreign key, because the row
+      // recording a deletion has to outlive the profile it names.
+      admin_audit_log: {
+        Row: {
+          id: string
+          actor_email: string
+          action: string
+          target_profile_id: string | null
+          target_email: string | null
+          detail: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          actor_email: string
+          action: string
+          target_profile_id?: string | null
+          target_email?: string | null
+          detail?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          actor_email?: string
+          action?: string
+          target_profile_id?: string | null
+          target_email?: string | null
+          detail?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       billing_events: {
         Row: {
           id: string

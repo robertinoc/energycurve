@@ -10,6 +10,7 @@ import {
 } from "@/lib/backstage/users"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
+import { recordAdminAction } from "@/services/admin-audit-service"
 import { sweepBillingPayloads } from "@/services/retention-service"
 import type { Profile } from "@/types/domain"
 
@@ -164,6 +165,13 @@ export async function setUserSuspension(
     actorEmail,
   })
 
+  await recordAdminAction({
+    actorEmail,
+    action: suspended ? "user.suspended" : "user.unsuspended",
+    targetProfileId: profileId,
+    targetEmail: data.email,
+  })
+
   return data
 }
 
@@ -241,6 +249,20 @@ export async function deleteUserEverywhere(
     profileId,
     email: profile.email,
     actorEmail,
+  })
+
+  // After the deletion, not before, and that ordering is the compromise rather
+  // than the ideal. Writing first would mean an audit row for a deletion that
+  // then failed halfway; writing after means a deletion that happened is briefly
+  // unrecorded. Neither is free, and this direction at least never claims
+  // something happened that didn't — `admin_audit.write_failed` covers the gap
+  // loudly enough to notice.
+  await recordAdminAction({
+    actorEmail,
+    action: "user.deleted",
+    targetProfileId: profileId,
+    targetEmail: profile.email,
+    detail: { workosUserId: profile.workos_user_id },
   })
 
   return { email: profile.email }
