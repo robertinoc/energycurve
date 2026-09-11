@@ -242,6 +242,15 @@ interface SiteCopySchema {
     primary: LocalizedLabel
     secondary: LocalizedLabel
   }
+  consent: {
+    title: LocalizedLabel
+    body: LocalizedLabel
+    accept: LocalizedLabel
+    reject: LocalizedLabel
+    policyLink: LocalizedLabel
+    changeChoice: LocalizedLabel
+    changed: LocalizedLabel
+  }
   footer: {
     product: LocalizedLabel
     features: LocalizedLabel
@@ -1341,6 +1350,27 @@ const siteCopy: SiteCopySchema = {
     primary: { en: "Create your account", es: "Creá tu cuenta" },
     secondary: { en: "Contact us", es: "Contactanos" },
   },
+  consent: {
+    title: {
+      en: "Can we count this visit?",
+      es: "\u00bfPodemos contar esta visita?",
+    },
+    body: {
+      en: "We use PostHog to see which parts of EnergyCurve get used, so we know what to fix. It stores a cookie. It never records your screen, never stores your IP address, and never sees your music. Say no and nothing is stored \u2014 the app works exactly the same.",
+      es: "Usamos PostHog para ver qu\u00e9 partes de EnergyCurve se usan, y as\u00ed saber qu\u00e9 arreglar. Guarda una cookie. Nunca graba tu pantalla, nunca guarda tu IP, y nunca ve tu m\u00fasica. Si dec\u00eds que no, no se guarda nada \u2014 la app funciona exactamente igual.",
+    },
+    accept: { en: "Yes, count it", es: "S\u00ed, cont\u00e1la" },
+    reject: { en: "No, thanks", es: "No, gracias" },
+    policyLink: { en: "What we collect", es: "Qu\u00e9 recolectamos" },
+    changeChoice: {
+      en: "Change my analytics choice",
+      es: "Cambiar mi decisi\u00f3n sobre anal\u00edtica",
+    },
+    changed: {
+      en: "Cleared. You'll be asked again on your next page.",
+      es: "Listo. Te vamos a volver a preguntar en la pr\u00f3xima p\u00e1gina.",
+    },
+  },
   footer: {
     product: { en: "Product", es: "Producto" },
     features: { en: "Features", es: "Características" },
@@ -1724,6 +1754,15 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       subtitle: siteCopy.cta.subtitle[locale],
       primary: siteCopy.cta.primary[locale],
       secondary: siteCopy.cta.secondary[locale],
+    },
+    consent: {
+      title: siteCopy.consent.title[locale],
+      body: siteCopy.consent.body[locale],
+      accept: siteCopy.consent.accept[locale],
+      reject: siteCopy.consent.reject[locale],
+      policyLink: siteCopy.consent.policyLink[locale],
+      changeChoice: siteCopy.consent.changeChoice[locale],
+      changed: siteCopy.consent.changed[locale],
     },
     footer: {
       product: siteCopy.footer.product[locale],

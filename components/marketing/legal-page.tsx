@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { LanguageToggle } from "@/components/marketing/language-toggle"
 import { useSiteLocale } from "@/components/marketing/use-site-locale"
+import { ConsentControl } from "@/components/privacy/consent-control"
 import { getLegalCopy, type LegalDocId } from "@/lib/content/legal-copy"
 import {
   localizedPath,
@@ -80,6 +81,14 @@ export function LegalPage({
               ))}
             </section>
           ))}
+
+          {/*
+            Only on the cookie page, because that is where someone reconsidering
+            is already standing. Consent that cannot be withdrawn as easily as it
+            was given is not consent, and a policy page that explains the
+            collection without offering a way out is a leaflet.
+          */}
+          {doc === "cookies" ? <ConsentControl locale={locale} /> : null}
         </div>
 
         <nav className="flex flex-wrap gap-x-5 gap-y-2 border-t border-white/8 pt-6 text-sm text-white/48">

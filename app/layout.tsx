@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Manrope, Space_Grotesk, Space_Mono } from "next/font/google"
 
 import { AnalyticsTracker } from "@/components/analytics/analytics-tracker"
+import { ConsentBanner } from "@/components/privacy/consent-banner"
 import { OPERATING_COMPANY, SEO_KEYWORDS, SITE_URL } from "@/lib/seo"
 import "./globals.css"
 
@@ -90,6 +91,12 @@ export default function RootLayout({
         */}
         {children}
         <AnalyticsTracker />
+        {/*
+          Below the tracker on purpose: the tracker no longer initialises
+          anything until this banner has been answered, so the order reads the
+          way the dependency runs.
+        */}
+        <ConsentBanner />
       </body>
     </html>
   )
