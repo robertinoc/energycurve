@@ -2,6 +2,7 @@ import { withAuth } from "@workos-inc/authkit-nextjs"
 import { NextResponse } from "next/server"
 
 import { logError } from "@/lib/observability/logger"
+import { isSuspended, SUSPENDED_RESPONSE } from "@/lib/auth/suspension"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { buildAccountExport } from "@/services/data-export-service"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -34,6 +35,12 @@ export async function GET() {
     firstName: user.firstName ?? null,
     lastName: user.lastName ?? null,
   })
+
+  if (isSuspended(profile)) {
+    return NextResponse.json(SUSPENDED_RESPONSE.body, {
+      status: SUSPENDED_RESPONSE.status,
+    })
+  }
 
   const rate = checkRateLimit({
     key: `account-export:${profile.id}`,

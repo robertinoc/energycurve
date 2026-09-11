@@ -15,6 +15,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
  */
 
 let sessionUser: { id: string; email: string } | null = null
+let suspendedAt: string | null = null
 /**
  * Varied per test, and it has to be the *profile* id rather than the WorkOS
  * one: the route's rate-limit key is `account-export:${profile.id}`. The first
@@ -32,7 +33,7 @@ vi.mock("@workos-inc/authkit-nextjs", () => ({
   withAuth: async () => ({ user: sessionUser }),
 }))
 vi.mock("@/services/profile-service", () => ({
-  syncProfileFromWorkOSUser: async () => ({ id: profileId }),
+  syncProfileFromWorkOSUser: async () => ({ id: profileId, suspended_at: suspendedAt }),
 }))
 vi.mock("@/services/data-export-service", () => ({ buildAccountExport }))
 vi.mock("@/lib/observability/logger", () => ({
@@ -55,6 +56,7 @@ beforeEach(() => {
   buildAccountExport.mockResolvedValue(SAMPLE)
   profileId = `profile-${Math.random().toString(36).slice(2)}`
   sessionUser = { id: `user-${profileId}`, email: "dj@example.com" }
+  suspendedAt = null
 })
 
 describe("who is allowed to ask", () => {
@@ -140,5 +142,33 @@ describe("when building it fails", () => {
     expect(response.status).toBe(500)
     expect(body).not.toContain("relation does not exist")
     expect(JSON.parse(body)).toEqual({ error: "export_failed" })
+  })
+})
+
+describe("a suspended account", () => {
+  it("is refused with 403, and nothing is assembled", async () => {
+    // Suspension used to be a page gate only: the browser bounced to
+    // /account-suspended while the session stayed valid, so this endpoint would
+    // still have handed over the whole account.
+    suspendedAt = "2026-09-11T00:00:00.000Z"
+
+    const response = await GET()
+
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({ error: "account_suspended" })
+    expect(buildAccountExport).not.toHaveBeenCalled()
+  })
+
+  it("is refused before the rate limit is spent", async () => {
+    // A refusal must not consume the caller's own bucket — otherwise lifting a
+    // suspension would leave someone rate-limited for an hour by the refusals.
+    suspendedAt = "2026-09-11T00:00:00.000Z"
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      expect((await GET()).status).toBe(403)
+    }
+
+    suspendedAt = null
+    expect((await GET()).status).toBe(200)
   })
 })

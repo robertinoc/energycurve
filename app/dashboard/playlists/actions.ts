@@ -7,6 +7,7 @@ import type { ZodError } from "zod"
 
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { buildReturnToHref } from "@/lib/auth/return-to"
+import { isSuspended } from "@/lib/auth/suspension"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -130,12 +131,23 @@ async function requireProfile() {
     redirect(buildReturnToHref("/login", "/dashboard/playlists"))
   }
 
-  return syncProfileFromWorkOSUser({
+  const profile = await syncProfileFromWorkOSUser({
     id: user.id,
     email: user.email,
     firstName: user.firstName ?? null,
     lastName: user.lastName ?? null,
   })
+
+  // One check here covers every server action in this file, which is most of
+  // the writes in the product. Suspension used to be enforced only by the
+  // dashboard shell — a page gate, which stops someone *seeing* the app while
+  // leaving their session able to change things. The redirect matches what the
+  // shell does, so a suspended user lands on the same explanation either way.
+  if (isSuspended(profile)) {
+    redirect("/account-suspended")
+  }
+
+  return profile
 }
 
 function collectFieldErrors(error: ZodError): Record<string, string> {
