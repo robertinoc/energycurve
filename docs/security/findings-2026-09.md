@@ -203,3 +203,47 @@ saltear para shipear deja de leerse.
 - **Lo que exige dashboards y es tuyo:** región de Supabase, backups y PITR,
   alcance de los secretos por entorno en Vercel, protección de deploys de preview,
   y MFA en WorkOS de producción.
+
+
+---
+
+## F1 · IDOR y control de acceso a nivel de objeto — 11/09/2026
+
+**Veredicto: no se encontró ningún IDOR.** Se auditaron las 24 server actions y
+las 32 funciones de servicio que reciben el id de un objeto. Todas las lecturas y
+escrituras sobre objetos ajenos están cerradas por una de tres vías:
+
+| Vía | Ejemplo |
+|---|---|
+| La consulta filtra por dueño | `getOwnedPlaylist(profileId, playlistId)`, usado por las 14 mutaciones de playlist y track |
+| Una fila de colaborador | `getSharedPlaylist` exige `set_collaborators(playlist_id, invited_email)` antes de cargar nada |
+| Una firma HMAC | `app/c/[token]` verifica el token antes de resolver el id |
+
+Dos comprobaciones que valen más que el veredicto:
+
+- **`releaseEditLock` y `touchEditLock` escriben con `.eq("edit_lock_holder", profileId)`**, así que sólo se puede soltar o renovar un turno que se tiene. No hace falta un chequeo previo porque la condición *es* el chequeo.
+- **`takeEditLock` llama `mayHoldLock` y además hace el UPDATE condicional.** Dos que corren por el mismo lock libre pasan el primero; sólo uno pasa el segundo.
+
+### Lo que sí hay que arreglar: el control vive en los llamadores y nada lo sostenía
+
+Tres funciones **no verifican acceso por sí mismas** a propósito, porque lo que
+hace de dueño está en el call site: `getPlaylistWithTracksById`, `listSuggestions`
+y `getLockState`. Es un diseño correcto — un chequeo que se puede desactivar
+desde un call site termina desactivado en todos — pero convierte la propiedad de
+seguridad en una propiedad de *quién llama*, y eso no estaba sostenido por nada.
+
+Ya se había corrido: `getPlaylistWithTracksById` llevaba escrito **"the only
+caller is the signed-link route"** cuando hacía rato que existía un segundo
+llamador en `collaboration-service`. Ese segundo llamador chequea acceso, así que
+no hubo vulnerabilidad. Lo que falla es el comentario, y el comentario es
+exactamente lo que lee el próximo antes de agregar un tercero.
+
+**Remediación:** `tests/object-access-callers.test.ts` fija la lista de llamadores
+de las tres, cada uno con la razón por la que es seguro. Agregar un llamador
+ahora obliga a escribir qué hace de dueño ahí, o a pasar por una función que
+filtre por usuario. El test se verificó rompiéndolo: un llamador nuevo lo pone en
+rojo.
+
+**Contexto que hace que esto pese.** RLS está activo con cero políticas y toda la
+app llega a la base por la service-role key. La base concede todo; estas
+funciones *son* el control de acceso. No hay una segunda línea debajo.
