@@ -7,6 +7,7 @@ import {
   Home,
   Library,
   ListMusic,
+  CircleUser,
   LogOut,
   Menu,
   Users,
@@ -56,6 +57,16 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/library",
     label: DASHBOARD_COPY.shell.library,
     icon: Library,
+    match: "prefix",
+  },
+  {
+    // In the nav rather than tucked into the footer next to Log out, because
+    // it is also the only in-app way to reach us — and an alpha user already
+    // had to log out to send feedback once. The point is that nobody has to
+    // hunt for it.
+    href: "/dashboard/account",
+    label: DASHBOARD_COPY.account.navLabel,
+    icon: CircleUser,
     match: "prefix",
   },
 ]

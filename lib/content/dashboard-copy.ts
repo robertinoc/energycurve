@@ -577,8 +577,13 @@ export const DASHBOARD_COPY = {
     },
     /** Said before the upload, not after: M3U8 carries almost nothing. */
     m3u8Heads: {
-      en: "Rekordbox XML, Traktor NML and the .txt export carry all of this. An M3U8 carries only file paths and track lengths — no BPM, key, genre or energy.",
-      es: "El XML de Rekordbox, el NML de Traktor y el export .txt traen todo esto. Un M3U8 sólo trae rutas de archivo y duraciones — sin BPM, key, género ni energía.",
+      en: "Rekordbox XML, Traktor NML, CSV and the .txt export carry all of this. An M3U8 carries only file paths and track lengths — no BPM, key, genre or energy.",
+      es: "El XML de Rekordbox, el NML de Traktor, un CSV y el export .txt traen todo esto. Un M3U8 sólo trae rutas de archivo y duraciones — sin BPM, key, género ni energía.",
+    },
+    /** Links the format reference, which is also the CSV column spec. */
+    formatsHelp: {
+      en: "Which formats we read, and the CSV columns",
+      es: "Qué formatos leemos, y las columnas del CSV",
     },
     setContext: { en: "Set context", es: "Contexto del set" },
     genre: { en: "Genre", es: "Género" },
@@ -954,6 +959,38 @@ export const DASHBOARD_COPY = {
       es: "Dónde poner la energía",
     },
     dismiss: { en: "Got it", es: "Entendido" },
+  },
+
+  /**
+   * The account page, and the in-app way to reach us.
+   *
+   * Added after an alpha user reported having to LOG OUT to send feedback —
+   * the contact form lived only on the landing page. Making a bug report cost
+   * a logout is a good way to stop receiving bug reports, and reports are the
+   * only thing we actually want from people during an alpha.
+   */
+  account: {
+    navLabel: { en: "Account", es: "Cuenta" },
+    title: { en: "Your account", es: "Tu cuenta" },
+    subtitle: {
+      en: "Your details, your plan, and a direct line to us.",
+      es: "Tus datos, tu plan, y una línea directa con nosotros.",
+    },
+    detailsHeading: { en: "Details", es: "Datos" },
+    nameLabel: { en: "Name", es: "Nombre" },
+    emailLabel: { en: "Email", es: "Email" },
+    languageLabel: { en: "Language", es: "Idioma" },
+    keyNotationLabel: { en: "Key notation", es: "Notación de key" },
+    keyNotationHint: {
+      en: "Switched from the Key column header on any tracklist.",
+      es: "Se cambia desde el encabezado de la columna Key en cualquier tracklist.",
+    },
+    planHeading: { en: "Plan", es: "Plan" },
+    contactHeading: { en: "Talk to us", es: "Escribinos" },
+    contactBody: {
+      en: "Bugs, missing formats, a tag we don't read, an idea — all of it is useful, and none of it needs to be polished. EnergyCurve is in alpha and this is how it gets better.",
+      es: "Bugs, formatos que faltan, un tag que no leemos, una idea — todo sirve, y nada tiene que venir prolijo. EnergyCurve está en alfa y así es como mejora.",
+    },
   },
 
   deleteButton: {

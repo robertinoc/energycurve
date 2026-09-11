@@ -84,6 +84,24 @@ export function fixIdForIssue(issue: {
 }
 
 /** Applies one move against a working array (immutable input, new array out). */
+/**
+ * Applies operations left to right.
+ *
+ * Exported so a hand move on the analysis screen is expressed in the same
+ * primitive a fix is. The alternative — a separate "manual order" that replaces
+ * the derived one — would mean two mechanisms for the same act and a screen
+ * where applying a fix after a drag either loses the drag or loses the fix.
+ */
+export function applyOperations(
+  order: string[],
+  operations: readonly FixOperation[]
+): string[] {
+  return operations.reduce(
+    (current, operation) => applyOperation(current, operation),
+    order
+  )
+}
+
 function applyOperation(order: string[], operation: FixOperation): string[] {
   const from = order.indexOf(operation.trackId)
 

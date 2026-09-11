@@ -127,9 +127,11 @@ describe("CSV export", () => {
       })
     )
     const lines = csv.trimEnd().split("\r\n")
-    expect(lines[0]).toBe("Position,Artist,Title,BPM,Key,Genre,Energy,Time")
+    expect(lines[0]).toBe(
+      "Position,Artist,Title,BPM,Key,Genre,Energy,Time,Location"
+    )
     expect(lines[1]).toBe(
-      '1,"DJ ""Q"", the one","Track, One",128,"8A","Bounce",7,3:12'
+      '1,"DJ ""Q"", the one","Track, One",128,"8A","Bounce",7,3:12,""'
     )
   })
 
@@ -150,7 +152,7 @@ describe("CSV export", () => {
         ],
       })
     )
-    expect(csv.trimEnd().split("\r\n")[1]).toBe('1,"A","B",,"","",,')
+    expect(csv.trimEnd().split("\r\n")[1]).toBe('1,"A","B",,"","",,,""')
   })
 })
 

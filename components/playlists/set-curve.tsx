@@ -55,8 +55,12 @@ export function SetCurve({
     )
   }, [target, scores.length])
 
+  // Carries the score so the marker can paint its own energy colour without
+  // re-narrowing a possibly-null index at the render site.
   const highlight =
-    hoveredIndex !== null && points[hoveredIndex] ? points[hoveredIndex] : null
+    hoveredIndex !== null && points[hoveredIndex]
+      ? { ...points[hoveredIndex], score: scores[hoveredIndex] ?? 0 }
+      : null
 
   return (
     <svg
@@ -156,15 +160,52 @@ export function SetCurve({
         )
       )}
 
+      {/* The hovered/dragged track.
+          Reported as "poco visible y me costó verlo y entenderlo" — two
+          problems, not one. It was a 2px white outline with no fill, r=6.5,
+          over r=3 data points on a dark ground with a gradient area fill
+          behind it: thin, and competing with everything underneath.
+
+          Comprehension is the other half, and the guide line is what answers
+          it — it says "the row you are touching is THIS point", which an
+          unconnected dot never did.
+
+          Shapes chosen to survive `preserveAspectRatio="none"`: this SVG is
+          stretched non-uniformly, so a stroked ring comes out thicker on its
+          vertical edges than its horizontal ones, and text would be squashed
+          outright. A filled dot and a vertical rule both read correctly at any
+          aspect ratio. */}
       {highlight ? (
-        <circle
-          cx={highlight.x}
-          cy={highlight.y}
-          r={6.5}
-          fill="none"
-          stroke="#fff"
-          strokeWidth={2}
-        />
+        <g>
+          <line
+            x1={highlight.x}
+            y1={PADDING}
+            x2={highlight.x}
+            y2={HEIGHT - PADDING}
+            stroke="#fff"
+            strokeOpacity={0.3}
+            strokeWidth={2}
+            strokeDasharray="5 5"
+          />
+          {/* Dark disc first, so the marker reads against the area fill and the
+              gradient stroke instead of blending into whichever it lands on. */}
+          <circle
+            cx={highlight.x}
+            cy={highlight.y}
+            r={9}
+            fill="#08050F"
+            fillOpacity={0.9}
+          />
+          <circle cx={highlight.x} cy={highlight.y} r={6} fill="#fff" />
+          {/* The track's own energy colour in the middle: the marker says which
+              point AND what it is worth. */}
+          <circle
+            cx={highlight.x}
+            cy={highlight.y}
+            r={2.75}
+            fill={energyColor(highlight.score)}
+          />
+        </g>
       ) : null}
     </svg>
   )

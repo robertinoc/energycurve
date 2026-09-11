@@ -108,6 +108,8 @@ export function defaultExportFormat(importSource: string | null): ExportFormat {
     case "traktor":
     case "m3u8":
       return importSource
+    case "csv":
+      return "csv"
     case "text":
       return "txt"
     case "files":
@@ -251,6 +253,14 @@ function durationClock(seconds: number | null): string {
   return `${m}:${String(s).padStart(2, "0")}`
 }
 
+/**
+ * CSV, and the schema the CSV importer reads back.
+ *
+ * `Location` is here because an alpha user asked what a CSV needs to carry and
+ * named it: without the file reference a CSV round-trips the order and the
+ * metadata but can never produce a native export that relinks to the library.
+ * Empty for manual and paste-built sets, which have no path to give.
+ */
 function toCsv(playlist: ExportPlaylist): string {
   const header = [
     "Position",
@@ -261,6 +271,7 @@ function toCsv(playlist: ExportPlaylist): string {
     "Genre",
     "Energy",
     "Time",
+    "Location",
   ].join(",")
   const rows = playlist.tracks.map((track) =>
     [
@@ -272,6 +283,7 @@ function toCsv(playlist: ExportPlaylist): string {
       csvCell(track.genre ?? ""),
       track.energyScore ?? "",
       durationClock(track.durationSeconds),
+      csvCell(track.sourceUri ?? ""),
     ].join(",")
   )
   return [header, ...rows].join("\r\n") + "\r\n"

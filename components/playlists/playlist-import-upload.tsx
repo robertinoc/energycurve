@@ -232,7 +232,7 @@ export function PlaylistImportUpload({
             id="import-file"
             name="file"
             type="file"
-            accept=".xml,.nml,.txt,.m3u8,.m3u,text/xml,application/xml,text/plain,audio/x-mpegurl"
+            accept=".xml,.nml,.txt,.csv,.m3u8,.m3u,text/xml,application/xml,text/plain,text/csv,audio/x-mpegurl"
             required
             className="sr-only"
             onChange={(event) =>
@@ -276,7 +276,14 @@ export function PlaylistImportUpload({
               finds four empty columns concludes the reader is broken — which is
               exactly what happened to the alpha user who reported it. */}
           <p className="text-[11.5px] leading-5 text-ec-text-dim">
-            {COPY.m3u8Heads[locale]}
+            {COPY.m3u8Heads[locale]}{" "}
+            <Link
+              href={localizedPath("/import-formats", locale)}
+              target="_blank"
+              className="underline decoration-white/20 underline-offset-2 transition hover:text-white"
+            >
+              {COPY.formatsHelp[locale]} →
+            </Link>
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2">

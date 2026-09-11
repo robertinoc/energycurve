@@ -60,6 +60,16 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
       es: "De qué tag lee EnergyCurve la energía de un track, y con qué formato exacto — para Mixed In Key, Lexicon DJ, Serato, Rekordbox y tags escritos a mano.",
     },
   },
+  "/import-formats": {
+    title: {
+      en: "What we read from your files",
+      es: "Qué leemos de tus archivos",
+    },
+    description: {
+      en: "Which playlist formats EnergyCurve reads, what each one carries, and exactly which columns a CSV needs — for Rekordbox, Traktor, Lexicon and anything that exports a spreadsheet.",
+      es: "Qué formatos de playlist lee EnergyCurve, qué trae cada uno, y exactamente qué columnas necesita un CSV — para Rekordbox, Traktor, Lexicon y cualquier cosa que exporte una planilla.",
+    },
+  },
   "/privacy": {
     title: {
       en: "Privacy Policy",
