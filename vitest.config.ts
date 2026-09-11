@@ -66,11 +66,11 @@ export default defineConfig({
         // the day after. Raise them as coverage arrives — never lower one to
         // make a run pass.
         //
-        // Baseline 63.1/62.1/71.5/62.6 on 2026-09-11, raised as the F2 suites
-        // landed: now 67.5/65.8/74.7/67.1.
-        statements: 67,
-        branches: 65,
-        functions: 74,
+        // Baseline 63.1/62.1/71.5/62.6 on 2026-09-11, raised as each suite
+        // landed. Now 68.2/66.2/75.0/67.8.
+        statements: 68,
+        branches: 66,
+        functions: 75,
         lines: 67,
 
         // The engine and the parsers are where a regression costs a DJ real
@@ -90,7 +90,7 @@ export default defineConfig({
         // remains uncovered there is mostly the smart-order Claude path, which
         // needs a recorded conversation rather than a guard test.
         "services/**": { statements: 8, branches: 8, functions: 12, lines: 8 },
-        "app/api/**": { statements: 43, branches: 38, functions: 38, lines: 43 },
+        "app/api/**": { statements: 46, branches: 40, functions: 39, lines: 46 },
       },
     },
   },
