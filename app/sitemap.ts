@@ -36,7 +36,11 @@ const HINTS: Record<
  * crawling, which is the slower half of the job the sitemap exists to do.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-08-20")
+  // Evaluated when the sitemap is generated, which for these statically
+  // rendered pages is the build — i.e. the last time the site actually changed.
+  // It used to be a frozen literal, which meant every deploy after the day it
+  // was written told crawlers nothing had moved.
+  const lastModified = new Date()
 
   // Articles, each in the one language it was written in. No `alternates` block:
   // there is no translation, and claiming one would point a crawler at a 404.

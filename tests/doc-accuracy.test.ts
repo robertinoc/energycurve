@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import { plannedCapabilities } from "@/lib/product/capabilities"
+import { CAPABILITIES, plannedCapabilities } from "@/lib/product/capabilities"
 import { buildPricingStructuredData } from "@/lib/seo"
 
 /**
@@ -70,6 +70,11 @@ describe("claims that were false and must not return", () => {
       pattern: /No quota enforcement/i,
       why: "quotaFor() has call sites in playlist, taxonomy and smart-order, and tests/capabilities.test.ts requires one per numeric limit",
     },
+    {
+      doc: "billing.md",
+      pattern: /Collaborative B2B sets have \*\*?not/i,
+      why: "b2b_sets is status:'shipped' in lib/product/capabilities.ts — asserted below. The claim was written on 2026-08-20, the same day #152 and #161 merged, and survived three weeks",
+    },
   ]
 
   for (const { doc, pattern, why } of FORBIDDEN) {
@@ -77,6 +82,13 @@ describe("claims that were false and must not return", () => {
       expect(read(doc), `Stale claim. ${why}`).not.toMatch(pattern)
     })
   }
+
+  it("b2b_sets really is shipped, so the canary above isn't guarding a lie", () => {
+    // The pattern only proves a sentence is absent. This proves the sentence was
+    // wrong to begin with, which is the half a grep can't do.
+    expect(plannedCapabilities()).not.toContain("b2b_sets")
+    expect(CAPABILITIES.b2b_sets.status).toBe("shipped")
+  })
 
   it("checks the PreOrder claim against the actual offers", () => {
     // The assertion above only proves the sentence is gone. This proves the fact
