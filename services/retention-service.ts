@@ -190,3 +190,48 @@ export async function sweepAnalysisBlobs(
 
   return cleared
 }
+
+/**
+ * How long a spent rate-limit bucket sticks around.
+ *
+ * A day rather than an hour, even though the longest window in the product is
+ * an hour: the row costs nothing once its window has passed, and deleting it
+ * the minute it expires would mean a delete for every bucket the product ever
+ * opens. One sweep a day removes them in bulk instead.
+ */
+export const RATE_LIMIT_BUCKET_RETENTION_DAYS = 1
+
+/**
+ * Deletes rate-limit buckets whose window is long gone.
+ *
+ * Unlike the other sweeps here this one has no privacy obligation behind it —
+ * it is housekeeping. A bucket key does carry a profile id, so the rows are
+ * worth not keeping forever, but the reason to delete them is that the table is
+ * written on every limited request and nothing else ever removes a row.
+ *
+ * Deleted rather than nulled, which is the opposite of `billing_events` and
+ * `analyses`: those keep the row because something still reads its other
+ * columns, and a bucket has no other columns worth keeping.
+ */
+export async function sweepRateLimitBuckets(
+  { retentionDays = RATE_LIMIT_BUCKET_RETENTION_DAYS } = {}
+): Promise<number> {
+  const supabase = getSupabaseAdminClient()
+
+  const { data, error } = await supabase
+    .from("rate_limit_buckets")
+    .delete()
+    .lt("window_start", cutoffIso(retentionDays))
+    .select("key")
+
+  if (error) {
+    logWarn("retention.rate_limit_sweep_failed", { message: error.message })
+    throw new Error("Unable to clear expired rate limit buckets.")
+  }
+
+  const cleared = data?.length ?? 0
+
+  logInfo("retention.rate_limit_buckets_swept", { cleared, retentionDays })
+
+  return cleared
+}

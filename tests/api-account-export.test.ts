@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { createFakeSupabase, type FakeSupabase } from "./helpers/supabase-fake"
+
 /**
  * The route in front of "download my data".
  *
@@ -36,6 +38,11 @@ vi.mock("@/services/profile-service", () => ({
   syncProfileFromWorkOSUser: async () => ({ id: profileId, suspended_at: suspendedAt }),
 }))
 vi.mock("@/services/data-export-service", () => ({ buildAccountExport }))
+let fake: FakeSupabase
+
+vi.mock("@/lib/supabase/server", () => ({
+  getSupabaseAdminClient: () => fake,
+}))
 vi.mock("@/lib/observability/logger", () => ({
   logError: vi.fn(),
   logInfo: vi.fn(),
@@ -53,6 +60,8 @@ const SAMPLE = {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // A fresh database per test, so one test's rate-limit bucket is not another's.
+  fake = createFakeSupabase()
   buildAccountExport.mockResolvedValue(SAMPLE)
   profileId = `profile-${Math.random().toString(36).slice(2)}`
   sessionUser = { id: `user-${profileId}`, email: "dj@example.com" }

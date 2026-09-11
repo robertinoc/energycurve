@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   }
 
   const ipAddress = getClientIp(request.headers)
-  const rateLimit = checkRateLimit({
+  const rateLimit = await checkRateLimit({
     key: `contact:${ipAddress}`,
     limit: RATE_LIMIT_MAX_REQUESTS,
     windowMs: RATE_LIMIT_WINDOW_MS,

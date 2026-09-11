@@ -18,6 +18,20 @@ export type Tables = Record<string, Row[]>
 
 export interface FakeSupabase {
   from: (table: string) => Builder
+  /**
+   * The stored procedures, with the same semantics as the SQL.
+   *
+   * `consume_rate_limit` matters most: it returns the new count, or **null when
+   * the limit is already reached**, because the refusal in the real function is
+   * the `on conflict … where` not firing and therefore returning no row. A fake
+   * that returned the count and left the comparison to the caller would let a
+   * test pass against a limiter that reads the number and decides in JS — which
+   * is exactly the read-then-write race the SQL exists to avoid.
+   */
+  rpc: (
+    name: "consume_rate_limit",
+    args: { p_key: string; p_window_start: string; p_limit: number }
+  ) => Promise<{ data: number | null; error: unknown }>
   /** Every statement that ran, in order. For asserting what did *not* happen. */
   readonly log: Statement[]
   /** Live view of the data, so a test can assert on what a write left behind. */
@@ -315,6 +329,37 @@ export function createFakeSupabase(seed: Tables = {}): FakeSupabase {
 
   return {
     from: (table: string) => new Builder(table, db, log, failures),
+    rpc: async (_name, args) => {
+      const failure = failures.get("rate_limit_buckets")
+
+      if (failure) {
+        failures.delete("rate_limit_buckets")
+        return { data: null, error: { message: failure } }
+      }
+
+      const rows = (db.rate_limit_buckets ??= [])
+      const bucket = rows.find(
+        (row) => row.key === args.p_key && row.window_start === args.p_window_start
+      )
+
+      if (!bucket) {
+        rows.push({
+          key: args.p_key,
+          window_start: args.p_window_start,
+          count: 1,
+        })
+        return { data: 1, error: null }
+      }
+
+      // Under the limit it increments; at the limit the conditional does not
+      // fire and no row comes back.
+      if ((bucket.count as number) >= args.p_limit) {
+        return { data: null, error: null }
+      }
+
+      bucket.count = (bucket.count as number) + 1
+      return { data: bucket.count as number, error: null }
+    },
     log,
     tables: db,
     failNext: (table, message) => failures.set(table, message),

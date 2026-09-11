@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 })
   }
 
-  const rate = checkRateLimit({
+  const rate = await checkRateLimit({
     key: `billing-checkout:${user.id}`,
     limit: 10,
     windowMs: 60_000,

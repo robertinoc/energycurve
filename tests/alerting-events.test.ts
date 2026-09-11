@@ -90,13 +90,17 @@ describe("the two events this phase added", () => {
 })
 
 describe("what the document promises about its own limits", () => {
-  it("still says the rate limiter is per-instance", () => {
-    // The `*_rate_limited` thresholds are only honest while this is true. If a
-    // distributed limiter ever lands, this test failing is the reminder that
-    // those rows now mean something different.
-    expect(DOC).toMatch(/por instancia/)
-    expect(readFileSync(join(process.cwd(), "lib/rate-limit.ts"), "utf8")).toMatch(
-      /new Map|Map</
-    )
+  it("says the rate limiter is shared, now that it is", () => {
+    // This test used to assert the opposite, and its failing is what carried the
+    // news: a distributed limiter landed in migration 0029, so the
+    // `*_rate_limited` rows stopped counting what one instance saw and started
+    // counting the person. The document has to say which of the two it means,
+    // because a threshold written against the old meaning now fires earlier —
+    // correctly, but surprisingly.
+    const source = readFileSync(join(process.cwd(), "lib/rate-limit.ts"), "utf8")
+
+    expect(source).not.toMatch(/new Map|Map</)
+    expect(source).toMatch(/consume_rate_limit/)
+    expect(DOC).toMatch(/rate_limit_buckets/)
   })
 })

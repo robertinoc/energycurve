@@ -592,6 +592,15 @@ export interface Database {
         }
         Returns: number
       }
+      /** Atomic "increment only while under the limit" — see migration 0029. */
+      consume_rate_limit: {
+        Args: {
+          p_key: string
+          p_window_start: string
+          p_limit: number
+        }
+        Returns: number
+      }
     }
     Enums: {
       playlist_context: "opening" | "main" | "closing"

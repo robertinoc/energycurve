@@ -5,6 +5,7 @@ import {
   sweepAnalysisBlobs,
   sweepAuditLogEmails,
   sweepBillingPayloads,
+  sweepRateLimitBuckets,
 } from "@/services/retention-service"
 
 export const dynamic = "force-dynamic"
@@ -69,11 +70,24 @@ export async function GET(request: Request) {
       logError("retention.analysis_sweep_failed", error)
     }
 
+    // Same isolation again, and this one needs migration 0029. It is also the
+    // only sweep here with no obligation behind it — housekeeping on a table
+    // nothing else prunes — so it is the one that most deserves to fail quietly
+    // rather than mask a sweep that does have one.
+    let rateLimitBucketsCleared: number | null = null
+
+    try {
+      rateLimitBucketsCleared = await sweepRateLimitBuckets()
+    } catch (error) {
+      logError("retention.rate_limit_sweep_failed", error)
+    }
+
     return NextResponse.json({
       ok: true,
       ...result,
       auditEmailsCleared,
       analysisBlobsCleared,
+      rateLimitBucketsCleared,
     })
   } catch (error) {
     logError("retention.sweep_failed", error)

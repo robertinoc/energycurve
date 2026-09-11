@@ -34,7 +34,7 @@ comentarios sueltos que nadie vuelve a leer.
 | 1 | **RLS activo con cero políticas** | Supabase | La base concede todo; el control de acceso es enteramente el código de `services/`. No hay segunda línea. Auditado el 11/09 sin hallar IDOR, y fijado con `tests/object-access-callers.test.ts` |
 | 2 | **Rate limiter en memoria del proceso** | `lib/rate-limit.ts` | En serverless el límite es por instancia y se reinicia en cada arranque en frío. El límite anunciado no es el límite real |
 | 3 | **Sin borrado de cuenta self-serve** | — | Sólo existe como acción de admin. Es una obligación del Art. 17, no una feature |
-| 4 | **Sin retención en `analyses` y `playlist_versions`** | Migraciones | Crecen sin techo. `billing_events` ya se cerró (PR #183) |
+| 4 | ~~Sin retención en `analyses` y `playlist_versions`~~ | — | **CORREGIDO 11/09/2026: esta fila estaba mal.** `analyses` se cerró en el PR #202 (migración 0028, los blobs se sueltan y la fila queda). Y `playlist_versions` **nunca creció sin techo**: `versionsToPrune` la capa en 20 por playlist en cada captura, protegiendo la versión `imported`, que es la única irrecuperable. Lo escribí sin leer `lib/playlists/versions.ts` |
 | 5 | **Dos archivos de más de 1.100 líneas** | `actions.ts` (1633), `analysis-workbench.tsx` (1161) | Son los dos que más cuesta modificar con seguridad. Ver abajo |
 | 6 | **`plan_cancellation_feedback` se escribe y nunca se lee** | `profiles` | Dato sin finalidad servida |
 
@@ -169,7 +169,9 @@ ella.
    grave si falla".
 2. **Un Sentry y una alerta de tasa de error.** Barato, y es la diferencia entre
    enterarse en una hora y enterarse por un usuario en el teléfono.
-3. **Rate limiter compartido.** El límite anunciado debería ser el límite real.
+3. ~~**Rate limiter compartido.**~~ **HECHO** — migración 0029: el contador vive
+   en `rate_limit_buckets` con ventanas alineadas a la época, así que el límite
+   anunciado es el límite real.
 4. **Borrado de cuenta self-serve.** Obligación legal, no feature.
 
 Lo demás puede esperar sin que el riesgo crezca.

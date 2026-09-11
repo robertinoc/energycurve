@@ -42,7 +42,7 @@ export async function GET() {
     })
   }
 
-  const rate = checkRateLimit({
+  const rate = await checkRateLimit({
     key: `account-export:${profile.id}`,
     limit: 3,
     windowMs: 60 * 60_000,
