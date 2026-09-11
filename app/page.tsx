@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 import { LandingPage } from "@/components/marketing/landing-page"
-import { buildLandingStructuredData, marketingMetadata } from "@/lib/seo"
+import { buildLandingStructuredData, marketingMetadata, serializeStructuredData } from "@/lib/seo"
 
 const LOCALE = "en" as const
 
@@ -17,7 +17,7 @@ export default function HomePage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: serializeStructuredData(structuredData) }}
       />
       <LandingPage locale={LOCALE} />
     </>
