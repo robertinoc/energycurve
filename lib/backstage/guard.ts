@@ -7,6 +7,7 @@ import { buildReturnToHref } from "@/lib/auth/return-to"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { isBackstageAdmin } from "@/lib/backstage/config"
 import { resolveMainOrigin } from "@/lib/backstage/hosts"
+import { logWarn } from "@/lib/observability/logger"
 
 export interface BackstageSession {
   email: string
@@ -44,6 +45,14 @@ export async function requireBackstageSession(): Promise<BackstageSession> {
   }
 
   if (!isBackstageAdmin(user.email)) {
+    // The redirect is deliberate and stays: the panel should not advertise its
+    // existence to a regular user. What was missing is that it happened in
+    // total silence, so "a signed-in account is repeatedly probing /backstage"
+    // — the one authorisation anomaly this app can actually have — produced no
+    // record anywhere. Warn, not error: one hit is usually a stale bookmark or
+    // a typo, and it is the *rate* that means something.
+    logWarn("backstage.non_admin_attempt", { workosUserId: user.id })
+
     redirect(mainOriginHref("/dashboard"))
   }
 

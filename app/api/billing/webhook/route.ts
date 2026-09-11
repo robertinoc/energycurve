@@ -70,6 +70,16 @@ export async function POST(request: Request) {
 
   const signature = request.headers.get("stripe-signature")
   if (!signature) {
+    // Logged, where it previously was not. A *bad* signature already emitted
+    // `billing.webhook.bad_signature`; a request with no signature header at all
+    // returned 400 in silence — and that is the shape of the ordinary probe,
+    // someone POSTing at a known billing path to see what answers. A burst of
+    // these was invisible while a burst of the other was alertable, which is the
+    // wrong way round: the unsigned one is the cheaper attack to run.
+    logWarn("billing.webhook.missing_signature", {
+      contentLength: request.headers.get("content-length"),
+    })
+
     return NextResponse.json({ error: "Missing signature." }, { status: 400 })
   }
 

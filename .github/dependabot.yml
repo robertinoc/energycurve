@@ -1,0 +1,31 @@
+# Keeps the pins in .github/workflows honest.
+#
+# Those workflows pin every action to a commit SHA, which stops a moved tag from
+# changing what runs inside a job that has the repository checked out. The cost
+# is that a SHA never updates itself — and an action pinned in March and never
+# touched is its own supply-chain problem by September, because a fixed
+# vulnerability is one you are still running.
+#
+# So the pins get a watcher. Dependabot opens a PR that rewrites the SHA and the
+# trailing `# vX.Y.Z` comment together, which is the thing that makes the pin
+# readable in review.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    # One PR per action rather than a grouped bump: an action update changes
+    # what executes in CI, and reviewing four of those in one diff is how the
+    # one that mattered gets skimmed.
+    open-pull-requests-limit: 4
+    commit-message:
+      prefix: "ci"
+
+  # npm deliberately NOT watched here.
+  #
+  # `npm audit --audit-level=high` already runs on every PR as advisory output,
+  # and this project has one maintainer. A weekly wall of dependency PRs against
+  # a repo where every merge needs a human is how a queue of them gets merged
+  # unread — which is worse than reading the audit output and deciding. Revisit
+  # when there is more than one person to review them.
