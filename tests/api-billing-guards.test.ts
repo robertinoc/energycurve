@@ -17,13 +17,12 @@ let sessionUser: { id: string; email: string } | null = null
 
 // Typed with their parameter so `mock.calls[0][0]` is the payload we sent to
 // Stripe rather than an empty tuple — the assertions below read it.
-const createSession = vi.fn(async (_params: unknown) => ({
-  id: "cs_1",
-  url: "https://checkout.stripe.test/1",
-}))
-const createPortalSession = vi.fn(async (_params: unknown) => ({
-  url: "https://portal.stripe.test/1",
-}))
+const createSession = vi.fn<(params: unknown) => Promise<{ id: string; url: string }>>(
+  async () => ({ id: "cs_1", url: "https://checkout.stripe.test/1" })
+)
+const createPortalSession = vi.fn<(params: unknown) => Promise<{ url: string }>>(
+  async () => ({ url: "https://portal.stripe.test/1" })
+)
 
 vi.mock("@workos-inc/authkit-nextjs", () => ({
   withAuth: async () => ({ user: sessionUser }),
