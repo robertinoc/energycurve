@@ -43,7 +43,7 @@ Estado: ✅ cumple · ⚠️ parcial · ❌ brecha · ⬜ depende de una acción
 | 5(1)(b) | Limitación de finalidad | ✅ | Finalidad por tratamiento en el RoPA |
 | 5(1)(c) | Minimización | ⚠️ | Dos hallazgos: blobs de `analyses` (resuelto), `plan_cancellation_feedback` (decisión pendiente) |
 | 5(1)(d) | Exactitud | ❌ | **No hay rectificación self-serve.** Ni nombre ni mail se pueden editar |
-| 5(1)(e) | Limitación de conservación | ⬜ | Tres ventanas implementadas y **ninguna corre**: falta `CRON_SECRET` |
+| 5(1)(e) | Limitación de conservación | ⬜ | **Cuatro** ventanas implementadas y **ninguna corre**: falta `CRON_SECRET`. La cuarta (`rate_limit_buckets`, 1 día, migración 0029) es housekeeping y no lleva obligación detrás — las otras tres sí |
 | 5(1)(f) | Integridad y confidencialidad | ✅ | Art. 32, abajo |
 | 5(2) | Responsabilidad proactiva | ✅ | Este dossier, y con tests que lo verifican |
 | 6 | Base legal | ⚠️ | Identificable por tratamiento en el RoPA, **no declarada al usuario** |
@@ -110,8 +110,8 @@ El orden de arreglo importa y no es el que sugiere la numeración:
 
 | # | Qué | Cierra | Costo |
 |---|---|---|---|
-| R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **tres ventanas escritas y ninguna corriendo** | 2 min |
-| R2 | Migraciones 0027 y 0028 | auditoría y retención | 5 min |
+| R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **cuatro ventanas escritas y ninguna corriendo** | 2 min |
+| R2 | ~~Migraciones 0027 y 0028~~ · **0029 corrida en ambos entornos (11/09/2026)** | auditoría, retención y rate limiting | 5 min |
 | R3 | Confirmar región de Supabase | 5(1)(a) — hoy la política puede estar diciendo algo falso | 2 min |
 | R4 | Aceptar los DPAs | Art. 28 | 1 hora |
 | R5 | Acceso de emergencia delegado | Art. 32 — bus factor 1 | 1 tarde |
@@ -120,7 +120,7 @@ El orden de arreglo importa y no es el que sugiere la numeración:
 | R8 | Decidir: link público opt-in | Art. 25 | decisión |
 
 **R1 es el de mejor relación de todos los proyectos**: dos minutos de trabajo
-que convierten tres políticas de retención escritas en tres que efectivamente
+que convierten cuatro políticas de retención escritas en cuatro que efectivamente
 corren.
 
 ---

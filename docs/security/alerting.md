@@ -17,6 +17,57 @@ Lo que sí se hizo en esta pasada, porque es la parte que no depende de ninguna
 herramienta: **asegurar que los eventos que una alerta necesitaría existan**.
 Una alerta sobre un evento que nadie emite es un documento, no un control.
 
+## Actualización 11/09/2026 — ya hay dónde mirar
+
+El párrafo de arriba se quedó sin la mitad de su premisa: **ahora sí hay
+seguimiento de errores**. `lib/observability/sentry.ts` cuelga de `logError`, por
+donde ya pasaba todo el servidor, más `onRequestError` de Next para los throws que
+nadie capturó. Sin SDK: catorce dependencias y un plugin de webpack, en un
+proyecto con Turbopack, a cambio de errores de navegador que no estábamos
+pidiendo.
+
+**Qué NO cubre, dicho acá para que nadie lo suponga:** errores del navegador, y
+los stacks no están mapeados al código fuente. Si alguna de las dos cosas
+empieza a doler, ahí sí el SDK paga su precio.
+
+### La alerta que hay que crear (en Sentry, no en el código)
+
+Una sola, y deliberadamente una sola: un catálogo de alertas que nadie atiende
+entrena a ignorarlas.
+
+| Campo | Valor |
+|---|---|
+| Tipo | Issue alert / Metric alert sobre tasa de error |
+| Condición | Más de **10 eventos en 5 minutos** en `environment:production` |
+| Acción | Mail a hello@energycurve.app |
+| Intervalo | Máximo una notificación por hora, para que un incidente no se convierta en cien mails |
+
+**Por qué 10 en 5 minutos y no "cualquier error".** El producto emite errores
+normales —un archivo que no decodifica, un tag ilegible— y una alerta que salta
+con el primero se apaga en una semana. Diez en cinco minutos es un cambio de
+régimen, no un martes.
+
+**El caso que la justifica**, y conviene tenerlo escrito: el ordenamiento con IA
+**nunca funcionó en producción**. La ruta pedía 55 s a Anthropic y la plataforma la
+mataba a los 10-15 s, así que todas las peticiones caían al heurístico. Se supo
+porque un usuario lo reportó desde el teléfono, semanas después. Con esta alerta
+habría saltado con el primer puñado de peticiones.
+
+### Qué se manda y qué no
+
+La metadata pasa por **lista blanca** antes de salir. El logger lleva direcciones
+de mail (`auth.password_reset_rate_limited` lleva una) y Sentry es un encargado
+en EE.UU.: reenviar la metadata tal cual habría sido una fuga con la suite en
+verde. Hay dos tests, y uno lee los bytes que saldrían por el camino real.
+
+Sí se manda `profileId`, que es un UUID opaco y es el mínimo para saber si dos
+errores son de la misma persona. Declarado en el RoPA. **Falta el DPA con Sentry
+— eso es tuyo.**
+
+El tope es de 60 eventos por minuto y por proceso: una dependencia caída produce
+errores en bucle, y lo primero que hace un reporter sin techo durante un incidente
+es convertir una caída en dos gastando la cuota entera.
+
 ---
 
 ## Dos eventos que faltaban

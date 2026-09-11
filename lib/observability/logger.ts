@@ -1,5 +1,7 @@
 import "server-only"
 
+import { reportToSentry } from "@/lib/observability/sentry"
+
 type LogLevel = "info" | "warn" | "error"
 
 type LogValue =
@@ -78,4 +80,9 @@ export function logError(
     ...metadata,
     error: serializeError(error),
   })
+
+  // After the log, never instead of it. stdout is the record that survives a
+  // Sentry outage, a missing DSN, and the per-minute budget — and it is the one
+  // an incident actually gets read from.
+  reportToSentry(event, error, metadata)
 }
