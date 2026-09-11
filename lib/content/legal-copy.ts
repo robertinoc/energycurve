@@ -7,7 +7,7 @@ import type { SiteLocale } from "@/lib/content/site-copy"
  * PostHog, Resend, Vercel).
  */
 
-export type LegalDocId = "privacy" | "terms" | "cookies"
+export type LegalDocId = "privacy" | "terms" | "cookies" | "subprocessors"
 
 export interface LegalSection {
   heading: string
@@ -137,6 +137,55 @@ const en: Record<LegalDocId, LegalDoc> = {
         heading: "Changes & contact",
         body: [
           `We may update these terms; we'll reflect the date above. Questions? ${CONTACT_EMAIL}.`,
+        ],
+      },
+    ],
+  },
+  subprocessors: {
+    title: "Subprocessors",
+    updated: UPDATED.en,
+    intro:
+      `Every third party that processes data on our behalf, what they do with it, and where they are. ${OPERATOR} is the controller; the companies below are processors acting on our instructions. This list is generated from the integrations the application actually uses — a service we stopped using is removed, and one we add appears here in the same change.`,
+    sections: [
+      {
+        heading: "Infrastructure",
+        body: [
+          "Vercel Inc. (United States) — application hosting and runtime logs. Every request reaches us through Vercel, so it processes whatever a request contains.",
+          "Supabase Inc. — the application database: your account record, your sets, your tracks, your analyses. Stores everything except payment details and authentication credentials.",
+        ],
+      },
+      {
+        heading: "Accounts and email",
+        body: [
+          "WorkOS Inc. (United States) — authentication. Holds your email, your name if you gave one, and your password; we never receive or store the password ourselves.",
+          "Resend (United States) — transactional email: password resets and verification codes. Receives your address and the message, nothing else.",
+        ],
+      },
+      {
+        heading: "Payments",
+        body: [
+          "Stripe, Inc. (United States) — subscriptions and payment processing. Card details are entered on Stripe's own checkout and never touch our servers; we hold only a customer identifier and your plan status.",
+        ],
+      },
+      {
+        heading: "Optional, and only if you turn them on",
+        body: [
+          "PostHog Inc. (United States) — product analytics. Loads only after you accept in the cookie banner, and never if your browser sends Do Not Track. Identifies you by an internal account id, never by email, and we do not send it your IP address.",
+          "GetSongBPM (United States) — track title and tempo lookup. Used only on sets where you explicitly enable it, and it receives only artist and title. We have no data processing agreement with them, which is why it is off by default and asked for per set.",
+          "Anthropic PBC (United States) — the AI reordering suggestion. Receives track titles, artists, tempos and keys for the set being reordered when you ask for a suggestion. It never receives your email, your account, or any audio.",
+        ],
+      },
+      {
+        heading: "What never leaves your device",
+        body: [
+          "Audio files. When you analyse local files, the reading happens in your browser and the audio is never uploaded to us or to anyone on this list. What leaves your device is the measurements — tempo, key, energy — not the recording.",
+        ],
+      },
+      {
+        heading: "Where they are, and what that means",
+        body: [
+          "Most of the companies above are in the United States, so using EnergyCurve from the European Economic Area involves an international transfer. We rely on each provider's own transfer mechanism under their data processing terms.",
+          `If you want to know the mechanism for a specific provider, or you are notified of a change you object to, write to ${CONTACT_EMAIL}.`,
         ],
       },
     ],
@@ -276,6 +325,55 @@ const es: Record<LegalDocId, LegalDoc> = {
         heading: "Cambios y contacto",
         body: [
           `Podemos actualizar estos términos; se reflejará en la fecha de arriba. ¿Dudas? ${CONTACT_EMAIL}.`,
+        ],
+      },
+    ],
+  },
+  subprocessors: {
+    title: "Sub-encargados",
+    updated: UPDATED.es,
+    intro:
+      `Cada tercero que trata datos por cuenta nuestra, qué hace con ellos y dónde está. ${OPERATOR} es el responsable; las empresas de abajo son encargados que actúan siguiendo nuestras instrucciones. Esta lista se arma a partir de las integraciones que la aplicación realmente usa — un servicio que dejamos de usar se saca, y uno que sumamos aparece acá en el mismo cambio.`,
+    sections: [
+      {
+        heading: "Infraestructura",
+        body: [
+          "Vercel Inc. (EE.UU.) — hosting de la aplicación y logs de ejecución. Todo request pasa por Vercel, así que trata lo que ese request contenga.",
+          "Supabase Inc. — la base de datos: tu cuenta, tus sets, tus tracks, tus análisis. Guarda todo excepto los datos de pago y las credenciales de acceso.",
+        ],
+      },
+      {
+        heading: "Cuentas y mails",
+        body: [
+          "WorkOS Inc. (EE.UU.) — autenticación. Tiene tu mail, tu nombre si lo diste, y tu contraseña; nosotros nunca recibimos ni guardamos la contraseña.",
+          "Resend (EE.UU.) — mails transaccionales: restablecer contraseña y códigos de verificación. Recibe tu dirección y el mensaje, nada más.",
+        ],
+      },
+      {
+        heading: "Pagos",
+        body: [
+          "Stripe, Inc. (EE.UU.) — suscripciones y procesamiento de pagos. Los datos de la tarjeta se cargan en el checkout de Stripe y nunca pasan por nuestros servidores; nosotros guardamos un identificador de cliente y el estado de tu plan.",
+        ],
+      },
+      {
+        heading: "Opcionales, y solo si los activás vos",
+        body: [
+          "PostHog Inc. (EE.UU.) — analítica de producto. Carga solo después de que aceptes en el banner, y nunca si tu navegador manda Do Not Track. Te identifica con un id interno de cuenta, nunca con tu mail, y no le mandamos tu dirección IP.",
+          "GetSongBPM (EE.UU.) — búsqueda de título y tempo. Se usa solo en los sets donde lo activás explícitamente, y recibe únicamente artista y título. No tenemos acuerdo de tratamiento de datos con ellos, y por eso viene apagado y se pide set por set.",
+          "Anthropic PBC (EE.UU.) — la sugerencia de reordenamiento con IA. Recibe títulos, artistas, tempos y tonalidades del set que estás reordenando, cuando pedís una sugerencia. Nunca recibe tu mail, tu cuenta, ni audio.",
+        ],
+      },
+      {
+        heading: "Lo que nunca sale de tu dispositivo",
+        body: [
+          "Los archivos de audio. Cuando analizás archivos locales, la lectura ocurre en tu navegador y el audio no se sube ni a nosotros ni a nadie de esta lista. Lo que sale de tu dispositivo son las mediciones — tempo, tonalidad, energía — no la grabación.",
+        ],
+      },
+      {
+        heading: "Dónde están, y qué significa eso",
+        body: [
+          "La mayoría de las empresas de arriba están en Estados Unidos, así que usar EnergyCurve desde el Espacio Económico Europeo implica una transferencia internacional. Nos apoyamos en el mecanismo de transferencia propio de cada proveedor, según sus condiciones de tratamiento de datos.",
+          `Si querés saber el mecanismo de un proveedor puntual, o te notificamos un cambio al que te querés oponer, escribinos a ${CONTACT_EMAIL}.`,
         ],
       },
     ],

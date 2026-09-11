@@ -26,6 +26,9 @@ const HINTS: Record<
   "/privacy": { changeFrequency: "yearly", priority: 0.3 },
   "/terms": { changeFrequency: "yearly", priority: 0.3 },
   "/cookie-policy": { changeFrequency: "yearly", priority: 0.3 },
+  // Monthly, unlike its neighbours: a subprocessor list that changes is the
+  // one legal page a reader has a reason to come back to.
+  "/subprocessors": { changeFrequency: "monthly", priority: 0.3 },
 }
 
 /**

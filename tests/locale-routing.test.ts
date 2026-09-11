@@ -201,6 +201,7 @@ describe("route files exist for both languages", () => {
     "/privacy": "privacy/page.tsx",
     "/terms": "terms/page.tsx",
     "/cookie-policy": "cookie-policy/page.tsx",
+    "/subprocessors": "subprocessors/page.tsx",
   }
 
   it("has an English and a Spanish route file per localized path", () => {

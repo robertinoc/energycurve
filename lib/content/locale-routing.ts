@@ -49,6 +49,7 @@ export const LOCALIZED_PATHS = [
   "/privacy",
   "/terms",
   "/cookie-policy",
+  "/subprocessors",
 ] as const
 
 export type LocalizedPath = (typeof LOCALIZED_PATHS)[number]
