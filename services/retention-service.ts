@@ -99,3 +99,43 @@ export async function sweepBillingPayloads(
 
   return result
 }
+
+/**
+ * How long an audit row keeps the target's address.
+ *
+ * The action, the actor and the (now unresolvable) profile id stay forever —
+ * that is the audit trail, and it holds no personal data about the target once
+ * the email is gone. What expires is the one field that identifies a person,
+ * and a year is the outer edge of "someone might still ask us what happened to
+ * this account".
+ *
+ * Without this, the audit log written for account deletions would quietly become
+ * the place a deleted person's email lives indefinitely — a new copy of exactly
+ * the problem the billing sweep above exists to remove.
+ */
+export const AUDIT_EMAIL_RETENTION_DAYS = 365
+
+/** Clears target emails from audit rows past the window. Returns how many. */
+export async function sweepAuditLogEmails(
+  { retentionDays = AUDIT_EMAIL_RETENTION_DAYS } = {}
+): Promise<number> {
+  const supabase = getSupabaseAdminClient()
+
+  const { data, error } = await supabase
+    .from("admin_audit_log")
+    .update({ target_email: null })
+    .lt("created_at", cutoffIso(retentionDays))
+    .not("target_email", "is", null)
+    .select("id")
+
+  if (error) {
+    logWarn("retention.audit_email_sweep_failed", { message: error.message })
+    throw new Error("Unable to clear aged audit log emails.")
+  }
+
+  const cleared = data?.length ?? 0
+
+  logInfo("retention.audit_emails_swept", { cleared, retentionDays })
+
+  return cleared
+}

@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server"
 
 import { logError } from "@/lib/observability/logger"
-import { sweepBillingPayloads } from "@/services/retention-service"
+import {
+  sweepAuditLogEmails,
+  sweepBillingPayloads,
+} from "@/services/retention-service"
 
 export const dynamic = "force-dynamic"
 
@@ -41,7 +44,20 @@ export async function GET(request: Request) {
   try {
     const result = await sweepBillingPayloads()
 
-    return NextResponse.json({ ok: true, ...result })
+    // Separate try, and not part of the one above, for a specific reason: the
+    // audit table arrives with migration 0027 and migrations here are applied by
+    // hand. An environment that has the code and not the table would otherwise
+    // have its billing sweep — the one with the erasure obligation behind it —
+    // reported as failed because a second, newer sweep could not run.
+    let auditEmailsCleared: number | null = null
+
+    try {
+      auditEmailsCleared = await sweepAuditLogEmails()
+    } catch (error) {
+      logError("retention.audit_sweep_failed", error)
+    }
+
+    return NextResponse.json({ ok: true, ...result, auditEmailsCleared })
   } catch (error) {
     logError("retention.sweep_failed", error)
 

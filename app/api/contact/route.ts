@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { ZodError } from "zod"
 
 import { createContactFormSchema } from "@/lib/contact-form"
+import { isTrustedOrigin } from "@/lib/http/trusted-origin"
 import { SiteLocale } from "@/lib/content/site-copy"
 import { logError, logWarn } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
@@ -18,22 +19,6 @@ function getClientIp(headers: Headers) {
   }
 
   return headers.get("x-real-ip") ?? "unknown"
-}
-
-function isTrustedOrigin(request: Request) {
-  const requestOrigin = new URL(request.url).origin
-  const origin = request.headers.get("origin")
-  const referer = request.headers.get("referer")
-
-  if (origin && origin !== requestOrigin) {
-    return false
-  }
-
-  if (referer && !referer.startsWith(requestOrigin)) {
-    return false
-  }
-
-  return true
 }
 
 function getApiMessage(
