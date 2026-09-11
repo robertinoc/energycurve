@@ -109,9 +109,14 @@ terminado.
    `COMP_PRO_PLUS_EMAILS`; la PRO conviene sacarla comprando con tarjeta de
    test de Stripe, así se valida el flujo de pago de paso.
 3. Después, el bloque de auth e ingesta, que destraba el resto.
-4. **Correr `RUN_THIS_IN_SUPABASE.sql`** (ver Ronda 2 más abajo) en dev y en
-   prod — bloquea plantillas de curva propias y el idioma de los mails hasta
-   que se haga.
+4. **Correr las migraciones pendientes** en dev y en prod — bloquean plantillas
+   de curva propias y el idioma de los mails hasta que se haga. Ojo: este punto
+   mandaba correr un `RUN_THIS_IN_SUPABASE.sql` que **nunca se commiteó** y solo
+   existió en el mensaje del PR #118. El SQL real son los archivos de
+   `supabase/migrations/`, concatenados en orden. Estado verificado el
+   11/09/2026 contra dev: 0018, 0019 y 0022–0026 aplicadas; **falta la 0021**
+   (`tracks.spectral_flux` no existe), que persiste las features espectrales.
+   Prod sigue sin verificar.
 
 ## Decisiones que siguen abiertas
 
@@ -248,11 +253,11 @@ la misma rama/PR que el resto de esta ronda porque es trivial y de bajísimo
 riesgo — no requiere backfill de datos ni cambia ningún comportamiento actual
 de la app, solo cierra la puerta a futuro.
 
-Las tres migraciones pendientes (0018 + 0019 + 0020) están combinadas en un
-solo script listo para pegar en el SQL Editor de Supabase — buscar
-`RUN_THIS_IN_SUPABASE.sql` en el mensaje del PR #118, o concatenar los tres
-archivos de `supabase/migrations/`. Es idempotente: correrlo dos veces, o en
-un entorno donde una parte ya esté aplicada, no rompe nada.
+Las tres migraciones pendientes (0018 + 0019 + 0020) se aplican concatenando
+los tres archivos de `supabase/migrations/` en el SQL Editor de Supabase. Es
+idempotente: correrlo dos veces, o en un entorno donde una parte ya esté
+aplicada, no rompe nada. (El `RUN_THIS_IN_SUPABASE.sql` que este documento
+nombraba solo existió en el mensaje del PR #118; nunca estuvo en el repo.)
 
 ---
 

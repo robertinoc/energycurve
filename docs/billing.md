@@ -95,10 +95,16 @@ Two caveats found while setting this up:
 
 The product `description` is what Stripe shows on the Checkout page and in the
 portal's plan picker — i.e. on the screen where someone enters a card. Keep it to
-what actually ships. Re-checked 2026-08-20: PRO's description is accurate, and of
-the three things PRO+ promises, Gig Mode and residency mode have both shipped.
-**Collaborative B2B sets have not** — that one is still a promise on the screen
-where someone enters a card, and it is the last remaining inaccuracy here.
+what actually ships. Re-checked 2026-09-11 against Stripe live: all three things
+PRO+ promises — Gig Mode, residency mode and collaborative B2B sets — have
+shipped, and the live descriptions name none of them anyway (PRO+ reads
+"Everything in PRO, plus unlimited AI ordering."). Nothing on the card screen
+promises something unbuilt.
+
+The note this replaces said B2B sets were "still a promise on the screen where
+someone enters a card". It was written on 2026-08-20, the same day the feature
+merged (#152 read-only sharing, #161 turn-based editing), and stayed wrong for
+three weeks.
 
 ## Production status (updated 2026-08-20)
 

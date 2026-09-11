@@ -228,7 +228,7 @@ Repository anchors:
 ## Strategy 2.0 — horizons (approved 2026-08-12)
 
 Full strategy: `docs/product-strategy-v2.md` (market analysis, science-based
-Energy Model v3, FREE/PRO/PRO+ plans at $5.99/$11.99).
+Energy Model v3, FREE/PRO/PRO+ plans at $9.99/$19.99).
 
 - **H1 (now)**: in-browser audio analysis (meyda + web-audio-beat-detector — Essentia.js ruled out on AGPL, see spike-browser-audio-analysis.md) · Energy Model v3
   (arousal multi-feature, calibrated vs MIK tags) · set version history ·
