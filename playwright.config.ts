@@ -21,6 +21,12 @@ import { defineConfig, devices } from "@playwright/test"
  * the tracker. Covering it needs a seeded test account and a way to sign in without
  * WorkOS, which is a real piece of work rather than a config change.
  */
+/**
+ * Dedicated by default so a dev server on the app's usual port is neither
+ * reused nor fought over. Override with E2E_PORT if 3010 is occupied.
+ */
+const PORT = process.env.E2E_PORT ?? "3010"
+
 export default defineConfig({
   testDir: "./e2e",
   // Nothing here mutates shared state, so parallel is safe and keeps CI short.
@@ -34,7 +40,7 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
 
   use: {
-    baseURL: "http://127.0.0.1:3010",
+    baseURL: `http://127.0.0.1:${PORT}`,
     trace: "retain-on-failure",
   },
 
@@ -49,9 +55,21 @@ export default defineConfig({
     // The production build, not `next dev`: these assert on rendered metadata and
     // structured data, and dev-only behaviour (no minification, different caching,
     // React's development warnings) is not what ships.
-    command: "npm run start -- --port 3010",
-    url: "http://127.0.0.1:3010",
-    reuseExistingServer: !process.env.CI,
+    command: `npm run start -- --port ${PORT}`,
+    url: `http://127.0.0.1:${PORT}`,
+    // Never reuse, not even locally. This used to be `!process.env.CI`, and on
+    // 2026-09-11 a local run reported four failures that did not exist: port
+    // 3010 was held by a `next dev` from another worktree, so the suite quietly
+    // tested a different branch, in dev mode, against the config directly above
+    // that insists on the production build. A dev server also serves an
+    // unminified, differently-cached app, so the assertions were not the ones
+    // this file thinks it makes.
+    //
+    // Starting a server costs seconds; a failure that is not real costs an hour
+    // and teaches everyone to re-run instead of to look — the same thing
+    // `retries: 0` exists to prevent. Override the port with E2E_PORT when
+    // something else must hold 3010.
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 })
