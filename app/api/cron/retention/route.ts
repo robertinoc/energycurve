@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { logError } from "@/lib/observability/logger"
 import {
+  sweepAnalysisBlobs,
   sweepAuditLogEmails,
   sweepBillingPayloads,
 } from "@/services/retention-service"
@@ -57,7 +58,23 @@ export async function GET(request: Request) {
       logError("retention.audit_sweep_failed", error)
     }
 
-    return NextResponse.json({ ok: true, ...result, auditEmailsCleared })
+    // Same isolation, same reason: this one needs migration 0028, and an
+    // environment that has the code and not the migration must not have its
+    // billing sweep reported as failed because a newer one could not run.
+    let analysisBlobsCleared: number | null = null
+
+    try {
+      analysisBlobsCleared = await sweepAnalysisBlobs()
+    } catch (error) {
+      logError("retention.analysis_sweep_failed", error)
+    }
+
+    return NextResponse.json({
+      ok: true,
+      ...result,
+      auditEmailsCleared,
+      analysisBlobsCleared,
+    })
   } catch (error) {
     logError("retention.sweep_failed", error)
 

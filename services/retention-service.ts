@@ -139,3 +139,54 @@ export async function sweepAuditLogEmails(
 
   return cleared
 }
+
+/**
+ * How long an analysis keeps its heavy blobs.
+ *
+ * A year, and the number is chosen against what would be lost rather than what
+ * feels safe. Nothing in the product reads `curve`, `issues`, `breakdown` or
+ * `suggested_order` after the analysis that produced them — the dashboard
+ * sparkline reads `set_score` and `created_at`, the dedupe reads `input_hash`,
+ * and the backstage KPIs read neither. The only consumer is the portability
+ * export, and an export returning data is a consequence of holding it, not a
+ * reason to hold it.
+ *
+ * So the cost of the window expiring is that an export a year from now shows
+ * `curve: null` on analyses older than a year, and nothing on any screen
+ * changes. The cost of no window is the one Art. 5(1)(e) is about: keeping a
+ * record of the shape of every set a DJ has ever built, indefinitely, because
+ * nobody decided otherwise.
+ */
+export const ANALYSIS_BLOB_RETENTION_DAYS = 365
+
+/** Drops the unread analysis blobs past the window. Returns how many rows. */
+export async function sweepAnalysisBlobs(
+  { retentionDays = ANALYSIS_BLOB_RETENTION_DAYS } = {}
+): Promise<number> {
+  const supabase = getSupabaseAdminClient()
+
+  const { data, error } = await supabase
+    .from("analyses")
+    .update({
+      curve: null,
+      issues: null,
+      breakdown: null,
+      suggested_order: null,
+    })
+    .lt("created_at", cutoffIso(retentionDays))
+    // Without this the sweep rewrites every already-scrubbed row on every run,
+    // reports them as newly cleared, and makes the count meaningless.
+    .not("curve", "is", null)
+    .select("id")
+
+  if (error) {
+    logWarn("retention.analysis_blob_sweep_failed", { message: error.message })
+    throw new Error("Unable to clear aged analysis blobs.")
+  }
+
+  const cleared = data?.length ?? 0
+
+  logInfo("retention.analysis_blobs_swept", { cleared, retentionDays })
+
+  return cleared
+}

@@ -523,9 +523,9 @@ export interface Database {
           genre: Database["public"]["Enums"]["playlist_genre"]
           context: Database["public"]["Enums"]["playlist_context"]
           set_score: number
-          curve: Json
-          issues: Json
-          breakdown: Json
+          curve: Json | null
+          issues: Json | null
+          breakdown: Json | null
           suggested_order: Json | null
           suggested_score: number | null
           input_hash: string
