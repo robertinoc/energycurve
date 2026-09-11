@@ -19,6 +19,7 @@ const DOC_PATHS: Record<LegalDocId, LocalizedPath> = {
   privacy: "/privacy",
   terms: "/terms",
   cookies: "/cookie-policy",
+  subprocessors: "/subprocessors",
 }
 
 export function LegalPage({
@@ -109,6 +110,12 @@ export function LegalPage({
             className="transition hover:text-white"
           >
             {getLegalCopy(locale, "cookies").title}
+          </Link>
+          <Link
+            href={localizedPath("/subprocessors", locale)}
+            className="transition hover:text-white"
+          >
+            {getLegalCopy(locale, "subprocessors").title}
           </Link>
         </nav>
       </div>

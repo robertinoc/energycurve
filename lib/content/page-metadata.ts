@@ -116,6 +116,16 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
       es: "Cómo usa EnergyCurve las cookies y el almacenamiento similar.",
     },
   },
+  "/subprocessors": {
+    title: {
+      en: "Subprocessors",
+      es: "Sub-encargados",
+    },
+    description: {
+      en: "Every third party that processes data on our behalf, what they do with it, and where they are.",
+      es: "Cada tercero que trata datos por cuenta nuestra, qué hace con ellos y dónde está.",
+    },
+  },
 }
 
 export function pageMetadata(path: LocalizedPath, locale: SiteLocale) {

@@ -152,11 +152,16 @@ información profesional que un competidor podría querer.
 | Resend | Mails | EE.UU. | Por confirmar |
 | Anthropic | Ordenamiento con IA | EE.UU. | Por confirmar |
 | GetSongBPM | Lookup por título | EE.UU. | **Sin DPA disponible** |
-| Crisp | Chat de soporte | UE | **Tiene variable en Vercel pero no se carga en el código.** Si se activa, hay que declararlo |
+| ~~Crisp~~ | ~~Chat de soporte~~ | — | **NO ES ENCARGADO (verificado 11/09/2026).** No hay una sola referencia a Crisp en `app/`, `lib/`, `components/` ni `services/`. Que exista una variable en Vercel no crea un tratamiento: lo crea el código que la usa. Si se activa, entra en el mismo PR que lo activa — `tests/subprocessors-accuracy.test.ts` está escrito para que esa omisión se note |
 
 **Todas las transferencias son fuera de la UE.** Si hay usuarios en la UE hace
 falta un mecanismo válido, y hoy no hay cláusulas contractuales tipo declaradas
 en ningún lado.
+
+Mapa completo, TIA y los pasos para verificar cada mecanismo:
+[`international-transfers.md`](international-transfers.md). La versión pública
+y abreviada es `/subprocessors`, y está atada al código por un test: una
+integración nueva que no se declare pone el test en rojo.
 
 ---
 
