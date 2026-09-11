@@ -60,7 +60,13 @@ export interface ImportedTrack {
   audioFeatures?: TrackAudioFeatures | null
 }
 
-export type ImportSource = "rekordbox" | "traktor" | "text" | "m3u8" | "files"
+export type ImportSource =
+  | "rekordbox"
+  | "traktor"
+  | "text"
+  | "m3u8"
+  | "csv"
+  | "files"
 
 export interface ParsedImport {
   source: ImportSource

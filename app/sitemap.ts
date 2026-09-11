@@ -20,6 +20,9 @@ const HINTS: Record<
   // A reference page a DJ lands on from the import screen or a search for
   // "where does <tool> write energy" — it changes when a tag format is added.
   "/energy-tags": { changeFrequency: "monthly", priority: 0.5 },
+  // Same shape as /energy-tags: a reference a DJ lands on from the import
+  // screen or a search for "csv format for a dj playlist".
+  "/import-formats": { changeFrequency: "monthly", priority: 0.5 },
   "/privacy": { changeFrequency: "yearly", priority: 0.3 },
   "/terms": { changeFrequency: "yearly", priority: 0.3 },
   "/cookie-policy": { changeFrequency: "yearly", priority: 0.3 },

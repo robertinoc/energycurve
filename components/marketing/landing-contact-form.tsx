@@ -32,8 +32,19 @@ interface FieldErrors {
 
 export function LandingContactForm({
   copy,
+  defaultName,
+  defaultEmail,
 }: {
   copy: LandingContactFormCopy
+  /**
+   * Prefilled when the sender is signed in.
+   *
+   * Retyping an address we already have is the kind of friction that turns a
+   * two-line bug report into no bug report — and the in-app copy of this form
+   * exists precisely to make reporting cheap.
+   */
+  defaultName?: string
+  defaultEmail?: string
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
@@ -99,6 +110,7 @@ export function LandingContactForm({
           name="name"
           label={copy.form.name}
           error={fieldErrors.name?.[0]}
+          defaultValue={defaultName}
         />
         <Field
           id="contact-email"
@@ -106,6 +118,7 @@ export function LandingContactForm({
           label={copy.form.email}
           type="email"
           error={fieldErrors.email?.[0]}
+          defaultValue={defaultEmail}
         />
       </div>
 
@@ -167,6 +180,7 @@ function Field({
   type = "text",
   error,
   multiline = false,
+  defaultValue,
 }: {
   id: string
   name: string
@@ -174,6 +188,7 @@ function Field({
   type?: string
   error?: string
   multiline?: boolean
+  defaultValue?: string
 }) {
   const describedBy = error ? `${id}-error` : undefined
 
@@ -199,6 +214,7 @@ function Field({
           id={id}
           name={name}
           type={type}
+          defaultValue={defaultValue}
           aria-invalid={Boolean(error)}
           aria-describedby={describedBy}
           className={cn(

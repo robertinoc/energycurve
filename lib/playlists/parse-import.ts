@@ -13,6 +13,7 @@ import {
   isRekordboxTxt,
   parseRekordboxTxt,
 } from "@/lib/playlists/parse-rekordbox-txt"
+import { isCsvPlaylist, parseCsv } from "@/lib/playlists/parse-csv"
 import { isTraktorNml, parseTraktor } from "@/lib/playlists/parse-traktor"
 
 export { mapGenreTag } from "@/lib/playlists/genre-mapping"
@@ -20,10 +21,11 @@ export { mapGenreTag } from "@/lib/playlists/genre-mapping"
 export class UnsupportedImportError extends Error {}
 
 /**
- * Detects the export format and parses it. Supports the four shapes Rekordbox
- * and Traktor emit: Rekordbox XML / Traktor NML (both XML, distinct roots), the
- * Rekordbox tab-separated txt export, and Extended M3U/M3U8 ("for music apps").
- * Throws UnsupportedImportError for anything else.
+ * Detects the export format and parses it. Supports the shapes Rekordbox and
+ * Traktor emit — Rekordbox XML / Traktor NML (both XML, distinct roots), the
+ * Rekordbox tab-separated txt export, and Extended M3U/M3U8 ("for music apps")
+ * — plus CSV, which is what every other tool can produce and what our own
+ * export writes. Throws UnsupportedImportError for anything else.
  */
 export function parseImport(fileContents: string): ParsedImport {
   if (isM3u8(fileContents)) {
@@ -38,13 +40,20 @@ export function parseImport(fileContents: string): ParsedImport {
     return parseTraktor(fileContents)
   }
 
+  // Both tabular readers need a resolvable header, which is what keeps a
+  // pasted "Artist - Title" list from matching either. CSV first because its
+  // delimiter set is narrower; the txt reader requires a tab.
+  if (isCsvPlaylist(fileContents)) {
+    return parseCsv(fileContents)
+  }
+
   // Checked after the XML formats because it's the loosest matcher.
   if (isRekordboxTxt(fileContents)) {
     return parseRekordboxTxt(fileContents)
   }
 
   throw new UnsupportedImportError(
-    "Unrecognized file. Export a playlist as Rekordbox (XML, TXT or M3U8) or Traktor NML."
+    "Unrecognized file. Export a playlist as Rekordbox (XML, TXT or M3U8), Traktor NML, or a CSV with a title column."
   )
 }
 

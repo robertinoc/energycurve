@@ -19,7 +19,10 @@ import { logError, logWarn } from "@/lib/observability/logger"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
 import { decodeUploadedText } from "@/lib/playlists/decode-upload"
-import type { ImportedTrack } from "@/lib/playlists/imported-track"
+import type {
+  ImportedTrack,
+  ImportSource,
+} from "@/lib/playlists/imported-track"
 import {
   detectGenres,
   parseImport,
@@ -618,6 +621,20 @@ export async function moveTrackAction(
   revalidatePath(`/dashboard/playlists/${playlistId}`)
   return success(ACTION_COPY.trackMoved[locale])
 }
+/**
+ * What to call the set when the file itself carried no name. Only reached after
+ * the embedded playlist name and the file's own basename, so it is the last
+ * resort — but naming a CSV import "Rekordbox" was simply wrong.
+ */
+const IMPORT_SOURCE_LABELS: Partial<Record<ImportSource, string>> = {
+  traktor: "Traktor",
+  rekordbox: "Rekordbox",
+  m3u8: "M3U8",
+  csv: "CSV",
+  files: "audio",
+  text: "text",
+}
+
 const IMPORT_MAX_FILE_BYTES = 12 * 1024 * 1024 // 12 MB — full collections can be large
 const IMPORT_MAX_TRACKS = 500
 
@@ -680,7 +697,7 @@ export async function importPlaylistAction(
     parsed.playlistName ||
     fileBaseName ||
     formatTemplate(ACTION_COPY.importedSetName[locale], {
-      source: parsed.source === "traktor" ? "Traktor" : "Rekordbox",
+      source: IMPORT_SOURCE_LABELS[parsed.source] ?? "Rekordbox",
     })
 
   const tracks = parsed.tracks.slice(0, IMPORT_MAX_TRACKS)

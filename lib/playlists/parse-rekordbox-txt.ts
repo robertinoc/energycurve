@@ -5,6 +5,7 @@ import {
   type ImportedTrack,
   type ParsedImport,
 } from "@/lib/playlists/imported-track"
+import { buildColumnIndex, cellAt } from "@/lib/playlists/tabular-columns"
 
 /**
  * Rekordbox' "Export a playlist to a file (*.txt)" writes a tab-separated grid
@@ -13,66 +14,6 @@ import {
  * position. Encoding is UTF-16 on export; decoding is handled upstream before
  * this parser runs (see `decode-upload.ts`).
  */
-
-/** Normalizes a header cell to an alphanumeric token for tolerant matching. */
-function normalizeHeader(cell: string): string {
-  return cell.toLowerCase().replace(/[^a-z0-9]+/g, "")
-}
-
-// Header token → logical field. Covers Rekordbox' English column names plus a
-// few common synonyms so a re-ordered/renamed column set still resolves.
-const HEADER_FIELDS: Record<string, keyof ColumnIndex> = {
-  tracktitle: "name",
-  title: "name",
-  trackname: "name",
-  name: "name",
-  artist: "artist",
-  bpm: "bpm",
-  key: "key",
-  tonality: "key",
-  genre: "genre",
-  time: "time",
-  length: "time",
-  duration: "time",
-  totaltime: "time",
-  comments: "comment",
-  comment: "comment",
-  mytag: "comment",
-  mytag1: "comment",
-}
-
-interface ColumnIndex {
-  name: number | null
-  artist: number | null
-  bpm: number | null
-  key: number | null
-  genre: number | null
-  time: number | null
-  comment: number | null
-}
-
-function buildColumnIndex(headerCells: string[]): ColumnIndex {
-  const index: ColumnIndex = {
-    name: null,
-    artist: null,
-    bpm: null,
-    key: null,
-    genre: null,
-    time: null,
-    comment: null,
-  }
-
-  headerCells.forEach((cell, position) => {
-    const field = HEADER_FIELDS[normalizeHeader(cell)]
-
-    // First occurrence wins; don't let a later duplicate clobber the mapping.
-    if (field && index[field] === null) {
-      index[field] = position
-    }
-  })
-
-  return index
-}
 
 function firstNonEmptyLine(contents: string): string {
   for (const line of contents.split(/\r?\n/)) {
@@ -99,18 +40,12 @@ export function isRekordboxTxt(contents: string): boolean {
   return index.artist !== null && index.name !== null
 }
 
-function cell(cells: string[], position: number | null): string {
-  if (position === null) {
-    return ""
-  }
-  return (cells[position] ?? "").trim()
-}
-
 /**
  * Parses a Rekordbox txt export into an ordered tracklist. Tracks keep their
- * file order (no location column is present in the txt, so `sourceUri` stays
- * null and native re-linking isn't available for this format). Throws when no
- * data rows are found.
+ * file order. Rekordbox' own txt has no location column, so `sourceUri` is
+ * usually null and native re-linking isn't available — but the column is read
+ * when some other tool's tab export provides it. Throws when no data rows are
+ * found.
  */
 export function parseRekordboxTxt(contents: string): ParsedImport {
   const lines = contents.split(/\r?\n/)
@@ -133,25 +68,33 @@ export function parseRekordboxTxt(contents: string): ParsedImport {
     }
 
     const cells = line.split("\t")
-    const artist = cell(cells, columns.artist)
-    const name = cell(cells, columns.name)
+    const artist = cellAt(cells, columns.artist)
+    const name = cellAt(cells, columns.name)
 
     if (!artist && !name) {
       continue
     }
 
-    const comment = cell(cells, columns.comment) || null
+    const comment = cellAt(cells, columns.comment) || null
 
     tracks.push({
       artist,
       name,
-      bpm: parseBpm(cell(cells, columns.bpm)),
-      key: cell(cells, columns.key) || null,
-      genre: cell(cells, columns.genre) || null,
-      energy: extractEnergyFromComment(comment),
-      sourceUri: null,
+      bpm: parseBpm(cellAt(cells, columns.bpm)),
+      key: cellAt(cells, columns.key) || null,
+      genre: cellAt(cells, columns.genre) || null,
+      // Both now come from the shared header table, so a tab-delimited export
+      // that happens to carry an Energy or Location column is read like the
+      // CSV equivalent instead of being silently narrower.
+      energy:
+        extractEnergyFromComment(cellAt(cells, columns.energy)) ??
+        extractEnergyFromComment(
+          `energy ${cellAt(cells, columns.energy)}`
+        ) ??
+        extractEnergyFromComment(comment),
+      sourceUri: cellAt(cells, columns.location) || null,
       comment,
-      durationSeconds: parseClockToSeconds(cell(cells, columns.time)),
+      durationSeconds: parseClockToSeconds(cellAt(cells, columns.time)),
     })
   }
 
