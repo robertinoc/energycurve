@@ -57,6 +57,7 @@ import { mayWrite } from "@/lib/playlists/edit-lock"
 import {
   addSuggestion,
   getLockState,
+  mayHoldLock,
   inviteCollaborator,
   releaseEditLock,
   removeCollaborator,
@@ -1496,9 +1497,20 @@ export async function reorderSharedTracksAction(
     return { ok: false, message: ACTION_COPY.genericError[locale] }
   }
 
-  const state = await getLockState(profile.id, playlistId)
+  // Access, explicitly, before the lock. The lock check alone was sound — you
+  // cannot become the holder without passing `mayHoldLock` — but that is an
+  // authorisation two hops away in another function, and `reorderTracksAsLockHolder`
+  // verifies nothing itself. One change to how an expired lock resolves and this
+  // becomes "any signed-in user can reorder any playlist".
+  //
+  // The same refusal either way: a caller with no access must not be able to
+  // tell "you lost the turn" from "that set isn't yours".
+  const hasAccess = await mayHoldLock(profile.id, profile.email, playlistId)
+  const state = hasAccess
+    ? await getLockState(profile.id, playlistId)
+    : null
 
-  if (!mayWrite(state)) {
+  if (!state || !mayWrite(state)) {
     return { ok: false, message: ACTION_COPY.turnLost[locale] }
   }
 
