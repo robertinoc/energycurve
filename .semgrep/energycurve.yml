@@ -1,0 +1,133 @@
+# Static rules for the invariants this codebase actually has.
+#
+# Why custom rules rather than a registry ruleset: the free registry set,
+# without a login, loads two rules for JavaScript and neither catches a planted
+# command injection. Verified with a canary before trusting the result — a SAST
+# run that reports "0 findings" while being unable to detect a deliberate
+# `exec("ls " + userInput)` is worse than no run, because it gets quoted as
+# assurance.
+#
+# These encode rules a reviewer would otherwise have to remember, each one
+# written down somewhere in AGENTS.md or docs/decisions.md and enforced by
+# nothing. Every rule below was verified against a file that violates it.
+#
+# Run: npm run sast
+
+rules:
+  - id: raw-json-in-script-tag
+    # `javascript`, not `typescript`: semgrep's TypeScript parser rejects a bare
+    # JSX attribute as a pattern, while its JavaScript one accepts it and still
+    # matches .tsx files.
+    languages: [javascript]
+    severity: ERROR
+    message: >-
+      JSON.stringify inside dangerouslySetInnerHTML. It does not escape `<`, so
+      a value containing `</script>` closes the tag and the rest is parsed as
+      HTML. Use serializeStructuredData from @/lib/seo.
+    patterns:
+      # Written as a whole element rather than a bare attribute: semgrep parses
+      # a JSX attribute only in element position, and a bare
+      # `dangerouslySetInnerHTML={...}` is a parse error in both the TypeScript
+      # and JavaScript modes. Found by running a deliberate violation past it —
+      # the rule reported nothing until the pattern was a complete tag.
+      # Quoted: an unquoted value containing `:` is a YAML mapping, and the file
+      # failed to load entirely until these were strings.
+      - pattern-either:
+          - pattern: "<$EL dangerouslySetInnerHTML={{ __html: JSON.stringify($X) }} />"
+          - pattern: "<$EL dangerouslySetInnerHTML={{ __html: JSON.stringify($X) }}>...</$EL>"
+
+  - id: console-instead-of-logger
+    languages: [typescript]
+    severity: WARNING
+    message: >-
+      Use logInfo/logWarn/logError from @/lib/observability/logger. Structured
+      single-line JSON is what makes a production log searchable, and the logger
+      is the one place where redaction can ever be added.
+    patterns:
+      - pattern-either:
+          - pattern: console.log(...)
+          - pattern: console.debug(...)
+    paths:
+      exclude:
+        - "**/*.test.ts"
+        - "tests/**"
+        - "e2e/**"
+        - "scripts/**"
+        - "lib/backstage/config.ts"
+
+  - id: unscoped-playlist-loader-outside-sanctioned-callers
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      getPlaylistWithTracksById reads a playlist WITHOUT an ownership check. Its
+      only sanctioned callers are the signed-link page and getSharedPlaylist,
+      which each carry their own authorisation. Anywhere else this is an IDOR.
+      Use getOwnedPlaylistWithTracks(profileId, id).
+    patterns:
+      - pattern: getPlaylistWithTracksById(...)
+    paths:
+      exclude:
+        - "app/c/**"
+        - "services/collaboration-service.ts"
+        - "services/playlist-service.ts"
+        - "tests/**"
+
+  - id: service-role-client-outside-server-modules
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      getSupabaseAdminClient bypasses RLS by design and must stay server-side.
+      A component file reaching for it is how a service-role key ends up in a
+      client bundle.
+    patterns:
+      - pattern: getSupabaseAdminClient(...)
+    paths:
+      include:
+        - "components/**"
+
+  - id: server-secret-read-outside-config-modules
+    languages: [typescript]
+    severity: WARNING
+    message: >-
+      Read server configuration through lib/env.ts, lib/billing/config.ts or
+      lib/config/infrastructure-status.ts. Scattered process.env reads are how a
+      variable ends up validated in one place and trusted raw in another — and
+      how one ends up missing from .env.example, which is what happened to
+      GETSONGBPM_API_KEY and CONTACT_INBOX_EMAIL.
+    patterns:
+      - pattern: process.env.$VAR
+      # NEXT_PUBLIC_* is excluded deliberately. Next inlines those at build time
+      # and they are public by definition, so a component reading one is correct
+      # — it is the only way to read one. The first version of this rule flagged
+      # all seven, five of them correct, which is the ratio at which a warning
+      # stops being read at all.
+      - metavariable-regex:
+          metavariable: $VAR
+          regex: ^(?!NEXT_PUBLIC_).*
+    paths:
+      include:
+        - "components/**"
+        - "services/**"
+
+  - id: missing-ownership-scope-in-playlist-query
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      A query against playlists that filters by id but not by user_id. Data
+      ownership is enforced in the service layer and RLS will not catch a miss
+      (decision 22). Add .eq("user_id", profileId).
+    patterns:
+      - pattern: |
+          $S.from("playlists").select(...).eq("id", $ID).maybeSingle(...)
+      - pattern-not: |
+          $S.from("playlists").select(...).eq("id", $ID).eq("user_id", $P).maybeSingle(...)
+    paths:
+      include:
+        - "services/**"
+      exclude:
+        # Owns the ownership check itself.
+        - "services/playlist-service.ts"
+        # getLockState reads only the two lock columns, and its callers now
+        # check access explicitly via mayHoldLock before reaching it — which is
+        # the change this rule prompted.
+        - "services/collaboration-service.ts"

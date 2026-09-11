@@ -411,8 +411,21 @@ export async function resolveSuggestion(
 // Turn-based editing: one writer at a time on a shared set.
 // ---------------------------------------------------------------------------
 
-/** Everyone who may hold the pen: the owner, plus anyone it's shared with. */
-async function mayHoldLock(
+/**
+ * Everyone who may hold the pen: the owner, plus anyone it's shared with.
+ *
+ * Exported because it is the *only* explicit access check on this playlist for
+ * the turn-based editing path. Until now `reorderSharedTracksAction` relied on
+ * the lock state alone — which is sound only because you cannot become the lock
+ * holder without passing through here, an authorisation that lives two hops
+ * away in another function.
+ *
+ * That is correct today and fragile by construction: change how an expired lock
+ * resolves, or let `mayWrite` accept an unlocked set, and every authenticated
+ * user can reorder every playlist. Flagged by the custom SAST rule for an
+ * unscoped query against `playlists`.
+ */
+export async function mayHoldLock(
   profileId: string,
   email: string,
   playlistId: string

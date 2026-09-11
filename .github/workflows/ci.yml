@@ -77,6 +77,19 @@ jobs:
         continue-on-error: true
         run: npm audit --audit-level=high
 
+      # Custom rules for this codebase's own invariants — the ownership scope on
+      # playlist queries, the unscoped loader's sanctioned callers, raw JSON in
+      # a script tag. Not the registry ruleset: without a login it loads two
+      # rules for JavaScript, and neither catches a planted command injection.
+      # Verified with a canary before being trusted.
+      - name: Install Semgrep
+        run: pipx install semgrep
+
+      - name: Static analysis
+        # ERROR severity only, so the gate blocks on a real invariant break and
+        # the WARNING findings stay visible in the log without failing a build.
+        run: npm run sast
+
       - name: Production build
         run: npm run build
 
