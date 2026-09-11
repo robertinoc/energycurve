@@ -67,11 +67,11 @@ export default defineConfig({
         // make a run pass.
         //
         // Baseline 63.1/62.1/71.5/62.6 on 2026-09-11, raised as each suite
-        // landed. Now 68.2/66.2/75.0/67.8.
-        statements: 68,
+        // landed. Now 69.0/67.0/75.9/68.7.
+        statements: 69,
         branches: 66,
         functions: 75,
-        lines: 67,
+        lines: 68,
 
         // The engine and the parsers are where a regression costs a DJ real
         // data — a wrong score, or a library entry overwritten on export.
