@@ -30,6 +30,13 @@ jobs:
       NEXT_PUBLIC_WORKOS_REDIRECT_URI: http://localhost:3010/auth/callback
       SUPABASE_URL: https://ci-placeholder.supabase.co
       SUPABASE_SERVICE_ROLE_KEY: ci_placeholder_service_role_key
+      # Analytics has to be *configured* for the consent tests to mean anything:
+      # without a key the tracker no-ops, and "no PostHog cookie after accepting"
+      # would pass for the wrong reason. The host points at port 9 (discard), so
+      # the key exists, cookies are set on init, and not one request leaves the
+      # runner.
+      NEXT_PUBLIC_POSTHOG_KEY: phc_ci_placeholder
+      NEXT_PUBLIC_POSTHOG_HOST: http://127.0.0.1:9
     steps:
       - uses: actions/checkout@v4
 
@@ -107,31 +114,38 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-${{ steps.playwright.outputs.browserkey }}
 
-      # `--with-deps` is back, narrowly, and the history matters.
+      # Two steps, and the split is the whole point.
       #
-      # It was removed because it shells out to `sudo apt-get install`, which hung
-      # for 22 minutes: apt blocks on a lock the runner image's own
-      # unattended-upgrades holds, with no timeout of its own. Chromium alone did
-      # not need it — the runner image ships the libraries headless chromium
-      # wants — so dropping it was free.
+      # `actions/cache` restores `~/.cache/ms-playwright`, which holds the browser
+      # *binaries*. It cannot hold WebKit's system libraries — libevent, libwoff2,
+      # libopus, gstreamer, libenchant and friends live in /usr/lib and are not in
+      # the runner image. So a combined `install --with-deps` behind a cache-hit
+      # guard is wrong in a way that only shows up on the second run: the first
+      # run misses the cache, installs both, and passes; every run after it hits
+      # the cache, skips the step entirely, and WebKit launches into
+      # "error while loading shared libraries: libevent-2.1.so.7".
       #
-      # WebKit is not free. Its shared libraries (libwoff2, libopus, gstreamer,
-      # libenchant, libsecret, libhyphen and friends) are simply not in the image,
-      # so the binary installs and then fails to launch. Since webkit and
-      # mobile-safari are the projects that caught the pricing table being
-      # unreachable by keyboard on a phone, dropping them to avoid apt would mean
-      # dropping the coverage that found the bug.
+      # That is exactly how this failed. PR #181 was green on a fresh cache key
+      # and PR #182 was red on the same code.
       #
-      # So: stop the unattended-upgrades timer first, which is the actual cause of
-      # the lock, and keep the step timeout as the backstop. If it ever hangs
-      # again it fails in eight minutes with a name, not in twenty-two without one.
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 8
+      # So: system dependencies every run, browser downloads only on a miss.
+      #
+      # `install-deps` shells out to apt, which is what hung CI for 22 minutes
+      # once — it blocks on a lock the runner's own unattended-upgrades holds.
+      # Stopping that timer first addresses the actual cause, and the step
+      # timeout is the backstop: if it ever hangs again it fails in five minutes
+      # with a name instead of twenty-two without one.
+      - name: Install browser system dependencies
+        timeout-minutes: 5
         run: |
           sudo systemctl stop unattended-upgrades.service 2>/dev/null || true
           sudo systemctl disable --now apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
-          npx playwright install --with-deps ${{ steps.playwright.outputs.browsers }}
+          npx playwright install-deps ${{ steps.playwright.outputs.browsers }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 8
+        run: npx playwright install ${{ steps.playwright.outputs.browsers }}
 
       - name: End-to-end tests
         timeout-minutes: 12
