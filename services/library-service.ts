@@ -4,6 +4,7 @@ import { logError } from "@/lib/observability/logger"
 import { buildLibrary, type LibrarySummary } from "@/lib/playlists/library"
 import { trackKey } from "@/lib/playlists/set-comparison"
 import { parseSnapshot } from "@/lib/playlists/versions"
+import { fetchAllRows } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 
 /**
@@ -19,12 +20,16 @@ export async function getGlobalLibrary(
 ): Promise<LibrarySummary> {
   const supabase = getSupabaseAdminClient()
 
-  const { data: playlists, error: playlistError } = await supabase
-    .from("playlists")
-    .select("id, name")
-    .eq("user_id", profileId)
+  const { rows: playlists, error: playlistError } = await fetchAllRows(
+    (from, to) =>
+      supabase
+        .from("playlists")
+        .select("id, name")
+        .eq("user_id", profileId)
+        .range(from, to)
+  )
 
-  if (playlistError || !playlists?.length) {
+  if (playlistError || !playlists.length) {
     if (playlistError) {
       logError("library.playlists_failed", playlistError, { profileId })
     }
@@ -38,17 +43,23 @@ export async function getGlobalLibrary(
   )
 
   const [tracksResult, versionsResult] = await Promise.all([
-    supabase
-      .from("tracks")
-      .select("artist, name, bpm, musical_key, playlist_id")
-      .in("playlist_id", playlistIds),
+    fetchAllRows((from, to) =>
+      supabase
+        .from("tracks")
+        .select("artist, name, bpm, musical_key, playlist_id")
+        .in("playlist_id", playlistIds)
+        .range(from, to)
+    ),
     // Only 'played' versions: the question is what actually got played, and a
     // curated order is a plan, not a night.
-    supabase
-      .from("playlist_versions")
-      .select("tracks")
-      .in("playlist_id", playlistIds)
-      .eq("kind", "played"),
+    fetchAllRows((from, to) =>
+      supabase
+        .from("playlist_versions")
+        .select("tracks")
+        .in("playlist_id", playlistIds)
+        .eq("kind", "played")
+        .range(from, to)
+    ),
   ])
 
   if (tracksResult.error) {
@@ -56,18 +67,28 @@ export async function getGlobalLibrary(
     return buildLibrary([], new Set())
   }
 
+  if (tracksResult.truncated) {
+    // Logged as well as surfaced: the UI tells this DJ, the log tells us the
+    // ceiling is being reached by real libraries and needs revisiting.
+    logError(
+      "library.truncated",
+      new Error(`global library hit the row ceiling for profile ${profileId}`),
+      { profileId, rows: tracksResult.rows.length }
+    )
+  }
+
   const playedKeys = new Set<string>()
 
   // A failed versions read degrades to "nothing known played" rather than
   // failing the page: the library is still worth showing without that column.
-  for (const row of versionsResult.data ?? []) {
+  for (const row of versionsResult.rows) {
     for (const track of parseSnapshot(row.tracks)) {
       playedKeys.add(trackKey(track.artist, track.name))
     }
   }
 
   return buildLibrary(
-    (tracksResult.data ?? []).map((track) => ({
+    tracksResult.rows.map((track) => ({
       artist: track.artist,
       name: track.name,
       bpm: track.bpm,
@@ -75,6 +96,7 @@ export async function getGlobalLibrary(
       playlistId: track.playlist_id,
       playlistName: nameById.get(track.playlist_id) ?? "",
     })),
-    playedKeys
+    playedKeys,
+    tracksResult.truncated
   )
 }

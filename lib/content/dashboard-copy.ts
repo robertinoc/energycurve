@@ -1419,6 +1419,16 @@ export const DASHBOARD_COPY = {
     records: { en: "records", es: "discos" },
     repeated: { en: "in more than one set", es: "en más de un set" },
     neverPlayed: { en: "never marked played", es: "nunca marcados como tocados" },
+    /**
+     * Shown when the read stopped at its row ceiling. It names a number rather
+     * than saying "some": a DJ deciding whether to trust the counts needs to
+     * know where the line fell, and "part of your library" is the kind of
+     * hedge that gets read as "all of it, roughly".
+     */
+    truncated: {
+      en: "This is the first {count} records we could read. Your library is larger, so the counts above are a floor, not a total.",
+      es: "Estos son los primeros {count} discos que pudimos leer. Tu librería es más grande, así que los números de arriba son un piso, no un total.",
+    },
     filterAll: { en: "All", es: "Todos" },
     filterRepeated: { en: "Repeated", es: "Repetidos" },
     filterNeverPlayed: { en: "Never played", es: "Nunca tocados" },

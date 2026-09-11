@@ -42,6 +42,13 @@ export interface LibrarySummary {
   repeatedCount: number
   /** Records that exist in a set but have never been played. */
   neverPlayedCount: number
+  /**
+   * True when the read stopped at its row ceiling, so this summary describes
+   * part of the library rather than all of it. Every count below is a floor,
+   * not a total, and the UI has to say so — a library that silently reports
+   * the first slice as the whole thing is the bug this flag exists to prevent.
+   */
+  truncated: boolean
 }
 
 /**
@@ -55,7 +62,8 @@ export interface LibrarySummary {
  */
 export function buildLibrary(
   tracks: readonly LibraryInputTrack[],
-  playedKeys: ReadonlySet<string>
+  playedKeys: ReadonlySet<string>,
+  truncated = false
 ): LibrarySummary {
   const byRecord = new Map<
     string,
@@ -120,6 +128,7 @@ export function buildLibrary(
     recordCount: entries.length,
     repeatedCount: entries.filter((entry) => entry.playlistCount > 1).length,
     neverPlayedCount: entries.filter((entry) => !entry.everPlayed).length,
+    truncated,
   }
 }
 
