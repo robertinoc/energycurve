@@ -1,0 +1,137 @@
+# Marcos aplicables y matriz de cumplimiento
+
+**Proyecto 3 · Privacy & Compliance · F7.** Fecha: 2026-09-11.
+
+---
+
+## 1. Qué marcos aplican, y por qué
+
+El plan original asumía una lista fija. Lo que aplica depende de dónde están los
+usuarios y qué se les vende, así que primero los hechos:
+
+- **Operador:** StageLink LLC, Estados Unidos.
+- **Precios:** en USD.
+- **Idiomas:** inglés y español rioplatense.
+- **Producto:** B2C, DJs. Sin vertical infantil, sin sector regulado.
+- **Venta:** mundial — nada en el checkout restringe país.
+
+| Marco | ¿Aplica? | Por qué |
+|---|---|---|
+| **GDPR** (UE/EEE) | **Sí, como marco base** | Art. 3(2)(a): ofrecer servicios a personas en la UE basta, sin establecimiento. Nada impide que un DJ de Berlín se suscriba hoy. |
+| **UK GDPR** | Sí, mismo razonamiento | Sustancialmente idéntico; cumplir GDPR lo cubre. |
+| **Ley 25.326** (Argentina) | **Sí, en la práctica** | Copy rioplatense y el usuario alpha es de ahí. Menos exigente que GDPR en casi todo. |
+| **LGPD** (Brasil) | Probable, bajo volumen | Art. 3 tiene alcance extraterritorial equivalente. Cumplir GDPR lo cubre. |
+| **CCPA/CPRA** (California) | **No hoy** | Requiere USD 25M de ingresos brutos, o datos de 100.000+ consumidores, o 50%+ de ingresos por venta de datos. Ninguno se cumple, ni cerca. |
+| **PCI DSS** | **SAQ-A** | Checkout alojado por Stripe; los datos de tarjeta nunca tocan nuestros servidores. Es el nivel más bajo que existe. |
+| **COPPA** | No | No dirigido a menores de 13. |
+| **HIPAA / GLBA / FERPA** | No | Sin datos de salud, financieros regulados ni educativos. |
+
+**Decisión: GDPR como marco base.** Es el más estricto de los que aplican;
+cumplirlo cubre UK GDPR, LGPD y Ley 25.326 con margen. CCPA se revisa si el
+volumen cambia — y el umbral que importa es el de 100.000 consumidores, no el
+de ingresos.
+
+---
+
+## 2. Matriz de cumplimiento contra GDPR
+
+Estado: ✅ cumple · ⚠️ parcial · ❌ brecha · ⬜ depende de una acción de Robertino
+
+| Art. | Requisito | Estado | Evidencia / qué falta |
+|---|---|---|---|
+| 5(1)(a) | Licitud, lealtad, transparencia | ⚠️ | Política publicada EN/ES, pero el archivo **se autodeclara "placeholder"** y no nombra base legal por tratamiento |
+| 5(1)(b) | Limitación de finalidad | ✅ | Finalidad por tratamiento en el RoPA |
+| 5(1)(c) | Minimización | ⚠️ | Dos hallazgos: blobs de `analyses` (resuelto), `plan_cancellation_feedback` (decisión pendiente) |
+| 5(1)(d) | Exactitud | ❌ | **No hay rectificación self-serve.** Ni nombre ni mail se pueden editar |
+| 5(1)(e) | Limitación de conservación | ⬜ | Tres ventanas implementadas y **ninguna corre**: falta `CRON_SECRET` |
+| 5(1)(f) | Integridad y confidencialidad | ✅ | Art. 32, abajo |
+| 5(2) | Responsabilidad proactiva | ✅ | Este dossier, y con tests que lo verifican |
+| 6 | Base legal | ⚠️ | Identificable por tratamiento en el RoPA, **no declarada al usuario** |
+| 7 | Consentimiento | ✅ | Opt-in, revocable con un clic, DNT respetado. PR #182 |
+| 12–14 | Información al titular | ⚠️ | Existe; le falta base legal, plazos de retención y el derecho a reclamar ante una autoridad |
+| 15 | Acceso | ✅ | `/api/account/export` |
+| 16 | Rectificación | ❌ | No implementado |
+| 17 | Supresión | ❌ | **Solo como acción de admin.** Un usuario tiene que mandar un mail |
+| 18 | Limitación | ❌ | No implementado |
+| 20 | Portabilidad | ✅ | JSON estructurado, legible por máquina |
+| 21 | Oposición | ⚠️ | Cubierto para analytics (banner); sin mecanismo general |
+| 24/25 | Responsabilidad y privacidad desde el diseño | ⚠️ | `privacy-by-design.md`; el link público sigue activo por defecto |
+| 28 | Encargados | ⬜ | Inventario y página publicados; **DPAs sin firmar** |
+| 30 | Registro de actividades | ✅ | `ropa.md`, verificado por test |
+| 32 | Seguridad del tratamiento | ⚠️ | Fuerte en app; **backups y restauración sin probar**, sin alertas activas |
+| 33/34 | Notificación de brechas | ⚠️ | Procedimiento y plantilla escritos; **sin ensayar** y con bus factor 1 |
+| 35 | DPIA | ✅ | Screening documentado: no requerida |
+| 37 | DPO | ✅ | No requerido, razonado |
+| 44–49 | Transferencias | ⬜ | Mapeadas; **mecanismos sin verificar** |
+
+**Resumen: 8 ✅ · 9 ⚠️ · 4 ❌ · 4 ⬜**
+
+---
+
+## 3. Las cuatro brechas rojas, que son una sola
+
+Los Arts. 16, 17, 18 y la mitad del 21 son todos lo mismo: **el usuario no puede
+hacer nada con sus propios datos salvo exportarlos.** No puede corregir su
+nombre, no puede borrar su cuenta, no puede pedir que se limite un tratamiento.
+
+Lo que hoy hay para todo eso es "mandá un mail a hello@", que es un mecanismo
+válido bajo GDPR — **siempre que alguien conteste dentro de 30 días**. Con bus
+factor 1 y sin proceso escrito de DSAR, esa condición no está asegurada.
+
+El orden de arreglo importa y no es el que sugiere la numeración:
+
+1. **Rectificación de nombre y mail.** Lo más barato de todo (una server action
+   y un formulario), cierra el Art. 16, y de paso quita el escenario absurdo de
+   alguien que tiene que escribir un mail para corregir un typo en su nombre.
+2. **Plazos y verificación de identidad de DSAR** — escrito, no código. Cierra la
+   condición que hace válido al "mandá un mail".
+3. **Borrado self-serve.** El más caro y el que más piensa: es irreversible,
+   toca WorkOS y Stripe, y necesita confirmación fuerte. `deleteUserEverywhere`
+   ya hace el trabajo pesado y está probado; lo que falta es la superficie de
+   usuario y la decisión de producto sobre qué pasa con una suscripción activa.
+4. **Limitación (Art. 18)** es la de menor demanda real en un producto así.
+   Suspender el tratamiento sin borrar se puede resolver con la suspensión que
+   ya existe, pero hoy es una acción de admin, no un derecho ejercible.
+
+---
+
+## 4. Plan de remediación
+
+### Autónomo (lo puedo hacer sin decisiones tuyas)
+
+| # | Qué | Cierra |
+|---|---|---|
+| A1 | Rectificación de nombre y mail en `/dashboard/account` | Art. 16 |
+| A2 | Procedimiento de DSAR: verificación de identidad y plazos | Arts. 12, 15–22 |
+| A3 | Base legal y plazos de retención en la política, y sacar el "placeholder" | Arts. 5(1)(a), 6, 13 |
+| A4 | Derecho a reclamar ante una autoridad de control, en la política | Art. 77 |
+
+### Tuyo, por orden de impacto
+
+| # | Qué | Cierra | Costo |
+|---|---|---|---|
+| R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **tres ventanas escritas y ninguna corriendo** | 2 min |
+| R2 | Migraciones 0027 y 0028 | auditoría y retención | 5 min |
+| R3 | Confirmar región de Supabase | 5(1)(a) — hoy la política puede estar diciendo algo falso | 2 min |
+| R4 | Aceptar los DPAs | Art. 28 | 1 hora |
+| R5 | Acceso de emergencia delegado | Art. 32 — bus factor 1 | 1 tarde |
+| R6 | Probar una restauración de backup | Art. 32 | 1 tarde |
+| R7 | Decidir: borrado self-serve | Art. 17 | decisión + ~1 día de build |
+| R8 | Decidir: link público opt-in | Art. 25 | decisión |
+
+**R1 es el de mejor relación de todos los proyectos**: dos minutos de trabajo
+que convierten tres políticas de retención escritas en tres que efectivamente
+corren.
+
+---
+
+## 5. Lo que esta matriz no es
+
+No es una opinión legal. Es una lectura del reglamento contra el código, hecha
+por quien escribió parte de ese código, y tiene el sesgo que eso implica. Antes
+de usarla en un data room o frente a una autoridad, la revisa un abogado de
+privacidad — y lo que le sirve no es esta tabla sino el RoPA y la evidencia
+enlazada, que es lo que no puede producir solo.
+
+Las casillas ⚠️ y ❌ son deliberadamente más largas que las ✅. Una matriz de
+cumplimiento con todo en verde es, casi siempre, una matriz que no se miró.
