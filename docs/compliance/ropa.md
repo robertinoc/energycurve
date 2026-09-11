@@ -31,8 +31,8 @@ información profesional que un competidor podría querer.
 
 | | |
 |---|---|
-| **Datos** | Dirección de mail, nombre, credenciales |
-| **Dónde** | WorkOS (identidad y contraseña). Nosotros guardamos `profiles.email` y `profiles.workos_user_id` |
+| **Datos** | Dirección de mail, nombre, credenciales. Y preferencias de interfaz: `preferred_locale` (idioma) y `key_notation` (en qué notación leer las tonalidades) |
+| **Dónde** | WorkOS (identidad y contraseña). Nosotros guardamos `profiles.email`, `profiles.workos_user_id`, `profiles.preferred_locale`, `profiles.key_notation` y `profiles.suspended_at` |
 | **Finalidad** | Dar acceso a la cuenta |
 | **Base legal** | Ejecución de un contrato (Art. 6.1.b) |
 | **Encargado** | WorkOS, EE.UU. |
@@ -43,13 +43,13 @@ información profesional que un competidor podría querer.
 
 | | |
 |---|---|
-| **Datos** | Nombre del set, descripción, género, contexto, franja horaria (`slot_start_minutes`, `slot_end_minutes`), **local** (`playlists.venue`), y por track: título, artista, BPM, tonalidad, comentario, duración, energía |
+| **Datos** | Nombre del set, `description`, `genre`, contexto, `target_shape`, `import_source`, franja horaria (`slot_start_minutes`, `slot_end_minutes`), **local** (`playlists.venue`), y por track: título, artista, BPM, tonalidad, `genre`, `comment`, duración, energía. Más el origen de importación: `tracks.source_uri`, `tracks.source_payload` y `playlists.source_header` |
 | **Dónde** | `playlists`, `tracks` |
 | **Finalidad** | Es el producto |
 | **Base legal** | Ejecución de un contrato |
 | **Encargado** | Supabase |
 | **Retención** | Hasta que el usuario borre el set o la cuenta |
-| **Nota de sensibilidad** | `venue` más `slot_*` más la fecha equivale a **dónde y cuándo trabaja una persona**. No es dato especial del Art. 9, pero es lo más identificante que guardamos y merece decirse |
+| **Nota de sensibilidad** | Dos cosas, no una. (1) `venue` más `slot_*` más la fecha equivale a **dónde y cuándo trabaja una persona**. (2) `source_uri` y `source_payload` guardan el `<ENTRY>` verbatim de la librería de Traktor o Rekordbox, y eso incluye `<LOCATION DIR=…>`: **la ruta absoluta en la máquina del DJ**, del estilo `Macintosh HD/:Users/:dj/:Music/:track.mp3`. Un directorio personal suele llevar el nombre real de la persona. Se guarda porque sin `LOCATION` el archivo reexportado no encuentra sus temas — es necesario para la finalidad, no accesorio — pero hay que declararlo, y ninguna de las dos columnas estaba nombrada acá hasta el 11/09/2026 |
 
 ### T3 · Historial de análisis y versiones
 
@@ -65,7 +65,8 @@ información profesional que un competidor podría querer.
 
 | | |
 |---|---|
-| **Datos** | Id de cliente y de suscripción de Stripe, plan, estado, fin de período, motivo de cancelación. Nombre, dirección y últimos cuatro dígitos viven en Stripe |
+| **Datos** | Id de cliente y de suscripción de Stripe, `plan`, `plan_status`, `plan_cancel_at`, `plan_cancellation_feedback`. Nombre, dirección y últimos cuatro dígitos viven en Stripe |
+| **Minimización** | `plan_cancellation_feedback` **se escribe y nunca se lee**: ninguna pantalla, consulta ni informe lo consume. Es un enum de Stripe (`too_complex`, `too_expensive`…), no texto libre, así que el riesgo es bajo — pero un dato sin finalidad servida es un dato que sobra. O se usa para entender la baja, o se deja de guardar |
 | **Dónde** | Columnas de `profiles` + `billing_events` |
 | **Finalidad** | Cobrar y dar los permisos pagos |
 | **Base legal** | Ejecución de un contrato, y obligación legal para los registros contables |
@@ -83,7 +84,7 @@ información profesional que un competidor podría querer.
 | **Base legal** | Debería ser consentimiento. **Hoy no se pide ninguno** |
 | **Encargado** | PostHog, **región EE.UU.** por defecto |
 | **Configuración** | IP desactivada, autocapture desactivado, grabación de sesión desactivada, DNT respetado. Es una configuración deliberadamente conservadora |
-| **Brechas** | (a) Sin banner de consentimiento y las cookies se ponen en la primera carga. (b) Las vistas de página incluyen la query string, y `/reset-password?token=…` y `/verify-email?pending=…&email=…` son páginas donde la gente aterriza. (c) La política dice "Supabase (región UE)" y eso es sobre Supabase, no sobre analytics |
+| **Brechas** | (a) ~~Sin banner de consentimiento.~~ **CERRADA 11/09/2026** (PR #182): nada se inicializa antes de la respuesta, y el silencio se lee como no. (b) ~~Las vistas de página incluyen la query string.~~ **CERRADA 11/09/2026**: se redacta por clave, y se redacta en vez de borrar la clave, así un valor tapado queda visible en los datos en vez de parecer que nunca estuvo. (c) **ABIERTA**: la política dice "Supabase (región UE)" y eso es sobre Supabase, no sobre analytics — PostHog está en región EE.UU. (d) **ABIERTA**: PostHog conserva lo recolectado antes de que existiera el banner |
 
 ### T6 · Mensajes del formulario de contacto
 
@@ -100,7 +101,7 @@ información profesional que un competidor podría querer.
 | | |
 |---|---|
 | **Datos** | Mail del invitado, mail del dueño, texto de las sugerencias |
-| **Dónde** | `set_collaborators`, `set_suggestions` |
+| **Dónde** | `set_collaborators`, `set_suggestions`, y en `playlists` el turno de edición: `edit_lock_holder` (qué persona tiene la pluma) y `edit_lock_taken_at` |
 | **Base legal** | Ejecución de un contrato |
 | **Brecha** | **La invitación no requiere aceptación.** Cualquiera puede asociar tu dirección a su set, y aparece en tu lista de "compartidos conmigo" apenas te registres. Y los dos mails quedan mutuamente expuestos |
 
@@ -163,12 +164,20 @@ en ningún lado.
 
 1. **Sin borrado de cuenta self-serve.** Solo existe como acción de admin. Un
    usuario no puede ejercer el derecho de supresión sin mandar un mail.
-2. **Sin export de datos.** No hay ninguna forma de "descargar mis datos". El
-   export de playlist es formato de DJ, no un DSAR.
+2. ~~**Sin export de datos.**~~ **CERRADA 11/09/2026** — `GET /api/account/export`,
+   enlazado desde `/dashboard/account`. Devuelve la cuenta entera en JSON, nombra
+   lo que NO contiene (WorkOS, Stripe, PostHog) y repite que el audio nunca sale
+   del dispositivo. Tres pedidos por hora.
 3. **`billing_events` guarda payloads completos de Stripe para siempre**, y
    sobrevive al borrado de la cuenta.
-4. **Sin banner de consentimiento**, con cookies de PostHog en la primera carga.
+4. ~~**Sin banner de consentimiento.**~~ **CERRADA 11/09/2026** (PR #182) — el
+   silencio se lee como no, rechazar cuesta un clic igual que aceptar (con un test
+   E2E que compara el color y la altura computados de los dos botones), y Do Not
+   Track responde por el visitante. Queda un resto: PostHog conserva lo
+   recolectado ANTES del banner, y qué hacer con eso es una decisión pendiente.
 5. **Sin política de retención ni job de limpieza** en ningún tratamiento.
+   Parcialmente en curso: el PR #183 cubre `billing_events`. Siguen sin política
+   `analyses` y `playlist_versions`.
 6. **Tokens de reset y verificación viajan en la URL** y quedan en los pageviews.
 7. **Las invitaciones a sets no requieren aceptación.**
 8. **Sin DPAs confirmados** con ningún encargado, y sin mecanismo de transferencia.
@@ -178,7 +187,13 @@ en ningún lado.
 
 ## Cómo verificar este documento
 
-No hay que creerle. Cada fila de tratamiento nombra su tabla y sus columnas, así
-que se puede correr contra la base y confirmar que no hay ninguna columna con
-datos personales que no aparezca acá. La forma de mantenerlo honesto es esa, y no
-volver a entrevistar a nadie.
+No hay que creerle, y desde el 11/09/2026 tampoco hay que acordarse:
+`tests/ropa-accuracy.test.ts` lee las migraciones y falla si una columna de
+`profiles`, `playlists` o `tracks` no está nombrada en este documento ni
+declarada en el test como dato no personal. Agregar una columna obliga a decidir
+cuál de las dos cosas es.
+
+Ese test encontró **16 columnas sin declarar** el día que se escribió, incluidas
+las dos que guardan la ruta de archivos del DJ. Un documento de compliance que
+nadie verifica se convierte en la peor clase de error: el que se lee como
+autoritativo en un data room.
