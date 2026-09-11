@@ -91,12 +91,19 @@ el test se pone rojo y este documento no queda mintiendo en silencio.
 Honestidad sobre los límites, porque una lista de alertas invita a creer que
 cubre todo:
 
-1. **El rate limiter es por instancia.** `lib/rate-limit.ts` guarda su estado en
-   memoria, y en serverless cada instancia tiene la suya. Los eventos
-   `*_rate_limited` cuentan lo que una instancia vio, no lo que un atacante hizo.
-   Un umbral sobre ellos mide el tráfico contra la instancia más ocupada.
-   Arreglar esto es la decisión pendiente sobre un limitador distribuido, no un
-   problema de alertas.
+1. ~~**El rate limiter es por instancia.**~~ **CERRADO** (migración 0029): el
+   contador vive en `rate_limit_buckets` y la ventana está alineada a la época,
+   así que todas las instancias cuentan sobre la misma fila. **Los eventos
+   `*_rate_limited` ahora significan otra cosa**: antes contaban lo que vio una
+   instancia, ahora cuentan a la persona. Un umbral que antes subestimaba el
+   tráfico real —medía contra la instancia más ocupada— ahora lo mide entero, así
+   que los umbrales existentes van a dispararse antes y eso es correcto, no un
+   falso positivo.
+
+   Queda una imprecisión, chica y conocida: la ventana es fija, no deslizante, así
+   que una ráfaga a caballo de un borde puede llegar a 2× el límite entre dos
+   ventanas contiguas. Una alerta sobre `*_rate_limited` no debería tratar un
+   pico de 2× como imposible.
 2. **No hay correlación entre eventos.** Sin un destino que agregue, "5 logins
    fallidos seguidos de un cambio de contraseña exitoso" no es detectable — cada
    línea existe, la secuencia no.

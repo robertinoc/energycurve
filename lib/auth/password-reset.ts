@@ -85,7 +85,7 @@ export async function forgotPasswordAction(formData: FormData) {
     redirect("/forgot-password?error=unavailable")
   }
 
-  const { allowed } = checkRateLimit({
+  const { allowed } = await checkRateLimit({
     key: `password-reset:${email}`,
     limit: RESET_REQUEST_LIMIT.limit,
     windowMs: RESET_REQUEST_LIMIT.windowMs,

@@ -1,20 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { createFakeSupabase, type FakeSupabase } from "./helpers/supabase-fake"
+
 /**
  * The only public, unauthenticated POST in the product. Its defences are a
  * same-origin check, a honeypot, an IP rate limit and a Zod schema, and none of
  * them had a test.
  *
- * Each test uses a distinct client IP on purpose: `lib/rate-limit.ts` keeps its
- * buckets in a module-level Map with no reset, so a shared IP would leak state
- * between tests. That is a real property of the limiter, not a test smell — the
- * same Map is why the limit is per serverless instance in production and resets
- * on a cold start. Noted in the F4 findings.
+ * Each test uses a distinct client IP on purpose, so one test's bucket is not
+ * another's. The limiter now counts in Postgres (migration 0029) rather than in
+ * a module-level Map, so the isolation comes from the fake being rebuilt in
+ * `beforeEach` instead of from the key never colliding — but distinct IPs still
+ * read better than shared ones.
  */
 
 const submitContactMessage = vi.fn(async () => ({ ok: true as const }))
 
 vi.mock("@/services/contact-service", () => ({ submitContactMessage }))
+let fake: FakeSupabase
+
+vi.mock("@/lib/supabase/server", () => ({
+  getSupabaseAdminClient: () => fake,
+}))
 vi.mock("@/lib/observability/logger", () => ({
   logError: vi.fn(),
   logWarn: vi.fn(),
@@ -51,6 +58,8 @@ const validMessage = {
 
 beforeEach(() => {
   submitContactMessage.mockClear()
+  // A fresh database per test, so one test's rate-limit bucket is not another's.
+  fake = createFakeSupabase()
 })
 
 describe("the same-origin check", () => {

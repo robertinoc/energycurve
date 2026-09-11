@@ -124,7 +124,7 @@ export async function resendVerificationEmailAction(formData: FormData) {
     redirect("/signup?error=signup_failed")
   }
 
-  const { allowed } = checkRateLimit({
+  const { allowed } = await checkRateLimit({
     key: `verify-resend:${email}`,
     limit: 3,
     windowMs: 10 * 60_000,

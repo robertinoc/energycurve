@@ -105,13 +105,13 @@ const RATE_LIMITS = {
   import: { limit: 10, windowMs: 60_000 },
 } as const
 
-function rateLimitFailure(
+async function rateLimitFailure(
   profileId: string,
   kind: keyof typeof RATE_LIMITS,
   locale: SiteLocale
-): PlaylistActionState | null {
+): Promise<PlaylistActionState | null> {
   const config = RATE_LIMITS[kind]
-  const { allowed } = checkRateLimit({
+  const { allowed } = await checkRateLimit({
     key: `playlist-${kind}:${profileId}`,
     limit: config.limit,
     windowMs: config.windowMs,
@@ -259,7 +259,7 @@ export async function createPlaylistWithTracksAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -377,7 +377,7 @@ export async function updatePlaylistDetailsAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -452,7 +452,7 @@ export async function deletePlaylistAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -485,7 +485,7 @@ export async function addTrackAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -528,7 +528,7 @@ export async function updateTrackAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -573,7 +573,7 @@ export async function removeTrackAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -607,7 +607,7 @@ export async function moveTrackAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -658,7 +658,7 @@ export async function importPlaylistAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "import", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "import", locale)
 
   if (rateLimited) {
     return rateLimited
@@ -808,7 +808,7 @@ export async function importAudioFilesAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "import", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "import", locale)
 
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
@@ -929,7 +929,7 @@ export async function markAsPlayedAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
   }
@@ -1018,7 +1018,7 @@ export async function restoreVersionAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
   }
@@ -1085,7 +1085,7 @@ export async function reorderTracksAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
   }
@@ -1128,7 +1128,7 @@ export async function createCustomTaxonomyAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited) {
     return { ok: false, message: rateLimited.message, createdId: null }
@@ -1190,7 +1190,7 @@ export async function deleteCustomTaxonomyAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
 
   if (rateLimited || !id) {
     return { ok: false }
@@ -1239,7 +1239,7 @@ export async function inviteCollaboratorAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
   }
@@ -1301,7 +1301,7 @@ export async function addSuggestionAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
   }
@@ -1375,7 +1375,7 @@ export async function applyMeasuredAudioAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "import", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "import", locale)
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
   }
@@ -1488,7 +1488,7 @@ export async function reorderSharedTracksAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "mutation", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "mutation", locale)
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
   }
@@ -1564,7 +1564,7 @@ export async function lookupTitlesAction(
   const profile = await requireProfile()
   const locale = await getRequestLocale()
 
-  const rateLimited = rateLimitFailure(profile.id, "import", locale)
+  const rateLimited = await rateLimitFailure(profile.id, "import", locale)
   if (rateLimited) {
     return { ok: false, message: rateLimited.message ?? undefined }
   }

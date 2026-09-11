@@ -376,7 +376,7 @@ export async function POST(
     return NextResponse.json({ error: "not_analyzable" }, { status: 422 })
   }
 
-  const rate = checkRateLimit({
+  const rate = await checkRateLimit({
     key: `smart-order:${profile.id}`,
     limit: 6,
     windowMs: 5 * 60_000,
