@@ -121,6 +121,30 @@ describe("buildLibrary", () => {
   })
 })
 
+describe("buildLibrary truncation flag", () => {
+  it("reports a complete read by default", () => {
+    // The default matters: every existing caller omits the argument, and a
+    // summary that claimed truncation by accident would put a permanent
+    // warning on a library that has nothing wrong with it.
+    const library = buildLibrary([track("Trikk", "Ondas", "a")], new Set())
+
+    expect(library.truncated).toBe(false)
+  })
+
+  it("carries truncation through so the page can say the counts are a floor", () => {
+    const library = buildLibrary(
+      [track("Trikk", "Ondas", "a"), track("Skee Mask", "Rev8617", "b")],
+      new Set(),
+      true
+    )
+
+    expect(library.truncated).toBe(true)
+    // The counts still describe what was read — they are not nulled out. A
+    // partial library is worth showing; it just has to say that it is partial.
+    expect(library.recordCount).toBe(2)
+  })
+})
+
 describe("filterLibrary", () => {
   const library = buildLibrary(
     [

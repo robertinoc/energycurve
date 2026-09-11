@@ -84,6 +84,16 @@ export default async function LibraryPage({
     <Shell title={copy.title[locale]}>
       <p className="text-sm text-white/48">{copy.subtitle[locale]}</p>
 
+      {library.truncated ? (
+        // Above the numbers, not below them: a caveat under a total is read
+        // after the total has already been believed.
+        <p className="rounded-xl border border-ec-amber/35 bg-ec-amber/[0.08] px-4 py-3 text-sm leading-6 text-white/80">
+          {formatTemplate(copy.truncated[locale], {
+            count: library.recordCount.toLocaleString(locale),
+          })}
+        </p>
+      ) : null}
+
       <div className="flex flex-wrap gap-4 text-sm">
         <Stat value={library.recordCount} label={copy.records[locale]} />
         <Stat value={library.repeatedCount} label={copy.repeated[locale]} />
