@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import { analyzePlaylist } from "@/lib/engine/analysis"
 import {
   deriveFixes,
+  applyOperations,
   deriveOrder,
   partitionFixes,
   potentialScore,
@@ -435,5 +436,96 @@ describe("applying every pending fix at once", () => {
     )
 
     expect(pending).toEqual([])
+  })
+})
+
+/**
+ * Hand moves on the analysis screen.
+ *
+ * The screen used to be read-only after a reorder — "una vez has reordenado
+ * esa opción desaparece, no permite mover las canciones". A move is now a
+ * `FixOperation` applied on top of the derived order, which is the whole point:
+ * it is the same primitive a fix is, so the two compose instead of one
+ * replacing the other.
+ */
+describe("applyOperations", () => {
+  const original = ["a", "b", "c", "d", "e"]
+
+  it("applies left to right", () => {
+    expect(
+      applyOperations(original, [
+        { trackId: "e", toIndex: 0 },
+        { trackId: "a", toIndex: 4 },
+      ])
+    ).toEqual(["e", "b", "c", "d", "a"])
+  })
+
+  it("is the identity with no operations", () => {
+    expect(applyOperations(original, [])).toEqual(original)
+  })
+
+  it("ignores a move of a track the set no longer has", () => {
+    // A stored move can outlive the track it names; moving whatever now sits
+    // at that index instead would be worse than doing nothing.
+    expect(applyOperations(original, [{ trackId: "zz", toIndex: 0 }])).toEqual(
+      original
+    )
+  })
+
+  it("clamps a target index instead of dropping the track", () => {
+    expect(applyOperations(original, [{ trackId: "a", toIndex: 99 }])).toEqual([
+      "b",
+      "c",
+      "d",
+      "e",
+      "a",
+    ])
+    expect(applyOperations(original, [{ trackId: "e", toIndex: -3 }])).toEqual([
+      "e",
+      "a",
+      "b",
+      "c",
+      "d",
+    ])
+  })
+
+  it("collapses to the same result as the last move of a track", () => {
+    // The workbench collapses consecutive moves of one track into one
+    // operation; this is the property that makes that safe.
+    const thrice = applyOperations(original, [
+      { trackId: "a", toIndex: 2 },
+      { trackId: "a", toIndex: 4 },
+    ])
+    const once = applyOperations(original, [{ trackId: "a", toIndex: 4 }])
+
+    expect(thrice).toEqual(once)
+  })
+
+  it("keeps both a hand move and a fix applied afterwards", () => {
+    // The composition that makes this a fourth layer rather than a
+    // replacement: a fix applied after a drag must not discard the drag.
+    const fixes = [fix({ id: "f1", operations: [{ trackId: "d", toIndex: 0 }] })]
+    const manual = [{ trackId: "b", toIndex: 4 }]
+
+    const derived = deriveOrder(original, fixes, new Set(["f1"]))
+    const withBoth = applyOperations(derived, manual)
+
+    // The fix moved d to the front; the hand move sent b to the back.
+    expect(withBoth[0]).toBe("d")
+    expect(withBoth.at(-1)).toBe("b")
+    expect([...withBoth].sort()).toEqual([...original].sort())
+  })
+
+  it("never loses or duplicates a track", () => {
+    const scrambled = applyOperations(original, [
+      { trackId: "c", toIndex: 0 },
+      { trackId: "a", toIndex: 3 },
+      { trackId: "e", toIndex: 1 },
+      { trackId: "c", toIndex: 4 },
+    ])
+
+    expect(scrambled).toHaveLength(original.length)
+    expect(new Set(scrambled).size).toBe(original.length)
+    expect([...scrambled].sort()).toEqual([...original].sort())
   })
 })

@@ -40,9 +40,11 @@ import {
   type ResidencyRepeat,
 } from "@/lib/playlists/residency"
 import {
+  applyOperations,
   deriveOrder,
   potentialScore,
   scoreOrder,
+  type FixOperation,
   type SetFix,
   partitionFixes,
 } from "@/lib/engine/fixes"
@@ -63,6 +65,8 @@ interface StoredDecisions {
   /** Full order set by smart ordering (zone 4), if any. */
   smartOrder?: string[] | null
   smartSource?: "claude" | "fallback" | null
+  /** Hand moves, in the order they were made. */
+  manualOps?: FixOperation[] | null
 }
 
 function readStoredDecisions(
@@ -74,12 +78,14 @@ function readStoredDecisions(
   discarded: Set<string>
   smartOrder: string[] | null
   smartSource: "claude" | "fallback" | null
+  manualOps: FixOperation[]
 } {
   const empty = {
     applied: new Set<string>(),
     discarded: new Set<string>(),
     smartOrder: null,
     smartSource: null,
+    manualOps: [],
   }
 
   try {
@@ -112,6 +118,20 @@ function readStoredDecisions(
         ? storedOrder
         : null
 
+    // A move that names a track the set no longer has is dropped rather than
+    // applied to whatever now sits at that index — `applyOperation` would
+    // no-op on a missing id anyway, but keeping dead operations around would
+    // make the "moved by hand" count lie.
+    const manualOps = (Array.isArray(parsed.manualOps) ? parsed.manualOps : [])
+      .filter(
+        (op): op is FixOperation =>
+          Boolean(op) &&
+          typeof op === "object" &&
+          typeof (op as FixOperation).trackId === "string" &&
+          typeof (op as FixOperation).toIndex === "number" &&
+          trackIds.has((op as FixOperation).trackId)
+      )
+
     return {
       applied: keep(parsed.applied),
       discarded: keep(parsed.discarded),
@@ -120,6 +140,7 @@ function readStoredDecisions(
         smartOrder && (parsed.smartSource === "claude" || parsed.smartSource === "fallback")
           ? parsed.smartSource
           : null,
+      manualOps,
     }
   } catch {
     return empty
@@ -253,6 +274,15 @@ export function AnalysisWorkbench({
   const [applied, setApplied] = useState<Set<string>>(new Set())
   const [discarded, setDiscarded] = useState<Set<string>>(new Set())
   const [smartOrder, setSmartOrder] = useState<string[] | null>(null)
+  /**
+   * Hand moves, newest last.
+   *
+   * A fourth layer on top of the derivation rather than a replacement for it:
+   * fixes still apply underneath, so applying or undoing one after a drag
+   * keeps both. Expressed as `FixOperation` so a move a DJ makes and a move a
+   * fix makes are the same kind of thing — see `applyOperations`.
+   */
+  const [manualOps, setManualOps] = useState<FixOperation[]>([])
   const [smartReason, setSmartReason] =
     useState<SmartOrderFallbackReason | null>(null)
   const [smartSource, setSmartSource] = useState<"claude" | "fallback" | null>(
@@ -281,6 +311,7 @@ export function AnalysisWorkbench({
     const stored = readStoredDecisions(playlistId, fixIds, trackIdSet)
     setApplied(stored.applied)
     setDiscarded(stored.discarded)
+    setManualOps(stored.manualOps)
     setSmartOrder(stored.smartOrder)
     setSmartSource(stored.smartSource)
     setSmartStatus(
@@ -303,11 +334,20 @@ export function AnalysisWorkbench({
       JSON.stringify({
         applied: [...applied],
         discarded: [...discarded],
+        manualOps,
         smartOrder,
         smartSource,
       } satisfies StoredDecisions)
     )
-  }, [playlistId, applied, discarded, smartOrder, smartSource, hydrated])
+  }, [
+    playlistId,
+    applied,
+    discarded,
+    manualOps,
+    smartOrder,
+    smartSource,
+    hydrated,
+  ])
 
   const applyFix = useCallback((fixId: string) => {
     setApplied((current) => new Set(current).add(fixId))
@@ -364,6 +404,7 @@ export function AnalysisWorkbench({
   const resetAll = useCallback(() => {
     setApplied(new Set())
     setDiscarded(new Set())
+    setManualOps([])
     setSmartOrder(null)
     setSmartSource(null)
     setSmartStatus("idle")
@@ -374,6 +415,7 @@ export function AnalysisWorkbench({
    * without touching discard decisions — those are opinions, not moves. */
   const resetOrder = useCallback(() => {
     setApplied(new Set())
+    setManualOps([])
     setSmartOrder(null)
     setSmartSource(null)
     setSmartStatus("idle")
@@ -386,9 +428,50 @@ export function AnalysisWorkbench({
   const baseIds = smartOrder ?? originalIds
 
   const order = useMemo(
-    () => deriveOrder(baseIds, fixes, applied),
-    [baseIds, fixes, applied]
+    () => applyOperations(deriveOrder(baseIds, fixes, applied), manualOps),
+    [baseIds, fixes, applied, manualOps]
   )
+
+  /**
+   * A hand move on the live tracklist.
+   *
+   * The case this exists for, in the reporter's words: "las canciones 10 y 17
+   * tienen todo idéntico key energy, yo sé que si pongo la 17 en el lugar de
+   * la 10, la 9 queda bien con la 17 y la 17 con la 11 hace mezcla
+   * apoteósica." Two tracks the engine cannot tell apart and he can, because
+   * he knows how they mix. Before this the screen showed him the result and
+   * gave him no way to touch it.
+   *
+   * Consecutive moves of the SAME track collapse into one operation: dragging
+   * something three times is one decision about where it goes, and three
+   * entries would make undo feel broken.
+   */
+  const moveTrack = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (fromIndex === toIndex) {
+        return
+      }
+
+      const trackId = order[fromIndex]
+
+      if (!trackId) {
+        return
+      }
+
+      setManualOps((current) => {
+        const last = current[current.length - 1]
+
+        return last?.trackId === trackId
+          ? [...current.slice(0, -1), { trackId, toIndex }]
+          : [...current, { trackId, toIndex }]
+      })
+    },
+    [order]
+  )
+
+  const undoLastMove = useCallback(() => {
+    setManualOps((current) => current.slice(0, -1))
+  }, [])
 
   const orderedScores = useMemo(
     () => order.map((id) => energiesById.get(id)?.score ?? 0),
@@ -561,7 +644,11 @@ export function AnalysisWorkbench({
     (row, index) => row.originalPosition !== index + 1
   ).length
 
-  const orderDirty = applied.size > 0 || smartOrder !== null
+  // Hand moves count: without them, a set reordered only by dragging offered
+  // no way back to the saved order — "Back to original" stayed hidden because
+  // the flag only knew about fixes and smart ordering.
+  const orderDirty =
+    applied.size > 0 || smartOrder !== null || manualOps.length > 0
 
   // Zone 4: smart ordering — server endpoint (Claude) with local heuristic
   // fallback. The result enters the SAME derived state as manual fixes.
@@ -629,6 +716,9 @@ export function AnalysisWorkbench({
       }
 
       setApplied(new Set())
+      // Hand moves were made against the previous order; replaying them
+      // against a new one would move tracks the DJ never touched.
+      setManualOps([])
       setSmartOrder(ids)
       setSmartSource(source)
       setSmartReason(source === "fallback" ? reason : null)
@@ -1008,6 +1098,9 @@ export function AnalysisWorkbench({
       {/* Zone 3: the live tracklist — replaces the two 48-row lists. */}
       <LiveTracklist
         rows={tracklistRows}
+        onMove={moveTrack}
+        manualMoveCount={manualOps.length}
+        onUndoMove={undoLastMove}
         movedCount={movedCount}
         dirty={orderDirty}
         smartStatus={smartStatus}

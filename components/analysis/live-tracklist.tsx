@@ -1,6 +1,7 @@
 "use client"
 
-import { Sparkles } from "lucide-react"
+import { useState } from "react"
+import { GripVertical, Sparkles } from "lucide-react"
 
 import { ANALYSIS_UI, formatTemplate } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -23,6 +24,15 @@ interface LiveTracklistProps {
   /** Rows in the CURRENT derived order. */
   rows: LiveTracklistRow[]
   movedCount: number
+  /**
+   * Moves a track from one position to another. Recorded upstream as an
+   * operation on top of the derived order, so it composes with fixes and with
+   * "Back to original" instead of replacing them.
+   */
+  onMove: (fromIndex: number, toIndex: number) => void
+  /** How many hand moves are currently in effect. */
+  manualMoveCount: number
+  onUndoMove: () => void
   /** True when any decision or smart order diverges from the original. */
   dirty: boolean
   smartStatus: SmartOrderStatus
@@ -43,6 +53,9 @@ interface LiveTracklistProps {
 export function LiveTracklist({
   rows,
   movedCount,
+  onMove,
+  manualMoveCount,
+  onUndoMove,
   dirty,
   smartStatus,
   onSmartOrder,
@@ -65,6 +78,21 @@ export function LiveTracklist({
         ? ANALYSIS_UI.smartOrderDone[locale]
         : ANALYSIS_UI.smartOrderCta[locale]
 
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  function endDrag() {
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
+
+  function handleDrop(index: number) {
+    if (dragIndex !== null) {
+      onMove(dragIndex, index)
+    }
+    endDrag()
+  }
+
   // Two columns read DOWN each column (positions 1..24 left, 25..48 right),
   // like a printed tracklist — grid-flow-col with an explicit row count.
   const columnRows = Math.ceil(rows.length / 2)
@@ -76,7 +104,22 @@ export function LiveTracklist({
           <p className="font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-ec-text-dim">
             {ANALYSIS_UI.liveOrderEyebrow[locale]}
           </p>
-          <p className="mt-1 text-sm text-ec-text-muted">{subtitle}</p>
+          <p className="mt-1 text-sm text-ec-text-muted">
+            {subtitle}
+            {manualMoveCount > 0 ? (
+              <>
+                {" · "}
+                <span className="text-ec-amber">
+                  {formatTemplate(ANALYSIS_UI.movedByHand[locale], {
+                    count: manualMoveCount,
+                  })}
+                </span>
+              </>
+            ) : null}
+          </p>
+          <p className="mt-0.5 text-[11.5px] text-ec-text-dim">
+            {ANALYSIS_UI.dragToReorder[locale]}
+          </p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-2.5">
           {exportSlot}
@@ -96,6 +139,15 @@ export function LiveTracklist({
             <Sparkles className="size-4" aria-hidden />
             {smartLabel}
           </button>
+          {manualMoveCount > 0 ? (
+            <button
+              type="button"
+              onClick={onUndoMove}
+              className="rounded-[13px] border border-ec-amber/30 px-4 py-2.5 text-sm text-ec-amber transition-colors hover:bg-ec-amber/[0.08]"
+            >
+              {ANALYSIS_UI.undoLastMove[locale]}
+            </button>
+          ) : null}
           {dirty ? (
             <button
               type="button"
@@ -123,12 +175,30 @@ export function LiveTracklist({
           return (
             <li
               key={row.id}
+              draggable
+              onDragStart={() => setDragIndex(index)}
+              onDragOver={(event) => {
+                event.preventDefault()
+                setDragOverIndex(index)
+              }}
+              onDrop={(event) => {
+                event.preventDefault()
+                handleDrop(index)
+              }}
+              onDragEnd={endDrag}
               className={cn(
-                "flex min-w-0 items-center gap-3 rounded-[10px] bg-ec-sunken px-3 py-2",
+                "flex min-w-0 cursor-grab items-center gap-2 rounded-[10px] bg-ec-sunken px-2.5 py-2 active:cursor-grabbing",
                 "motion-safe:transition-colors",
-                moved && "outline outline-1 -outline-offset-1 outline-ec-amber/20"
+                moved && "outline outline-1 -outline-offset-1 outline-ec-amber/20",
+                dragOverIndex === index &&
+                  dragIndex !== index &&
+                  "shadow-[inset_0_2px_0_#A24DE0]"
               )}
             >
+              <GripVertical
+                aria-hidden
+                className="size-3.5 shrink-0 text-ec-text-dim/70"
+              />
               <span className="w-6 shrink-0 text-right font-mono text-xs text-ec-text-dim">
                 {position}
               </span>

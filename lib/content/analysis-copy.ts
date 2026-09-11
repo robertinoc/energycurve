@@ -579,6 +579,24 @@ export const ANALYSIS_UI = {
   },
 
   // Smart ordering (redesign zone 4)
+  /**
+   * Hand moves on the live tracklist.
+   *
+   * Added because the screen was a dead end: reported as "una vez has
+   * reordenado esa opción desaparece, no permite mover las canciones". Two
+   * tracks with identical key and energy are interchangeable to the engine and
+   * not to the DJ, who knows how they mix — and that is knowledge the engine
+   * cannot get.
+   */
+  dragToReorder: {
+    en: "Drag a track to move it",
+    es: "Arrastrá un track para moverlo",
+  },
+  movedByHand: {
+    en: "{count} moved by hand",
+    es: "{count} movidos a mano",
+  },
+  undoLastMove: { en: "Undo move", es: "Deshacer movimiento" },
   smartOrderCta: { en: "Smart ordering", es: "Ordenación inteligente" },
   smartOrderThinking: { en: "Thinking the order…", es: "Pensando el orden…" },
   smartOrderDone: { en: "Reordered with AI", es: "Reordenado con IA" },
