@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 import { PricingPage } from "@/components/marketing/pricing-page"
-import { buildPricingStructuredData, marketingMetadata } from "@/lib/seo"
+import { buildPricingStructuredData, marketingMetadata, serializeStructuredData } from "@/lib/seo"
 
 const LOCALE = "en" as const
 
@@ -14,7 +14,7 @@ export default function Pricing() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: serializeStructuredData(structuredData) }}
       />
       <PricingPage locale={LOCALE} />
     </>

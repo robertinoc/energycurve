@@ -307,3 +307,31 @@ export function marketingMetadata(
     },
   }
 }
+
+/**
+ * Serialises a structured-data graph for embedding in a `<script>` tag.
+ *
+ * `JSON.stringify` alone is not enough, and the reason is specific: it does not
+ * escape `<`, so a string containing `</script>` closes the tag early and
+ * everything after it is parsed as HTML. That is script injection through a
+ * JSON blob, and it does not care that the blob is valid JSON.
+ *
+ * Today every graph here is built from `getSiteCopy()`, which is static copy in
+ * this repo, so nothing hostile can reach it. This exists because that is a
+ * property of the current call sites and not of the mechanism — the day someone
+ * puts a blog post title, a playlist name or a user's display name into
+ * structured data, the escaping has to already be in place. It will not occur to
+ * them to add it, because the code around it will look like it already works.
+ *
+ * Escaping `<` as `\u003c` is valid JSON and valid JavaScript, so consumers and
+ * crawlers read exactly the same value. Also escapes U+2028 and U+2029, which
+ * are legal in JSON strings and illegal as raw line terminators in a script
+ * body — an old parser trips on them.
+ */
+export function serializeStructuredData(graph: unknown): string {
+  return JSON.stringify(graph)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029")
+}

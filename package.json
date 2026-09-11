@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "sbom": "cyclonedx-npm --omit dev --output-reproducible --output-format json --output-file docs/security/sbom/energycurve-sbom.cdx.json"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@cyclonedx/cyclonedx-npm": "^6.0.1",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
