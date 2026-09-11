@@ -45,8 +45,17 @@ edit together.
 | **Native export** (Rekordbox / Traktor / M3U8) | ✓ | ✓ | ✓ |
 | **Slot-aware planning**, **named curve shapes**, **PDF set sheet**, **order history**, **planned vs played**, **real BPM from audio** | ✗ | ✓ | ✓ |
 | Key detection from audio, Energy Model v3 | ✗ | soon | soon |
-| **Set comparator** (two sets side by side), **global library**, **per-transition advice**, **your own curve shapes** | ✗ | ✗ | ✓ |
+| **Set comparator** (two sets side by side), **global library**, **per-transition advice**, **your own curve shapes**, **title lookup** | ✗ | ✗ | ✓ |
 | Residency mode, B2B sets, Gig Mode | ✗ | ✗ | soon |
+
+**Title lookup is PRO+ because of what it costs, not what it returns.** It fills
+in the same two fields as measuring the audio, which is why it first shipped
+sharing that PRO gate. But measuring runs on the DJ's own CPU and costs us
+nothing, while every lookup spends a request against a third party's rate limit
+— and variable cost is the line PRO+ exists to hold. Gated in
+`app/dashboard/playlists/actions.ts` → `lookupTitlesAction`, with the playlist
+page gating the panel on the same capability so we never offer what the server
+will refuse.
 
 **Applied fixes are uncapped on every tier.** A cap was advertised on /pricing
 and never enforced anywhere: applying a fix is local, instant and reversible, so

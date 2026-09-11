@@ -1575,9 +1575,11 @@ export async function lookupTitlesAction(
 
   const billing = await getProfileBilling(profile.id)
 
-  // Same gate as measuring audio: both fill in the same two fields, and charging
-  // differently for them by source would be arbitrary.
-  if (!can(billing.plan, billing.status, "audio_analysis")) {
+  // Its own capability, at PRO+. Measuring audio and looking a title up fill the
+  // same two fields, which is why this used to share that gate — but the tier
+  // rule keys on cost, not on output, and only one of the two spends someone
+  // else's rate limit.
+  if (!can(billing.plan, billing.status, "title_lookup")) {
     return { ok: false, message: ACTION_COPY.audioAnalysisNotEntitled[locale] }
   }
 

@@ -115,6 +115,7 @@ export default async function PlaylistDetailPage({
   const canMeasureAudio = can(billing.plan, billing.status, "audio_analysis")
   // Hidden entirely with no key configured, rather than shown and failing: an
   // offer that can't be taken is worse than no offer.
+  const canLookUpTitles = can(billing.plan, billing.status, "title_lookup")
   const lookupConfigured = isTitleLookupConfigured()
 
   // How many tracks would gain something. Shown as the reason to bother rather
@@ -436,7 +437,7 @@ export default async function PlaylistDetailPage({
             doesn't. Shown together and in this order because measuring is the
             better answer when it's available — it reads the actual audio, and it
             sends nothing anywhere. */}
-        {canMeasureAudio && tracksWithoutBpm > 0 && lookupConfigured ? (
+        {canLookUpTitles && tracksWithoutBpm > 0 && lookupConfigured ? (
           <TitleLookup
             playlistId={id}
             missingCount={tracksWithoutBpm}

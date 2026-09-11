@@ -824,6 +824,18 @@ const siteCopy: SiteCopySchema = {
             },
           },
           {
+            capability: "title_lookup",
+            plan: "pro_plus",
+            title: {
+              en: "No files? Look them up",
+              es: "¿No tenés los archivos? Buscalos",
+            },
+            desc: {
+              en: "For a tracklist you pasted rather than imported: we look each track up by name and fill in the BPM and key we find, so the curve stops being a guess.",
+              es: "Para un tracklist que pegaste en vez de importar: buscamos cada tema por su nombre y completamos el BPM y la tonalidad que encontremos, para que la curva deje de ser una suposición.",
+            },
+          },
+          {
             capability: "global_library",
             plan: "pro_plus",
             title: { en: "Your whole library", es: "Tu librería completa" },
@@ -1273,6 +1285,16 @@ const siteCopy: SiteCopySchema = {
         capability: {
           en: "Global track library and insights",
           es: "Librería global de temas e insights",
+        },
+        free: "no",
+        pro: "no",
+        proPlus: "yes",
+      },
+      {
+        key: "title_lookup",
+        capability: {
+          en: "Fill in BPM and key by track name",
+          es: "Completar BPM y tonalidad por nombre del tema",
         },
         free: "no",
         pro: "no",
