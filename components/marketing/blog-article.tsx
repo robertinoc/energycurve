@@ -117,7 +117,7 @@ export function BlogArticle({ post }: { post: BlogPost }) {
     <BlogShell locale={post.locale}>
       <article className="flex flex-col gap-5">
         <header className="space-y-2">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-white/40">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-white/50">
             {BLOG_COPY.publishedOn[post.locale]}{" "}
             {formatPostDate(post.publishedAt!, post.locale)}
           </p>

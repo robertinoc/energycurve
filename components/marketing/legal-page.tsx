@@ -57,7 +57,13 @@ export function LegalPage({
           <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
             {t.title}
           </h1>
-          <p className="text-xs uppercase tracking-[0.18em] text-white/40">{t.updated}</p>
+          {/*
+            white/40 measured 3.73:1 against --ec-bg (#08050f), and WCAG AA asks
+            4.5:1 for text this size. white/50 is 5.31:1. Not /45, which is 4.47
+            and would sit on the wrong side of the line the day the background
+            token moves by a shade.
+          */}
+          <p className="text-xs uppercase tracking-[0.18em] text-white/50">{t.updated}</p>
           <p className="max-w-2xl text-sm leading-7 text-white/64">{t.intro}</p>
         </header>
 

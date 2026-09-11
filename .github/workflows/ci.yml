@@ -97,13 +97,13 @@ jobs:
       # image already ships the shared libraries headless chromium needs — and if
       # that ever stops being true, chromium fails to launch and the e2e step says
       # so, which is a diagnosable failure instead of a silent stall.
-      - name: Install Playwright browser
+      - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 5
-        run: npx playwright install chromium
+        timeout-minutes: 8
+        run: npx playwright install chromium webkit firefox
 
       - name: End-to-end tests
-        timeout-minutes: 8
+        timeout-minutes: 12
         run: npm run test:e2e
 
       # Only on failure, and only then: a trace is tens of megabytes and is

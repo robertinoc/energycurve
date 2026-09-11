@@ -58,7 +58,7 @@ export default async function ResetPasswordPage({
 
       <Card className="relative w-full max-w-md border-white/10 bg-[#14101F] text-white ring-0">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle as="h1" className="flex items-center gap-2 text-white">
             <LockKeyhole className="size-4 text-white/58" />
             Choose a new password
           </CardTitle>

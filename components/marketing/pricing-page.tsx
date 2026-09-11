@@ -265,8 +265,24 @@ export function PricingPage({ locale }: { locale: SiteLocale }) {
             <p className="mt-2 text-sm leading-6 text-white/54">{copy.matrixLegend}</p>
           </div>
 
-          {/* Wide table scrolls inside itself rather than the page. */}
-          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#14101F]/60">
+          {/*
+            Wide table scrolls inside itself rather than the page.
+
+            `tabIndex={0}` because a region that scrolls has to be reachable by
+            keyboard: without it the only way to see the PRO+ column on a phone
+            is to drag it, which excludes anyone not using a pointer. Caught by
+            axe on mobile-safari and invisible on desktop Chrome, since the table
+            fits there and never scrolls at all.
+
+            A focusable region needs a name and a role for a screen reader to
+            announce what it just landed in, hence group + aria-label.
+          */}
+          <div
+            tabIndex={0}
+            role="group"
+            aria-label={copy.matrixTitle}
+            className="overflow-x-auto rounded-2xl border border-white/10 bg-[#14101F]/60"
+          >
             <table className="w-full min-w-[560px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-left">

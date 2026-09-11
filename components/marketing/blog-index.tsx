@@ -50,7 +50,7 @@ export function BlogIndex({
                 href={localizedPath(`/blog/${post.slug}`, post.locale)}
                 className="block rounded-2xl border border-white/8 bg-white/[0.02] p-5 transition hover:border-white/16 hover:bg-white/[0.04]"
               >
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/40">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-white/50">
                   {formatPostDate(post.publishedAt!, locale)}
                 </p>
                 <h2 className="mt-1.5 font-heading text-lg font-semibold leading-snug text-white">

@@ -33,9 +33,25 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * `as` exists so a card that *is* the page can carry the page's heading.
+ *
+ * The default stays `div`, which is right for a card inside a list — a dozen
+ * playlist cards must not emit a dozen headings. But the password-reset,
+ * reset-password and verify-email pages are a single card on an otherwise empty
+ * screen, and they were shipping with **no `h1` at all**: nothing answered "what
+ * is this page" for anyone navigating by heading. Login and signup were fine
+ * because they use `password-auth-page.tsx`, which has a real one.
+ *
+ * Additive on purpose: every existing call site keeps rendering a div.
+ */
+function CardTitle({
+  className,
+  as: Component = "div",
+  ...props
+}: React.ComponentProps<"div"> & { as?: "div" | "h1" | "h2" | "h3" }) {
   return (
-    <div
+    <Component
       data-slot="card-title"
       className={cn(
         "font-heading text-base leading-snug font-medium group-data-[size=sm]/card:text-sm",

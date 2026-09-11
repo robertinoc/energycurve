@@ -45,9 +45,32 @@ export default defineConfig({
   },
 
   projects: [
+    /**
+     * Three engines, not one. The August round's most expensive finding was a
+     * platform bug, not a logic bug — exports silently failed to save on iOS
+     * because Safari cancels a download when the object URL is revoked
+     * synchronously, and ignores `download` on blob URLs entirely. Chromium
+     * would never have caught it.
+     *
+     * WebKit here is desktop Safari's engine; `mobile-safari` adds the touch
+     * and viewport emulation. Firefox is cheap insurance on rendering and on
+     * `<details>`, which the FAQ relies on shipping its answers in the HTML.
+     */
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "mobile-safari",
+      use: { ...devices["iPhone 15"] },
     },
   ],
 
