@@ -11,6 +11,11 @@ on:
     - cron: "17 9 * * 1,4"
   workflow_dispatch: {}
 
+# This job curls a public URL. It needs nothing from the token, so it gets
+# nothing — a scheduled workflow is the one an attacker would most like to find
+# holding write access, because it runs on `main` on a timer with no reviewer.
+permissions: {}
+
 jobs:
   ping:
     runs-on: ubuntu-latest

@@ -12,6 +12,21 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+# Least privilege for GITHUB_TOKEN, declared here rather than relied on.
+#
+# The repository setting is already `default_workflow_permissions: read`, which
+# is the right value — but that value lives in GitHub's UI, not in this repo,
+# and nothing here would notice if it changed. This job reads code and writes
+# artifacts; it never needs to push a commit, open an issue, or publish a
+# package, so it says so in the file that gets reviewed.
+#
+# Worth being precise about what this protects against: every `npm ci` below
+# executes install scripts from the whole dependency tree. A compromised
+# transitive dependency runs as this job. With a read-only token it can read
+# public code; with a write token it could push to `main`.
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -38,9 +53,25 @@ jobs:
       NEXT_PUBLIC_POSTHOG_KEY: phc_ci_placeholder
       NEXT_PUBLIC_POSTHOG_HOST: http://127.0.0.1:9
     steps:
-      - uses: actions/checkout@v4
+      # Third-party actions are pinned to a commit SHA, not a tag.
+      #
+      # `@v4` is a *mutable* pointer: the owner can move it, and whoever
+      # controls the tag controls what runs inside this job — with the
+      # repository checked out and the token in scope. Pinning the SHA means an
+      # upgrade is a reviewable diff instead of something that happens to a run.
+      #
+      # The cost is that these do not update themselves, which is why
+      # .github/dependabot.yml now watches them: a pin nobody bumps becomes a
+      # different supply-chain problem six months later.
+      #
+      # `persist-credentials: false` because the very next step runs `npm ci`.
+      # By default checkout leaves the token in .git/config, where any install
+      # script in the dependency tree can read it and push with it.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -63,7 +94,7 @@ jobs:
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage
           path: coverage/
@@ -83,7 +114,11 @@ jobs:
       # rules for JavaScript, and neither catches a planted command injection.
       # Verified with a canary before being trusted.
       - name: Install Semgrep
-        run: pipx install semgrep
+        # Pinned for the same reason the actions above are: this installs an
+        # executable from PyPI and runs it over the whole repository. Unpinned,
+        # the version that gates a merge is whatever was published that morning,
+        # and a rule-behaviour change arrives as a red build on an unrelated PR.
+        run: pipx install semgrep==1.177.0
 
       - name: Static analysis
         # ERROR severity only, so the gate blocks on a real invariant break and
@@ -122,7 +157,7 @@ jobs:
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-${{ steps.playwright.outputs.browserkey }}
@@ -170,7 +205,7 @@ jobs:
       # actually broke — which is exactly when reproducing it locally is hardest.
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report
           path: |
