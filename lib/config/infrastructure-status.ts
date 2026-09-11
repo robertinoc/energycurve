@@ -14,14 +14,27 @@ function hasValue(name: string) {
   return Boolean(process.env[name]?.trim())
 }
 
+/**
+ * A URL we could actually make a request to.
+ *
+ * The protocol check is the point, and it was missing. `new URL()` alone
+ * accepts `localhost:3010/auth/callback` — it reads `localhost:` as the scheme
+ * and is perfectly happy — which means the single most common setup mistake,
+ * forgetting the `http://`, passed validation and then failed at runtime on the
+ * first login with an error from WorkOS that says nothing about the cause.
+ *
+ * A setup check exists to catch exactly that, before someone spends an evening
+ * on it.
+ */
 function isValidUrl(value: string | undefined) {
   if (!value) {
     return false
   }
 
   try {
-    new URL(value)
-    return true
+    const url = new URL(value)
+
+    return url.protocol === "http:" || url.protocol === "https:"
   } catch {
     return false
   }
