@@ -77,33 +77,64 @@ jobs:
       # not `next dev`, because it asserts on rendered metadata and structured data
       # and dev-mode output is not what ships.
 
-      # Keyed on the resolved Playwright version, not on the lockfile hash: the
-      # browser build only changes when Playwright does, so an unrelated dependency
-      # bump shouldn't throw away a 100 MB download.
+      # Keyed on the resolved Playwright version **and the browser set**, not on
+      # the lockfile hash: the browser build only changes when Playwright does,
+      # so an unrelated dependency bump shouldn't throw away a 300 MB download.
+      #
+      # The browser set belongs in the key, and leaving it out cost a full red
+      # run. When webkit and firefox were added to the matrix, the key was still
+      # version-only — so the cache saved by an earlier chromium-only run still
+      # hit, the install step was skipped as a cache hit, and 126 tests failed
+      # with "Executable doesn't exist". Locally everything passed, because a
+      # local cache already had all three.
+      #
+      # Defined once and used for both the key and the install command, so the
+      # two can't drift apart again.
       - name: Resolve Playwright version
         id: playwright
-        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+        run: |
+          BROWSERS="chromium webkit firefox"
+          echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "browsers=$BROWSERS" >> "$GITHUB_OUTPUT"
+          # Derived, never written twice: the cache key and the install command
+          # have to name the same set or the cache lies.
+          echo "browserkey=$(echo "$BROWSERS" | tr ' ' '-')" >> "$GITHUB_OUTPUT"
 
-      - name: Cache Playwright browser
+      - name: Cache Playwright browsers
         id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-${{ steps.playwright.outputs.browserkey }}
 
-      # No `--with-deps`. That flag shells out to `sudo apt-get install`, which is
-      # what actually hung: apt blocks on a lock the runner image's own
-      # unattended-upgrades holds, with no timeout of its own. The ubuntu-latest
-      # image already ships the shared libraries headless chromium needs — and if
-      # that ever stops being true, chromium fails to launch and the e2e step says
-      # so, which is a diagnosable failure instead of a silent stall.
-      - name: Install Playwright browser
+      # `--with-deps` is back, narrowly, and the history matters.
+      #
+      # It was removed because it shells out to `sudo apt-get install`, which hung
+      # for 22 minutes: apt blocks on a lock the runner image's own
+      # unattended-upgrades holds, with no timeout of its own. Chromium alone did
+      # not need it — the runner image ships the libraries headless chromium
+      # wants — so dropping it was free.
+      #
+      # WebKit is not free. Its shared libraries (libwoff2, libopus, gstreamer,
+      # libenchant, libsecret, libhyphen and friends) are simply not in the image,
+      # so the binary installs and then fails to launch. Since webkit and
+      # mobile-safari are the projects that caught the pricing table being
+      # unreachable by keyboard on a phone, dropping them to avoid apt would mean
+      # dropping the coverage that found the bug.
+      #
+      # So: stop the unattended-upgrades timer first, which is the actual cause of
+      # the lock, and keep the step timeout as the backstop. If it ever hangs
+      # again it fails in eight minutes with a name, not in twenty-two without one.
+      - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 5
-        run: npx playwright install chromium
+        timeout-minutes: 8
+        run: |
+          sudo systemctl stop unattended-upgrades.service 2>/dev/null || true
+          sudo systemctl disable --now apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+          npx playwright install --with-deps ${{ steps.playwright.outputs.browsers }}
 
       - name: End-to-end tests
-        timeout-minutes: 8
+        timeout-minutes: 12
         run: npm run test:e2e
 
       # Only on failure, and only then: a trace is tens of megabytes and is

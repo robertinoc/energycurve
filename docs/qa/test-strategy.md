@@ -169,11 +169,35 @@ el producto. Es exactamente lo que este paso existe para encontrar.
 | `services/playlist-service.ts` | Sacar `.eq("user_id", profileId)` de `getOwnedPlaylist` | 7 de 16 |
 | `services/billing-service.ts` | Anular la rama `23505` de `claimBillingEvent` | 1 de 6 |
 | `lib/playlists/export.ts` | Forzar `preservedEntry` a `null` (el bug P0) | 7 de 63 |
+| `app/api/billing/checkout` | Aceptar un `priceId` mandado por el cliente | 1 de 10 |
+| `app/api/playlists/[id]/smart-order` | Devolver 422 en vez de 404 ante un set ajeno | 2 de 8 |
+| `app/api/health` | Devolver 200 aunque la base no responda | 3 de 6 |
+| `app/api/contact` | Desactivar el honeypot | 1 de 10 |
 
 Ninguna mutación sobrevivió sin detección. Dos mutaciones del primer caso
 sobreviven a propósito y están documentadas: `deletePlaylist` y
 `updatePlaylistDetails` vuelven a filtrar por `user_id` en el propio write, que
 es defensa en profundidad y tiene su propio test para que no se "simplifique".
+
+## Dos trampas de estado compartido que aparecieron al escribir las suites
+
+Las dos son propiedades reales del producto, no defectos de los tests, y por eso
+quedan anotadas acá en vez de resueltas con un truco.
+
+**El limitador de tasa no tiene reset.** `lib/rate-limit.ts` guarda los buckets en
+un `Map` a nivel de módulo y no expone forma de limpiarlo, así que dos tests que
+compartan IP o usuario se contaminan entre sí. Las suites usan una IP distinta por
+test. Eso mismo es lo que en producción hace que el límite sea **por instancia de
+serverless** y se reinicie en cada arranque en frío: el test tiene que esquivar
+exactamente la propiedad que F4 tiene que medir.
+
+**El caché del ordenamiento inteligente se consulta antes del gate de cuota.** Es
+deliberado y está bien: un acierto de caché no hace ninguna llamada a Claude, así
+que cobrarlo mediría nuestra infraestructura y no nuestro costo. Pero significa que
+un test anterior en el mismo archivo puede dejar el caché caliente y entregarle al
+siguiente un 200 que nunca pidió. Pasó en la primera corrida de la suite de
+smart-order: los tests de cuota daban 200 en vez de 402. Cada test usa ahora su
+propio id de playlist.
 
 ## Lo que esta estrategia no cubre, y hay que decirlo
 

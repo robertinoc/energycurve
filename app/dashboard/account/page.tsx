@@ -1,7 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
-import { MessageSquare } from "lucide-react"
+import { Download, MessageSquare } from "lucide-react"
 
 import { PlanCard } from "@/components/dashboard/plan-card"
 import { LandingContactForm } from "@/components/marketing/landing-contact-form"
@@ -128,6 +128,37 @@ export default async function AccountPage() {
           defaultName={displayName === "—" ? undefined : displayName}
           defaultEmail={user.email}
         />
+      </section>
+
+      {/*
+        Portability, reachable without asking us for it.
+
+        This is on the account page rather than buried in the privacy policy
+        because a right you have to read a legal document to discover is a right
+        most people never exercise. A plain anchor, not a fetch: the route
+        answers with Content-Disposition, so the browser saves the file and
+        there is no blob URL to revoke — which is the mechanism that made the
+        playlist export fail silently on iOS in August.
+      */}
+      <section className="rounded-[16px] border border-ec-border bg-[#0C0917] p-5">
+        <h2 className="flex items-center gap-2 font-heading text-base font-semibold text-white">
+          <Download aria-hidden className="size-4 text-ec-violet" />
+          {COPY.dataHeading[locale]}
+        </h2>
+        <p className="mt-1.5 text-[13px] leading-6 text-white/60">
+          {COPY.dataBody[locale]}
+        </p>
+        <p className="mt-2 text-[12px] leading-5 text-white/45">
+          {COPY.dataAudioNote[locale]}
+        </p>
+        <a
+          href="/api/account/export"
+          download
+          className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/14 px-4 py-2 text-[13px] font-medium text-white transition hover:border-white/28 hover:bg-white/5"
+        >
+          <Download aria-hidden className="size-3.5" />
+          {COPY.dataDownload[locale]}
+        </a>
       </section>
     </div>
   )

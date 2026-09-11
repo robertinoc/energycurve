@@ -66,12 +66,12 @@ export default defineConfig({
         // the day after. Raise them as coverage arrives — never lower one to
         // make a run pass.
         //
-        // Baseline 63.1/62.1/71.5/62.6, raised to 64.4/63.2/72.6/64.0 once the
-        // service-tenancy and webhook suites landed.
-        statements: 64,
-        branches: 63,
-        functions: 72,
-        lines: 64,
+        // Baseline 63.1/62.1/71.5/62.6 on 2026-09-11, raised as each suite
+        // landed. Now 68.2/66.2/75.0/67.8.
+        statements: 68,
+        branches: 66,
+        functions: 75,
+        lines: 67,
 
         // The engine and the parsers are where a regression costs a DJ real
         // data — a wrong score, or a library entry overwritten on export.
@@ -81,14 +81,16 @@ export default defineConfig({
         "lib/product/**": { statements: 96, branches: 94, functions: 87, lines: 96 },
         "lib/smart-order/**": { statements: 96, branches: 92, functions: 99, lines: 96 },
 
-        // Pinned at zero on purpose, so the number is visible rather than
-        // absent. services/ is where data ownership is enforced — every
-        // function takes a profileId and scopes by it, and AGENTS.md is explicit
-        // that RLS will not catch a miss. It has no tests at all. Same for the
-        // API routes: webhook signature checks, rate limits and quota gates are
-        // all unverified. Both are raised by the F2 suite.
+        // Both started at zero and are still low, which is the point: the
+        // number has to be visible rather than absent. services/ is where data
+        // ownership is enforced — every function takes a profileId and scopes by
+        // it, and AGENTS.md is explicit that RLS will not catch a miss. The
+        // tenancy suite covers playlist-service; the other sixteen services are
+        // still untested. app/api went 0 → 43 with the six route suites; what
+        // remains uncovered there is mostly the smart-order Claude path, which
+        // needs a recorded conversation rather than a guard test.
         "services/**": { statements: 8, branches: 8, functions: 12, lines: 8 },
-        "app/api/**": { statements: 0, branches: 0, functions: 0, lines: 0 },
+        "app/api/**": { statements: 46, branches: 40, functions: 39, lines: 46 },
       },
     },
   },

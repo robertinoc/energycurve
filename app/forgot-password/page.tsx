@@ -67,7 +67,7 @@ export default async function ForgotPasswordPage({
 
       <Card className="relative w-full max-w-md border-white/10 bg-[#14101F] text-white ring-0">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle as="h1" className="flex items-center gap-2 text-white">
             <KeyRound className="size-4 text-white/58" />
             Forgot your password?
           </CardTitle>

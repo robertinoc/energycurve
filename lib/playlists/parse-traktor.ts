@@ -1,5 +1,7 @@
 import { XMLParser } from "fast-xml-parser"
 
+import { inspectXmlDocument } from "@/lib/playlists/xml-guard"
+
 import { musicalKeyValueToOpenKey } from "@/lib/music/camelot"
 import { readEnergyTag } from "@/lib/playlists/energy-tag"
 import {
@@ -166,6 +168,14 @@ function findFirstPlaylistNode(node: RawNode): RawNode | null {
  * order when no playlist node is present. Throws if unparseable/empty.
  */
 export function parseTraktor(xml: string): ParsedImport {
+  // Structural check before the parser touches it: a DOCTYPE, an entity
+  // declaration or absurd nesting is refused without building a tree. See
+  // lib/playlists/xml-guard.ts for why a library limit alone is not enough.
+  const guard = inspectXmlDocument(xml)
+
+  if (!guard.ok) {
+    throw new Error("This XML file has a structure we refuse to parse.")
+  }
   const doc = parser.parse(xml) as {
     NML?: {
       COLLECTION?: { ENTRY?: RawEntry[] }
