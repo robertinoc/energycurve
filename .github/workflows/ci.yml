@@ -5,6 +5,13 @@ on:
   push:
     branches: [main]
 
+# A second push to the same branch makes the first run's answer irrelevant, and
+# two full runs of this job take two runners for ~12 minutes to tell you one
+# thing. `main` is exempt: its runs are the record of what was released.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -40,8 +47,28 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Unit tests
-        run: npm run test
+      - name: Unit tests with coverage
+        # Thresholds live in vitest.config.ts, including per-directory floors.
+        # They are set to what has already been cleared, so this fails only on a
+        # real drop — and the floors are raised as coverage lands, never lowered
+        # to make a run pass.
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+
+      # Advisory on purpose. A new critical advisory in a transitive dependency
+      # would otherwise block every unrelated pull request until someone upstream
+      # publishes a fix, and a gate that has to be bypassed to ship stops being
+      # read. The output is here to be looked at; the decision stays human.
+      - name: Dependency audit (advisory)
+        continue-on-error: true
+        run: npm audit --audit-level=high
 
       - name: Production build
         run: npm run build
@@ -78,3 +105,17 @@ jobs:
       - name: End-to-end tests
         timeout-minutes: 8
         run: npm run test:e2e
+
+      # Only on failure, and only then: a trace is tens of megabytes and is
+      # worth nothing for a run that passed. `trace: retain-on-failure` in
+      # playwright.config.ts means this directory is empty unless something
+      # actually broke — which is exactly when reproducing it locally is hardest.
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

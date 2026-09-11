@@ -16,6 +16,10 @@ const eslintConfig = defineConfig([
     "docs/brand-kit/**",
     // Claude Code session artifacts (agent worktrees are full repo copies):
     ".claude/**",
+    // Generated coverage report. Istanbul's HTML bundles ship their own
+    // eslint-disable headers, which this config then reports as unused —
+    // two warnings on every local run, from files nobody wrote.
+    "coverage/**",
   ]),
 ]);
 
