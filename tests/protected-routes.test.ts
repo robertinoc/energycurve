@@ -48,11 +48,65 @@ function routePathOf(file: string): string {
   )
 }
 
+/**
+ * Strips comments before the scan.
+ *
+ * Without this the check reads prose as code: the retention cron route explains
+ * in its docblock *why* it does not go through authkit, the word `withAuth(`
+ * appears in that sentence, and the route was reported as an uncovered caller
+ * of a function it never calls.
+ *
+ * A test that fails on a comment is a test people learn to argue with, and the
+ * whole value of this one is that its failure is never debatable.
+ *
+ * Deliberately naive — it does not understand a `//` inside a string literal —
+ * because the only thing downstream is a search for `withAuth(`, and no route
+ * in this codebase puts that inside a string. If one ever does, the parser to
+ * reach for is TypeScript's own, not a better regex.
+ */
+function withoutComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1")
+}
+
 const routes = findRouteFiles(API_ROOT).map((file) => ({
   file: relative(process.cwd(), file),
   path: routePathOf(file),
-  source: readFileSync(file, "utf8"),
+  source: withoutComments(readFileSync(file, "utf8")),
 }))
+
+describe("the scan itself", () => {
+  it("does not read a mention in a comment as a call", () => {
+    // The regression that prompted `withoutComments`: a route that explains in
+    // prose why it is *not* behind authkit was reported as an uncovered caller
+    // of withAuth. Pinned so the stripping cannot be quietly removed.
+    const prose = withoutComments(`
+      /** Deliberately outside the matcher: cron has no session, so withAuth() cannot decide. */
+      // another withAuth( mention
+      export async function GET() { return new Response("ok") }
+    `)
+
+    expect(/\bwithAuth\s*\(/.test(prose)).toBe(false)
+  })
+
+  it("still reads a real call", () => {
+    // And the other direction, so the stripper cannot pass by deleting
+    // everything.
+    const code = withoutComments(`
+      import { withAuth } from "@workos-inc/authkit-nextjs"
+      export async function GET() { const { user } = await withAuth(); return user }
+    `)
+
+    expect(/\bwithAuth\s*\(/.test(code)).toBe(true)
+  })
+
+  it("leaves a URL alone, since // appears in every https:", () => {
+    const code = withoutComments(`const url = "https://energycurve.app/api"`)
+
+    expect(code).toContain("https://energycurve.app/api")
+  })
+})
 
 describe("AuthKit middleware coverage", () => {
   it("finds the API routes", () => {

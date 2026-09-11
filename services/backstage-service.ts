@@ -10,6 +10,7 @@ import {
 } from "@/lib/backstage/users"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
+import { sweepBillingPayloads } from "@/services/retention-service"
 import type { Profile } from "@/types/domain"
 
 export interface BackstageUsersSnapshot {
@@ -208,6 +209,32 @@ export async function deleteUserEverywhere(
     throw new Error(
       "The WorkOS user was deleted but removing the profile failed. Retry to finish the cleanup."
     )
+  }
+
+  // The profile row is gone, which cascades to playlists, tracks, analyses,
+  // versions, templates, taxonomies, collaborations and usage. `billing_events`
+  // does **not** cascade — its FK is `on delete set null`, deliberately, because
+  // the row is the webhook idempotency guarantee and deleting it would let a
+  // redelivered Stripe event be processed as new.
+  //
+  // So the rows stay and their payloads go. Without this, deleting an account
+  // left its complete Stripe events behind — name, email, billing address,
+  // country — orphaned and indefinite, which is an erasure request answered
+  // with "most of it".
+  //
+  // Best effort on purpose: the account is already deleted by this point, and
+  // failing here would report a deletion that did happen as one that did not.
+  // The daily sweep picks up anything this misses, since an orphaned payload is
+  // exactly what it looks for.
+  try {
+    const swept = await sweepBillingPayloads()
+
+    logInfo("backstage.billing_payloads_scrubbed", { profileId, ...swept })
+  } catch (error) {
+    logWarn("backstage.billing_scrub_deferred", {
+      profileId,
+      message: error instanceof Error ? error.message : String(error),
+    })
   }
 
   logInfo("backstage.user_deleted", {

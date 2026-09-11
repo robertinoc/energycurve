@@ -35,7 +35,7 @@ export interface Statement {
 
 type Filter = [
   column: string,
-  op: "eq" | "in" | "neq" | "is" | "gte" | "lte",
+  op: "eq" | "in" | "neq" | "is" | "gte" | "lte" | "lt" | "gt" | "not-is",
   value: unknown,
 ]
 
@@ -48,6 +48,11 @@ function matches(row: Row, filters: Filter[]): boolean {
     if (op === "in") return (value as unknown[]).includes(actual)
     if (op === "gte") return (actual as number) >= (value as number)
     if (op === "lte") return (actual as number) <= (value as number)
+    // Dates arrive as ISO strings, which compare correctly lexicographically —
+    // which is the whole reason the retention sweep can filter on them at all.
+    if (op === "lt") return (actual as number) < (value as number)
+    if (op === "gt") return (actual as number) > (value as number)
+    if (op === "not-is") return actual !== value
     return false
   })
 }
@@ -123,6 +128,31 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
 
   is(column: string, value: unknown) {
     this.filters.push([column, "is", value])
+    return this
+  }
+
+  lt(column: string, value: unknown) {
+    this.filters.push([column, "lt", value])
+    return this
+  }
+
+  gt(column: string, value: unknown) {
+    this.filters.push([column, "gt", value])
+    return this
+  }
+
+  /**
+   * PostgREST spells negation as `.not(column, operator, value)`. Only the
+   * `is` form is used here — `.not("payload", "is", null)` means "has a
+   * payload" — so that is the only one implemented, and anything else throws
+   * rather than silently matching everything.
+   */
+  not(column: string, operator: string, value: unknown) {
+    if (operator !== "is") {
+      throw new Error(`supabase-fake: .not(…, "${operator}", …) is not implemented`)
+    }
+
+    this.filters.push([column, "not-is", value])
     return this
   }
 
