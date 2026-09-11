@@ -145,10 +145,14 @@ The audio-files import already opens local files for tag reading; the same
     which is the one structural claim no web competitor can copy. Written up in
     [research-server-side-batch.md](research-server-side-batch.md) with the four
     signals that would reopen it.
-12. Title-lookup enrichment API (PRO+, per-request cost).
-13. Beatport / Lexicon partnerships.
-14. **Public set curves** (share a read-only "shape of my set" page — the
-    growth loop; every shared curve is an ad).
+12. ~~Title-lookup enrichment API~~ — **shipped 20 Aug 2026** (PR #166). PRO+ as
+    specified here, confirmed 11 Sep when it got its own capability entry: the
+    per-request cost is exactly why it belongs in that tier.
+13. Beatport / Lexicon partnerships. **The only H3 item still open.**
+14. ~~**Public set curves**~~ — **shipped 14 Aug 2026.** `app/c/[token]`, with
+    stateless signed links rather than a share-token table: the id plus an HMAC
+    of it, so nobody can walk the space of playlist ids and there is no row to
+    create, expire or clean up.
 
 ## 6. Plans: FREE / PRO / PRO+
 

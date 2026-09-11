@@ -237,10 +237,14 @@ Energy Model v3, FREE/PRO/PRO+ plans at $9.99/$19.99).
 - **H2 (next)**: Gig Mode (offline PWA) · global track library + insights ·
   set comparator · per-transition suggestions (B20 expansion) · USB export
   research.
-- **H3 (later)**: ~~server-side batch analysis~~ (declined 20 Aug — see
-  `docs/research-server-side-batch.md`) · title-lookup
-  enrichment API (PRO+) · Beatport/Lexicon partnerships · public set curves
-  (growth loop).
+- **H3 (later) is down to one item.** ~~Server-side batch analysis~~ declined
+  20 Aug (`docs/research-server-side-batch.md`). ~~Title-lookup enrichment~~
+  shipped 20 Aug (PR #166), given its own PRO+ capability 11 Sep. ~~Public set
+  curves~~ shipped 14 Aug — `app/c/[token]` with stateless signed links
+  (`lib/playlists/share-token.ts`), and listed as shipped further down this same
+  file, which is how the staleness was spotted. **Only Beatport/Lexicon
+  partnerships remain**, and that is an email and a months-long lead time rather
+  than a build.
 
 ## Content, SEO & AEO — closed 12 Aug 2026
 
