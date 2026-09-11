@@ -172,7 +172,12 @@ describe("ownership on playlists and tracks", () => {
 
   it("refuses to edit a track in someone else's set, and the value is unchanged", async () => {
     await expect(
-      updateTrack(STRANGER, MINE, "t-mine", { name: "Overwritten", bpm: 999 })
+      updateTrack(STRANGER, MINE, "t-mine", {
+        artist: "Attacker",
+        name: "Overwritten",
+        bpm: 999,
+        energyScore: 10,
+      })
     ).rejects.toThrow()
 
     const track = rows("tracks").find((row) => row.id === "t-mine")
@@ -182,7 +187,12 @@ describe("ownership on playlists and tracks", () => {
 
   it("refuses to add a track to someone else's set, and none appears", async () => {
     await expect(
-      addTrack(STRANGER, MINE, { name: "Smuggled", artist: "Nobody" })
+      addTrack(STRANGER, MINE, {
+        artist: "Nobody",
+        name: "Smuggled",
+        bpm: null,
+        energyScore: null,
+      })
     ).rejects.toThrow()
 
     expect(rows("tracks").map((row) => row.name)).not.toContain("Smuggled")
