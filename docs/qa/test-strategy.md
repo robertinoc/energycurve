@@ -151,8 +151,29 @@ Hecho en esta fase, y no fue ceremonia:
   Acá también hubo que arreglar el fake primero, que no aplicaba unicidad de clave
   primaria y dejaba pasar la segunda inserción.
 
-Las dos veces, el defecto estaba en la herramienta de medición y no en el
-producto. Es exactamente lo que este paso existe para encontrar.
+- **Fidelidad del export nativo.** Se forzó a `preservedEntry` a devolver `null`
+  siempre, que es literalmente el bug P0 del 07/09: volver a reconstruir cada
+  entrada desde los campos que modelamos en vez de devolver la del usuario. 7
+  tests en rojo, entre ellos "keeps every hotcue, with its position and number
+  intact" y "survives a field this codebase has never heard of". Ese riesgo, que
+  es el más caro del producto, **ya está cubierto de verdad**: se verificó en vez
+  de suponerlo.
+
+Las dos primeras veces, el defecto estaba en la herramienta de medición y no en
+el producto. Es exactamente lo que este paso existe para encontrar.
+
+### Resumen de las mutaciones corridas
+
+| Módulo | Bug inyectado | Tests en rojo |
+|---|---|---|
+| `services/playlist-service.ts` | Sacar `.eq("user_id", profileId)` de `getOwnedPlaylist` | 7 de 16 |
+| `services/billing-service.ts` | Anular la rama `23505` de `claimBillingEvent` | 1 de 6 |
+| `lib/playlists/export.ts` | Forzar `preservedEntry` a `null` (el bug P0) | 7 de 63 |
+
+Ninguna mutación sobrevivió sin detección. Dos mutaciones del primer caso
+sobreviven a propósito y están documentadas: `deletePlaylist` y
+`updatePlaylistDetails` vuelven a filtrar por `user_id` en el propio write, que
+es defensa en profundidad y tiene su propio test para que no se "simplifique".
 
 ## Lo que esta estrategia no cubre, y hay que decirlo
 
