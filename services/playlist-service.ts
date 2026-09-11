@@ -254,8 +254,21 @@ export async function getOwnedPlaylistWithTracks(
  *
  * Deliberately separate from `getOwnedPlaylistWithTracks` rather than a flag on
  * it: an ownership check that can be switched off from a call site is one bad
- * refactor away from being switched off everywhere. The only caller is the
- * signed-link route, and the signature is what stands in for ownership there.
+ * refactor away from being switched off everywhere.
+ *
+ * Two callers, and each has something that stands in for ownership:
+ *
+ * - `app/c/[token]/page.tsx` — the share token's HMAC is verified first, so an
+ *   id cannot be walked without producing a valid signature.
+ * - `services/collaboration-service.ts` → `getSharedPlaylist`, which reads
+ *   `set_collaborators` for (playlist_id, invited_email) and returns null
+ *   before reaching here when the viewer has no row.
+ *
+ * This comment used to say "the only caller is the signed-link route" while the
+ * second one already existed. It was harmless — that caller checks access — but
+ * a caller list is exactly what the next person reads before adding a third, so
+ * `tests/object-access-callers.test.ts` now holds the list still instead of
+ * trusting this paragraph to stay true.
  */
 export async function getPlaylistWithTracksById(
   playlistId: string
