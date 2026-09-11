@@ -36,9 +36,33 @@ import { getPlaylistWithTracksById } from "@/services/playlist-service"
  * - **noindex.** A link someone chose to hand out is not a page they asked to
  *   be findable by searching their set's name.
  */
-export const metadata: Metadata = {
-  title: "The shape of a set",
-  robots: { index: false, follow: false },
+/**
+ * Resolved per request rather than static, for one reason that only shows up in
+ * a browser: when this route calls `notFound()`, Next serves `app/not-found.tsx`
+ * — correct body, correct 404 status, and the served HTML even carries the
+ * not-found title — but the **route's own metadata still wins on the client**.
+ * So a person clicking a revoked link saw a page saying the set isn't there,
+ * inside a tab titled "The shape of a set". Verified by probe: renaming this
+ * title changed what the browser showed on the 404.
+ *
+ * Only the signature case is covered here, deliberately. The second
+ * `notFound()` below fires when the set was deleted or has no tracks, and
+ * answering that in metadata would need a second call to
+ * `getPlaylistWithTracksById` — the intentionally unscoped loader whose callers
+ * are pinned to two by `.semgrep/energycurve.yml`. Widening that list to fix a
+ * tab title is the wrong trade, and the rule catching it is the rule working.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>
+}): Promise<Metadata> {
+  const { token } = await params
+
+  return {
+    title: readShareToken(token) ? "The shape of a set" : "Page not found",
+    robots: { index: false, follow: false },
+  }
 }
 
 export const dynamic = "force-dynamic"

@@ -132,6 +132,34 @@ export const DASHBOARD_COPY = {
       en: "Reference",
       es: "Referencia",
     },
+    // 404. Ten `notFound()` calls existed with no not-found.tsx behind any of
+    // them, so every one rendered Next's built-in page: unstyled, English only,
+    // no way back. Two variants because the two audiences are not the same
+    // person — see app/not-found.tsx and app/dashboard/not-found.tsx.
+    missingTitle: {
+      en: "This page doesn't exist",
+      es: "Esta página no existe",
+    },
+    // Deliberately covers three different causes at once — a wrong URL, a
+    // revoked share link, and a set that was deleted — because the public page
+    // refuses to distinguish them on purpose (naming which one would confirm a
+    // set id exists). The copy has to be true for all three.
+    missingBody: {
+      en: "The link may be wrong, or it may have pointed at something that was removed. If someone shared a set with you, ask them for a fresh link.",
+      es: "Puede que el link esté mal, o que apuntara a algo que ya no está. Si alguien te compartió un set, pedile un link nuevo.",
+    },
+    missingTitleDashboard: {
+      en: "That set isn't here",
+      es: "Ese set no está acá",
+    },
+    missingBodyDashboard: {
+      en: "It may have been deleted, or it may belong to another account. Your other sets are untouched.",
+      es: "Puede que lo hayas borrado, o que pertenezca a otra cuenta. Tus otros sets están intactos.",
+    },
+    missingBackToSets: {
+      en: "Back to my sets",
+      es: "Volver a mis sets",
+    },
     byHand: {
       en: "Prefer to build it by hand?",
       es: "¿Preferís armarla a mano?",
