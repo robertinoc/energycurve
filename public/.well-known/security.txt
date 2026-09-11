@@ -1,0 +1,13 @@
+# EnergyCurve — how to report a security problem
+#
+# EnergyCurve is operated by StageLink LLC.
+
+Contact: mailto:hello@energycurve.app
+Expires: 2027-09-11T00:00:00.000Z
+Preferred-Languages: en, es
+Canonical: https://energycurve.app/.well-known/security.txt
+
+# If you have found something, tell us before you tell anyone else and we will
+# not come after you for looking. Please do not run automated scanners against
+# production, do not access or modify data that is not yours, and give us a
+# reasonable window to fix it.
