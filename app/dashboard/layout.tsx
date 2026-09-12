@@ -7,6 +7,7 @@ import {
 } from "@/components/dashboard/dashboard-shell"
 import { BillingAlertStrip } from "@/components/dashboard/billing-alert-strip"
 import { AuthProvider } from "@/components/providers/auth-provider"
+import { signOutAndReturnTo } from "@/lib/auth/sign-out"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
@@ -18,12 +19,7 @@ import { listPlaylists } from "@/services/playlist-service"
 async function logoutAction() {
   "use server"
 
-  try {
-    await signOut({ returnTo: "/" })
-  } catch (error) {
-    logWorkOSRuntimeError("Logout failed", error)
-    redirect("/")
-  }
+  await signOutAndReturnTo("/", "Logout failed")
 }
 
 /**

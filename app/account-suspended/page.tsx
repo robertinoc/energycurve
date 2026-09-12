@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { signOutAndReturnTo } from "@/lib/auth/sign-out"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 
 export const metadata: Metadata = {
@@ -15,12 +16,7 @@ export const metadata: Metadata = {
 async function signOutAction() {
   "use server"
 
-  try {
-    await signOut({ returnTo: "/" })
-  } catch (error) {
-    logWorkOSRuntimeError("Suspended-account sign out failed", error)
-    redirect("/")
-  }
+  await signOutAndReturnTo("/", "Suspended-account sign out failed")
 }
 
 export default function AccountSuspendedPage() {

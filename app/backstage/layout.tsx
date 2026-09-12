@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 import { AuthProvider } from "@/components/providers/auth-provider"
+import { signOutAndReturnTo } from "@/lib/auth/sign-out"
 import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { requireBackstageSession } from "@/lib/backstage/guard"
 
@@ -21,12 +22,7 @@ export const dynamic = "force-dynamic"
 async function logoutAction() {
   "use server"
 
-  try {
-    await signOut({ returnTo: "/" })
-  } catch (error) {
-    logWorkOSRuntimeError("Backstage logout failed", error)
-    redirect("/")
-  }
+  await signOutAndReturnTo("/", "Backstage logout failed")
 }
 
 export default async function BackstageLayout({
