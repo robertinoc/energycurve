@@ -39,22 +39,22 @@ Estado: ✅ cumple · ⚠️ parcial · ❌ brecha · ⬜ depende de una acción
 
 | Art. | Requisito | Estado | Evidencia / qué falta |
 |---|---|---|---|
-| 5(1)(a) | Licitud, lealtad, transparencia | ⚠️ | Política publicada EN/ES, pero el archivo **se autodeclara "placeholder"** y no nombra base legal por tratamiento |
+| 5(1)(a) | Licitud, lealtad, transparencia | ✅ | Política EN/ES con base legal por tratamiento, plazos de retención y derecho a reclamar. Se quitó la afirmación **"Supabase (región UE)"**: nadie la confirmó (R3), y era un hecho declarado en un documento del que la gente puede fiarse |
 | 5(1)(b) | Limitación de finalidad | ✅ | Finalidad por tratamiento en el RoPA |
 | 5(1)(c) | Minimización | ⚠️ | Dos hallazgos: blobs de `analyses` (resuelto), `plan_cancellation_feedback` (decisión pendiente) |
 | 5(1)(d) | Exactitud | ❌ | **No hay rectificación self-serve.** Ni nombre ni mail se pueden editar |
 | 5(1)(e) | Limitación de conservación | ⬜ | **Cuatro** ventanas implementadas y **ninguna corre**: falta `CRON_SECRET`. La cuarta (`rate_limit_buckets`, 1 día, migración 0029) es housekeeping y no lleva obligación detrás — las otras tres sí |
 | 5(1)(f) | Integridad y confidencialidad | ✅ | Art. 32, abajo |
 | 5(2) | Responsabilidad proactiva | ✅ | Este dossier, y con tests que lo verifican |
-| 6 | Base legal | ⚠️ | Identificable por tratamiento en el RoPA, **no declarada al usuario** |
+| 6 | Base legal | ✅ | Declarada al usuario, por tratamiento: contrato, obligación legal, interés legítimo y consentimiento |
 | 7 | Consentimiento | ✅ | Opt-in, revocable con un clic, DNT respetado. PR #182 |
-| 12–14 | Información al titular | ⚠️ | Existe; le falta base legal, plazos de retención y el derecho a reclamar ante una autoridad |
+| 12–14 | Información al titular | ✅ | Base legal, plazos y derecho a reclamar, en los dos idiomas |
 | 15 | Acceso | ✅ | `/api/account/export` |
-| 16 | Rectificación | ❌ | No implementado |
+| 16 | Rectificación | ⚠️ | Nombre self-serve en `/dashboard/account`. El email sigue por mail: cambia la identidad de login y descarta los sets compartidos |
 | 17 | Supresión | ❌ | **Solo como acción de admin.** Un usuario tiene que mandar un mail |
 | 18 | Limitación | ❌ | No implementado |
 | 20 | Portabilidad | ✅ | JSON estructurado, legible por máquina |
-| 21 | Oposición | ⚠️ | Cubierto para analytics (banner); sin mecanismo general |
+| 21 | Oposición | ⚠️ | Cubierto para analytics, y ahora la revocación **llega al tercero** (`opt_out_capturing` + `reset`), no solo a nuestros call sites. Sin mecanismo general |
 | 24/25 | Responsabilidad y privacidad desde el diseño | ⚠️ | `privacy-by-design.md`; el link público sigue activo por defecto |
 | 28 | Encargados | ⬜ | Inventario y página publicados; **DPAs sin firmar** |
 | 30 | Registro de actividades | ✅ | `ropa.md`, verificado por test |
@@ -64,7 +64,7 @@ Estado: ✅ cumple · ⚠️ parcial · ❌ brecha · ⬜ depende de una acción
 | 37 | DPO | ✅ | No requerido, razonado |
 | 44–49 | Transferencias | ⬜ | Mapeadas; **mecanismos sin verificar** |
 
-**Resumen: 8 ✅ · 9 ⚠️ · 4 ❌ · 4 ⬜**
+**Resumen: 11 ✅ · 8 ⚠️ · 2 ❌ · 4 ⬜** (era 8/9/4/4 el 11/09)
 
 ---
 
