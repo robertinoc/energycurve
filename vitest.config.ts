@@ -67,11 +67,12 @@ export default defineConfig({
         // make a run pass.
         //
         // Baseline 63.1/62.1/71.5/62.6 on 2026-09-11, raised as each suite
-        // landed. Now 69.0/67.0/75.9/68.7.
-        statements: 69,
-        branches: 66,
-        functions: 75,
-        lines: 68,
+        // landed. Now 73.0/69.7/80.3/72.8 (2026-09-12, after the service
+        // ownership suites).
+        statements: 72,
+        branches: 68,
+        functions: 79,
+        lines: 71,
 
         // The engine and the parsers are where a regression costs a DJ real
         // data — a wrong score, or a library entry overwritten on export.
@@ -81,15 +82,28 @@ export default defineConfig({
         "lib/product/**": { statements: 96, branches: 94, functions: 87, lines: 96 },
         "lib/smart-order/**": { statements: 96, branches: 92, functions: 99, lines: 96 },
 
-        // Both started at zero and are still low, which is the point: the
-        // number has to be visible rather than absent. services/ is where data
-        // ownership is enforced — every function takes a profileId and scopes by
-        // it, and AGENTS.md is explicit that RLS will not catch a miss. The
-        // tenancy suite covers playlist-service; the other sixteen services are
-        // still untested. app/api went 0 → 43 with the six route suites; what
-        // remains uncovered there is mostly the smart-order Claude path, which
-        // needs a recorded conversation rather than a guard test.
-        "services/**": { statements: 8, branches: 8, functions: 12, lines: 8 },
+        // Both started at zero, which was the point: the number has to be
+        // visible rather than absent. services/ is where data ownership is
+        // enforced — every function takes a profileId and scopes by it, and
+        // AGENTS.md is explicit that RLS will not catch a miss.
+        //
+        // 2026-09-12: 8 → 33. There are **21** services, not the seventeen this
+        // comment used to claim — that count was never measured. Twelve had no
+        // tests at all; seven still don't (analysis, dashboard, profile,
+        // residency, usage, and the two purchase/payment email services).
+        // Covered since: backstage — the two irreversible admin actions — plus
+        // curve templates, taxonomy, library and version history, each verified
+        // by removing its ownership filter and watching the suite go red.
+        //
+        // app/api went 0 → 43 with the six route suites; what remains uncovered
+        // there is mostly the smart-order Claude path, which needs a recorded
+        // conversation rather than a guard test.
+        "services/**": {
+          statements: 32,
+          branches: 24,
+          functions: 43,
+          lines: 32,
+        },
         "app/api/**": { statements: 46, branches: 40, functions: 39, lines: 46 },
       },
     },
