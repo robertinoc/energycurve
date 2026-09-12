@@ -58,7 +58,7 @@ Estado: ✅ cumple · ⚠️ parcial · ❌ brecha · ⬜ depende de una acción
 | 24/25 | Responsabilidad y privacidad desde el diseño | ⚠️ | `privacy-by-design.md`; el link público sigue activo por defecto |
 | 28 | Encargados | ⬜ | Inventario y página publicados; **DPAs sin firmar** |
 | 30 | Registro de actividades | ✅ | `ropa.md`, verificado por test |
-| 32 | Seguridad del tratamiento | ⚠️ | Fuerte en app; **backups y restauración sin probar**, sin alertas activas |
+| 32 | Seguridad del tratamiento | ⚠️ | Medidas y evidencia en [`security-measures.md`](security-measures.md), con un test que verifica que cada archivo citado exista. **La restauración de backups nunca se ejecutó** — un backup que nadie restauró es una hipótesis, no un control |
 | 33/34 | Notificación de brechas | ⚠️ | Procedimiento y plantilla escritos; **sin ensayar** y con bus factor 1 |
 | 35 | DPIA | ✅ | Screening documentado: no requerida |
 | 37 | DPO | ✅ | No requerido, razonado |
