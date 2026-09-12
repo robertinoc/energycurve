@@ -1,5 +1,21 @@
 import { defineConfig, devices } from "@playwright/test"
 
+import {
+  accountFor,
+  storageStatePath,
+  type TestPlan,
+} from "./e2e/helpers/accounts"
+
+/**
+ * The four public projects run every spec except the two kinds that need a
+ * session. Without this they would each pick up the authenticated specs and
+ * run them signed out, where every one would fail on a redirect to /login and
+ * say nothing about the product.
+ */
+const PUBLIC_IGNORES = [/auth\.setup\.ts/, /\.auth\.spec\.ts/]
+
+const AUTH_PLANS: TestPlan[] = ["free", "pro", "proPlus"]
+
 /**
  * End-to-end coverage of the surface a visitor can reach without an account.
  *
@@ -17,9 +33,21 @@ import { defineConfig, devices } from "@playwright/test"
  * health probe, and the redirect that protects the dashboard — now run on every
  * PR, before a deploy rather than after one.
  *
- * The authenticated flow (import → analyse → fix → export) stays a manual row in
- * the tracker. Covering it needs a seeded test account and a way to sign in without
- * WorkOS, which is a real piece of work rather than a config change.
+ * ## The authenticated half (2026-09-12)
+ *
+ * The scaffolding for it now exists: a `setup` project signs in once per plan
+ * and caches the session, and three `auth-*` projects run the specs that need
+ * one. What it still needs is the accounts themselves, which are created by
+ * hand once — signup is a WorkOS flow with email verification in the middle,
+ * and automating that would tie every CI run to somebody's inbox.
+ *
+ * Until `.env.e2e.local` exists, those projects **skip with a stated reason**
+ * rather than fail or pass. All three outcomes were available and only one is
+ * honest: failing would paint CI red on every machine without the credentials
+ * until people stopped reading the colour, and passing would put a green tick
+ * over tests that never ran — the exact shape of the two injected defects this
+ * audit failed to catch, where the instrument reported on itself instead of on
+ * the product.
  */
 /**
  * Dedicated by default so a dev server on the app's usual port is neither
@@ -59,19 +87,61 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: PUBLIC_IGNORES,
     },
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
+      testIgnore: PUBLIC_IGNORES,
     },
     {
       name: "firefox",
       use: { ...devices["Desktop Firefox"] },
+      testIgnore: PUBLIC_IGNORES,
     },
     {
       name: "mobile-safari",
       use: { ...devices["iPhone 15"] },
+      testIgnore: PUBLIC_IGNORES,
     },
+
+    /**
+     * Signs in once per plan and caches the session. A setup *project* rather
+     * than `globalSetup` so a broken login is a named red row in the report
+     * instead of a crash before the run starts.
+     */
+    {
+      name: "setup",
+      testMatch: /auth\.setup\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+
+    /**
+     * The authenticated suite: one project per plan, because what separates
+     * FREE from PRO from PRO+ is which gates open, and a single signed-in
+     * session could only ever test one side of each.
+     *
+     * Chromium only, deliberately. The public suite runs four engines because
+     * its findings were rendering and platform bugs; these assert on gating and
+     * data ownership, which are server decisions and identical in every
+     * browser. Running them four times would quadruple CI for no new
+     * information. The one authenticated flow with a known platform-specific
+     * failure — the export download on iOS — belongs in `mobile-safari` and
+     * gets added there when it is written, rather than fanning out everything.
+     *
+     * `storageState` is only wired when the account exists. Pointing it at a
+     * file that was never written makes Playwright throw while building the
+     * context, which would report a missing credential as a broken browser.
+     */
+    ...AUTH_PLANS.map((plan) => ({
+      name: `auth-${plan}`,
+      testMatch: /\.auth\.spec\.ts/,
+      dependencies: ["setup"],
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: accountFor(plan) ? storageStatePath(plan) : undefined,
+      },
+    })),
   ],
 
   webServer: {
