@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 import { logError } from "@/lib/observability/logger"
 import { isSuspended, SUSPENDED_RESPONSE } from "@/lib/auth/suspension"
-import { checkRateLimit } from "@/lib/rate-limit"
+import { consumeRateLimit } from "@/services/rate-limit-service"
 import { buildAccountExport } from "@/services/data-export-service"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 
@@ -42,7 +42,7 @@ export async function GET() {
     })
   }
 
-  const rate = await checkRateLimit({
+  const rate = await consumeRateLimit({
     key: `account-export:${profile.id}`,
     limit: 3,
     windowMs: 60 * 60_000,

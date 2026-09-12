@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 import { getBillingConfig } from "@/lib/billing/config"
 import { logError } from "@/lib/observability/logger"
-import { checkRateLimit } from "@/lib/rate-limit"
+import { consumeRateLimit } from "@/services/rate-limit-service"
 import { getProfileBilling } from "@/services/billing-service"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 })
   }
 
-  const rate = await checkRateLimit({
+  const rate = await consumeRateLimit({
     key: `billing-portal:${user.id}`,
     limit: 10,
     windowMs: 60_000,

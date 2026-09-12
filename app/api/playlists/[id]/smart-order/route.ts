@@ -12,7 +12,7 @@ import { classifyFailure } from "@/lib/smart-order/classify-failure"
 import type { SmartOrderFallbackReason } from "@/lib/smart-order/stream"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { isSuspended, SUSPENDED_RESPONSE } from "@/lib/auth/suspension"
-import { checkRateLimit } from "@/lib/rate-limit"
+import { consumeRateLimit } from "@/services/rate-limit-service"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { quotaFor } from "@/lib/product/capabilities"
 import {
@@ -376,7 +376,7 @@ export async function POST(
     return NextResponse.json({ error: "not_analyzable" }, { status: 422 })
   }
 
-  const rate = await checkRateLimit({
+  const rate = await consumeRateLimit({
     key: `smart-order:${profile.id}`,
     limit: 6,
     windowMs: 5 * 60_000,

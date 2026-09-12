@@ -97,10 +97,16 @@ describe("what the document promises about its own limits", () => {
     // counting the person. The document has to say which of the two it means,
     // because a threshold written against the old meaning now fires earlier —
     // correctly, but surprisingly.
-    const source = readFileSync(join(process.cwd(), "lib/rate-limit.ts"), "utf8")
+    // Two files since the architecture review moved the query into services/,
+    // where this codebase keeps database access: lib/ holds the pure half.
+    const pure = readFileSync(join(process.cwd(), "lib/rate-limit.ts"), "utf8")
+    const query = readFileSync(
+      join(process.cwd(), "services/rate-limit-service.ts"),
+      "utf8"
+    )
 
-    expect(source).not.toMatch(/new Map|Map</)
-    expect(source).toMatch(/consume_rate_limit/)
+    expect(pure).not.toMatch(/new Map|Map</)
+    expect(query).toMatch(/consume_rate_limit/)
     expect(DOC).toMatch(/rate_limit_buckets/)
   })
 })

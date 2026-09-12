@@ -21,7 +21,7 @@ import {
   sendTransactionalEmail,
 } from "@/lib/email/send-email"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
-import { checkRateLimit } from "@/lib/rate-limit"
+import { consumeRateLimit } from "@/services/rate-limit-service"
 
 const RESET_REQUEST_LIMIT = { limit: 5, windowMs: 15 * 60_000 }
 
@@ -85,7 +85,7 @@ export async function forgotPasswordAction(formData: FormData) {
     redirect("/forgot-password?error=unavailable")
   }
 
-  const { allowed } = await checkRateLimit({
+  const { allowed } = await consumeRateLimit({
     key: `password-reset:${email}`,
     limit: RESET_REQUEST_LIMIT.limit,
     windowMs: RESET_REQUEST_LIMIT.windowMs,

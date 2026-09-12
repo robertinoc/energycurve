@@ -20,7 +20,10 @@ vi.mock("@/lib/observability/logger", () => ({
   logWarn: vi.fn(),
 }))
 
-const { checkRateLimit, windowStart } = await import("@/lib/rate-limit")
+const { windowStart } = await import("@/lib/rate-limit")
+// The query moved to services/ in the architecture review: services own database
+// access here, and the IDOR audit leans on that being true without exceptions.
+const { consumeRateLimit } = await import("@/services/rate-limit-service")
 
 const HOUR = 60 * 60_000
 
@@ -44,7 +47,7 @@ describe("windowStart", () => {
 describe("counting", () => {
   it("allows up to the limit and refuses after it", async () => {
     const call = () =>
-      checkRateLimit({ key: "export:dj", limit: 3, windowMs: HOUR, now: 1_000 })
+      consumeRateLimit({ key: "export:dj", limit: 3, windowMs: HOUR, now: 1_000 })
 
     expect((await call()).allowed).toBe(true)
     expect((await call()).allowed).toBe(true)
@@ -57,9 +60,9 @@ describe("counting", () => {
     // second instance sees what the first one did. This is the assertion the
     // in-memory limiter could never have passed.
     const serverA = () =>
-      checkRateLimit({ key: "export:dj", limit: 2, windowMs: HOUR, now: 5_000 })
+      consumeRateLimit({ key: "export:dj", limit: 2, windowMs: HOUR, now: 5_000 })
     const serverB = () =>
-      checkRateLimit({ key: "export:dj", limit: 2, windowMs: HOUR, now: 5_050 })
+      consumeRateLimit({ key: "export:dj", limit: 2, windowMs: HOUR, now: 5_050 })
 
     expect((await serverA()).allowed).toBe(true)
     expect((await serverB()).allowed).toBe(true)
@@ -67,9 +70,9 @@ describe("counting", () => {
   })
 
   it("keeps one person's budget away from another's", async () => {
-    await checkRateLimit({ key: "export:a", limit: 1, windowMs: HOUR, now: 0 })
+    await consumeRateLimit({ key: "export:a", limit: 1, windowMs: HOUR, now: 0 })
 
-    const other = await checkRateLimit({
+    const other = await consumeRateLimit({
       key: "export:b",
       limit: 1,
       windowMs: HOUR,
@@ -81,7 +84,7 @@ describe("counting", () => {
 
   it("starts fresh in the next window", async () => {
     const spend = (now: number) =>
-      checkRateLimit({ key: "export:dj", limit: 1, windowMs: HOUR, now })
+      consumeRateLimit({ key: "export:dj", limit: 1, windowMs: HOUR, now })
 
     expect((await spend(0)).allowed).toBe(true)
     expect((await spend(HOUR - 1)).allowed).toBe(false)
@@ -92,7 +95,7 @@ describe("counting", () => {
     // Retry-After has to name the wait that is left. Telling someone to come
     // back in an hour when the bucket resets in ninety seconds is a worse answer
     // than no header.
-    const result = await checkRateLimit({
+    const result = await consumeRateLimit({
       key: "export:dj",
       limit: 1,
       windowMs: HOUR,
@@ -111,7 +114,7 @@ describe("when the database is unreachable", () => {
     // served anyway. Failing closed would turn a database blip into an outage.
     fake.failNext("rate_limit_buckets", "connection refused")
 
-    const result = await checkRateLimit({
+    const result = await consumeRateLimit({
       key: "export:dj",
       limit: 1,
       windowMs: HOUR,
