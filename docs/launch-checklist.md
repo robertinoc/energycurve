@@ -1,73 +1,73 @@
-# Launch Checklist
+# Lanzamiento — estado
 
-Operational steps to take EnergyCurve from "code complete" to production.
-Everything code-side is done (see `docs/roadmap-status.md`); every item
-below is a dashboard/console task for the project owner, in order.
+> **EnergyCurve lanzó.** Está desplegado en `https://energycurve.app`, tiene
+> usuarios alpha y cobra suscripciones. Este documento era una checklist de
+> pre-lanzamiento con 16 casillas sin marcar, y en septiembre de 2026 seguía
+> diciendo cosas como "aplicar la migración `0003`" cuando hay 29 migraciones.
+>
+> Lo detectó la fase F4 de la Auditoría360
+> (`docs/audit360/f4-consolidation-2026-09.md`): para alguien que llega nuevo,
+> el documento afirmaba que el producto no había lanzado. Se reescribió como
+> registro de estado, no como plan.
 
-## 1. Database
+Actualizado: 12/09/2026.
 
-- [ ] Apply migration `supabase/migrations/0003_analyses.sql` in the
-      Supabase SQL Editor (dev project).
-- [ ] Create a **dedicated production Supabase project** and apply all
-      migrations (`0001` → `0003`) there. The free tier pauses after ~1
-      week of inactivity — use a paid plan for production.
+---
 
-## 2. Product analytics (PostHog)
+## Verificado desde afuera, contra producción
 
-- [ ] Create a project at posthog.com (free tier is fine to start).
-- [ ] Set `NEXT_PUBLIC_POSTHOG_KEY` in `.env.local` and in Vercel
-      (all environments). Optional: `NEXT_PUBLIC_POSTHOG_HOST` if using
-      the EU cloud.
-- [ ] Build the three KPI dashboards (all insights use the events the app
-      already sends):
-      1. **Active users** — Insight → Trends → event `$pageview`, counted
-         by *Unique users*, daily; add a second series with *Weekly active
-         users* aggregation.
-      2. **Analyses run** — Insight → Trends → event `analysis_completed`,
-         *Total count*, daily; breakdown by `genre` or `context` for
-         flavor. A second series with `playlist_created` shows the funnel
-         informally.
-      3. **Retention** — Insight → Retention → performed `signup` (first
-         time) then came back to do `analysis_completed`, weekly.
+Comprobado con lecturas pasivas y sin sesión el 12/09/2026. Cualquiera puede
+repetirlo.
 
-## 3. Transactional email (Resend) — required for password reset
+| Qué | Cómo se comprobó |
+|---|---|
+| La aplicación está desplegada y sirve por TLS | `GET https://energycurve.app` → 200 |
+| Headers de seguridad activos | `x-frame-options`, `x-content-type-options`, `referrer-policy`, `permissions-policy`, HSTS y CSP en Report-Only |
+| `/api/health` responde | 200, consultando la base de verdad |
+| Las páginas legales están publicadas | `/privacy`, `/terms`, `/cookie-policy`, `/subprocessors` — en EN y ES |
+| El panel de admin está protegido | `/backstage` sin sesión → 307 a `/login`, con `noindex` |
+| `robots.txt` y el sitemap | Publicados y coherentes |
+| El consentimiento gatea la analítica | Cero referencias a PostHog en el HTML antes de aceptar |
 
-- [ ] Create a Resend account and verify a sending domain.
-- [ ] Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL`
-      (e.g. `EnergyCurve <noreply@yourdomain.com>`) in `.env.local` + Vercel.
-- [ ] Test: `/forgot-password` with a real account email → reset link
-      arrives → new password works on `/login`.
+## Verificado desde el repositorio
 
-## 4. Email verification flag
+| Qué | Dónde |
+|---|---|
+| 29 migraciones versionadas | `supabase/migrations/` |
+| Variables de entorno documentadas | `.env.example`, verificado por `tests/env-example.test.ts` |
+| Pipeline de CI con gates por PR | `.github/workflows/ci.yml` |
+| Despliegue y rollback | `docs/runbooks/deploy-and-rollback.md` |
 
-- [ ] With WorkOS Staging, sign up a test account with
-      `AUTH_REQUIRE_EMAIL_VERIFICATION=true` locally → confirm the WorkOS
-      6-digit code email arrives and `/verify-email` completes signup.
-- [ ] Then set `AUTH_REQUIRE_EMAIL_VERIFICATION=true` in Vercel
-      production. Until then the documented MVP bypass stays active.
+---
 
-## 5. Production environment
+## Lo que sigue abierto
 
-- [ ] Unlock WorkOS **Production** and configure redirect URI
-      (`https://<prod-domain>/auth/callback`) + logout URI.
-- [ ] Set all production env vars in Vercel (WorkOS Production keys,
-      production Supabase URL + service role key, PostHog, Resend, the
-      verification flag).
-- [ ] Re-verify login, signup, playlist flow, and analysis on the deployed
-      production URL (production smoke test — run it together).
+No se puede verificar desde afuera del dashboard, así que se lista sin marcar en
+ninguna dirección — que es distinto de listarlo como pendiente.
 
-## 6. Monitoring
+| # | Qué | Por qué importa |
+|---|---|---|
+| 1 | `CRON_SECRET` en Vercel | Sin eso, las cuatro ventanas de retención no corren nunca |
+| 2 | Migraciones **0027** y **0028** | Verificado el 12/09 contra dev: **no están aplicadas**. Sin ellas no hay log de auditoría ni barrido de análisis |
+| 3 | Región de Supabase | La política de privacidad tuvo que dejar de afirmarla |
+| 4 | Backups: contenido, retención, PITR, y **una restauración probada** | Nunca se ejecutó |
+| 5 | `BACKSTAGE_ADMIN_EMAILS` en Vercel | Hoy producción corre con el fallback del código |
+| 6 | `AUTH_REQUIRE_EMAIL_VERIFICATION` | Confirmar su valor en producción |
+| 7 | Monitor de uptime sobre `/api/health` | Con timeout **> 4 s**: el endpoint llegó a tardar 3,57 s |
+| 8 | Dashboards de KPI en PostHog | Los eventos ya se emiten |
+| 9 | Google Search Console | El código está listo (`GOOGLE_SITE_VERIFICATION`, sitemap, robots); falta reclamar el dominio |
+| 10 | DPAs con los ocho encargados | `docs/compliance/international-transfers.md` §4 |
 
-- [ ] Point an uptime monitor (UptimeRobot, Better Stack, or Vercel
-      checks) at `GET /api/health`. It returns 200 with
-      `{"status":"ok"}` when healthy and 503 when the database is
-      unreachable.
+---
 
-## 7. Post-launch
+## Dónde seguir
 
-- [ ] Collect feedback from the first DJs (KPIs to watch in PostHog:
-      signups, analyses per user, time on the results screen, weekly
-      retention).
-- [ ] Revisit the deferred backlog with real usage data: AI narrative
-      layer on recommendations, analysis history UI, broader E2E test
-      coverage.
+- Desplegar y volver atrás: [`runbooks/deploy-and-rollback.md`](runbooks/deploy-and-rollback.md)
+- Estado por área: [`roadmap-status.md`](roadmap-status.md)
+- Operar el sistema: `runbooks/operations.md` — *llega con el PR #213*
+- Todo lo que produjeron las auditorías: `audit360/evidence-index.md` — *llega
+  con el PR #214*
+
+Los dos últimos se citan sin enlace a propósito: todavía están en revisión, y un
+enlace roto en la página de entrada es exactamente el problema que este
+documento acaba de dejar de tener.
