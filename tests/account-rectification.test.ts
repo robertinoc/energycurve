@@ -41,8 +41,8 @@ vi.mock("@/services/profile-service", () => ({
     lastName: string | null
   ) => updateDisplayName(workosUserId, firstName, lastName),
 }))
-vi.mock("@/lib/rate-limit", () => ({
-  checkRateLimit: async () => ({ allowed: rateLimitAllowed }),
+vi.mock("@/services/rate-limit-service", () => ({
+  consumeRateLimit: async () => ({ allowed: rateLimitAllowed }),
 }))
 vi.mock("@/lib/observability/logger", () => ({
   logError: vi.fn(),

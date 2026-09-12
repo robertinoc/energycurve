@@ -5,7 +5,7 @@ import { createContactFormSchema } from "@/lib/contact-form"
 import { isTrustedOrigin } from "@/lib/http/trusted-origin"
 import { SiteLocale } from "@/lib/content/site-copy"
 import { logError, logWarn } from "@/lib/observability/logger"
-import { checkRateLimit } from "@/lib/rate-limit"
+import { consumeRateLimit } from "@/services/rate-limit-service"
 import { submitContactMessage } from "@/services/contact-service"
 
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   }
 
   const ipAddress = getClientIp(request.headers)
-  const rateLimit = await checkRateLimit({
+  const rateLimit = await consumeRateLimit({
     key: `contact:${ipAddress}`,
     limit: RATE_LIMIT_MAX_REQUESTS,
     windowMs: RATE_LIMIT_WINDOW_MS,

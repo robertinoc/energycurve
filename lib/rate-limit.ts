@@ -1,8 +1,5 @@
 import "server-only"
 
-import { logError } from "@/lib/observability/logger"
-import { getSupabaseAdminClient } from "@/lib/supabase/server"
-
 /**
  * Rate limiting that holds across every server, not just the one you reached.
  *
@@ -10,6 +7,12 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server"
  * instance, resetting on every cold start, so "three exports an hour" really
  * meant "three per instance per hour, until the instance goes away". The limit
  * we advertised was never the limit that applied.
+ *
+ * This file holds only the pure half — window alignment and the result shape —
+ * so it can be tested without a database. The query lives in
+ * `services/rate-limit-service.ts`, because `services/` is where this codebase
+ * keeps database access, and that convention is what lets the IDOR audit say
+ * "we reviewed every service" without an "and also".
  *
  * ## Why the window had to change shape
  *
@@ -34,48 +37,4 @@ export interface RateLimitResult {
 /** Floors a timestamp to the start of its window, the same way on every server. */
 export function windowStart(now: number, windowMs: number): number {
   return Math.floor(now / windowMs) * windowMs
-}
-
-export async function checkRateLimit({
-  key,
-  limit,
-  windowMs,
-  now = Date.now(),
-}: {
-  key: string
-  limit: number
-  windowMs: number
-  /** Injectable for tests; nothing in the app passes it. */
-  now?: number
-}): Promise<RateLimitResult> {
-  const start = windowStart(now, windowMs)
-  const retryAfterMs = start + windowMs - now
-
-  try {
-    const supabase = getSupabaseAdminClient()
-
-    // No row back means the conditional update didn't fire, which is the refusal.
-    // The caller never compares anything: Postgres decided, under the primary
-    // key, so two requests arriving together cannot both see room for one.
-    const { data, error } = await supabase.rpc("consume_rate_limit", {
-      p_key: key,
-      p_window_start: new Date(start).toISOString(),
-      p_limit: limit,
-    })
-
-    if (error) {
-      throw error
-    }
-
-    return { allowed: data !== null, retryAfterMs }
-  } catch (error) {
-    // Fails open, and that is safe for a specific reason rather than as a
-    // general principle: every endpoint behind this limiter needs the same
-    // database to do its work. If the counter can't be written, the thing being
-    // protected can't be served either, so an open limiter grants nothing. A
-    // limiter that fails closed would instead turn a database blip into a
-    // sitewide outage.
-    logError("rate_limit.unavailable", error, { key })
-    return { allowed: true, retryAfterMs }
-  }
 }

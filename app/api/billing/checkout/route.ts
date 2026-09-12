@@ -5,7 +5,7 @@ import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { getBillingConfig, priceIdFor } from "@/lib/billing/config"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { isPlan, type BillingInterval } from "@/lib/product/plans"
-import { checkRateLimit } from "@/lib/rate-limit"
+import { consumeRateLimit } from "@/services/rate-limit-service"
 import {
   attachStripeCustomer,
   getProfileBilling,
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 })
   }
 
-  const rate = await checkRateLimit({
+  const rate = await consumeRateLimit({
     key: `billing-checkout:${user.id}`,
     limit: 10,
     windowMs: 60_000,

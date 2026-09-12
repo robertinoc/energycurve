@@ -10,7 +10,7 @@ import { isSuspended } from "@/lib/auth/suspension"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { logError, logWarn } from "@/lib/observability/logger"
-import { checkRateLimit } from "@/lib/rate-limit"
+import { consumeRateLimit } from "@/services/rate-limit-service"
 import { getRequestLocale } from "@/lib/server-locale"
 import {
   syncProfileFromWorkOSUser,
@@ -86,7 +86,7 @@ export async function updateNameAction(
 
   const locale: SiteLocale = await getRequestLocale()
 
-  const { allowed } = await checkRateLimit({
+  const { allowed } = await consumeRateLimit({
     key: `account-name:${profile.id}`,
     limit: RATE_LIMIT.limit,
     windowMs: RATE_LIMIT.windowMs,

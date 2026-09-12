@@ -12,7 +12,7 @@ import {
 import { persistWorkOSSession } from "@/lib/auth/password-auth"
 import { getSafeReturnTo } from "@/lib/auth/return-to"
 import { logInfo, logWarn } from "@/lib/observability/logger"
-import { checkRateLimit } from "@/lib/rate-limit"
+import { consumeRateLimit } from "@/services/rate-limit-service"
 
 function getFormValue(formData: FormData, key: string) {
   const value = formData.get(key)
@@ -124,7 +124,7 @@ export async function resendVerificationEmailAction(formData: FormData) {
     redirect("/signup?error=signup_failed")
   }
 
-  const { allowed } = await checkRateLimit({
+  const { allowed } = await consumeRateLimit({
     key: `verify-resend:${email}`,
     limit: 3,
     windowMs: 10 * 60_000,

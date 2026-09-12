@@ -17,7 +17,7 @@ import type {
   TaxonomyActionState,
 } from "@/lib/playlists/action-state"
 import { logError, logWarn } from "@/lib/observability/logger"
-import { checkRateLimit } from "@/lib/rate-limit"
+import { consumeRateLimit } from "@/services/rate-limit-service"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
 import { decodeUploadedText } from "@/lib/playlists/decode-upload"
 import type {
@@ -111,7 +111,7 @@ async function rateLimitFailure(
   locale: SiteLocale
 ): Promise<PlaylistActionState | null> {
   const config = RATE_LIMITS[kind]
-  const { allowed } = await checkRateLimit({
+  const { allowed } = await consumeRateLimit({
     key: `playlist-${kind}:${profileId}`,
     limit: config.limit,
     windowMs: config.windowMs,
