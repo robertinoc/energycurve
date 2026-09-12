@@ -1,12 +1,14 @@
 import "server-only"
 
+import { getWorkOS } from "@workos-inc/authkit-nextjs"
+
 import { toSiteLocale } from "@/lib/analysis-locale"
 import {
   DEFAULT_KEY_NOTATION,
   isKeyNotation,
   type KeyNotation,
 } from "@/lib/music/camelot"
-import { logError } from "@/lib/observability/logger"
+import { logError, logInfo } from "@/lib/observability/logger"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import type { Profile, WorkOSUserIdentity } from "@/types/domain"
@@ -165,4 +167,35 @@ export async function getProfileKeyNotation(
     .maybeSingle()
 
   return isKeyNotation(data?.key_notation) ? data.key_notation : DEFAULT_KEY_NOTATION
+}
+
+/**
+ * Rectification (GDPR Art. 16), for the one field a user can actually be wrong
+ * about.
+ *
+ * The name lives **only in WorkOS** — `profiles` stores `workos_user_id` and
+ * `email` and nothing else, so there is no row to update here and no migration
+ * to write. What changes is the identity record, and the next
+ * `syncProfileFromWorkOSUser` picks it up for free.
+ *
+ * Email is deliberately NOT rectifiable through this, and the reason is not
+ * effort. Changing the account email in WorkOS changes the login identity, may
+ * require re-verification, and — per the comment in migration 0023 —
+ * `set_collaborators` is keyed by address, so it silently drops every set
+ * someone shared with you. Shipping that behind a text input would break
+ * something a DJ relies on without saying so. It needs a product decision and a
+ * confirmation screen, not a save button.
+ */
+export async function updateDisplayName(
+  workosUserId: string,
+  firstName: string | null,
+  lastName: string | null
+): Promise<void> {
+  await getWorkOS().userManagement.updateUser({
+    userId: workosUserId,
+    firstName: firstName ?? "",
+    lastName: lastName ?? "",
+  })
+
+  logInfo("profile.name_rectified", { workosUserId })
 }

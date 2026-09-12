@@ -120,8 +120,16 @@ El orden de arreglo importa y no es el que sugiere la numeración:
 | R8 | Decidir: link público opt-in | Art. 25 | decisión |
 
 **R1 es el de mejor relación de todos los proyectos**: dos minutos de trabajo
-que convierten cuatro políticas de retención escritas en cuatro que efectivamente
-corren.
+que convierten cuatro políticas de retención escritas en cuatro que
+efectivamente corren.
+
+Las cuatro ventanas, y cómo llegaron a ser cuatro: `billing_events.payload`
+(90 días), `admin_audit_log.target_email` (365), los blobs de `analyses` (365) y
+`rate_limit_buckets` (1 día, agregada con el limitador distribuido en el PR
+#206). Las tres primeras tienen una obligación detrás; la cuarta es
+housekeeping. La cuarta apareció acá porque `tests/compliance-claims.test.ts` se
+puso en rojo cuando llegó — que es exactamente para lo que está ese test: la
+matriz decía "tres" y el código ya decía cuatro.
 
 ---
 
