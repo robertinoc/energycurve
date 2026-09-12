@@ -4,53 +4,13 @@ import { usePathname, useSearchParams } from "next/navigation"
 import posthog from "posthog-js"
 import { Suspense, useEffect } from "react"
 
-import { analyticsAllowed, readConsent } from "@/lib/privacy/consent"
+import {
+  analyticsRunning,
+  applyConsentToAnalytics,
+} from "@/components/analytics/analytics-runtime"
 import { useConsent } from "@/lib/privacy/use-consent"
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY
-const POSTHOG_HOST =
-  process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com"
-
-let initialized = false
-
-/**
- * Initialises PostHog, but only once the visitor has said yes.
- *
- * The consent check is here rather than at the call sites so there is exactly
- * one place that can get it wrong. Before this, `posthog.init` ran on first
- * paint and set `localStorage+cookie` persistence before anyone was asked —
- * which is the gap this whole change exists to close.
- */
-function ensureInitialized() {
-  if (initialized || !POSTHOG_KEY) {
-    return initialized
-  }
-
-  if (!analyticsAllowed(readConsent())) {
-    return false
-  }
-
-  posthog.init(POSTHOG_KEY, {
-    api_host: POSTHOG_HOST,
-    // Pageviews are captured manually on route change (App Router soft
-    // navigations don't reload the document). Pageleave powers the
-    // "time on results screen" engagement KPI.
-    capture_pageview: false,
-    capture_pageleave: true,
-    persistence: "localStorage+cookie",
-    // Privacy-first defaults: honor the browser's Do Not Track signal,
-    // don't store visitor IPs, and keep autocapture off so we only send
-    // the explicit product events we defined. Lighter payloads and a
-    // cleaner privacy posture for a launched product.
-    respect_dnt: true,
-    ip: false,
-    autocapture: false,
-    disable_session_recording: true,
-  })
-  initialized = true
-
-  return initialized
-}
 
 /**
  * Query-string keys that must never reach analytics.
@@ -95,7 +55,10 @@ function PageviewCapture() {
   const consent = useConsent()
 
   useEffect(() => {
-    if (!analyticsAllowed(consent) || !ensureInitialized() || !pathname) {
+    // Applied rather than merely read: this is the one call that starts the SDK
+    // on yes and tears it down on no, so the vendor's state follows the answer
+    // instead of only our capture calls doing so.
+    if (!applyConsentToAnalytics(consent) || !pathname) {
       return
     }
 
@@ -132,15 +95,21 @@ export function AnalyticsTracker() {
  * distinct id the server-side events use. Mounted on authenticated pages.
  */
 export function AnalyticsIdentify({ profileId }: { profileId: string }) {
+  // Subscribed to consent, which it was not before — and that was the bug. It
+  // asked only whether the SDK was initialised, and after one accepted session
+  // that answer was yes forever, so a visitor who had withdrawn still sent an
+  // identify() the next time they landed on an authenticated page.
+  const consent = useConsent()
+
   useEffect(() => {
-    if (!ensureInitialized()) {
+    if (!analyticsRunning(consent)) {
       return
     }
 
     if (posthog.get_distinct_id() !== profileId) {
       posthog.identify(profileId)
     }
-  }, [profileId])
+  }, [consent, profileId])
 
   return null
 }

@@ -1,10 +1,24 @@
 import type { SiteLocale } from "@/lib/content/site-copy"
 
 /**
- * Placeholder-but-real legal copy for EnergyCurve, bilingual (EN/ES) to match
- * the landing. Reviewed properly in the privacy & compliance pass — until then
- * this is an honest first version reflecting the actual stack (WorkOS, Supabase,
- * PostHog, Resend, Vercel).
+ * Legal copy for EnergyCurve, bilingual (EN/ES) to match the landing.
+ *
+ * This used to open by calling itself a placeholder. It no longer does, and the
+ * difference is not tone: the privacy policy now names a **legal basis** for
+ * each processing activity (Art. 6), the **retention period** for each kind of
+ * data (Art. 13(2)(a)), the full list of rights including the two that are
+ * self-serve, and the **right to complain to a supervisory authority**
+ * (Art. 77). Those were the four things missing, and each is checkable rather
+ * than a matter of wording.
+ *
+ * One claim was **removed** rather than added. The old text said "Supabase
+ * (EU region)". Nobody has confirmed the region — it is item R3 on the
+ * remediation plan and can only be read off the dashboard — so the sentence was
+ * an unverified statement of fact in a document people are entitled to rely on.
+ * It comes back when it is confirmed, not before.
+ *
+ * `docs/compliance/ropa.md` is the working record behind this copy; where the
+ * two disagree, the RoPA is what was measured.
  */
 
 export type LegalDocId = "privacy" | "terms" | "cookies" | "subprocessors"
@@ -30,8 +44,8 @@ const OPERATOR = "StageLink LLC"
  * names new subprocessors under a stale date is worse than no date at all.
  */
 const UPDATED = {
-  en: "Last updated: August 2026",
-  es: "Última actualización: agosto 2026",
+  en: "Last updated: September 2026",
+  es: "Última actualización: septiembre 2026",
 }
 
 const en: Record<LegalDocId, LegalDoc> = {
@@ -66,16 +80,44 @@ const en: Record<LegalDocId, LegalDoc> = {
       {
         heading: "Who processes it",
         body: [
-          "WorkOS (authentication), Supabase (database, EU region), PostHog (product analytics), Resend (transactional email), and Vercel (hosting). Each processes data only to provide their part of the service.",
+          "WorkOS (authentication), Supabase (database), PostHog (product analytics), Resend (transactional email), and Vercel (hosting). Each processes data only to provide their part of the service. Most are in the United States; the full list, with what each one receives, is on our Subprocessors page.",
           "Anthropic, when you use AI-assisted set ordering. Only the track metadata described above is sent — never your audio. Anthropic does not train its models on this data.",
           "GetSongBPM, only when you choose to look up a track by name. The artist and title are sent so they can return the BPM and key they hold for it. Never your audio — that feature exists precisely for tracks whose files you don't have.",
           "Stripe, if you subscribe to a paid plan. Stripe handles the payment and stores the card details; we never see your full card number. The charge is processed by StageLink LLC.",
         ],
       },
       {
+        heading: "Why we are allowed to process it",
+        body: [
+          "Running your account and storing your sets: because you asked us to — it is what the service is, and we cannot provide it otherwise (performance of a contract).",
+          "Billing, if you subscribe: the same reason, plus the tax and accounting records we are legally required to keep.",
+          "Keeping the service secure — rate limits, audit records of administrative actions, error reports: our legitimate interest in a product that is not trivially abused, balanced against the fact that none of it profiles you.",
+          "Product analytics, the AI reordering suggestion, and track lookup by title: your consent, given per feature. You can withdraw any of them at any time, and withdrawing is one click in the same place you gave it.",
+        ],
+      },
+      {
+        heading: "How long we keep it",
+        body: [
+          "Your account, sets and tracks: for as long as the account exists. Delete the account and they go with it.",
+          "Payment records: Stripe event payloads are stripped after 90 days, and immediately if you delete your account. The records Stripe itself must keep for tax purposes are outside our control.",
+          "Analyses: the score and date stay while the account does; the detailed breakdown is dropped after a year, because nothing in the product reads it after the day it was produced.",
+          "Records of administrative actions on an account: the action is kept, and the email attached to it is removed after a year.",
+        ],
+      },
+      {
         heading: "Your rights",
         body: [
-          `You can request access to, correction of, or deletion of your data at any time by writing to ${CONTACT_EMAIL}.`,
+          "Access and portability: download everything we hold about you, as JSON, from your account page. No request needed.",
+          "Correction: change your name from the same page. To change your email, write to us — it is also your login, and sets shared with you are matched by address.",
+          "Deletion, restriction, and objection: write to us and we will act within 30 days. Deleting your account removes it from our database and from our authentication provider, along with your sets, tracks, analyses and versions.",
+          "Withdrawing consent: the cookie banner and the Cookie Policy page both let you change your answer, and withdrawing takes effect immediately — including telling our analytics provider to forget the identifier it held.",
+          `Any of these can also be exercised by writing to ${CONTACT_EMAIL}.`,
+        ],
+      },
+      {
+        heading: "If you think we got it wrong",
+        body: [
+          "You can complain to a data protection authority. In the EU or the UK that is the regulator where you live; in Argentina it is the Agencia de Acceso a la Información Pública. We would rather you told us first, but you are not required to.",
         ],
       },
       {
@@ -254,16 +296,44 @@ const es: Record<LegalDocId, LegalDoc> = {
       {
         heading: "Quién los procesa",
         body: [
-          "WorkOS (autenticación), Supabase (base de datos, región UE), PostHog (analítica de producto), Resend (email transaccional) y Vercel (hosting). Cada uno procesa datos solo para brindar su parte del servicio.",
+          "WorkOS (autenticación), Supabase (base de datos), PostHog (analítica de producto), Resend (email transaccional) y Vercel (hosting). Cada uno procesa datos solo para brindar su parte del servicio. La mayoría están en Estados Unidos; la lista completa, con qué recibe cada uno, está en nuestra página de Sub-encargados.",
           "Anthropic, cuando usás el ordenamiento de sets asistido por IA. Sólo se envía la metadata de los tracks descrita arriba — nunca tu audio. Anthropic no entrena sus modelos con estos datos.",
           "GetSongBPM, sólo cuando elegís buscar un tema por nombre. Se manda el artista y el título para que devuelvan el BPM y la tonalidad que tengan. Nunca tu audio — esa función existe justamente para los temas de los que no tenés el archivo.",
           "Stripe, si contratás un plan pago. Stripe procesa el pago y guarda los datos de la tarjeta; nosotros nunca vemos el número completo. El cobro lo procesa StageLink LLC.",
         ],
       },
       {
+        heading: "Por qué podemos tratarlos",
+        body: [
+          "Tener tu cuenta y guardar tus sets: porque nos lo pediste — es en qué consiste el servicio y no podríamos darlo de otra forma (ejecución de un contrato).",
+          "Facturación, si te suscribís: lo mismo, más los registros fiscales y contables que estamos obligados a conservar.",
+          "Mantener el servicio seguro — límites de uso, registro de acciones administrativas, reportes de error: nuestro interés legítimo en un producto que no sea trivialmente abusable, balanceado contra el hecho de que nada de eso te perfila.",
+          "Analítica de producto, la sugerencia de reordenamiento con IA, y la búsqueda de tracks por título: tu consentimiento, dado por función. Podés retirar cualquiera cuando quieras, y retirarlo es un clic en el mismo lugar donde lo diste.",
+        ],
+      },
+      {
+        heading: "Cuánto tiempo los guardamos",
+        body: [
+          "Tu cuenta, tus sets y tus tracks: mientras exista la cuenta. Si la borrás, se van con ella.",
+          "Registros de pago: los payloads de los eventos de Stripe se limpian a los 90 días, y de inmediato si borrás tu cuenta. Los registros que Stripe debe conservar por obligación fiscal quedan fuera de nuestro control.",
+          "Análisis: el puntaje y la fecha quedan mientras exista la cuenta; el detalle se descarta al año, porque nada del producto lo lee después del día en que se generó.",
+          "Registro de acciones administrativas sobre una cuenta: la acción se conserva, y el email asociado se borra al año.",
+        ],
+      },
+      {
         heading: "Tus derechos",
         body: [
-          `Podés solicitar acceso, corrección o eliminación de tus datos cuando quieras escribiendo a ${CONTACT_EMAIL}.`,
+          "Acceso y portabilidad: descargá todo lo que tenemos sobre vos, en JSON, desde la página de tu cuenta. No hace falta pedirlo.",
+          "Rectificación: cambiá tu nombre desde esa misma página. Para cambiar el email, escribinos — también es tu usuario, y los sets compartidos con vos se asocian por dirección.",
+          "Supresión, limitación y oposición: escribinos y actuamos dentro de los 30 días. Borrar tu cuenta la elimina de nuestra base y de nuestro proveedor de identidad, junto con tus sets, tracks, análisis y versiones.",
+          "Retirar el consentimiento: el banner y la página de Política de cookies te dejan cambiar tu respuesta, y retirarlo tiene efecto inmediato — incluso decirle a nuestro proveedor de analítica que olvide el identificador que tenía.",
+          `Cualquiera de estos también se ejerce escribiendo a ${CONTACT_EMAIL}.`,
+        ],
+      },
+      {
+        heading: "Si creés que nos equivocamos",
+        body: [
+          "Podés reclamar ante una autoridad de protección de datos. En la UE o el Reino Unido es el regulador de donde vivas; en Argentina es la Agencia de Acceso a la Información Pública. Preferiríamos que nos lo cuentes primero, pero no estás obligado.",
         ],
       },
       {
