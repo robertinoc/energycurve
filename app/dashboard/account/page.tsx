@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { Download, MessageSquare } from "lucide-react"
 
+import { NameForm } from "@/components/dashboard/name-form"
 import { PlanCard } from "@/components/dashboard/plan-card"
 import { LandingContactForm } from "@/components/marketing/landing-contact-form"
 import { buildReturnToHref } from "@/lib/auth/return-to"
@@ -100,6 +101,12 @@ export default async function AccountPage() {
             hint={COPY.keyNotationHint[locale]}
           />
         </dl>
+
+        <NameForm
+          locale={locale}
+          defaultFirstName={user.firstName ?? ""}
+          defaultLastName={user.lastName ?? ""}
+        />
       </section>
 
       <section className="space-y-3">

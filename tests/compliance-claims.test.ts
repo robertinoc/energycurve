@@ -74,12 +74,14 @@ describe("Art. 5(1)(e) — retention is written and not running", () => {
   it("names every window the code implements", () => {
     const retention = source("services/retention-service.ts")
 
-    // Three constants, three windows. A fourth sweep landing without a line in
-    // the matrix is exactly the drift this file exists to catch.
+    // One constant per window. A sweep landing without a line in the matrix is
+    // exactly the drift this file exists to catch — and it already caught one:
+    // the distributed rate limiter (PR #206) brought a fourth while the matrix
+    // still said three.
     const windows = [...retention.matchAll(/export const (\w+_RETENTION_DAYS)/g)]
 
-    expect(windows).toHaveLength(3)
-    expect(MATRIX).toMatch(/tres ventanas/i)
+    expect(windows).toHaveLength(4)
+    expect(MATRIX).toMatch(/cuatro ventanas/i)
   })
 
   it("still depends on a secret that is checked before anything is deleted", () => {

@@ -1007,6 +1007,36 @@ export const DASHBOARD_COPY = {
     detailsHeading: { en: "Details", es: "Datos" },
     nameLabel: { en: "Name", es: "Nombre" },
     emailLabel: { en: "Email", es: "Email" },
+    // Rectification (Art. 16). Name only — see app/dashboard/account/actions.ts
+    // for why the email is not editable here.
+    nameEditHeading: { en: "Change your name", es: "Cambiá tu nombre" },
+    nameEditHint: {
+      en: "This is the name on your account. Leave both fields empty to remove it.",
+      es: "Es el nombre de tu cuenta. Dejá los dos campos vacíos para sacarlo.",
+    },
+    firstNameLabel: { en: "First name", es: "Nombre" },
+    lastNameLabel: { en: "Last name", es: "Apellido" },
+    nameSave: { en: "Save", es: "Guardar" },
+    nameSaving: { en: "Saving…", es: "Guardando…" },
+    nameSaved: { en: "Name updated.", es: "Nombre actualizado." },
+    nameInvalid: {
+      en: "A name can be at most 80 characters per field.",
+      es: "Cada campo del nombre puede tener como máximo 80 caracteres.",
+    },
+    nameFailed: {
+      en: "We couldn't save that. Try again in a moment.",
+      es: "No pudimos guardarlo. Probá de nuevo en un momento.",
+    },
+    nameRateLimited: {
+      en: "Too many changes in a row. Try again later.",
+      es: "Demasiados cambios seguidos. Probá más tarde.",
+    },
+    // The email is deliberately not editable. Saying why, where someone looks
+    // for the control, beats letting them conclude it was forgotten.
+    emailChangeNote: {
+      en: "To change your email, write to us — it is also your login, and sets shared with you are matched by address.",
+      es: "Para cambiar tu email, escribinos — también es tu usuario, y los sets compartidos con vos se asocian por dirección.",
+    },
     languageLabel: { en: "Language", es: "Idioma" },
     keyNotationLabel: { en: "Key notation", es: "Notación de key" },
     keyNotationHint: {
