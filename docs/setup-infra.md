@@ -41,8 +41,16 @@ Recommended setup:
 
 | Surface | WorkOS environment | Supabase project | Base URL |
 | --- | --- | --- | --- |
-| Local development | `Staging` | Dev project | `http://localhost:3010` |
-| Vercel production | `Production` | Production project | `https://energycurve.app` |
+| Local development | `Staging` | `djoutoutkukpjrdgjqkb` (dev) | `http://localhost:3010` |
+| Vercel production | `Production` | `iwzkzybzadsmnwilcity` (prod) | `https://energycurve.app` |
+
+The refs are named here rather than left as "dev project" and "production
+project", which is how this table read until 11/09/2026. The abstraction cost
+more than it saved: the Supabase dashboard shows a green **`main PRODUCTION`**
+badge on *both* projects — it labels the `main` branch, not the environment — so
+an operator with no ref to check against has no reliable way to tell which one
+they are looking at. It has already caused the same migration to be run twice in
+dev. Operational detail in [`runbooks/operations.md`](runbooks/operations.md).
 
 Why this split matters:
 

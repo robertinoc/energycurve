@@ -175,7 +175,18 @@ describe("V2 score calibration", () => {
     ).toBe(true)
   })
 
-  it("orders the real PRIDE - BOUNCE set harmonically like a fine DJ would (V4 regression)", () => {
+  /**
+   * Explicit timeout because this one is CPU-bound and its runtime is not stable
+   * under load: 698 ms on an idle machine, measured at 6,080 ms while the same
+   * machine was busy — past vitest's 5,000 ms default. It failed twice on
+   * 11-12/09/2026 and passed on every re-run, which is the worst shape a test
+   * can have: CI turns red for a reason that isn't in the diff, and everyone
+   * learns to press the button again instead of reading it.
+   *
+   * The number is not padding for a slow test. It is headroom for a 24-track
+   * harmonic reorder competing for a core with a four-browser Playwright job.
+   */
+  it("orders the real PRIDE - BOUNCE set harmonically like a fine DJ would (V4 regression)", { timeout: 20_000 }, () => {
     // The 38 real tracks (bpm / numeric MUSICAL_KEY / perceived dB) from the
     // production NML. Claude.ai ordered this set by Camelot compatibility and
     // Robertino rated that ordering "very fine" — this fixture asserts the
