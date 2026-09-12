@@ -45,7 +45,7 @@ interface AdminAction {
   detail?: Record<string, unknown>
 }
 
-const recordAdminAction = vi.fn(async (_action: AdminAction) => undefined)
+const recordAdminAction = vi.fn(async (action: AdminAction) => void action)
 const sweepBillingPayloads = vi.fn(async () => ({ scrubbed: 0 }))
 
 vi.mock("@/lib/supabase/server", () => ({
