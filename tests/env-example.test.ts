@@ -24,6 +24,9 @@ const NOT_OURS = new Set([
   "VERCEL",
   "VERCEL_ENV",
   "VERCEL_URL",
+  // Injected by Vercel on every deploy. Used as the Sentry release so an issue
+  // names the commit that caused it; absent locally, which is correct.
+  "VERCEL_GIT_COMMIT_SHA",
   "CI",
   "npm_package_version",
 ])

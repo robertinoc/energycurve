@@ -43,7 +43,7 @@ Estado: ✅ cumple · ⚠️ parcial · ❌ brecha · ⬜ depende de una acción
 | 5(1)(b) | Limitación de finalidad | ✅ | Finalidad por tratamiento en el RoPA |
 | 5(1)(c) | Minimización | ⚠️ | Dos hallazgos: blobs de `analyses` (resuelto), `plan_cancellation_feedback` (decisión pendiente) |
 | 5(1)(d) | Exactitud | ❌ | **No hay rectificación self-serve.** Ni nombre ni mail se pueden editar |
-| 5(1)(e) | Limitación de conservación | ⬜ | Cuatro ventanas implementadas y **ninguna corre**: falta `CRON_SECRET` |
+| 5(1)(e) | Limitación de conservación | ⬜ | **Cuatro** ventanas implementadas y **ninguna corre**: falta `CRON_SECRET`. La cuarta (`rate_limit_buckets`, 1 día, migración 0029) es housekeeping y no lleva obligación detrás — las otras tres sí |
 | 5(1)(f) | Integridad y confidencialidad | ✅ | Art. 32, abajo |
 | 5(2) | Responsabilidad proactiva | ✅ | Este dossier, y con tests que lo verifican |
 | 6 | Base legal | ⚠️ | Identificable por tratamiento en el RoPA, **no declarada al usuario** |
@@ -111,13 +111,45 @@ El orden de arreglo importa y no es el que sugiere la numeración:
 | # | Qué | Cierra | Costo |
 |---|---|---|---|
 | R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **cuatro ventanas escritas y ninguna corriendo** | 2 min |
-| R2 | Migraciones 0027 y 0028 | auditoría y retención | 5 min |
+| R2 | **0027 y 0028 SIN aplicar en dev** (verificado 12/09/2026) · 0029 sí | auditoría y retención de análisis | 5 min |
 | R3 | Confirmar región de Supabase | 5(1)(a) — hoy la política puede estar diciendo algo falso | 2 min |
 | R4 | Aceptar los DPAs | Art. 28 | 1 hora |
 | R5 | Acceso de emergencia delegado | Art. 32 — bus factor 1 | 1 tarde |
 | R6 | Probar una restauración de backup | Art. 32 | 1 tarde |
 | R7 | Decidir: borrado self-serve | Art. 17 | decisión + ~1 día de build |
 | R8 | Decidir: link público opt-in | Art. 25 | decisión |
+
+### Estado real de las migraciones, medido y no asumido
+
+Consultado contra la base de **dev** por PostgREST el 12/09/2026:
+
+| Migración | Qué trae | dev | producción |
+|---|---|---|---|
+| 0027 | `admin_audit_log` | ❌ la tabla no existe | sin verificar |
+| 0028 | `curve`, `issues` y `breakdown` nullable en `analyses` | ❌ los tres siguen `not null` | sin verificar |
+| 0029 | `rate_limit_buckets` | ✅ presente | reportada como corrida |
+
+Una versión anterior de esta fila las daba por aplicadas. No lo estaban, y el
+efecto no es cosmético:
+
+- **El log de auditoría no registra nada.** Cada suspensión y cada borrado emiten
+  `admin_audit.write_failed` a nivel error, y el panel muestra el estado vacío
+  que dice exactamente eso. Degrada como fue diseñado —la acción no se bloquea—
+  pero la garantía de trazabilidad no existe hasta que la migración corra.
+- **`sweepAnalysisBlobs` no puede funcionar**: poner en null tres columnas
+  `not null` falla, y el cron lo atrapa en su propio `try` y lo reporta como
+  `retention.analysis_sweep_failed`.
+
+Se verifica en dos comandos, sin abrir el dashboard:
+
+```
+curl -s -o /dev/null -w "%{http_code}\n" \
+  "$SUPABASE_URL/rest/v1/admin_audit_log?select=id&limit=1" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY"
+```
+
+404 = sin aplicar, 200 = aplicada. Para la 0028, el `required` de `analyses` en
+`GET /rest/v1/` deja de incluir `curve`.
 
 **R1 es el de mejor relación de todos los proyectos**: dos minutos de trabajo
 que convierten cuatro políticas de retención escritas en cuatro que
@@ -126,9 +158,10 @@ efectivamente corren.
 Las cuatro ventanas, y cómo llegaron a ser cuatro: `billing_events.payload`
 (90 días), `admin_audit_log.target_email` (365), los blobs de `analyses` (365) y
 `rate_limit_buckets` (1 día, agregada con el limitador distribuido en el PR
-#206). La cuarta apareció acá porque `tests/compliance-claims.test.ts` se puso
-en rojo cuando llegó — que es exactamente para lo que está ese test: la matriz
-decía "tres" y el código ya decía cuatro.
+#206). Las tres primeras tienen una obligación detrás; la cuarta es
+housekeeping. La cuarta apareció acá porque `tests/compliance-claims.test.ts` se
+puso en rojo cuando llegó — que es exactamente para lo que está ese test: la
+matriz decía "tres" y el código ya decía cuatro.
 
 ---
 

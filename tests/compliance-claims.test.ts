@@ -76,12 +76,16 @@ describe("Art. 5(1)(e) — retention is written and not running", () => {
 
     // One constant per window. A sweep landing without a line in the matrix is
     // exactly the drift this file exists to catch — and it already caught one:
-    // the distributed rate limiter (PR #206) brought a fourth while the matrix
-    // still said three.
+    // the shared rate limiter (PR #206, migration 0029) brought a fourth while
+    // the matrix still said three. A fifth has to update both places again.
+    //
+    // The match is loose on purpose: "cuatro ventanas" and "cuatro (4) ventanas"
+    // are the same claim, and a checker that fails on the phrasing of a sentence
+    // it agrees with gets deleted.
     const windows = [...retention.matchAll(/export const (\w+_RETENTION_DAYS)/g)]
 
     expect(windows).toHaveLength(4)
-    expect(MATRIX).toMatch(/cuatro ventanas/i)
+    expect(MATRIX).toMatch(/cuatro.{0,20}ventanas/i)
   })
 
   it("still depends on a secret that is checked before anything is deleted", () => {
