@@ -5,6 +5,7 @@ import {
   camelotToOpenKey,
   detectKeyNotation,
   formatKey,
+  harmonicMove,
   harmonicTier,
   isCamelot,
   isKeyNotation,
@@ -14,6 +15,7 @@ import {
   musicalKeyValueToOpenKey,
   toCamelot,
 } from "@/lib/music/camelot"
+import { camelotColor } from "@/lib/music/camelot-colors"
 
 describe("toCamelot", () => {
   it("maps minor keys to the A ring", () => {
@@ -343,5 +345,118 @@ describe("key spellings in the wild", () => {
     expect(formatKey("8 a", "camelot")).toBe("8A")
     expect(keySortIndex("8 a")).toBe(keySortIndex("8A"))
     expect(harmonicTier("8 A", "8A")).toBe("perfect")
+  })
+})
+
+/**
+ * Direction on the wheel.
+ *
+ * An alpha user asked whether we account for "Energy Boost y Drop". We modelled
+ * the jump and not its direction — `harmonicTier` took the shorter way round
+ * with `Math.min`, so a two-hour lift and a two-hour release were the same
+ * thing, and the product called both a boost.
+ */
+describe("harmonicMove", () => {
+  it("separates a lift from a release at the same distance", () => {
+    expect(harmonicMove("8A", "10A")).toMatchObject({
+      tier: "boost",
+      direction: "up",
+      steps: 2,
+    })
+    expect(harmonicMove("10A", "8A")).toMatchObject({
+      tier: "boost",
+      direction: "down",
+      steps: -2,
+    })
+  })
+
+  it("separates them on the single-hour moves too", () => {
+    expect(harmonicMove("8A", "9A").direction).toBe("up")
+    expect(harmonicMove("8A", "7A").direction).toBe("down")
+    // Both remain "smooth": direction changes what you hear, not the cost.
+    expect(harmonicMove("8A", "9A").tier).toBe("smooth")
+    expect(harmonicMove("8A", "7A").tier).toBe("smooth")
+  })
+
+  it("takes the shorter way round the wheel", () => {
+    // 12 → 1 is one hour up, not eleven down.
+    expect(harmonicMove("12A", "1A")).toMatchObject({ direction: "up", steps: 1 })
+    expect(harmonicMove("1A", "12A")).toMatchObject({
+      direction: "down",
+      steps: -1,
+    })
+  })
+
+  it("has no direction when nothing moves", () => {
+    expect(harmonicMove("8A", "8A")).toMatchObject({
+      tier: "perfect",
+      direction: "none",
+      steps: 0,
+    })
+    // Relative major/minor: same hour, other ring.
+    expect(harmonicMove("8A", "8B")).toMatchObject({
+      tier: "smooth",
+      direction: "none",
+    })
+  })
+
+  it("reports unknown without inventing a direction", () => {
+    expect(harmonicMove(null, "8A")).toMatchObject({
+      tier: "unknown",
+      direction: "none",
+      steps: 0,
+    })
+    expect(harmonicMove("nonsense", "8A").tier).toBe("unknown")
+  })
+
+  it("leaves every tier exactly as it was", () => {
+    // The tier feeds HARMONY_RULES_V4.tierCosts and therefore the optimizer's
+    // objective. Adding direction must not move a single transition between
+    // tiers, or this became a silent scoring change.
+    for (let n = 1; n <= 12; n += 1) {
+      for (const ring of ["A", "B"] as const) {
+        for (let m = 1; m <= 12; m += 1) {
+          for (const other of ["A", "B"] as const) {
+            const from = `${n}${ring}`
+            const to = `${m}${other}`
+            expect(harmonicMove(from, to).tier, `${from}->${to}`).toBe(
+              harmonicTier(from, to)
+            )
+          }
+        }
+      }
+    }
+  })
+})
+
+describe("camelotColor", () => {
+  it("has a colour for all 24 positions", () => {
+    for (let n = 1; n <= 12; n += 1) {
+      for (const ring of ["A", "B"] as const) {
+        expect(camelotColor(`${n}${ring}`), `${n}${ring}`).toMatch(/^#[0-9A-F]{6}$/)
+      }
+    }
+  })
+
+  it("gives the minor ring a darker shade than its major partner", () => {
+    // The structure that makes the wheel readable: same hue, two brightnesses.
+    const luminance = (hex: string) =>
+      Number.parseInt(hex.slice(1, 3), 16) +
+      Number.parseInt(hex.slice(3, 5), 16) +
+      Number.parseInt(hex.slice(5, 7), 16)
+
+    for (let n = 1; n <= 12; n += 1) {
+      expect(
+        luminance(camelotColor(`${n}A`)!),
+        `${n}A vs ${n}B`
+      ).toBeLessThan(luminance(camelotColor(`${n}B`)!))
+    }
+  })
+
+  it("normalises case and whitespace, and refuses a non-key", () => {
+    expect(camelotColor("8a")).toBe(camelotColor("8A"))
+    expect(camelotColor(" 12B ")).toBe(camelotColor("12B"))
+    expect(camelotColor("13A")).toBeNull()
+    expect(camelotColor(null)).toBeNull()
   })
 })

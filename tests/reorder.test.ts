@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 
 import { computeSetScore } from "@/lib/engine/analysis"
-import { optimizeOrder } from "@/lib/engine/reorder"
+import { optimizeOrder, REORDER_MAX_TRACKS } from "@/lib/engine/reorder"
+import { suggestReorder } from "@/lib/engine/recommendations"
 import type { ResolvedTrackEnergy } from "@/types/analysis"
 
 function energiesFrom(scores: number[]): ResolvedTrackEnergy[] {
@@ -134,4 +135,58 @@ describe("optimizeOrder", () => {
 
     expect(orderedScores[orderedScores.length - 1]).toBeGreaterThanOrEqual(8)
   })
+})
+
+/**
+ * The search is 2-opt over a whole-order objective — O(passes · n²) candidate
+ * swaps, each scored in O(n). Measured with keys: 60 tracks 0.5s, 150 tracks
+ * 11.6s, 250 tracks 63s, 400 tracks four minutes. The analysis runs inside a
+ * server render, so past a certain length the page doesn't get slow, it times
+ * out and the DJ gets nothing.
+ */
+describe("length cap on the reorder search", () => {
+  function energies(n: number): ResolvedTrackEnergy[] {
+    return Array.from({ length: n }, (_, i) => ({
+      trackId: `t${i}`,
+      position: i + 1,
+      score: 1 + ((i * 37) % 90) / 10,
+      source: "manual" as const,
+      bpm: 128,
+      camelot: `${((i * 5) % 12) + 1}${i % 2 === 0 ? "A" : "B"}`,
+    }))
+  }
+
+  it("still suggests an order at the cap", () => {
+    expect(
+      suggestReorder(
+        energies(REORDER_MAX_TRACKS),
+        "house",
+        "main",
+        5,
+        "en"
+      )
+    ).not.toBeNull()
+  }, 30_000)
+
+  it("declines past it rather than hanging the render", () => {
+    expect(
+      suggestReorder(
+        energies(REORDER_MAX_TRACKS + 1),
+        "house",
+        "main",
+        5,
+        "en"
+      )
+    ).toBeNull()
+  })
+
+  it("stays inside a server render's budget at the cap", () => {
+    const t0 = performance.now()
+    optimizeOrder(energies(REORDER_MAX_TRACKS), "house", "main", null)
+    const ms = performance.now() - t0
+
+    // Generous ceiling — CI machines vary — but it fails loudly if the cost
+    // at the cap ever climbs back into "the page hangs" territory.
+    expect(ms).toBeLessThan(15_000)
+  }, 60_000)
 })

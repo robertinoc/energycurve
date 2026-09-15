@@ -1,7 +1,12 @@
+"use client"
+
+import { useEffect, useState } from "react"
+
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import type { RatedTransition } from "@/lib/engine/transitions"
+import { camelotColor } from "@/lib/music/camelot-colors"
 import { cn } from "@/lib/utils"
 
 const COPY = DASHBOARD_COPY.transitions
@@ -23,13 +28,51 @@ export function TransitionList({
   const flagged = transitions.filter(
     (transition) => transition.verdict !== "good"
   )
+  const [colored, setColored] = useState(false)
+
+  // Read after mount: localStorage doesn't exist during SSR, so the server and
+  // the first client render must agree on "off" before this syncs in.
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setColored(window.localStorage.getItem(COLOR_KEYS_STORAGE_KEY) === "1")
+    } catch {
+      // Private mode and friends: the preference just doesn't persist.
+    }
+  }, [])
+
+  function toggleColored(next: boolean) {
+    setColored(next)
+    try {
+      window.localStorage.setItem(COLOR_KEYS_STORAGE_KEY, next ? "1" : "0")
+    } catch {
+      // Ignore storage failures — the toggle still works for this session.
+    }
+  }
 
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
-      <h2 className="text-sm font-semibold text-white">{COPY.title[locale]}</h2>
-      <p className="mt-1 text-xs leading-5 text-white/40">
-        {COPY.subtitle[locale]}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-white">
+            {COPY.title[locale]}
+          </h2>
+          <p className="mt-1 text-xs leading-5 text-white/40">
+            {COPY.subtitle[locale]}
+          </p>
+        </div>
+        {flagged.length > 0 ? (
+          <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-[11px] text-white/45 hover:text-white/70">
+            <input
+              type="checkbox"
+              checked={colored}
+              onChange={(event) => toggleColored(event.target.checked)}
+              className="size-3.5 accent-[#A24DE0]"
+            />
+            {COPY.colorKeys[locale]}
+          </label>
+        ) : null}
+      </div>
 
       {flagged.length === 0 ? (
         <p className="mt-3 text-sm text-white/56">{COPY.allGood[locale]}</p>
@@ -43,6 +86,15 @@ export function TransitionList({
               <span className="tabular-nums text-white/40">
                 {transition.fromPosition} → {transition.toPosition}
               </span>
+              {/* The keys themselves: "keys clash" is more useful when it says
+                  which two. */}
+              {transition.fromCamelot || transition.toCamelot ? (
+                <span className="flex items-baseline gap-1 font-mono text-[11px]">
+                  <KeyChip code={transition.fromCamelot} colored={colored} />
+                  <span className="text-white/28">→</span>
+                  <KeyChip code={transition.toCamelot} colored={colored} />
+                </span>
+              ) : null}
               <span
                 className={cn(
                   "text-[10px] font-semibold uppercase tracking-wide",
@@ -72,6 +124,33 @@ export function TransitionList({
   )
 }
 
+const COLOR_KEYS_STORAGE_KEY = "ec:transitions:color-keys"
+
+function KeyChip({
+  code,
+  colored,
+}: {
+  code: string | null
+  colored: boolean
+}) {
+  if (!code) {
+    return <span className="text-white/28">—</span>
+  }
+
+  const color = colored ? camelotColor(code) : null
+
+  return (
+    <span
+      // Colour goes on the text, not a filled pill: a block of saturated colour
+      // next to a verdict would read as the verdict's severity.
+      style={color ? { color } : undefined}
+      className={color ? "font-semibold" : "text-white/70"}
+    >
+      {code}
+    </span>
+  )
+}
+
 /** The shortest true sentence about why this mix was flagged. */
 function reason(transition: RatedTransition, locale: SiteLocale): string {
   const parts: string[] = []
@@ -79,7 +158,11 @@ function reason(transition: RatedTransition, locale: SiteLocale): string {
   if (transition.tier === "clash") {
     parts.push(COPY.tierClash[locale])
   } else if (transition.tier === "boost") {
-    parts.push(COPY.tierBoost[locale])
+    parts.push(
+      transition.direction === "down"
+        ? COPY.tierDrop[locale]
+        : COPY.tierBoost[locale]
+    )
   } else if (transition.tier === "unknown") {
     parts.push(COPY.tierUnknown[locale])
   }

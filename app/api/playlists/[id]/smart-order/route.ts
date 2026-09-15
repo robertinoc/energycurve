@@ -8,12 +8,19 @@ import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { CONTEXT_DISPLAY_NAMES } from "@/lib/content/analysis-copy"
 import { analyzePlaylist } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
+import { optimizeOrder, REORDER_MAX_TRACKS } from "@/lib/engine/reorder"
 import { classifyFailure } from "@/lib/smart-order/classify-failure"
 import type { SmartOrderFallbackReason } from "@/lib/smart-order/stream"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { isSuspended, SUSPENDED_RESPONSE } from "@/lib/auth/suspension"
 import { consumeRateLimit } from "@/services/rate-limit-service"
-import { GENRE_LABELS } from "@/lib/product/strategy"
+import {
+  GENRE_LABELS,
+  parseCurveShape,
+  type CurveShape,
+  type PlaylistContext,
+  type SupportedGenre,
+} from "@/lib/product/strategy"
 import { quotaFor } from "@/lib/product/capabilities"
 import {
   countPlacedIds,
@@ -24,6 +31,7 @@ import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
 import { getProfileBilling } from "@/services/billing-service"
 import { consumeQuota, readQuota } from "@/services/usage-service"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
+import type { ResolvedTrackEnergy } from "@/types/analysis"
 
 export const dynamic = "force-dynamic"
 
@@ -89,7 +97,14 @@ function cacheKey(
 
 /** Local heuristic: ascending energy with two deliberate breathers (the two
  * lowest-energy tracks) re-inserted at ~35% and ~72% of the set. */
-function heuristicOrder(
+/**
+ * Last resort for sets too long to search: ascending energy with two breathers.
+ *
+ * Reads no keys, which is exactly why it is the last resort and not the
+ * fallback. Kept for sets past `REORDER_MAX_TRACKS`, where the alternative is
+ * no order at all.
+ */
+function ascendingEnergyOrder(
   tracks: { id: string; energy: number; position: number }[]
 ): SmartOrderResult {
   const ascending = [...tracks].sort(
@@ -111,6 +126,42 @@ function heuristicOrder(
   }
 
   return { order, rationale: "", breathers, source: "fallback" }
+}
+
+/**
+ * The order used when the model doesn't answer.
+ *
+ * This used to be a pure energy sort that read no keys at all — which meant the
+ * product had two reorder paths, one that weighs harmony and one that ignores
+ * it, and the one that ignores it was the one that ran whenever the other
+ * failed. An alpha user asked whether the reordering respects harmonic
+ * compatibility; the honest answer was "yes, except in the order you are
+ * actually looking at".
+ *
+ * `optimizeOrder` is the same engine behind the analysis suggestions: energy
+ * curve plus a weighted harmonic ratio, and it already degrades to energy-only
+ * when too few tracks have a readable key. Reusing it costs nothing and closes
+ * the gap.
+ */
+function heuristicOrder(
+  tracks: { id: string; energy: number; position: number }[],
+  energies: ResolvedTrackEnergy[],
+  genre: SupportedGenre,
+  context: PlaylistContext,
+  shape: CurveShape | null
+): SmartOrderResult {
+  if (energies.length > REORDER_MAX_TRACKS) {
+    return ascendingEnergyOrder(tracks)
+  }
+
+  const optimized = optimizeOrder(energies, genre, context, shape)
+
+  return {
+    order: optimized.order.map((index) => tracks[index].id),
+    rationale: "",
+    breathers: [],
+    source: "fallback",
+  }
 }
 
 /** Strict permutation check: same ids, nothing missing, nothing extra. */
@@ -374,6 +425,7 @@ export async function POST(
 
   if (!playlist.genre || !playlist.context || playlist.tracks.length < 2) {
     return NextResponse.json({ error: "not_analyzable" }, { status: 422 })
+
   }
 
   const rate = await consumeRateLimit({
@@ -391,6 +443,12 @@ export async function POST(
       }
     )
   }
+
+  // Narrowed once here: the 422 above already proved both are set, but the
+  // closure below is past TypeScript's reach.
+  const genre: SupportedGenre = playlist.genre
+  const context: PlaylistContext = playlist.context
+  const shape: CurveShape | null = parseCurveShape(playlist.target_shape)
 
   const energies = resolveTrackEnergies(
     playlist.tracks,
@@ -503,7 +561,10 @@ export async function POST(
         )
         result = claude.ok
           ? { ...claude.value, source: "claude" }
-          : { ...heuristicOrder(tracks), reason: claude.reason }
+          : {
+              ...heuristicOrder(tracks, energies, genre, context, shape),
+              reason: claude.reason,
+            }
       } catch (error) {
         // An aborted request is the budget doing its job, not a fault — it is
         // logged at info so a genuinely broken key or a schema change stays
@@ -526,7 +587,10 @@ export async function POST(
           })
         }
 
-        result = { ...heuristicOrder(tracks), reason }
+        result = {
+          ...heuristicOrder(tracks, energies, genre, context, shape),
+          reason,
+        }
       }
 
       // Charged on the Claude path only. A fallback to the local heuristic still
