@@ -50,7 +50,13 @@ async function signIn(page: Page, email: string, password: string) {
 
   await page.locator("#login-email").fill(email)
   await page.locator("#login-password").fill(password)
-  await page.getByRole("button", { name: /log in|iniciar/i }).click()
+
+  // The form's submit, not its label. This matched `/log in|iniciar/i` on the
+  // first attempt and found nothing: the button reads "Login", one word, and
+  // is hard-coded rather than localized. Guessing at copy makes the harness
+  // break when someone rewords a button, which is not a thing the harness
+  // should have an opinion about.
+  await page.locator('form button[type="submit"]').click()
 
   // Waiting for the URL rather than for a selector: any dashboard element could
   // be renamed, but "we are no longer on /login" is the actual claim, and a
