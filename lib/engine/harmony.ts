@@ -1,5 +1,11 @@
 import { HARMONY_RULES_V4 } from "@/lib/product/strategy"
-import { harmonicTier, type HarmonicTier } from "@/lib/music/camelot"
+import {
+  harmonicMoveBetween,
+  parseCamelot,
+  toCamelot,
+  type CamelotPosition,
+  type HarmonicTier,
+} from "@/lib/music/camelot"
 
 /**
  * Harmonic read of an ordered set (B18): how many adjacent transitions are
@@ -22,7 +28,26 @@ export interface HarmonyAssessment {
   tiers: HarmonicTier[]
 }
 
+/**
+ * Parses a set of key strings into wheel positions, once.
+ *
+ * The optimizer re-scores the same keys thousands of times while searching;
+ * parsing them per comparison was costing more than the search itself.
+ */
+export function toWheelPositions(
+  keys: Array<string | null>
+): Array<CamelotPosition | null> {
+  return keys.map((key) => parseCamelot(key ? toCamelot(key) : null))
+}
+
 export function assessHarmony(keys: Array<string | null>): HarmonyAssessment {
+  return assessHarmonyPositions(toWheelPositions(keys))
+}
+
+/** `assessHarmony` on already-parsed positions — same result, no re-parsing. */
+export function assessHarmonyPositions(
+  positions: Array<CamelotPosition | null>
+): HarmonyAssessment {
   const costs = HARMONY_RULES_V4.tierCosts
   const tiers: HarmonicTier[] = []
   let knownTransitions = 0
@@ -31,8 +56,8 @@ export function assessHarmony(keys: Array<string | null>): HarmonyAssessment {
   let clashCount = 0
   let totalCost = 0
 
-  for (let i = 1; i < keys.length; i += 1) {
-    const tier = harmonicTier(keys[i - 1], keys[i])
+  for (let i = 1; i < positions.length; i += 1) {
+    const { tier } = harmonicMoveBetween(positions[i - 1], positions[i])
     tiers.push(tier)
 
     if (tier === "unknown") {

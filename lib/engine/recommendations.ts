@@ -19,7 +19,11 @@ import {
   SET_DURATION_GUIDELINE_MINUTES,
 } from "@/lib/engine/analysis"
 import { assessHarmony, type HarmonyAssessment } from "@/lib/engine/harmony"
-import { harmonyApplies, optimizeOrder } from "@/lib/engine/reorder"
+import {
+  harmonyApplies,
+  optimizeOrder,
+  REORDER_MAX_TRACKS,
+} from "@/lib/engine/reorder"
 import type {
   DetectedIssue,
   PlaylistAnalysis,
@@ -148,6 +152,12 @@ export function suggestReorder(
   targetShape: CurveShape | null = null
 ): ReorderSuggestion | null {
   if (energies.length < 2) {
+    return null
+  }
+
+  // Too long to search. See REORDER_MAX_TRACKS: the alternative is not a slow
+  // suggestion, it is a server render that never finishes.
+  if (energies.length > REORDER_MAX_TRACKS) {
     return null
   }
 

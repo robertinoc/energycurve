@@ -15,7 +15,12 @@ import {
   GENRE_TRANSITION_TOLERANCE_V2,
   type SupportedGenre,
 } from "@/lib/product/strategy"
-import { harmonicTier, type HarmonicTier } from "@/lib/music/camelot"
+import {
+  harmonicMove,
+  harmonicTier,
+  type HarmonicDirection,
+  type HarmonicTier,
+} from "@/lib/music/camelot"
 
 export interface TransitionTrack {
   id: string
@@ -33,6 +38,18 @@ export interface RatedTransition {
   toPosition: number
   verdict: TransitionVerdict
   tier: HarmonicTier
+  /**
+   * Which way round the Camelot wheel the move goes.
+   *
+   * Reported because a two-hour jump up lifts a room and a two-hour jump down
+   * releases it, and the product used to call both "an energy-boost jump". It
+   * does not affect the verdict — both are equally mixable, and the tier costs
+   * are unchanged.
+   */
+  direction: HarmonicDirection
+  /** Both keys, so the row can name what clashes instead of only that it does. */
+  fromCamelot: string | null
+  toCamelot: string | null
   /** Energy step, signed. Positive is a lift. */
   delta: number
   /** How far past the genre's comfort the step goes. Zero when inside it. */
@@ -106,7 +123,7 @@ export function rateTransitions(
   for (let i = 0; i < tracks.length - 1; i += 1) {
     const from = tracks[i]
     const to = tracks[i + 1]
-    const tier = harmonicTier(from.camelot, to.camelot)
+    const { tier, direction } = harmonicMove(from.camelot, to.camelot)
     const delta = to.energy - from.energy
     const { verdict, excess } = rateTransition(tier, delta, genre)
 
@@ -115,6 +132,9 @@ export function rateTransitions(
       toPosition: to.position,
       verdict,
       tier,
+      direction,
+      fromCamelot: from.camelot,
+      toCamelot: to.camelot,
       delta,
       excess,
       betterFit:

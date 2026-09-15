@@ -199,43 +199,104 @@ export function parseCamelot(value: string | null | undefined): CamelotPosition 
 export type HarmonicTier = "perfect" | "smooth" | "boost" | "clash" | "unknown"
 
 /**
- * Harmonic compatibility of a transition on the Camelot wheel (B18):
+ * Which way round the wheel a move travels.
+ *
+ * Reported separately from the tier because it changes what the DJ hears and
+ * not what the transition costs: clockwise lifts, anticlockwise releases, and
+ * both are equally mixable. An alpha user asked whether we account for "Energy
+ * Boost y Drop" — we modelled the jump and not its direction, so the product
+ * called a release a boost.
+ */
+export type HarmonicDirection = "up" | "down" | "none"
+
+export interface HarmonicMove {
+  tier: HarmonicTier
+  direction: HarmonicDirection
+  /**
+   * Signed hours travelled on the wheel, -5..+6, taking the shorter way round.
+   * +6 is the tritone, where both ways are the same distance; it is a clash
+   * either way, so the sign there is a convention and not a claim.
+   */
+  steps: number
+}
+
+/**
+ * Harmonic compatibility of a transition on the Camelot wheel (B18), with the
+ * direction of travel.
+ *
  * - perfect: same key
  * - smooth: ±1 on the same ring (wrapping 12↔1) or the relative major/minor
  *   (same number, other ring) — the classic harmonic-mixing moves
- * - boost: +2 on the same ring (the "energy boost" jump — usable, not seamless)
+ * - boost: ±2 on the same ring (the "energy boost" jump — usable, not seamless)
  * - clash: everything else
  * - unknown: either key missing/unparseable
+ */
+export function harmonicMove(
+  from: string | null | undefined,
+  to: string | null | undefined
+): HarmonicMove {
+  return harmonicMoveBetween(
+    parseCamelot(from ? toCamelot(from) : null),
+    parseCamelot(to ? toCamelot(to) : null)
+  )
+}
+
+/**
+ * The same judgement, on already-parsed wheel positions.
+ *
+ * Split out because the reorder optimizer evaluates this inside a hot loop:
+ * 2-opt considers O(n²) swaps per pass and scores each over the whole order, so
+ * a per-call `toCamelot` meant re-parsing the same strings with regexes
+ * millions of times. Measured on a 250-track set, that parsing was the
+ * difference between 160 seconds and 5. Parse once, compare integers.
+ */
+export function harmonicMoveBetween(
+  a: CamelotPosition | null,
+  b: CamelotPosition | null
+): HarmonicMove {
+  if (!a || !b) {
+    return { tier: "unknown", direction: "none", steps: 0 }
+  }
+
+  const forward = (b.num - a.num + 12) % 12
+  const steps = forward <= 6 ? forward : forward - 12
+  const wheelDistance = Math.abs(steps)
+  const direction: HarmonicDirection =
+    steps > 0 ? "up" : steps < 0 ? "down" : "none"
+
+  if (wheelDistance === 0) {
+    return {
+      tier: a.ring === b.ring ? "perfect" : "smooth",
+      direction: "none",
+      steps,
+    }
+  }
+
+  if (wheelDistance === 1 && a.ring === b.ring) {
+    return { tier: "smooth", direction, steps }
+  }
+
+  if (wheelDistance === 2 && a.ring === b.ring) {
+    return { tier: "boost", direction, steps }
+  }
+
+  return { tier: "clash", direction, steps }
+}
+
+/**
+ * The tier alone.
+ *
+ * Kept as its own export, and deliberately identical to what it returned
+ * before direction existed: the tier feeds `HARMONY_RULES_V4.tierCosts` and
+ * therefore the optimizer's objective, and those constants are frozen. Adding
+ * direction is a vocabulary change, not a scoring change — if a drop should
+ * ever cost differently from a boost, that is its own decision.
  */
 export function harmonicTier(
   from: string | null | undefined,
   to: string | null | undefined
 ): HarmonicTier {
-  const a = parseCamelot(from ? toCamelot(from) : null)
-  const b = parseCamelot(to ? toCamelot(to) : null)
-
-  if (!a || !b) {
-    return "unknown"
-  }
-
-  const wheelDistance = Math.min(
-    (a.num - b.num + 12) % 12,
-    (b.num - a.num + 12) % 12
-  )
-
-  if (wheelDistance === 0) {
-    return a.ring === b.ring ? "perfect" : "smooth"
-  }
-
-  if (wheelDistance === 1 && a.ring === b.ring) {
-    return "smooth"
-  }
-
-  if (wheelDistance === 2 && a.ring === b.ring) {
-    return "boost"
-  }
-
-  return "clash"
+  return harmonicMove(from, to).tier
 }
 
 /**

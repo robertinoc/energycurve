@@ -686,7 +686,20 @@ export const DASHBOARD_COPY = {
     rough: { en: "Rough", es: "Áspera" },
     workable: { en: "Workable", es: "Pasable" },
     tierClash: { en: "keys clash", es: "las tonalidades chocan" },
-    tierBoost: { en: "energy-boost jump", es: "salto de energía" },
+    /**
+     * Split by direction: the same two-hour jump lifts a room going clockwise
+     * and releases it going the other way. One label for both was the product
+     * calling a drop a boost.
+     */
+    tierBoost: { en: "energy-boost jump", es: "salto de energía hacia arriba" },
+    tierDrop: { en: "energy-drop jump", es: "salto de energía hacia abajo" },
+    /**
+     * Requested by the alpha user who sent the wheel palette, and scoped to
+     * this view on purpose: a sortable table would line the colours up and
+     * imply a harmonically optimal set. Off by default — a colour that carries
+     * meaning should be something you asked for.
+     */
+    colorKeys: { en: "Colour the keys", es: "Colorear las tonalidades" },
     tierUnknown: { en: "no key on one side", es: "falta la tonalidad de un lado" },
     bigStep: { en: "step of {delta}", es: "salto de {delta}" },
     suggestion: {

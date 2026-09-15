@@ -5,7 +5,12 @@ import {
   type CurveShape,
 } from "@/lib/product/strategy"
 import { computeSetScore } from "@/lib/engine/analysis"
-import { assessHarmony, keyCoverage } from "@/lib/engine/harmony"
+import {
+  assessHarmonyPositions,
+  keyCoverage,
+  toWheelPositions,
+} from "@/lib/engine/harmony"
+import type { CamelotPosition } from "@/lib/music/camelot"
 import { buildTargetCurve } from "@/lib/engine/target-curve"
 import type { ResolvedTrackEnergy } from "@/types/analysis"
 
@@ -14,6 +19,29 @@ const EXACT_SEARCH_MAX_TRACKS = 8
 
 /** Hard cap on 2-opt improvement passes for larger sets. */
 const MAX_IMPROVEMENT_PASSES = 50
+
+/**
+ * Longest set we will search for a better order.
+ *
+ * The search is 2-opt over a whole-order objective: O(passes · n²) candidate
+ * swaps, each scored in O(n). That is fine for a set and ruinous for a library.
+ * Measured, with keys, after the parse-once fix: 60 tracks 0.6s, 80 tracks
+ * 1.4s, 100 tracks 2.9s, 120 tracks 6s, 150 tracks 11.6s, 250 tracks 63s, 400
+ * tracks four minutes.
+ *
+ * 80 is where the curve is still flat enough to sit inside a render. It is also
+ * past any real set — 80 tracks is five or six hours.
+ *
+ * The analysis runs inside a server render, so past a certain length the page
+ * does not get slow — it times out and the DJ gets nothing at all. A cap turns
+ * that into a set that simply carries no reorder suggestion, which is the
+ * honest outcome anyway: 120 tracks is an eight-hour set, and a curve over one
+ * is not what this engine is for.
+ *
+ * This is an engineering bound, not a scoring rule — the objective and its
+ * weights are untouched, so `lib/product/strategy.ts` stays frozen.
+ */
+export const REORDER_MAX_TRACKS = 80
 
 export interface OptimizedOrder {
   /** Indexes into the input array, in suggested playing order. */
@@ -56,11 +84,18 @@ function energyScoreOf(
   )
 }
 
+/**
+ * Harmonic ratio of a candidate order, from positions parsed once per search.
+ *
+ * `wheel` is indexed like `energies`; the permutation only reorders lookups.
+ * Parsing inside this function is what made the optimizer unusable on long
+ * sets — see `harmonicMoveBetween`.
+ */
 function harmonicRatioOf(
-  energies: ResolvedTrackEnergy[],
+  wheel: Array<CamelotPosition | null>,
   order: number[]
 ): number {
-  return assessHarmony(order.map((index) => energies[index].camelot)).ratio
+  return assessHarmonyPositions(order.map((index) => wheel[index])).ratio
 }
 
 /**
@@ -70,6 +105,7 @@ function harmonicRatioOf(
  */
 function objectiveOf(
   energies: ResolvedTrackEnergy[],
+  wheel: Array<CamelotPosition | null>,
   order: number[],
   genre: SupportedGenre,
   context: PlaylistContext,
@@ -84,12 +120,13 @@ function objectiveOf(
 
   return (
     energy +
-    REORDER_HARMONY_V4.harmonyWeight * harmonicRatioOf(energies, order)
+    REORDER_HARMONY_V4.harmonyWeight * harmonicRatioOf(wheel, order)
   )
 }
 
 function exactBestOrder(
   energies: ResolvedTrackEnergy[],
+  wheel: Array<CamelotPosition | null>,
   genre: SupportedGenre,
   context: PlaylistContext,
   shape: CurveShape | null,
@@ -108,6 +145,7 @@ function exactBestOrder(
   const consider = (candidate: number[]) => {
     const objective = objectiveOf(
       energies,
+      wheel,
       candidate,
       genre,
       context,
@@ -200,13 +238,22 @@ function harmonicSeed(energies: ResolvedTrackEnergy[]): number[] {
 function twoOpt(
   seed: number[],
   energies: ResolvedTrackEnergy[],
+  wheel: Array<CamelotPosition | null>,
   genre: SupportedGenre,
   context: PlaylistContext,
   shape: CurveShape | null,
   useHarmony: boolean
 ): { order: number[]; objective: number } {
   const order = [...seed]
-  let objective = objectiveOf(energies, order, genre, context, shape, useHarmony)
+  let objective = objectiveOf(
+    energies,
+    wheel,
+    order,
+    genre,
+    context,
+    shape,
+    useHarmony
+  )
 
   // Best-improvement pairwise swaps until a full pass finds nothing better.
   // Deterministic: fixed scan order, strict improvement required.
@@ -219,6 +266,7 @@ function twoOpt(
         ;[order[a], order[b]] = [order[b], order[a]]
         const candidate = objectiveOf(
           energies,
+          wheel,
           order,
           genre,
           context,
@@ -250,6 +298,7 @@ function twoOpt(
 
 function localSearchBestOrder(
   energies: ResolvedTrackEnergy[],
+  wheel: Array<CamelotPosition | null>,
   genre: SupportedGenre,
   context: PlaylistContext,
   shape: CurveShape | null,
@@ -265,7 +314,15 @@ function localSearchBestOrder(
   let best: { order: number[]; objective: number } | null = null
 
   for (const seed of seeds) {
-    const result = twoOpt(seed, energies, genre, context, shape, useHarmony)
+    const result = twoOpt(
+      seed,
+      energies,
+      wheel,
+      genre,
+      context,
+      shape,
+      useHarmony
+    )
 
     if (!best || result.objective > best.objective) {
       best = result
@@ -293,15 +350,17 @@ export function optimizeOrder(
   shape: CurveShape | null = null
 ): OptimizedOrder {
   const useHarmony = harmonyApplies(energies)
+  // Parsed once for the whole search, then only indexed.
+  const wheel = toWheelPositions(energies.map((entry) => entry.camelot))
 
   const order =
     energies.length <= EXACT_SEARCH_MAX_TRACKS
-      ? exactBestOrder(energies, genre, context, shape, useHarmony)
-      : localSearchBestOrder(energies, genre, context, shape, useHarmony)
+      ? exactBestOrder(energies, wheel, genre, context, shape, useHarmony)
+      : localSearchBestOrder(energies, wheel, genre, context, shape, useHarmony)
 
   return {
     order,
     score: energyScoreOf(energies, order, genre, context, shape),
-    harmonicRatio: harmonicRatioOf(energies, order),
+    harmonicRatio: harmonicRatioOf(wheel, order),
   }
 }
