@@ -510,6 +510,7 @@ export default async function PlaylistDetailPage({
                 name: playlist.tracks[index].name,
                 camelot: entry.camelot,
                 energy: entry.score,
+                bpm: playlist.tracks[index].bpm,
               })),
               playlist.genre
             )}

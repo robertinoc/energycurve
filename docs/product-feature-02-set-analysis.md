@@ -190,11 +190,21 @@ same explainability contract.
     The parser falls back to it (`musicalKeyValueToOpenKey`), emitting Open
     Key text that `toCamelot` already converts. `PERCEIVED_DB` is now
     extracted and persisted (`tracks.perceived_db`, migration 0010).
-18. **Camelot harmony math (B18)** — `harmonicTier(a, b)`: perfect (same
-    key), smooth (±1 same ring with 12↔1 wrap, or relative major/minor),
-    boost (+2 same ring, cost 0.5), clash (cost 1); unknown keys are
-    excluded, never treated as clashes. `assessHarmony` aggregates a
-    per-order ratio (`HARMONY_RULES_V4`).
+18. **Camelot harmony math (B18)** — `harmonicTier(a, b)` reads the
+    transition table in `lib/music/harmonic-transitions.ts` (contributed by
+    an alpha user, audited in
+    `docs/feedback-2026-09-16-jordi-harmony-table.md`): 24 rows × 12
+    recommended targets. Perfect match (same key, or the one-accidental
+    diagonal) and Energy Boost +/Drop − (relative major/minor, the fifth
+    either way) cost 0; Boost ++/+++, Drop −−/−−−, and Mood change — the one-
+    to three-semitone modulations and the parallel major/minor — are the
+    `boost` tier at 0.5; a key absent from the row is a clash at 1. Unknown
+    keys are excluded, never treated as clashes. `assessHarmony` aggregates
+    a per-order ratio (`HARMONY_RULES_V4`, unchanged). The table replaced a
+    wheel-distance rule (±1 smooth, ±2 boost, rest clash) that called half
+    of the wheel's valid moves a clash. Section 2.3 of the same file adds
+    the ±7% BPM crossfade margin, reported per transition (`tempoGap`) and
+    deliberately not folded into any score.
 19. **Loudness as an energy signal (B19)** — for BPM-derived tracks with a
     dB reading, energy adjusts by up to ±0.8 around the BPM anchor based on
     the track's loudness relative to the set median (`LOUDNESS_RULES_V4`:

@@ -451,6 +451,41 @@ The playlist **detail** page is a DJ-familiar workbench: a dense, Rekordbox-styl
 - Reordering is a preview-until-saved flow (drag + column sort) landing in a later PR; column preferences persist in `localStorage`.
 - Full write-up: `docs/product-feature-03-dj-tracklist.md`.
 
+## 26. A user's transition table replaces our Camelot distance heuristic
+
+Harmonic compatibility is decided by the 24-row transition table in
+`lib/music/harmonic-transitions.ts`, contributed by an alpha user, and not by
+distance on the Camelot wheel.
+
+**Why**
+
+- The heuristic it replaces (±1 same ring smooth, ±2 boost, everything else a
+  clash) marked **144 of the 288 recommended moves — half the wheel — as
+  clashes**, including `8A → 9B` (A minor into G major, one accidental apart).
+  Audit and numbers: `docs/feedback-2026-09-16-jordi-harmony-table.md`.
+- The table is not a taste ranking: all 192 cells fall out of one rule, the
+  pitch shift of the tonic, and the relation is symmetric. It was verified
+  before adoption and the verification is now a test.
+- It is a strict superset — **no move the old rules accepted is now rejected**
+  — so adopting it cannot take away a mix the product had already blessed.
+
+**Consequence**
+
+- `HARMONY_RULES_V4.tierCosts` and every other constant in
+  `lib/product/strategy.ts` are untouched: the eight columns map onto the four
+  existing tiers. Which pairs sit in which tier changes, so the optimizer does
+  return different orders — deliberately.
+- `direction` is read from the table's column, which fixes the 24 relative
+  major/minor moves that the wheel reported as directionless.
+- `RatedTransition.level` carries the table's own name for the move ("Energy
+  Boost ++", "Mood change"), shown in the transitions list in both locales.
+- The ±7% BPM crossfade margin from the same file is **reported, never scored**
+  (`tempoGap`, `HARMONIC_BPM_MARGIN`), which is why the constant lives beside
+  the table and not in `strategy.ts`. Half- and double-time are matched rather
+  than flagged.
+- The 80-track reorder search is ~27% slower, because more candidate swaps now
+  improve the objective. The lever if it ever matters is `REORDER_MAX_TRACKS`.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

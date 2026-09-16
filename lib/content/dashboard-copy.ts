@@ -694,6 +694,36 @@ export const DASHBOARD_COPY = {
     tierBoost: { en: "energy-boost jump", es: "salto de energía hacia arriba" },
     tierDrop: { en: "energy-drop jump", es: "salto de energía hacia abajo" },
     /**
+     * The transition table's own names for the move (section 2.2 of the
+     * reference file an alpha user sent). Shown instead of the generic
+     * boost/drop wording when the table names the move, because "+3 semitones
+     * up" and "parallel major" are different advice and the DJ can act on the
+     * difference. Left untranslated where the notation is the notation:
+     * "Energy Boost ++" reads the same in both languages, and it is what his
+     * own file says.
+     */
+    levelBoost1: { en: "Energy Boost +", es: "Energy Boost +" },
+    levelBoost2: { en: "Energy Boost ++", es: "Energy Boost ++" },
+    levelBoost3: { en: "Energy Boost +++", es: "Energy Boost +++" },
+    levelDrop1: { en: "Energy Drop -", es: "Energy Drop -" },
+    levelDrop2: { en: "Energy Drop --", es: "Energy Drop --" },
+    levelDrop3: { en: "Energy Drop ---", es: "Energy Drop ---" },
+    levelMood: { en: "Mood change", es: "Cambio de mood" },
+    /** The parenthesised option of a level — his table's second choice. */
+    levelSecondary: { en: "second choice", es: "segunda opción" },
+    /**
+     * The ±7% crossfade margin (section 2.3). Its own flag, not a verdict:
+     * a mix can be harmonically perfect and still be untouchable at that tempo
+     * distance, and saying so is more use than folding it into "rough".
+     */
+    tempo: { en: "Tempo", es: "Tempo" },
+    tempoGap: {
+      en: "BPM gap of {gap} (margin ±7%)",
+      es: "diferencia de BPM de {gap} (margen ±7%)",
+    },
+    tempoHalf: { en: "at half time", es: "a mitad de tiempo" },
+    tempoDouble: { en: "at double time", es: "a doble tiempo" },
+    /**
      * Requested by the alpha user who sent the wheel palette, and scoped to
      * this view on purpose: a sortable table would line the colours up and
      * imply a harmonically optimal set. Off by default — a colour that carries
