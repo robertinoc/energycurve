@@ -3,8 +3,10 @@
  *
  * The engine already judges a set as a shape. This judges it as a sequence of
  * mixes — which is what the DJ is actually doing at 3am, one transition at a
- * time. Two things decide whether a mix works: whether the keys sit together,
- * and whether the energy step is one the genre tolerates.
+ * time. Three things decide whether a mix works: whether the keys sit together
+ * (the transition table), whether the energy step is one the genre tolerates,
+ * and whether the two tempos are close enough to ride the same crossfade (the
+ * ±7% margin).
  *
  * Diagnosing a bad transition is only half of it. "Track 7 into 8 clashes" is
  * a complaint; "and track 12 would fit there" is advice, and the second one is
@@ -21,6 +23,12 @@ import {
   type HarmonicDirection,
   type HarmonicTier,
 } from "@/lib/music/camelot"
+import {
+  tempoGap,
+  type HarmonicLevel,
+  type HarmonicOption,
+  type TempoGap,
+} from "@/lib/music/harmonic-transitions"
 
 export interface TransitionTrack {
   id: string
@@ -29,6 +37,12 @@ export interface TransitionTrack {
   name: string
   camelot: string | null
   energy: number
+  /**
+   * The tag, not a guess. Null is normal — half of most libraries have no BPM
+   * on some rows — and a transition with a missing BPM is reported as having no
+   * tempo reading rather than as a safe one.
+   */
+  bpm: number | null
 }
 
 export type TransitionVerdict = "good" | "workable" | "rough"
@@ -47,6 +61,20 @@ export interface RatedTransition {
    * are unchanged.
    */
   direction: HarmonicDirection
+  /**
+   * The transition table's own name for this move — `boost_2`, `mood`, … —
+   * or null when the target key isn't in the row (the table's "no
+   * recomendada"). Richer than the tier on purpose: the tier is what the
+   * optimizer costs, this is what the DJ is told.
+   */
+  level: HarmonicLevel | null
+  /** Primary or the table's parenthesised second choice for that level. */
+  option: HarmonicOption | null
+  /**
+   * Tempo distance and whether it clears the ±7% crossfade margin, or null
+   * when either track has no BPM.
+   */
+  tempo: TempoGap | null
   /** Both keys, so the row can name what clashes instead of only that it does. */
   fromCamelot: string | null
   toCamelot: string | null
@@ -123,7 +151,10 @@ export function rateTransitions(
   for (let i = 0; i < tracks.length - 1; i += 1) {
     const from = tracks[i]
     const to = tracks[i + 1]
-    const { tier, direction } = harmonicMove(from.camelot, to.camelot)
+    const { tier, direction, level, option } = harmonicMove(
+      from.camelot,
+      to.camelot
+    )
     const delta = to.energy - from.energy
     const { verdict, excess } = rateTransition(tier, delta, genre)
 
@@ -133,6 +164,9 @@ export function rateTransitions(
       verdict,
       tier,
       direction,
+      level,
+      option,
+      tempo: tempoGap(from.bpm, to.bpm),
       fromCamelot: from.camelot,
       toCamelot: to.camelot,
       delta,
@@ -154,6 +188,11 @@ export function rateTransitions(
  * be worse than what it replaces — it's only returned when it rates strictly
  * better. Neighbours are excluded: proposing the track already on either side
  * is proposing to do nothing.
+ *
+ * Tempo breaks ties rather than filtering: a candidate the DJ cannot beatmatch
+ * into the outgoing track is not advice, but the ±7% margin is his rule for
+ * the mix and not a rule about which track is better, so it never overrides a
+ * verdict — it only decides between candidates that already rate the same.
  */
 function findBetterFit(
   from: TransitionTrack,
@@ -170,8 +209,12 @@ function findBetterFit(
   const currentTier = harmonicTier(from.camelot, to.camelot)
   const current = rateTransition(currentTier, to.energy - from.energy, genre)
 
-  let best: { track: TransitionTrack; score: number; excess: number } | null =
-    null
+  let best: {
+    track: TransitionTrack
+    score: number
+    inTempo: boolean
+    excess: number
+  } | null = null
 
   for (const candidate of tracks) {
     if (
@@ -193,16 +236,26 @@ function findBetterFit(
       continue
     }
 
-    // Among equally-rated candidates, the smallest energy step wins: it's the
-    // one that changes the set's shape least, and the shape was already scored.
+    // A missing BPM counts as in tempo: we don't know, and demoting every
+    // untagged track would make the suggestion a function of tag hygiene.
+    const gap = tempoGap(from.bpm, candidate.bpm)
+    const inTempo = gap === null || !gap.beyondMargin
+
+    // Among equally-rated candidates: the one you can beatmatch, then the
+    // smallest energy step — it changes the set's shape least, and the shape
+    // was already scored.
     if (
       !best ||
       rank[result.verdict] > best.score ||
-      (rank[result.verdict] === best.score && result.excess < best.excess)
+      (rank[result.verdict] === best.score &&
+        (inTempo !== best.inTempo
+          ? inTempo
+          : result.excess < best.excess))
     ) {
       best = {
         track: candidate,
         score: rank[result.verdict],
+        inTempo,
         excess: result.excess,
       }
     }

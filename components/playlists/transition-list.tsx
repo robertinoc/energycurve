@@ -25,8 +25,12 @@ export function TransitionList({
   transitions: RatedTransition[]
   locale: SiteLocale
 }) {
+  // Tempo joins the verdict as a reason to list a row: a mix can be
+  // harmonically perfect and still be beyond the ±7% crossfade margin, and
+  // that is exactly the row a DJ wants to find before the night, not during.
   const flagged = transitions.filter(
-    (transition) => transition.verdict !== "good"
+    (transition) =>
+      transition.verdict !== "good" || transition.tempo?.beyondMargin === true
   )
   const [colored, setColored] = useState(false)
 
@@ -100,12 +104,19 @@ export function TransitionList({
                   "text-[10px] font-semibold uppercase tracking-wide",
                   transition.verdict === "rough"
                     ? "text-ec-error/80"
-                    : "text-ec-amber/80"
+                    : transition.verdict === "workable"
+                      ? "text-ec-amber/80"
+                      : "text-white/45"
                 )}
               >
                 {transition.verdict === "rough"
                   ? COPY.rough[locale]
-                  : COPY.workable[locale]}
+                  : transition.verdict === "workable"
+                    ? COPY.workable[locale]
+                    : // Listed for its tempo alone: the keys and the energy
+                      // step are fine, so calling the row "workable" would
+                      // report a problem it doesn't have.
+                      COPY.tempo[locale]}
               </span>
               <span className="text-white/56">{reason(transition, locale)}</span>
               {transition.betterFit ? (
@@ -151,12 +162,43 @@ function KeyChip({
   )
 }
 
+/**
+ * The transition table's name for a move, when it has one.
+ *
+ * Preferred over the generic "energy-boost jump" because the table
+ * distinguishes moves our tiers cannot: `+`, `++` and `+++` are different
+ * sizes of lift, and a mood change is not a lift at all.
+ */
+const LEVEL_LABEL: Record<
+  NonNullable<RatedTransition["level"]>,
+  keyof typeof COPY | null
+> = {
+  // A perfect match is never the reason a row is listed, so it has no label.
+  perfect: null,
+  boost_1: "levelBoost1",
+  boost_2: "levelBoost2",
+  boost_3: "levelBoost3",
+  drop_1: "levelDrop1",
+  drop_2: "levelDrop2",
+  drop_3: "levelDrop3",
+  mood: "levelMood",
+}
+
 /** The shortest true sentence about why this mix was flagged. */
 function reason(transition: RatedTransition, locale: SiteLocale): string {
   const parts: string[] = []
+  const levelKey = transition.level ? LEVEL_LABEL[transition.level] : null
 
   if (transition.tier === "clash") {
     parts.push(COPY.tierClash[locale])
+  } else if (levelKey) {
+    const label = (COPY[levelKey] as Record<SiteLocale, string>)[locale]
+
+    parts.push(
+      transition.option === "secondary"
+        ? `${label} (${COPY.levelSecondary[locale]})`
+        : label
+    )
   } else if (transition.tier === "boost") {
     parts.push(
       transition.direction === "down"
@@ -173,6 +215,21 @@ function reason(transition: RatedTransition, locale: SiteLocale): string {
         delta: `${transition.delta > 0 ? "+" : ""}${transition.delta.toFixed(1)}`,
       })
     )
+  }
+
+  if (transition.tempo?.beyondMargin) {
+    const gap = `${transition.tempo.ratio > 0 ? "+" : "−"}${(
+      Math.abs(transition.tempo.ratio) * 100
+    ).toFixed(1)}%`
+
+    const relation =
+      transition.tempo.relation === "half"
+        ? ` ${COPY.tempoHalf[locale]}`
+        : transition.tempo.relation === "double"
+          ? ` ${COPY.tempoDouble[locale]}`
+          : ""
+
+    parts.push(formatTemplate(COPY.tempoGap[locale], { gap }) + relation)
   }
 
   return parts.join(", ")

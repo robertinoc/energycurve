@@ -5,7 +5,8 @@ import { rateTransition, rateTransitions } from "@/lib/engine/transitions"
 const track = (
   position: number,
   camelot: string | null,
-  energy: number
+  energy: number,
+  bpm: number | null = null
 ) => ({
   id: `t${position}`,
   position,
@@ -13,6 +14,7 @@ const track = (
   name: `Track ${position}`,
   camelot,
   energy,
+  bpm,
 })
 
 describe("rateTransition", () => {
@@ -118,6 +120,77 @@ describe("rateTransitions", () => {
     )
 
     expect(rated[0].betterFit?.position).toBe(4)
+  })
+
+  it("names the transition table's own level, not just a tier", () => {
+    // "Energy Boost ++" and "Mood change" are different advice; the tier
+    // ("boost") is the same for both, which is why the level is reported.
+    // Row 8A: Energy Boost ++ is 5A (+3 semitones), Mood change is 11B (A
+    // minor into A major).
+    const boost = rateTransitions([track(1, "8A", 6), track(2, "5A", 6)], "house")
+    const mood = rateTransitions([track(1, "8A", 6), track(2, "11B", 6)], "house")
+
+    expect(boost[0]).toMatchObject({ level: "boost_2", option: "primary" })
+    expect(mood[0]).toMatchObject({ level: "mood", direction: "none" })
+  })
+
+  it("marks the table's parenthesised second choice as secondary", () => {
+    // Row 8A, Energy Boost +++: "10A, (3A)".
+    const rated = rateTransitions(
+      [track(1, "8A", 6), track(2, "3A", 6)],
+      "house"
+    )
+
+    expect(rated[0]).toMatchObject({ level: "boost_3", option: "secondary" })
+  })
+
+  it("measures the BPM gap without touching the verdict", () => {
+    // 124 → 136 is +9.7%, past the ±7% crossfade margin — but the keys are the
+    // same key and the energy step is nothing, so the mix itself is good.
+    const rated = rateTransitions(
+      [track(1, "8A", 6, 124), track(2, "8A", 6, 136)],
+      "house"
+    )
+
+    expect(rated[0].verdict).toBe("good")
+    expect(rated[0].tempo?.beyondMargin).toBe(true)
+    expect(rated[0].tempo?.ratio).toBeCloseTo(0.0968, 3)
+  })
+
+  it("reads a halftime mix as a matched tempo, not a 50% jump", () => {
+    const rated = rateTransitions(
+      [track(1, "8A", 6, 174), track(2, "8A", 6, 87)],
+      "house"
+    )
+
+    expect(rated[0].tempo).toMatchObject({
+      relation: "half",
+      beyondMargin: false,
+    })
+  })
+
+  it("has no tempo reading when a BPM is missing", () => {
+    const rated = rateTransitions(
+      [track(1, "8A", 6, 128), track(2, "8A", 6)],
+      "house"
+    )
+
+    expect(rated[0].tempo).toBeNull()
+  })
+
+  it("prefers a candidate you can beatmatch among equally good ones", () => {
+    // Both #3 and #4 fix the clash at the same energy; #4 is 30 BPM away.
+    const rated = rateTransitions(
+      [
+        track(1, "8A", 6, 128),
+        track(2, "2B", 6, 128),
+        track(3, "9A", 6, 130),
+        track(4, "9A", 6, 158),
+      ],
+      "house"
+    )
+
+    expect(rated[0].betterFit?.position).toBe(3)
   })
 
   it("returns nothing for a set too short to have a transition", () => {

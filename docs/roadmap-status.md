@@ -437,3 +437,29 @@ bug in a live product. Full write-up, including the measurement that pinned it:
 
 Migrations `0025_source_payload.sql` and `0026_profile_key_notation.sql` must be
 applied before this deploys.
+
+## Alpha feedback rounds 2–4 — harmony (11–16 Sep 2026)
+
+The same user kept going, and the thread is now the reason the harmonic model
+looks the way it does. Write-ups:
+[round 2](feedback-2026-09-11-jordi-round-2.md),
+[round 3](feedback-2026-09-15-jordi-harmony.md),
+[round 4](feedback-2026-09-16-jordi-harmony-table.md).
+
+- **Harmony reaches the order the DJ is actually looking at** (round 3, #224).
+  The smart-order fallback sorted by energy and read no keys; it now runs the
+  same optimizer as the analysis suggestions, capped at
+  `REORDER_MAX_TRACKS = 80`.
+- **His transition table replaced our wheel-distance heuristic** (round 4,
+  decision 26). Ours called **half the Camelot wheel a clash** — 144 of 288
+  recommended moves, `8A → 9B` among them. The table is a strict superset, so
+  no previously-approved mix was taken away, and
+  `lib/product/strategy.ts` stayed frozen: the eight columns map onto the four
+  existing tiers. The optimizer does return different orders now.
+- **Transitions speak his vocabulary** — "Energy Boost ++", "Mood change", and
+  the parenthesised second choice — instead of one label for five different
+  moves, and relative major/minor finally reads as a lift one way and a release
+  the other.
+- **The ±7% BPM crossfade margin is measured and reported per transition**,
+  never folded into a score. Half- and double-time are matched, not flagged.
+- **Still open on his side:** the NML re-import test he said he hadn't run yet.

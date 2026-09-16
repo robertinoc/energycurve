@@ -44,8 +44,11 @@ describe("harmonicTier", () => {
     expect(harmonicTier("12A", "1A")).toBe("smooth") // wheel wrap
     expect(harmonicTier("8A", "8B")).toBe("smooth") // relative major/minor
     expect(harmonicTier("8A", "10A")).toBe("boost") // +2 energy jump
-    expect(harmonicTier("8A", "3B")).toBe("clash")
-    expect(harmonicTier("8A", "9B")).toBe("clash") // diagonal is not smooth
+    expect(harmonicTier("8A", "3B")).toBe("clash") // in no column of row 8A
+    // The diagonal: A minor into G major is one accidental away, and the
+    // transition table lists it beside the same key under Perfect match. The
+    // wheel-distance heuristic we used to run called it a clash.
+    expect(harmonicTier("8A", "9B")).toBe("smooth")
   })
 
   it("works across notations (Open Key / musical keys convert first)", () => {
@@ -63,14 +66,24 @@ describe("harmonicTier", () => {
 
 describe("assessHarmony", () => {
   it("counts tiers and computes the ratio over known transitions", () => {
-    // 8A→9A smooth, 9A→9B smooth(relative), 9B→? unknown, ?→3B unknown,
-    // 3B→10B clash... wait 3B→10B distance 5 → clash.
+    // 8A→9A smooth, 9A→9B smooth (relative major), 9B→null and null→3B
+    // unknown, 3B→10B is row 3B's Energy Boost +++ second choice — a boost,
+    // where the old wheel-distance rule saw five hours and called it a clash.
     const result = assessHarmony(["8A", "9A", "9B", null, "3B", "10B"])
 
     expect(result.knownTransitions).toBe(3)
     expect(result.harmonicCount).toBe(2)
+    expect(result.boostCount).toBe(1)
+    expect(result.clashCount).toBe(0)
+    expect(result.ratio).toBeCloseTo(1 - 0.5 / 3)
+  })
+
+  it("still costs a key the table does not list at all", () => {
+    // 8A → 4A is in no column of row 8A: "no recomendada".
+    const result = assessHarmony(["8A", "4A"])
+
     expect(result.clashCount).toBe(1)
-    expect(result.ratio).toBeCloseTo(1 - 1 / 3)
+    expect(result.ratio).toBe(0)
   })
 
   it("is neutral (ratio 1) when nothing is known", () => {

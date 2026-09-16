@@ -393,10 +393,21 @@ describe("harmonicMove", () => {
       direction: "none",
       steps: 0,
     })
-    // Relative major/minor: same hour, other ring.
+  })
+
+  it("reads the relative major as a lift, though it travels no hours", () => {
+    // Same hour, other ring — so the wheel says "no direction" and the
+    // transition table says Energy Boost + one way and Energy Drop - the
+    // other. Direction now comes from the table (see harmonic-transitions).
     expect(harmonicMove("8A", "8B")).toMatchObject({
       tier: "smooth",
-      direction: "none",
+      direction: "up",
+      steps: 0,
+    })
+    expect(harmonicMove("8B", "8A")).toMatchObject({
+      tier: "smooth",
+      direction: "down",
+      steps: 0,
     })
   })
 
