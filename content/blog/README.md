@@ -12,9 +12,16 @@ To add an article: drop a `.md` file in `es/` whose filename equals its `slug`
 and fill the frontmatter; it appears in the index, the sitemap, and its own
 route on the next build. An article with `publishedAt: null` stays a draft.
 
+One local gotcha: these files are read with `readFileSync` at build time, so the
+bundler doesn't know a page depends on them. Editing an article and rebuilding
+can serve the previous text from `.next`; `rm -rf .next` before checking your
+change. CI and Vercel build from empty, so they never see this.
+
 Frontmatter keys: `title`, `description` and `slug` are required; `locale`,
 `targetQuery` and `publishedAt` are the rest of what the five articles use.
-`updatedAt` is optional and means the last substantive revision — set it when you
+Descriptions are 140–155 characters, enforced by `tests/blog.test.ts`: past ~155
+Google truncates the snippet mid-sentence, and much under 140 leaves a third of
+it blank. `updatedAt` is optional and means the last substantive revision — set it when you
 edit a published article, and the sitemap's `lastmod` and the `dateModified` in
 the article's `BlogPosting` both follow it. Leave it out and both fall back to
 `publishedAt`, which is the honest answer for an article nobody has touched.

@@ -1,6 +1,6 @@
 ---
 title: "Ordenar un set cuando sólo tenés una lista de texto"
-description: "No hace falta Rekordbox ni Serato para analizar el orden de un set. Con la lista de temas pegada alcanza para empezar."
+description: "No hace falta Rekordbox ni Serato para analizar el orden de un set. Con la lista de temas pegada en un cuadro de texto ya alcanza para empezar."
 slug: ordenar-un-set-desde-una-lista-de-texto
 locale: es
 targetQuery: "ordenar set de DJ sin Rekordbox"

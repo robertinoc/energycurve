@@ -201,6 +201,42 @@ describe("the real articles", () => {
   })
 })
 
+describe("article descriptions fit a search result", () => {
+  /**
+   * 140–155 characters, the same band the `/es` home description was cut to.
+   *
+   * The ceiling is the real defect: Google stops rendering a description at
+   * roughly 155, so two of these articles were being truncated mid-sentence in
+   * the one place a stranger decides whether to click. The floor is the other
+   * half of the same idea — a 118-character description leaves a third of the
+   * snippet blank, and this is the only copy on the page written for that slot.
+   *
+   * It applies to articles and not to `PAGE_METADATA`, where a legal page that
+   * needs nine words has nothing to gain from padding to forty.
+   */
+  const MIN = 140
+  const MAX = 155
+
+  it("keeps every published article inside the band", async () => {
+    const { allPublishedPosts } = await import("@/lib/blog/posts")
+    const posts = allPublishedPosts()
+
+    expect(posts.length).toBeGreaterThan(0)
+
+    for (const post of posts) {
+      expect(
+        post.description.length,
+        `${post.slug}: ${post.description.length} chars — "${post.description}"`
+      ).toBeGreaterThanOrEqual(MIN)
+
+      expect(
+        post.description.length,
+        `${post.slug}: ${post.description.length} chars — "${post.description}"`
+      ).toBeLessThanOrEqual(MAX)
+    }
+  })
+})
+
 describe("article structured data", () => {
   /** Parsed back from the string the page actually embeds, not the object. */
   async function graphFor(slug: string) {
