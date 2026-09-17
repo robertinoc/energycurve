@@ -100,7 +100,10 @@ y notas.
 
 Su contenido —qué se prueba, con qué pasos— vive en
 [`docs/qa/banco-de-pruebas.html`](banco-de-pruebas.html) y se revisa como
-cualquier archivo del repo. El orden es: editar el archivo, commitear, republicar
+cualquier archivo del repo. Eso es también lo que permite que el mapa se mantenga
+desde cualquier cuenta: cada una republica al artifact que le corresponde desde el
+mismo archivo. El traspaso entre cuentas está en
+[`docs/handoff-2026-09-17.md`](../handoff-2026-09-17.md). El orden es: editar el archivo, commitear, republicar
 desde él. El estado y las notas no están ahí: cambian mientras alguien prueba, no
 cuando alguien commitea.
 
