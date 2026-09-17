@@ -277,13 +277,36 @@ test.describe("blog", () => {
   test("an article claims no translation it doesn't have", async ({ page }) => {
     await page.goto("/es/blog/esta-bien-el-orden-de-mi-set")
 
-    // Self-canonical and no hreflang pair: the article exists in Spanish only, and
-    // advertising an English twin would point a crawler at a 404.
+    // Self-canonical, and an hreflang set naming exactly one language: itself.
+    //
+    // This used to assert zero hreflang tags, on the reasoning that advertising
+    // an English twin would point a crawler at a 404. The first half of that is
+    // still true and is what the count of one protects. The second half threw out
+    // something safe to say: one entry tells a crawler the set is closed, where
+    // no entries only tells it nothing was declared.
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
       /\/es\/blog\/esta-bien-el-orden-de-mi-set$/
     )
-    await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0)
+
+    const alternates = page.locator("link[rel=\"alternate\"][hreflang]")
+    await expect(alternates).toHaveCount(1)
+    await expect(alternates).toHaveAttribute("hreflang", "es")
+    await expect(alternates).toHaveAttribute(
+      "href",
+      /\/es\/blog\/esta-bien-el-orden-de-mi-set$/
+    )
+  })
+
+  test("a Spanish article's 404 is in Spanish", async ({ page }) => {
+    // A slug that doesn't exist used to fall through to app/not-found.tsx, which
+    // sits outside both root layouts: the reader got Next's bare error shell.
+    const response = await page.goto("/es/blog/no-existe")
+
+    expect(response?.status()).toBe(404)
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /no existe/i
+    )
   })
 
   test("the English index says where the writing is", async ({ page }) => {

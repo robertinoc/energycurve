@@ -237,6 +237,57 @@ describe("article descriptions fit a search result", () => {
   })
 })
 
+describe("the English blog route is shaped for the content it has", () => {
+  it("renders on demand while there are no English articles", async () => {
+    /**
+     * `app/(en)/blog/[slug]/page.tsx` deliberately has no `generateStaticParams`
+     * while `content/blog/en/` is empty: it would return `[]`, which Next reads
+     * as "prerender this route's shell" rather than "there is nothing to
+     * prerender" — and a prerendered 404 that reaches a not-found reading the
+     * request returns a 500.
+     *
+     * The day an English article exists that stops being true, and prerendering
+     * is what you want. Nobody adding an article will think to check, so this
+     * fails and says so.
+     */
+    const { listPosts } = await import("@/lib/blog/posts")
+    const { readFileSync } = await import("node:fs")
+    const { join } = await import("node:path")
+
+    const route = readFileSync(
+      join(process.cwd(), "app/(en)/blog/[slug]/page.tsx"),
+      "utf8"
+    )
+
+    // The export, not the word: the route's comment explains its own absence.
+    const EXPORT = /export\s+(async\s+)?function\s+generateStaticParams/
+
+    if (listPosts("en").length === 0) {
+      expect(route).not.toMatch(EXPORT)
+      return
+    }
+
+    expect(
+      EXPORT.test(route),
+      "English articles exist now — add generateStaticParams back to " +
+        "app/(en)/blog/[slug]/page.tsx so they are prerendered, the way the " +
+        "Spanish route already is"
+    ).toBe(true)
+  })
+
+  it("prerenders the Spanish articles, which do exist", async () => {
+    const { readFileSync } = await import("node:fs")
+    const { join } = await import("node:path")
+
+    const route = readFileSync(
+      join(process.cwd(), "app/(es)/es/blog/[slug]/page.tsx"),
+      "utf8"
+    )
+
+    expect(route).toMatch(/export\s+(async\s+)?function\s+generateStaticParams/)
+  })
+})
+
 describe("article structured data", () => {
   /** Parsed back from the string the page actually embeds, not the object. */
   async function graphFor(slug: string) {

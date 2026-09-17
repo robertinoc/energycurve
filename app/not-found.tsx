@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import { NotFoundContent } from "@/components/layout/not-found-content"
+import { getRequestLocale } from "@/lib/server-locale"
 import { SiteHtml } from "@/components/layout/site-html"
 import { SITE_URL } from "@/lib/seo"
 import "./globals.css"
@@ -36,10 +37,12 @@ export const metadata: Metadata = {
  * dynamic surface that can do better already does: the dashboard keeps its own
  * not-found.tsx and still reads the cookie.
  */
-export default function GlobalNotFound() {
+export default async function GlobalNotFound() {
+  const locale = await getRequestLocale()
+
   return (
-    <SiteHtml lang="en">
-      <NotFoundContent locale="en" />
+    <SiteHtml lang={locale}>
+      <NotFoundContent locale={locale} />
     </SiteHtml>
   )
 }
