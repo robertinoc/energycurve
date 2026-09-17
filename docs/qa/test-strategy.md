@@ -42,6 +42,7 @@ Ordenada por lo que ya falló o por lo que costaría más si fallara.
 | `lib/rate-limit.ts` | Medio | Vive en un `Map` en memoria: en serverless el límite es por instancia y se reinicia en frío. | Documentado como riesgo, medido en F4 |
 | Gig Mode / PWA | Medio | Tiene que funcionar sin señal, en una cabina. | E2E offline |
 | Copy y paridad EN/ES | Medio | Media docena de tests ya fijan la transparencia de StageLink LLC. | Se mantiene |
+| Superficie indexable (`lib/content/locale-routing.ts`, sitemap, JSON-LD) | Medio | Un `lang` equivocado, un `hreflang` que apunta a una página con `noindex` o un sitemap que ofrece una URL muerta se pagan en tráfico, semanas después y sin ruido. El PR #227 arregló los cuatro. | `tests/locale-routing.test.ts` + `tests/blog.test.ts`; lo que depende del sitio servido, en la sesión SEO del banco de pruebas |
 
 ## Criterios de entrada y salida
 
