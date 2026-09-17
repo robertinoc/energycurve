@@ -53,14 +53,28 @@ function alternateOpenGraphLocale(locale: SiteLocale): string {
  * Naming it here puts the same card on every localized page. The dimensions are
  * the ones `app/opengraph-image/route.tsx` declares; a scraper that has to fetch the
  * PNG to learn its size often just skips the image.
+ *
+ * The `alt` follows the page's language. The drawing doesn't — the card is one
+ * PNG with English words in it, and splitting it in two is a separate change
+ * with a design decision in it. But `og:image:alt` is text we emit, it is what a
+ * screen reader announces on a shared link and what an image search reads, and
+ * shipping an English sentence on a Spanish page would have been a new instance
+ * of exactly the bug this branch exists to fix.
  */
-const SOCIAL_IMAGE = {
-  url: `${SITE_URL}/opengraph-image`,
-  width: 1200,
-  height: 630,
-  type: "image/png",
-  alt: "EnergyCurve — analyze your DJ set's energy curve and fix the order before you play",
-} as const
+const SOCIAL_IMAGE_ALT: Record<SiteLocale, string> = {
+  en: "EnergyCurve — analyze your DJ set's energy curve and fix the order before you play",
+  es: "EnergyCurve — analizá la curva de energía de tu set y corregí el orden antes de tocar",
+}
+
+function socialImage(locale: SiteLocale) {
+  return {
+    url: `${SITE_URL}/opengraph-image`,
+    width: 1200,
+    height: 630,
+    type: "image/png",
+    alt: SOCIAL_IMAGE_ALT[locale],
+  }
+}
 
 /**
  * The defaults every page inherits from its root layout: the title template, the
@@ -277,7 +291,7 @@ export function buildOrganization(locale: SiteLocale = "en") {
 }
 
 /** The social card URL, for consumers outside this module. */
-export const SOCIAL_IMAGE_URL = SOCIAL_IMAGE.url
+export const SOCIAL_IMAGE_URL = `${SITE_URL}/opengraph-image`
 
 /**
  * The social card as an Open Graph image entry, for pages that build their own
@@ -285,7 +299,9 @@ export const SOCIAL_IMAGE_URL = SOCIAL_IMAGE.url
  * blog articles. Without it a shared article previews as a bare title, and the
  * `image` its JSON-LD claims is one no scraper ever sees.
  */
-export const SOCIAL_IMAGES = [SOCIAL_IMAGE]
+export function socialImages(locale: SiteLocale) {
+  return [socialImage(locale)]
+}
 
 export function buildLandingStructuredData({
   locale = "en",
@@ -437,13 +453,13 @@ export function marketingMetadata(
       type: "website",
       locale: openGraphLocale(locale),
       alternateLocale: alternateOpenGraphLocale(locale),
-      images: [SOCIAL_IMAGE],
+      images: [socialImage(locale)],
     },
     twitter: {
       card: "summary_large_image",
       title: socialTitle,
       description,
-      images: [SOCIAL_IMAGE],
+      images: [socialImage(locale)],
     },
   }
 }

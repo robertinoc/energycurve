@@ -9,7 +9,7 @@ import {
   openGraphLocale,
   serializeStructuredData,
   SITE_URL,
-  SOCIAL_IMAGES,
+  socialImages,
 } from "@/lib/seo"
 
 const LOCALE = "en" as const
@@ -60,13 +60,13 @@ export async function generateMetadata({
       publishedTime: post.publishedAt ?? undefined,
       modifiedTime: postUpdatedAt(post),
       locale: openGraphLocale(LOCALE),
-      images: SOCIAL_IMAGES,
+      images: socialImages(LOCALE),
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.description,
-      images: SOCIAL_IMAGES,
+      images: socialImages(LOCALE),
     },
   }
 }

@@ -131,6 +131,37 @@ describe("hreflang and canonicals", () => {
     }
   })
 
+  it("stops holding /blog out of the index once English articles exist", async () => {
+    /**
+     * The noindex on the English blog index is a fact about today's content, not
+     * a decision about the page: it has no articles, so it competes with
+     * /es/blog for the same queries while answering none of them.
+     *
+     * The moment someone writes an English article that stops being true, and
+     * the page should be indexed and back in the sitemap with /es/blog naming it
+     * as the English alternate again. Nobody adding an article will think to
+     * check a noindex list, so this fails the build instead and says what to do.
+     */
+    const { listPosts } = await import("@/lib/blog/posts")
+
+    if (listPosts("en").length === 0) {
+      expect(isIndexable("/blog", "en")).toBe(false)
+      return
+    }
+
+    expect(
+      isIndexable("/blog", "en"),
+      "English articles exist now — drop \"en:/blog\" from NOINDEX_PAGES in " +
+        "lib/content/locale-routing.ts so the index can be found in English"
+    ).toBe(true)
+  })
+
+  it("keeps the Spanish blog index indexable either way", () => {
+    // The half that never changes: the articles are Spanish and /es/blog is
+    // where they are found.
+    expect(isIndexable("/blog", "es")).toBe(true)
+  })
+
   it("puts the same social card on every localized page", () => {
     // /es used to carry six og: tags to the English home's eleven, because the
     // file-based opengraph-image only merged into the page in its own segment.
@@ -146,6 +177,20 @@ describe("hreflang and canonicals", () => {
   it("names the other language as the Open Graph alternate", () => {
     expect(marketingMetadata("/", "es").openGraph?.alternateLocale).toBe("en_US")
     expect(marketingMetadata("/", "en").openGraph?.alternateLocale).toBe("es_LA")
+  })
+
+  it("writes the card's alt text in the page's own language", () => {
+    // The drawing is one English PNG, but `og:image:alt` is text we emit — it is
+    // what a screen reader announces on a shared link. An English sentence on a
+    // Spanish page would be this branch's own bug, committed again.
+    for (const path of LOCALIZED_PATHS) {
+      const alt = (locale: "en" | "es") =>
+        (marketingMetadata(path, locale).openGraph?.images as { alt: string }[])[0].alt
+
+      expect(alt("es"), path).toContain("curva de energía")
+      expect(alt("en"), path).toContain("energy curve")
+      expect(alt("es"), path).not.toBe(alt("en"))
+    }
   })
 
   it("uses a bare `es` for hreflang so every Spanish region is served", () => {

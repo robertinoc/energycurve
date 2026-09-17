@@ -18,15 +18,22 @@ import { NotFoundContent } from "@/components/layout/not-found-content"
 export const metadata: Metadata = { title: "Page not found" }
 
 /**
- * 404 for the English tree — a `notFound()` from an article that moved, a set
- * that belongs to someone else, a share link whose signature no longer verifies.
+ * 404 for the English tree — a share link whose signature no longer verifies, a
+ * set that belongs to someone else.
  *
- * English, not the locale cookie, and that is load-bearing rather than a
- * simplification. `/blog/[slug]` is statically generated, and a static page that
- * reads a cookie while rendering its 404 fails at request time with "page
- * changed from static to dynamic" — a 500 where a 404 belongs. The bilingual
- * case that justified reading the cookie is the dashboard, which is entirely
- * dynamic and has kept its own not-found.tsx all along; that one still reads it.
+ * English because the URL is English, not because the visitor must be. The
+ * language toggle writes a cookie that the dashboard and every transactional
+ * email honour, and reading it here was tried: it cannot be done safely. Almost
+ * every page in this tree is statically rendered, and a static page that reads a
+ * cookie while rendering its 404 fails at request time with "page changed from
+ * static to dynamic" — a 500 where a 404 belongs. Adding a boundary per static
+ * route to dodge that is a rule nobody will remember the next time a route is
+ * added, and the failure is a 500 in production.
+ *
+ * So the 404 speaks the language of the address that produced it: `/es/…` gets
+ * Spanish from its own tree, everything else gets English. The place a signed-in
+ * Spanish speaker actually lives is the dashboard, which is fully dynamic and
+ * keeps reading the cookie in its own not-found.tsx.
  */
 export default function NotFound() {
   return <NotFoundContent locale="en" />
