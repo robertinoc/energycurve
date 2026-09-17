@@ -165,6 +165,18 @@ error genérico acá cuesta más que adentro.
 | Errores: set de dos temas, archivo corrupto, formato no soportado | Que el mensaje diga qué pasó y cómo seguir se lee, no se afirma |
 | Indexación y rich result de FAQ | Semanas de calendario, y Search Console |
 
+### 4d · Las dos herramientas armónicas (PR #231)
+
+| Caso | Por qué no lo cierra un test |
+|---|---|
+| La rueda y la tabla de equivalencias contra el archivo de Jordi | Los tests verifican coherencia interna —576 pares contra `assessHarmony`—; que la tabla adoptada sea la que él mandó se compara a ojo contra su archivo |
+| El pitch sin key lock contra un CDJ real | Ningún test tiene un deck. Es la afirmación más falsable de la herramienta |
+| Key lock encendido, herramienta contra equipo | Igual |
+| Mitad y doble tiempo con temas reales | Un falso positivo arruina justo los sets donde más se usa |
+| La rueda en un teléfono | Es un canvas: en desktop anda y con el dedo puede ser intocable |
+| Lector de pantalla sobre la rueda | El E2E verifica que se navegue con teclado, no que se entienda |
+| `camelot_key_selected` y `compatibility_checked` sin la clave ni el BPM | La consola es de Robertino |
+
 **Hueco cerrado el 17/09:** las ocho páginas de herramientas —no cuatro; el #231
 sumó otras cuatro sin agregarlas— faltaban en `PUBLIC_PAGES` de
 `e2e/accessibility.spec.ts`. Ya están, y el barrido WCAG 2.1 AA da cero

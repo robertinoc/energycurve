@@ -482,7 +482,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">63</strong>
+      <strong id="tally-total">71</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -756,6 +756,62 @@
           steps: ["Confirmá que las 4 URLs nuevas estén en el sitemap y devuelvan 200", "Subilas en Search Console", "Volvé en unos días: indexación, y si aparece el rich result de FAQ"],
           expect: "Las cuatro indexadas, y el FAQ mostrándose como rich result en la página de la herramienta.",
           ifNot: "Toda la página existe para esto. Si no entra al índice, es el hallazgo más importante de la sesión."
+        }
+      ]
+    },
+    {
+      code: "TOOL2",
+      title: "La rueda Camelot y el chequeador de key/BPM",
+      meta: "~45 min · una necesita un deck de verdad",
+      why: "El PR #231 sumó dos herramientas públicas más. Lo automatizado es fuerte otra vez: <code>tests/harmonic-tools.test.ts</code> verifica que la calculadora coincida con <code>assessHarmony</code> en los 576 pares, que la tabla de claves tenga las 24 una sola vez y que el semitono esté donde está (5,9463%); y <code>e2e/harmonic-tools.spec.ts</code> corre las dos en los dos idiomas, incluido el recorrido por teclado de la rueda. Lo que queda necesita el oído, el hardware y la tabla de Jordi al lado. Ojo: la rueda y el chequeador salen de la misma tabla que adoptamos en el #225, así que un error acá probablemente no sea de la herramienta sino de la tabla — y eso vale doble anotarlo.",
+      tests: [
+        {
+          code: "TOOL2.1", title: "La rueda contra el archivo de Jordi", sub: "Sección 2.2, fila por fila",
+          steps: ["Abrí la rueda y elegí <code>8A</code>", "Anotá las claves que ofrece", "Comparalas contra la fila 8A de la tabla de Jordi: <code>8A, 9B</code> perfectas; <code>8B, 9A</code> Boost +; <code>5A</code> ++; <code>10A, (3A)</code> +++; <code>7A</code> Drop −; <code>11A</code> −−; <code>6A, (1A)</code> −−−; <code>11B</code> mood", "Repetí con una clave del anillo B, por ejemplo <code>5B</code>"],
+          expect: "Coinciden las doce, y ninguna de más.",
+          ifNot: "Si falta o sobra una, el problema puede estar en la tabla misma y no en la rueda: eso toca también el reordenamiento. Anotá la clave de origen y la que sobra o falta."
+        },
+        {
+          code: "TOOL2.2", title: "La tabla de equivalencias, contra su sección 2.1", sub: "La que él tenía mal en 10 de 24 filas",
+          steps: ["Abrí la tabla de equivalencias de la rueda", "Compará Camelot ↔ Open Key ↔ tonalidad contra la sección 2.1 del archivo de Jordi", "Prestá atención a las filas 3A a 7B, que son las que él tiene mal"],
+          expect: "Nuestra tabla dice <code>3A = 8m = Bb menor</code>, no C menor. Donde discrepe con la de él, la correcta es la nuestra.",
+          ifNot: "Si discrepa en una fila fuera de ese rango, entonces sí es nuestra y hay que mirarla."
+        },
+        {
+          code: "TOOL2.3", title: "El pitch sin key lock, contra un deck real", sub: "Lo único de esta lista que necesita hardware",
+          steps: ["En el chequeador poné dos temas con BPM distintos y key lock apagado", "Anotá en qué clave dice que cae el tema entrante", "Hacé lo mismo en el CDJ o el controlador: mismo pitch, y mirá qué clave reporta el equipo"],
+          expect: "Coinciden. Y cuando el corrimiento cae entre dos claves, la herramienta lo dice en vez de inventar una.",
+          ifNot: "Es la afirmación más falsable de la herramienta: un DJ la va a contrastar con su equipo en la primera semana. Anotá los dos BPM, el pitch y las dos claves."
+        },
+        {
+          code: "TOOL2.4", title: "Key lock encendido", sub: "Que la herramienta y el equipo digan lo mismo",
+          steps: ["Mismo par de temas, key lock encendido en los dos lados"],
+          expect: "La herramienta dice que la clave no se mueve, y el equipo tampoco la mueve.",
+          ifNot: "Si el equipo sí la corre con key lock puesto, es del equipo — pero anotalo igual, porque cambia el consejo."
+        },
+        {
+          code: "TOOL2.5", title: "Mitad y doble tiempo con temas reales", sub: "174 contra 87, en serio",
+          steps: ["Cargá un tema de 174 y uno de 87 en el chequeador", "Después probá 128 contra 64"],
+          expect: "Los lee como tempos emparejados, no como saltos del 50%, y lo dice.",
+          ifNot: "Un falso positivo acá arruina justo los sets de drum and bass, que es donde más se usa."
+        },
+        {
+          code: "TOOL2.6", title: "La rueda en el teléfono", sub: "Es un canvas, y se toca con el dedo",
+          steps: ["Abrí la rueda en el teléfono", "Tocá varias claves, incluidas las de los bordes", "Girá el teléfono a horizontal"],
+          expect: "Se puede tocar cada clave sin errarle, se lee, y no se rompe al rotar.",
+          ifNot: "Sacá captura. Un canvas que en desktop funciona puede ser intocable en un teléfono y ningún test lo ve."
+        },
+        {
+          code: "TOOL2.7", title: "Lector de pantalla sobre la rueda", sub: "El teclado ya tiene test; la voz no",
+          steps: ["Recorré la rueda con lector de pantalla", "Escuchá qué anuncia al elegir una clave y al leer las compatibles"],
+          expect: "Anuncia la clave elegida y las compatibles de forma entendible sin ver el dibujo.",
+          ifNot: "El E2E verifica que se pueda navegar con teclado, que no es lo mismo que que se entienda. Anotá qué dijo exactamente."
+        },
+        {
+          code: "TOOL2.8", title: "Los dos eventos nuevos en PostHog", sub: "<code>camelot_key_selected</code> y <code>compatibility_checked</code>",
+          steps: ["Usá las dos herramientas", "En PostHog buscá los dos eventos", "Abrí las propiedades"],
+          expect: "Llegan con el idioma y el nombre de la herramienta, y <strong>sin la clave que tocaste ni los BPM</strong>: qué clave eligió alguien es su crate, no nuestra métrica.",
+          ifNot: "Si viaja la clave o el BPM, es el mismo bug que un fetch con el nombre de un tema. Severidad alta."
         }
       ]
     },

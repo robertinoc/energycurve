@@ -150,6 +150,7 @@ Instantánea, no fuente de verdad. La fuente es la página.
 | J2 — la tabla armónica (PR #225) | 4 | Sin correr |
 | SEO — lo que el SEO técnico no puede probar solo (PR #227) | 9 | Sin correr |
 | TOOL — la herramienta pública, con archivos de verdad (PR #229) | 9 | Sin correr |
+| TOOL2 — rueda Camelot y chequeador de key/BPM (PR #231) | 8 | Sin correr — una necesita un CDJ |
 | A2 — migraciones, cron y región | 7 | Sin correr |
 | A3 — el pico objetivo | 1 | Sin correr |
 | A4 — backups y restauración | 2 | Sin correr |
@@ -159,7 +160,7 @@ Instantánea, no fuente de verdad. La fuente es la página.
 | A8 — etiquetado por oído | 3 | Sin correr |
 | UX — casos de borde | 5 | Sin correr |
 
-Son **63 pruebas** en 13 sesiones. El contador de la página se calcula solo, así
+Son **71 pruebas** en 14 sesiones. El contador de la página se calcula solo, así
 que el que vale es el que muestra arriba: el encabezado de la página original
 decía 32 mientras su propio plan ya tenía 41 filas, y ese número se arrastró
 durante varias actualizaciones antes de que alguien lo contara.
