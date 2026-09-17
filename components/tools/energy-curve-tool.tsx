@@ -31,6 +31,7 @@ import {
 } from "@/lib/tools/energy-curve"
 import { stashSet } from "@/lib/tools/stash"
 import { captureToolEvent } from "@/lib/tools/tool-events"
+import { useTypedBeforeHydration } from "@/lib/tools/use-typed-before-hydration"
 
 /**
  * The free energy-curve tool.
@@ -118,6 +119,10 @@ export function EnergyCurveTool({ locale }: { locale: SiteLocale }) {
   const [error, setError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // A tracklist pasted before hydration is in the textarea and not in state,
+  // which leaves "Analyze this list" disabled over text the visitor can see.
+  useTypedBeforeHydration([["tool-paste", paste, setPaste]])
 
   function show(
     tracks: ImportedTrack[],
