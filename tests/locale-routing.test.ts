@@ -319,28 +319,27 @@ describe("route files exist for both languages", () => {
    * in the URL, so `/pricing` and `/es/pricing` are unchanged; what it buys is a
    * second root layout, and a root layout is the only place `<html>` is written.
    */
-  const ROUTE_FILE: Record<string, string> = {
-    "/": "page.tsx",
-    "/pricing": "pricing/page.tsx",
-    "/blog": "blog/page.tsx",
-    "/install": "install/page.tsx",
-    "/energy-tags": "energy-tags/page.tsx",
-    "/import-formats": "import-formats/page.tsx",
-    "/privacy": "privacy/page.tsx",
-    "/terms": "terms/page.tsx",
-    "/cookie-policy": "cookie-policy/page.tsx",
-    "/subprocessors": "subprocessors/page.tsx",
-  }
+  const ROUTE_ROOT = { en: "app/(en)", es: "app/(es)" } as const
 
-  const ROUTE_DIR = { en: "app/(en)", es: "app/(es)/es" } as const
+  /**
+   * Where a page's route file lives, derived rather than listed.
+   *
+   * `localizedPath` already knows the URL in each language, translated slugs
+   * included, and a route file's path is that URL plus `page.tsx`. Deriving it
+   * means a page with a Spanish slug cannot be added to ES_SLUGS and forgotten
+   * here.
+   */
+  function routeFile(path: (typeof LOCALIZED_PATHS)[number], locale: "en" | "es") {
+    const url = localizedPath(path, locale)
+    const segments = url === "/" ? "" : url.slice(1)
+
+    return join(process.cwd(), ROUTE_ROOT[locale], segments, "page.tsx")
+  }
 
   it("has an English and a Spanish route file per localized path", () => {
     for (const path of LOCALIZED_PATHS) {
-      const relative = ROUTE_FILE[path]
-      expect(relative, `no route file mapped for ${path}`).toBeDefined()
-
       for (const locale of ["en", "es"] as const) {
-        const file = join(process.cwd(), ROUTE_DIR[locale], relative)
+        const file = routeFile(path, locale)
         expect(() => readFileSync(file, "utf8"), file).not.toThrow()
       }
     }
@@ -348,15 +347,26 @@ describe("route files exist for both languages", () => {
 
   it("pins each route file to one locale, matching its directory", () => {
     for (const path of LOCALIZED_PATHS) {
-      const relative = ROUTE_FILE[path]
-
       for (const locale of ["en", "es"] as const) {
-        const file = join(process.cwd(), ROUTE_DIR[locale], relative)
+        const file = routeFile(path, locale)
         expect(readFileSync(file, "utf8"), file).toContain(
           `const LOCALE = "${locale}"`
         )
       }
     }
+  })
+
+  it("serves the Spanish tools at Spanish words", () => {
+    // The reason ES_SLUGS exists: the tool pages are the ones whose whole job is
+    // to be found, and /es/tools/energy-curve throws away the words the search
+    // is made of.
+    expect(localizedPath("/tools", "es")).toBe("/es/herramientas")
+    expect(localizedPath("/tools/energy-curve", "es")).toBe(
+      "/es/herramientas/curva-de-energia"
+    )
+    expect(localizedPath("/tools/energy-curve", "en")).toBe(
+      "/tools/energy-curve"
+    )
   })
 
   it("gives each language a root layout that states its own lang", () => {

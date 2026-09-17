@@ -66,13 +66,34 @@ const SOCIAL_IMAGE_ALT: Record<SiteLocale, string> = {
   es: "EnergyCurve — analizá la curva de energía de tu set y corregí el orden antes de tocar",
 }
 
-function socialImage(locale: SiteLocale) {
+/**
+ * Pages that draw their own card instead of the site's.
+ *
+ * The free tool is the one, and the reason is the promise: a link to a page that
+ * says "no sign-up" previewing as a pitch for the thing you sign up for is a
+ * mismatch a reader notices before they click.
+ */
+const CARD_OVERRIDES: Partial<
+  Record<LocalizedPath, { path: string; alt: Record<SiteLocale, string> }>
+> = {
+  "/tools/energy-curve": {
+    path: "/opengraph-image/energy-curve",
+    alt: {
+      en: "EnergyCurve — see your DJ set's energy curve free, with no sign-up",
+      es: "EnergyCurve — mirá la curva de energía de tu set gratis y sin cuenta",
+    },
+  },
+}
+
+function socialImage(locale: SiteLocale, path?: LocalizedPath) {
+  const override = path ? CARD_OVERRIDES[path] : undefined
+
   return {
-    url: `${SITE_URL}/opengraph-image`,
+    url: `${SITE_URL}${override?.path ?? "/opengraph-image"}`,
     width: 1200,
     height: 630,
     type: "image/png",
-    alt: SOCIAL_IMAGE_ALT[locale],
+    alt: override?.alt[locale] ?? SOCIAL_IMAGE_ALT[locale],
   }
 }
 
@@ -453,13 +474,13 @@ export function marketingMetadata(
       type: "website",
       locale: openGraphLocale(locale),
       alternateLocale: alternateOpenGraphLocale(locale),
-      images: [socialImage(locale)],
+      images: [socialImage(locale, path)],
     },
     twitter: {
       card: "summary_large_image",
       title: socialTitle,
       description,
-      images: [socialImage(locale)],
+      images: [socialImage(locale, path)],
     },
   }
 }

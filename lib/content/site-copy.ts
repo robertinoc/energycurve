@@ -33,6 +33,7 @@ interface SiteCopySchema {
     title: LocalizedLabel
     subtitle: LocalizedLabel
     support: LocalizedLabel
+    tryFree: LocalizedLabel
     audienceLine: LocalizedLabel
     visual: {
       energyScore: LocalizedLabel
@@ -262,6 +263,7 @@ interface SiteCopySchema {
     billing: LocalizedLabel
     resources: LocalizedLabel
     stagelink: LocalizedLabel
+    freeTool: LocalizedLabel
     blog: LocalizedLabel
     legal: LocalizedLabel
     privacy: LocalizedLabel
@@ -321,6 +323,11 @@ const siteCopy: SiteCopySchema = {
     support: {
       en: "Your audio never leaves your computer: tags and files are read locally in your browser. Free to start — no plugin, no install.",
       es: "Tu audio nunca sale de tu computadora: los tags y los archivos se leen localmente en tu navegador. Empezás gratis — sin plugin ni instalación.",
+    },
+    /** The no-account way in, linked under the two CTAs. */
+    tryFree: {
+      en: "Or see your set's energy curve first — free, no account →",
+      es: "O mirá primero la curva de energía de tu set — gratis, sin cuenta →",
     },
     audienceLine: {
       en: "A set of nine certified bangers can still score 4 out of 10 — nine peaks in a row isn’t a journey. That’s the part no track analyzer looks at.",
@@ -1419,6 +1426,10 @@ const siteCopy: SiteCopySchema = {
     },
     resources: { en: "Resources", es: "Recursos" },
     stagelink: { en: "StageLink", es: "StageLink" },
+    freeTool: {
+      en: "Free energy curve tool",
+      es: "Curva de energía gratis",
+    },
     // Both languages call it Blog; the EN index has its own honest empty state.
     blog: { en: "Blog", es: "Blog" },
     legal: { en: "Legal", es: "Legal" },
@@ -1570,6 +1581,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       title: siteCopy.hero.title[locale],
       subtitle: siteCopy.hero.subtitle[locale],
       support: siteCopy.hero.support[locale],
+      tryFree: siteCopy.hero.tryFree[locale],
       audienceLine: siteCopy.hero.audienceLine[locale],
       visual: {
         energyScore: siteCopy.hero.visual.energyScore[locale],
@@ -1797,6 +1809,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       billing: siteCopy.footer.billing[locale],
       resources: siteCopy.footer.resources[locale],
       stagelink: siteCopy.footer.stagelink[locale],
+      freeTool: siteCopy.footer.freeTool[locale],
       blog: siteCopy.footer.blog[locale],
       legal: siteCopy.footer.legal[locale],
       privacy: siteCopy.footer.privacy[locale],

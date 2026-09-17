@@ -42,6 +42,8 @@ export const LOCALE_PREFIX = `/${PREFIXED_LOCALE}`
 export const LOCALIZED_PATHS = [
   "/",
   "/pricing",
+  "/tools",
+  "/tools/energy-curve",
   "/blog",
   "/install",
   "/energy-tags",
@@ -53,6 +55,33 @@ export const LOCALIZED_PATHS = [
 ] as const
 
 export type LocalizedPath = (typeof LOCALIZED_PATHS)[number]
+
+/**
+ * Spanish URLs for the pages whose Spanish slug is not the English one.
+ *
+ * Every page above this line has the same slug in both languages — `/pricing`
+ * and `/es/pricing` — which is why the whole model was once "prefix with /es".
+ * That worked because those slugs are product nouns a Spanish-speaking DJ types
+ * in English anyway.
+ *
+ * The tools are the first pages where it stops working. They exist to be found
+ * by someone searching "curva de energía dj", and a Spanish page living at
+ * `/es/tools/energy-curve` throws away the words the search is made of — on the
+ * one page whose entire job is to be found. So the path a page is *known by*
+ * stays English (it is an identifier, and it keeps this table readable), and the
+ * URL it is *served at* comes from here.
+ *
+ * Keys are LocalizedPath; anything absent falls through to the English slug.
+ */
+const ES_SLUGS: Partial<Record<LocalizedPath, string>> = {
+  "/tools": "/herramientas",
+  "/tools/energy-curve": "/herramientas/curva-de-energia",
+}
+
+/** The reverse table, so a Spanish URL can be read back to its path. */
+const ES_SLUGS_REVERSED = new Map(
+  Object.entries(ES_SLUGS).map(([path, slug]) => [slug, path])
+)
 
 /**
  * Pages that exist in a language but should not be indexed in it.
@@ -106,15 +135,20 @@ export function localizedPath(path: string, locale: SiteLocale): string {
     return normalized
   }
 
-  return normalized === "/" ? LOCALE_PREFIX : `${LOCALE_PREFIX}${normalized}`
+  // A translated slug where there is one — see ES_SLUGS. Paths that aren't
+  // localized pages (a blog article, say) simply aren't in the table.
+  const slug = ES_SLUGS[normalized as LocalizedPath] ?? normalized
+
+  return slug === "/" ? LOCALE_PREFIX : `${LOCALE_PREFIX}${slug}`
 }
 
 /**
  * Splits a request pathname into the locale it encodes and the path underneath.
  *
- * `/es/pricing` → `{ locale: "es", path: "/pricing" }`
- * `/es`         → `{ locale: "es", path: "/" }`
- * `/pricing`    → `{ locale: "en", path: "/pricing" }`
+ * `/es/pricing`      → `{ locale: "es", path: "/pricing" }`
+ * `/es/herramientas` → `{ locale: "es", path: "/tools" }` (see ES_SLUGS)
+ * `/es`              → `{ locale: "es", path: "/" }`
+ * `/pricing`         → `{ locale: "en", path: "/pricing" }`
  *
  * Matching is per **segment**, so `/estudio` stays English rather than being read
  * as `/es` + `tudio`.
@@ -128,9 +162,13 @@ export function splitLocalePath(pathname: string): {
   }
 
   if (pathname.startsWith(`${LOCALE_PREFIX}/`)) {
+    const slug = pathname.slice(LOCALE_PREFIX.length)
+
     return {
       locale: PREFIXED_LOCALE,
-      path: pathname.slice(LOCALE_PREFIX.length),
+      // Back through ES_SLUGS, so `/es/herramientas` reads as `/tools` rather
+      // than as a path nothing else in the app has heard of.
+      path: ES_SLUGS_REVERSED.get(slug) ?? slug,
     }
   }
 

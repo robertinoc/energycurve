@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useRef, useState } from "react"
+import { useActionState, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { CheckCircle2, UploadCloud } from "lucide-react"
 
@@ -18,6 +18,12 @@ import {
 import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
+import {
+  clearStashedSet,
+  readStashedSet,
+  stashedSetAsText,
+} from "@/lib/tools/stash"
+import { useIsClient } from "@/lib/use-is-client"
 import { cn } from "@/lib/utils"
 import {
   GENRE_LABELS,
@@ -27,6 +33,25 @@ import {
 import type { UserContext, UserGenre } from "@/types/domain"
 
 const COPY = DASHBOARD_COPY.importUpload
+
+/**
+ * Copy for the hand-off from the free tool. Local to this file because it is
+ * four strings used in exactly one place, and the alternative is a trip through
+ * site-copy.ts for something no other surface says.
+ */
+const STASH_COPY = {
+  title: {
+    en: "The set you analysed on the free tool is still here",
+    es: "El set que analizaste en la herramienta gratis sigue acá",
+  },
+  tracks: { en: "tracks", es: "temas" },
+  lossy: {
+    en: "Track names only — if it came from a Rekordbox or Traktor export, importing that file keeps the BPMs and keys.",
+    es: "Sólo los nombres — si venía de un export de Rekordbox o Traktor, importar ese archivo conserva los BPM y las tonalidades.",
+  },
+  use: { en: "Use it", es: "Usarlo" },
+  dismiss: { en: "Discard", es: "Descartar" },
+} as const
 
 export function contextCustomOptions(
   customs: UserContext[],
@@ -66,6 +91,21 @@ export function PlaylistImportUpload({
     initialPlaylistActionState
   )
   const [mode, setMode] = useState<"dj" | "audio" | "manual">("dj")
+  /**
+   * A set analysed on the free tool before this account existed.
+   *
+   * Through `useIsClient` rather than an effect: localStorage does not exist on
+   * the server, reading it in the render body would make the first paint
+   * disagree with the server's, and setting state from an effect to work around
+   * that is the cascading-render pattern the lint rule exists to stop.
+   */
+  const isClient = useIsClient()
+  const [dismissed, setDismissed] = useState(false)
+  const [prefill, setPrefill] = useState("")
+  const stashed = useMemo(
+    () => (isClient && !dismissed ? readStashedSet() : null),
+    [isClient, dismissed]
+  )
   const [fileName, setFileName] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -101,6 +141,43 @@ export function PlaylistImportUpload({
               ? COPY.subtitleManual[locale]
               : COPY.subtitle[locale]}
         </p>
+
+        {stashed ? (
+          <div className="mt-5 rounded-2xl border border-ec-cyan/25 bg-ec-cyan/[0.06] p-4">
+            <p className="text-sm font-semibold text-white">
+              {STASH_COPY.title[locale]}
+            </p>
+            <p className="mt-1 text-sm leading-6 text-ec-text-muted">
+              {stashed.playlistName ? `“${stashed.playlistName}” — ` : ""}
+              {stashed.tracks.length} {STASH_COPY.tracks[locale]}.{" "}
+              {STASH_COPY.lossy[locale]}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setPrefill(stashedSetAsText(stashed))
+                  setMode("manual")
+                  clearStashedSet()
+                  setDismissed(true)
+                }}
+                className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40"
+              >
+                {STASH_COPY.use[locale]}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  clearStashedSet()
+                  setDismissed(true)
+                }}
+                className="rounded-full px-4 py-2 text-sm text-white/60 transition hover:text-white"
+              >
+                {STASH_COPY.dismiss[locale]}
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         {/* The card hosts the three entry ways: a DJ-software export file,
             local audio files (tags read in the browser), or by hand (name +
@@ -148,9 +225,11 @@ export function PlaylistImportUpload({
         {mode === "manual" ? (
           <div className="mt-5">
             <ManualCreatePanel
+              key={prefill}
               locale={locale}
               customContexts={customContexts}
               customGenres={customGenres}
+              initialText={prefill}
             />
           </div>
         ) : null}
