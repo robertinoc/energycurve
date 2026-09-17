@@ -335,11 +335,17 @@ export function EnergyCurveTool({ locale }: { locale: SiteLocale }) {
               />
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-white/45">{copy.pasteHint[locale]}</p>
+                {/*
+                  Not disabled on an empty box. `analyzePaste` has always had a
+                  message for nothing-to-read and disabling the button made it
+                  unreachable — the visitor got a greyed-out control and no
+                  reason. Saying "one track per line" when they press it is the
+                  useful half of the same guard.
+                */}
                 <button
                   type="button"
                   onClick={analyzePaste}
-                  disabled={paste.trim().length === 0}
-                  className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition enabled:hover:border-white/40 disabled:opacity-40"
+                  className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40"
                   data-testid="tool-analyze-paste"
                 >
                   {copy.analyzePaste[locale]}
@@ -522,6 +528,9 @@ export function EnergyCurveTool({ locale }: { locale: SiteLocale }) {
         {error && (
           <p
             role="alert"
+            // Its own handle: `getByRole("alert")` matches two elements on any
+            // page here, because Next ships a route announcer with the same role.
+            data-testid="tool-error"
             className="mt-4 rounded-2xl border border-red-400/25 bg-red-400/[0.07] p-4 text-sm leading-6 text-red-100/85"
           >
             {error}{" "}

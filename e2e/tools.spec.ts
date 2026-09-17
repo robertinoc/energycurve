@@ -79,6 +79,15 @@ for (const { locale, path } of PAGES) {
       await expectResult(page)
     })
 
+    test("pressing analyze with an empty box says why", async ({ page }) => {
+      // The button used to be disabled here, which made this message
+      // unreachable: a greyed-out control and no reason given.
+      await page.goto(path)
+      await page.getByTestId("tool-analyze-paste").click()
+
+      await expect(page.getByTestId("tool-error")).toBeVisible()
+    })
+
     test("the example set works without a file", async ({ page }) => {
       await page.goto(path)
       await page.getByTestId("tool-example").click()
