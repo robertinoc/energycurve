@@ -98,6 +98,12 @@ oído o una tarjeta— se anotan en una página, no en este archivo:
 — copia de trabajo, cuenta personal. Es el único lugar donde se registra estado
 y notas.
 
+Su contenido —qué se prueba, con qué pasos— vive en
+[`docs/qa/banco-de-pruebas.html`](banco-de-pruebas.html) y se revisa como
+cualquier archivo del repo. El orden es: editar el archivo, commitear, republicar
+desde él. El estado y las notas no están ahí: cambian mientras alguien prueba, no
+cuando alguien commitea.
+
 ### Cómo está hecha, porque determina qué se puede automatizar
 
 La página guarda cada prueba como un documento en su propio almacén:
@@ -133,15 +139,16 @@ dos lados ven lo mismo porque **es el mismo almacén**, no una copia sincronizad
 No hay un proceso que corra solo, y decirlo es parte del traspaso: si nadie pide
 el paso 2, esta tabla envejece y la página tiene la verdad.
 
-### Último estado leído — 17/09/2026
+### Último estado leído — 17/09/2026 (tarde)
 
 Instantánea, no fuente de verdad. La fuente es la página.
 
 | Sesión | Pruebas | Estado |
 |---|---|---|
-| A1 — las tres cuentas de prueba | 4 | `A1.4` bloqueada por `A1.1`–`A1.3`; el resto sin correr |
+| A1 — las tres cuentas de prueba | 4 | **Las cuatro pasan (17/09).** Las tres cuentas existen y `.env.e2e.local` está escrito |
 | J — feedback de Jordi | 8 | Sin correr |
 | J2 — la tabla armónica (PR #225) | 4 | Sin correr |
+| SEO — lo que el SEO técnico no puede probar solo (PR #227) | 9 | Sin correr — **esperan el deploy**, no las cuentas |
 | A2 — migraciones, cron y región | 7 | Sin correr |
 | A3 — el pico objetivo | 1 | Sin correr |
 | A4 — backups y restauración | 2 | Sin correr |
@@ -151,9 +158,28 @@ Instantánea, no fuente de verdad. La fuente es la página.
 | A8 — etiquetado por oído | 3 | Sin correr |
 | UX — casos de borde | 5 | Sin correr |
 
-**A1 sigue siendo el cuello de botella**: desbloquea 9 de las 36. Las seis claves
-que hay que escribir en `.env.e2e.local` son las que lee `e2e/helpers/accounts.ts`,
-que hoy saltea los tests anunciándolo en el reporte — nunca los pasa en falso.
+Son **54 pruebas**, no 36: el encabezado de la página original decía 32 mientras
+su propio plan ya tenía 41 filas, y ese número se venía arrastrando. El contador
+de la página se calcula solo, así que el que vale es el que muestra arriba.
+
+**A1 está hecha, y con eso no queda nada bloqueado.** Desbloqueaba nueve pruebas
+—las cinco de UX de la página más los cuatro E2E automatizados, que no son filas—
+y las nueve están ahora disponibles. Las seis claves viven en `.env.e2e.local`,
+que es lo que lee `e2e/helpers/accounts.ts`: hasta ahora salteaba los tests
+anunciándolo en el reporte, y en la máquina donde está ese archivo ya no debería
+saltear ninguno. **Ese archivo no está en el contenedor de Claude** —ni puede
+estar, son credenciales—, así que los E2E se corren donde vive: `npm run test:e2e`.
+
+Cómo se registró: Robertino las corrió y las marcó, pero **en la otra copia del
+tracker**. Acá quedaron anotadas desde su reporte, no desde un click en esta
+página. Es la divergencia que esta sección advierte dos párrafos más arriba, y la
+primera vez que pasó de verdad.
+
+**La sesión SEO no espera a A1.** El PR #227 se mergeó sin deployar y se verificó
+contra un build local, así que sus nueve pruebas esperan a que producción sirva
+`dac198b` o posterior. Todo lo que un test puede afirmar sobre ese HTML ya está en
+`tests/locale-routing.test.ts` y `tests/blog.test.ts`; lo que queda es lo que sólo
+se ve en el sitio servido, en un navegador de verdad o en un validador ajeno.
 
 ## Lo que estos artefactos NO cubren
 

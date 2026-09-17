@@ -1,0 +1,1005 @@
+<!--
+  Banco de Pruebas EnergyCurve — fuente de la página publicada.
+
+  La página vive en https://claude.ai/artifact/S4cBUXpSRXp3X9z1REwQgA y este
+  archivo es de dónde sale. El orden importa: se edita acá, se commitea, y recién
+  entonces se republica pasando esta ruta y esa URL al publicador de artifacts.
+  Publicar desde otra copia es cómo las dos versiones empiezan a divergir.
+
+  Lo que NO está acá: el estado y las notas de cada prueba. Eso vive en el almacén
+  de la página (colección `tests`, un documento por código de prueba) porque cambia
+  mientras alguien prueba, no cuando alguien commitea. `artifacts-handoff.md`
+  explica el circuito completo.
+
+  Lo que sí está acá: el mapa — qué se prueba, en qué orden, con qué pasos y qué
+  hay que ver. Eso se revisa como cualquier otro archivo del repo.
+-->
+<title>Banco de Pruebas EnergyCurve</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+  :root {
+    --ground: #F7F7FA;
+    --raised: #FFFFFF;
+    --sunken: #EDEDF3;
+    --border: #DCDCE6;
+    --border-soft: #E9E9F0;
+    --text: #16181F;
+    --text-dim: #5C6070;
+    --text-faint: #8A8FA0;
+    --violet: #6D3FE0;
+    --violet-soft: rgba(109, 63, 224, 0.10);
+    --mint: #0E8F5E;
+    --mint-soft: rgba(14, 143, 94, 0.11);
+    --amber: #A56A00;
+    --amber-soft: rgba(165, 106, 0, 0.12);
+    --rose: #C23B3B;
+    --rose-soft: rgba(194, 59, 59, 0.10);
+    --slate: #6B7180;
+    --slate-soft: rgba(107, 113, 128, 0.10);
+    --shadow: 0 1px 2px rgba(16, 18, 27, 0.05);
+  }
+
+  :root:not([data-theme="light"]) {
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0B0D14;
+      --raised: #141824;
+      --sunken: #080A10;
+      --border: #262C3C;
+      --border-soft: #1C2130;
+      --text: #E8EAF2;
+      --text-dim: #939AB1;
+      --text-faint: #6B7288;
+      --violet: #A78BFA;
+      --violet-soft: rgba(167, 139, 250, 0.13);
+      --mint: #34D399;
+      --mint-soft: rgba(52, 211, 153, 0.13);
+      --amber: #FBBF24;
+      --amber-soft: rgba(251, 191, 36, 0.13);
+      --rose: #F87171;
+      --rose-soft: rgba(248, 113, 113, 0.13);
+      --slate: #7C8499;
+      --slate-soft: rgba(124, 132, 153, 0.13);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0B0D14;
+    --raised: #141824;
+    --sunken: #080A10;
+    --border: #262C3C;
+    --border-soft: #1C2130;
+    --text: #E8EAF2;
+    --text-dim: #939AB1;
+    --text-faint: #6B7288;
+    --violet: #A78BFA;
+    --violet-soft: rgba(167, 139, 250, 0.13);
+    --mint: #34D399;
+    --mint-soft: rgba(52, 211, 153, 0.13);
+    --amber: #FBBF24;
+    --amber-soft: rgba(251, 191, 36, 0.13);
+    --rose: #F87171;
+    --rose-soft: rgba(248, 113, 113, 0.13);
+    --slate: #7C8499;
+    --slate-soft: rgba(124, 132, 153, 0.13);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text);
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px 96px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 22px;
+    border-bottom: 2px solid var(--text);
+  }
+
+  h1 {
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    font-size: clamp(30px, 4.4vw, 42px);
+    line-height: 1.04;
+    letter-spacing: -0.022em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    margin: 10px 0 0;
+    max-width: 62ch;
+    color: var(--text-dim);
+  }
+
+  .stamp {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .stamp strong {
+    display: block;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    text-transform: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- tally ---------- */
+
+  .tally {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: 1px;
+    margin: 26px 0 0;
+    background: var(--border-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .tally-cell {
+    background: var(--raised);
+    padding: 13px 15px;
+  }
+
+  .tally-cell .n {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 23px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    display: block;
+  }
+
+  .tally-cell .k {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-faint);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  .n.s-pass { color: var(--mint); }
+  .n.s-fail { color: var(--rose); }
+  .n.s-blocked { color: var(--amber); }
+  .n.s-running { color: var(--violet); }
+  .n.s-pending, .n.s-na { color: var(--text-faint); }
+
+  /* ---------- gate notice ---------- */
+
+  .gate {
+    display: flex;
+    gap: 13px;
+    align-items: flex-start;
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-left: 3px solid var(--amber);
+    background: var(--amber-soft);
+    border-radius: 0 7px 7px 0;
+  }
+
+  .gate p { margin: 0; font-size: 14px; }
+  .gate .tag {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    color: var(--amber);
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+
+  /* ---------- session ---------- */
+
+  .session { margin-top: 40px; }
+
+  .session-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .session-code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--violet);
+    background: var(--violet-soft);
+    padding: 3px 8px;
+    border-radius: 5px;
+  }
+
+  .session-head h2 {
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: -0.015em;
+    margin: 0;
+    flex: 1 1 auto;
+  }
+
+  .session-meta {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .session-why {
+    margin: 9px 0 0;
+    font-size: 14px;
+    color: var(--text-dim);
+    max-width: 72ch;
+  }
+
+  /* ---------- test rows ---------- */
+
+  .rows { margin-top: 14px; display: flex; flex-direction: column; gap: 7px; }
+
+  .row {
+    background: var(--raised);
+    border: 1px solid var(--border-soft);
+    border-left: 3px solid var(--slate);
+    border-radius: 7px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .row[data-status="pass"] { border-left-color: var(--mint); }
+  .row[data-status="fail"] { border-left-color: var(--rose); }
+  .row[data-status="blocked"] { border-left-color: var(--amber); }
+  .row[data-status="running"] { border-left-color: var(--violet); }
+  .row[data-status="na"] { border-left-color: var(--border); }
+
+  .row-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 13px;
+    align-items: center;
+    padding: 11px 14px;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    width: 100%;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+  }
+
+  .row-head:focus-visible {
+    outline: 2px solid var(--violet);
+    outline-offset: -2px;
+  }
+
+  .code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .row-title { font-weight: 600; font-size: 15px; }
+
+  .row-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 1px;
+  }
+
+  .pill {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+    background: var(--slate-soft);
+    color: var(--slate);
+  }
+
+  .pill.s-pass { background: var(--mint-soft); color: var(--mint); }
+  .pill.s-fail { background: var(--rose-soft); color: var(--rose); }
+  .pill.s-blocked { background: var(--amber-soft); color: var(--amber); }
+  .pill.s-running { background: var(--violet-soft); color: var(--violet); }
+
+  .row-body {
+    padding: 2px 14px 15px 14px;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .block-label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-faint);
+    margin: 14px 0 5px;
+  }
+
+  ol.steps {
+    margin: 0;
+    padding-left: 19px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 14px;
+  }
+
+  ol.steps code, .expect code, .ifnot code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12.5px;
+    background: var(--sunken);
+    padding: 1px 5px;
+    border-radius: 4px;
+    overflow-wrap: anywhere;
+  }
+
+  .expect, .ifnot {
+    margin: 0;
+    font-size: 14px;
+    padding: 9px 12px;
+    border-radius: 6px;
+  }
+
+  .expect { background: var(--mint-soft); }
+  .ifnot { background: var(--sunken); color: var(--text-dim); }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-start;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .segmented { display: flex; flex-wrap: wrap; gap: 5px; }
+
+  .seg {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--raised);
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+
+  .seg:hover { border-color: var(--slate); color: var(--text); }
+  .seg:focus-visible { outline: 2px solid var(--violet); outline-offset: 1px; }
+
+  .seg[aria-pressed="true"] { color: #fff; border-color: transparent; }
+  .seg[data-v="pass"][aria-pressed="true"] { background: var(--mint); }
+  .seg[data-v="fail"][aria-pressed="true"] { background: var(--rose); }
+  .seg[data-v="blocked"][aria-pressed="true"] { background: var(--amber); color: #1a1204; }
+  .seg[data-v="running"][aria-pressed="true"] { background: var(--violet); }
+  .seg[data-v="pending"][aria-pressed="true"] { background: var(--slate); }
+
+  textarea {
+    flex: 1 1 300px;
+    min-height: 62px;
+    resize: vertical;
+    font: inherit;
+    font-size: 14px;
+    padding: 9px 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--sunken);
+    color: var(--text);
+  }
+
+  textarea:focus-visible { outline: 2px solid var(--violet); outline-offset: -1px; }
+  textarea::placeholder { color: var(--text-faint); }
+
+  .saved {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-faint);
+    align-self: center;
+    min-height: 14px;
+  }
+
+  .saved.ok { color: var(--mint); }
+  .saved.err { color: var(--rose); }
+
+  footer {
+    margin-top: 52px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-faint);
+    max-width: 72ch;
+  }
+
+  [hidden] { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 26px 15px 70px; }
+    .row-head { grid-template-columns: auto 1fr; }
+    .row-head .pill { grid-column: 2; justify-self: start; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <h1>Banco de Pruebas</h1>
+      <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
+    </div>
+    <div class="stamp">
+      <strong id="tally-total">54</strong>
+      pruebas · 5 proyectos
+    </div>
+  </header>
+
+  <div class="tally" id="tally"></div>
+
+  <div class="gate">
+    <span class="tag">Cuello&nbsp;de&nbsp;botella</span>
+    <p><strong>A1 está hecha (17/09) y con eso no queda nada bloqueado.</strong> Las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX se pueden correr y los cuatro E2E automatizados también — en la máquina donde vive ese archivo, no en el contenedor de Claude. Lo único que sigue esperando algo son las nueve de SEO, que esperan el deploy.</p>
+  </div>
+
+  <main id="sessions"></main>
+
+  <footer>
+    <p>El estado y las notas se guardan solos y los leo desde acá para actualizar Asana. El JSON de etiquetas de A8 y la evidencia de cada prueba viven donde siempre — esto registra qué se probó y qué pasó, no reemplaza el artefacto.</p>
+    <p><strong>Ésta es la copia de trabajo.</strong> Vive en la cuenta personal, que es la única en la que Claude puede escribir: la original quedó en la cuenta de migbirds y no se puede sincronizar con ésta — cada página tiene su propio almacenamiento. Anotá acá y en ningún otro lado. El traspaso al repo lo hace Claude leyendo esta página: <code>docs/qa/artifacts-handoff.md</code> explica cómo.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STATUSES = [
+    { v: "pending", label: "Pendiente" },
+    { v: "running", label: "En curso" },
+    { v: "pass", label: "Pasa" },
+    { v: "fail", label: "Falla" },
+    { v: "blocked", label: "Bloqueada" }
+  ];
+
+  var SESSIONS = [
+    {
+      code: "A1",
+      title: "Las tres cuentas de prueba",
+      meta: "~40 min · dev + Stripe test",
+      why: "Es el único ítem de la lista que bloquea a otros nueve. Con email y contraseña, no con Google: el E2E tiene que poder loguearse solo y un flujo de SSO no se automatiza sin pelearse con el consentimiento.",
+      tests: [
+        {
+          code: "A1.1", title: "Cuenta FREE", sub: "Signup normal en dev",
+          steps: ["Levantá el server: <code>cd ~/Documents/code/energycurve &amp;&amp; npm run dev</code>", "Abrí <code>localhost:3010/signup</code>", "Email <code>e2e-free@energycurve.app</code>, contraseña larga del gestor", "Completá la verificación de mail si la pide"],
+          expect: "Entrás al dashboard y la cuenta dice FREE.",
+          ifNot: "Anotá en qué paso se cortó y el texto exacto de la pantalla."
+        },
+        {
+          code: "A1.2", title: "Cuenta PRO", sub: "Checkout con tarjeta de prueba",
+          steps: ["Signup con <code>e2e-pro@energycurve.app</code>", "Confirmá arriba en Stripe que estás en <strong>Test mode</strong>", "Pricing → PRO → Checkout", "Tarjeta <code>4242 4242 4242 4242</code>, fecha futura, cualquier CVC"],
+          expect: "Volvés a la app y la cuenta dice PRO.",
+          ifNot: "Si sigue en FREE el webhook no llegó. Stripe → Developers → Webhooks: anotá si salió el evento y con qué código respondió. Eso es un hallazgo real, no un error tuyo."
+        },
+        {
+          code: "A1.3", title: "Cuenta PRO+", sub: "Por lista de cortesía, no por pago",
+          steps: ["Signup con <code>e2e-proplus@energycurve.app</code>", "En <code>.env.local</code>: <code>COMP_PRO_PLUS_EMAILS=e2e-proplus@energycurve.app</code>", "Reiniciá el server — la variable se lee del entorno del proceso"],
+          expect: "La cuenta dice PRO+ y el estado es <code>active</code>.",
+          ifNot: "Si ya había otros mails en la lista, confirmá que estén separados por coma sin espacios."
+        },
+        {
+          code: "A1.4", title: "Escribir .env.e2e.local", sub: "Lo que lee el scaffolding del PR #221",
+          steps: ["Creá <code>.env.e2e.local</code> en la raíz del repo", "Seis líneas: <code>E2E_FREE_EMAIL</code>, <code>E2E_FREE_PASSWORD</code>, y lo mismo para <code>PRO</code> y <code>PROPLUS</code>"],
+          expect: "Los seis pares cargados. No me pegues las contraseñas en el chat: con el archivo alcanza.",
+          ifNot: "El archivo ya está cubierto por <code>.env*</code> en <code>.gitignore</code>, así que no se te escapa a git."
+        }
+      ]
+    },
+    {
+      code: "J",
+      title: "Lo que salió del feedback de Jordi",
+      meta: "~45 min · necesita A1 y un NML real",
+      why: "Ocho cambios que salieron de tres rondas de feedback de un DJ externo. Ninguno tiene test automático que lo cubra de punta a punta: cuatro son de interfaz, dos necesitan un archivo real, y dos sólo se ven comparando dos órdenes a ojo.",
+      tests: [
+        {
+          code: "J.1", title: "Contacto sin cerrar sesión", sub: "El formulario vive en la página de cuenta",
+          steps: ["Entrá a <code>/dashboard/account</code>", "Mirá que estén nombre, email y plan", "Bajá al formulario de contacto: nombre y mail tienen que venir ya cargados", "Mandá un mensaje de prueba"],
+          expect: "Llega el mail, y nunca tuviste que cerrar sesión para mandarlo.",
+          ifNot: "Anotá si el link a Cuenta no aparece en el menú lateral: esa es la mitad del arreglo."
+        },
+        {
+          code: "J.2", title: "Importar CSV", sub: "Round-trip del propio export",
+          steps: ["Exportá cualquier playlist como CSV", "Volvé a subir ese mismo archivo"],
+          expect: "Entra completa, con el mismo orden y la misma metadata.",
+          ifNot: "Abrí el CSV en un editor de texto y pegame el encabezado. El importador resuelve por nombre de columna, así que el header dice por qué falló."
+        },
+        {
+          code: "J.3", title: "CSV con punto y coma", sub: "Excel en español usa <code>;</code>",
+          steps: ["Abrí el CSV exportado con Excel en español", "Guardalo desde Excel", "Volvé a subirlo"],
+          expect: "También entra.",
+          ifNot: "Es un caso real y frecuente, no un borde exótico: tratalo como severidad media."
+        },
+        {
+          code: "J.4", title: "Mover tracks después de reordenar", sub: "El callejón sin salida que reportó Jordi",
+          steps: ["Corré el análisis", "Aplicá arreglos o el orden inteligente", "Arrastrá un track a otra posición"],
+          expect: "Se mueve, aparece «Deshacer movimiento», y el puntaje se recalcula al instante.",
+          ifNot: "Si volvió, es severidad alta: era exactamente el callejón sin salida que reportó Jordi."
+        },
+        {
+          code: "J.5", title: "El punto de la curva", sub: "El arreglo fue de visibilidad",
+          steps: ["Abrí la página de la playlist", "Pasá el mouse por las filas"],
+          expect: "Un disco relleno con el color de energía del track, y una línea vertical punteada que lo conecta con el eje.",
+          ifNot: "Sacá captura. El arreglo fue justamente de visibilidad, así que lo que importa es qué se ve."
+        },
+        {
+          code: "J.6", title: "El orden de respaldo ahora respeta armonía", sub: "Sólo si la mitad del set tiene tonalidad",
+          steps: ["Usá un set donde al menos la mitad de los tracks tengan key", "Tirá el orden inteligente", "Si cae al orden automático, anotá el orden resultante y mirá las transiciones"],
+          expect: "Las keys adyacentes se llevan bien mucho más seguido que antes. Ojo: desde el PR #225 «se llevan bien» es la tabla de Jordi, no ±1 hora — también valen ±3 y ±1 semitono, el diagonal (<code>8A → 9B</code>) y la paralela mayor/menor.",
+          ifNot: "Anotá cuántos tracks del set tenían key. Abajo del 50% el optimizador ignora armonía a propósito, así que no sería un fallo. Y si una transición te suena mal pero figura en la tabla, eso es un hallazgo contra la tabla: anotá las dos keys."
+        },
+        {
+          code: "J.7", title: "Boost y drop separados", sub: "Necesita PRO+",
+          steps: ["Usá un set con transiciones marcadas", "Abrí la lista de transiciones"],
+          expect: "Las filas muestran las dos keys (<code>8A → 10A</code>) y el motivo nombra el movimiento. Desde el PR #225 son los nombres de la tabla — «Energy Boost ++», «Cambio de mood» — y ya no una sola etiqueta para cinco movimientos distintos.",
+          ifNot: "Anotá las dos keys y qué texto salió. Si dice «salto de energía hacia arriba» a secas, estás viendo el deploy viejo."
+        },
+        {
+          code: "J.8", title: "Colorear tonalidades", sub: "En la misma lista de transiciones",
+          steps: ["Tildá «Colorear las tonalidades»", "Recargá la página"],
+          expect: "Las keys se pintan con el color de la rueda, el menor más oscuro que su mayor. Y al recargar sigue tildado.",
+          ifNot: "Si no aparece el checkbox, confirmá que la cuenta sea PRO+."
+        }
+      ]
+    },
+    {
+      code: "J2",
+      title: "La tabla armónica de Jordi",
+      meta: "~25 min · necesita PRO+ y un set con keys",
+      why: "Mergeado el 16/09 en el PR #225. La tabla de transiciones que mandó Jordi reemplazó la heurística de distancia en la rueda, que marcaba como choque a la mitad de los movimientos válidos del círculo. Cambia qué órdenes propone el optimizador, así que lo que hay que mirar es si las mezclas que ahora aprueba suenan bien de verdad.",
+      tests: [
+        {
+          code: "J2.1", title: "El diagonal dejó de ser un choque", sub: "La minor a Sol mayor, el caso que destapó el bug",
+          steps: ["Armá un set con <code>8A</code> seguido de <code>9B</code>", "Corré el análisis y abrí la lista de transiciones"],
+          expect: "Esa transición ya no aparece marcada. Antes decía «las tonalidades chocan».",
+          ifNot: "Si todavía la marca, el deploy no tiene el #225. Confirmá en Vercel qué commit está sirviendo antes de anotarlo como fallo."
+        },
+        {
+          code: "J2.2", title: "Los nombres de los ocho niveles", sub: "Contra la tabla 2.2 del archivo de Jordi",
+          steps: ["Usá un set que tenga varias de estas: <code>8A→5A</code>, <code>8A→11B</code>, <code>8A→3A</code>", "Leé el motivo de cada fila"],
+          expect: "«Energy Boost ++» para 8A→5A, «Cambio de mood» para 8A→11B, y «Energy Boost +++ (segunda opción)» para 8A→3A.",
+          ifNot: "Pegame la fila entera. Los nombres salen de su tabla, así que si uno no coincide es un error de transcripción nuestro y se arregla en un renglón."
+        },
+        {
+          code: "J2.3", title: "El margen de ±7% de BPM", sub: "Su sección 2.3 — se reporta, no puntúa",
+          steps: ["Poné dos tracks con la misma key y BPM lejanos: 124 y 136", "Mirá la lista de transiciones"],
+          expect: "La fila aparece con la etiqueta <strong>Tempo</strong> (no «Áspera») y dice «diferencia de BPM de +9.7% (margen ±7%)».",
+          ifNot: "Si no aparece, fijate que los dos tracks tengan BPM: sin BPM de un lado no hay lectura de tempo, y eso es a propósito."
+        },
+        {
+          code: "J2.4", title: "Mitad de tiempo no es un salto del 50%", sub: "174 contra 87",
+          steps: ["Dos tracks a 174 y 87 BPM", "Mirá si la transición se marca por tempo"],
+          expect: "No se marca. Es un beat contra dos, y la fila lo dice: «a mitad de tiempo».",
+          ifNot: "Si la marca como fuera de margen, es un falso positivo y arruina justo los sets de drum and bass. Severidad media."
+        }
+      ]
+    },
+    {
+      code: "SEO",
+      title: "Lo que el SEO técnico no puede probar solo",
+      meta: "~40 min · necesita el deploy, no las cuentas",
+      why: "El PR #227 se verificó contra un build de producción local y se mergeó <strong>sin deployar</strong>. Todo lo que un test puede afirmar sobre el HTML ya está cubierto por <code>tests/locale-routing.test.ts</code> y <code>tests/blog.test.ts</code>: hreflang, sitemap, JSON-LD, el largo de las descripciones. Lo que queda es lo que sólo se ve contra el sitio servido, en un navegador de verdad, o en un validador ajeno — y eso es esta sesión. Primer paso de todo: confirmar en Vercel qué commit está sirviendo producción, porque si no es <code>dac198b</code> o posterior, todo lo de abajo mide el sitio viejo.",
+      tests: [
+        {
+          code: "SEO.1", title: "lang=\"es\" en el HTML que llega del servidor", sub: "El arreglo entero del PR, medido donde importa",
+          steps: ["Confirmá primero qué commit sirve producción", "<code>curl -s https://energycurve.app/es | grep -o \'&lt;html[^&gt;]*&gt;\'</code>", "Repetí con <code>/es/blog</code> y con un post cualquiera", "Y con <code>/</code>, que tiene que seguir diciendo <code>en</code>"],
+          expect: "Las tres rutas <code>/es*</code> dicen <code>lang=\"es\"</code> y la home en inglés <code>lang=\"en\"</code>.",
+          ifNot: "Antes era <code>en</code> en todo y un efecto de cliente lo corregía después de hidratar, que es tarde para un crawler. Si sigue en <code>en</code>, mirá si el deploy tiene el commit: es lo más probable, no una regresión."
+        },
+        {
+          code: "SEO.2", title: "El navegador deja de ofrecer traducir", sub: "La consecuencia humana del atributo",
+          steps: ["Abrí <code>/es</code> en Chrome con la interfaz en inglés", "Fijate si aparece el cartel de «Translate this page»", "Si tenés lector de pantalla a mano, escuchá cómo pronuncia el primer párrafo"],
+          expect: "No ofrece traducir una página que ya está en el idioma del lector, y el lector de pantalla la pronuncia en español.",
+          ifNot: "Esto no lo puede ver ningún test: es el navegador reaccionando al atributo. Si todavía ofrece traducir con <code>lang=\"es\"</code> servido, sacá captura — sería del navegador, no nuestro."
+        },
+        {
+          code: "SEO.3", title: "Rich Results Test sobre un post", sub: "Un validador ajeno, no el nuestro",
+          steps: ["Abrí el Rich Results Test de Google", "Pegá la URL de un post en producción", "Repetí con el validador de schema.org"],
+          expect: "Detecta <code>BlogPosting</code> y <code>BreadcrumbList</code>, sin errores ni advertencias de campos faltantes.",
+          ifNot: "Nuestros tests verifican que el JSON parsea y que están los campos que pedimos. Que Google lo acepte es otra cosa: si marca algo, anotá el campo exacto que nombra."
+        },
+        {
+          code: "SEO.4", title: "La tarjeta social en un scraper real", sub: "WhatsApp, X y Slack",
+          steps: ["Pegá la URL de un post en un chat de WhatsApp", "Pegá <code>/es</code> en X y en Slack", "Mirá la tarjeta que arma cada uno"],
+          expect: "Sale la imagen, el título y la descripción en los tres. Antes <code>/es</code> tenía 6 etiquetas <code>og:</code> contra las 11 de la home y salía sin imagen.",
+          ifNot: "Un test puede afirmar que la etiqueta existe; que la imagen resuelva y tenga el tamaño correcto sólo lo dice un scraper. Si falta la imagen, anotá en cuál de los tres."
+        },
+        {
+          code: "SEO.5", title: "Sitemap en producción y Search Console", sub: "Sólo vos tenés la consola",
+          steps: ["<code>curl -s https://energycurve.app/sitemap.xml | grep -c \'&lt;loc&gt;\'</code>", "Confirmá que den 24 y que <code>/blog</code> no esté", "Subí el sitemap en Search Console", "Volvé en unos días a mirar cobertura y errores de hreflang"],
+          expect: "24 URLs, sin <code>/blog</code>, y Search Console lo acepta sin errores de hreflang.",
+          ifNot: "Los errores de hreflang aparecen días después, no al subirlo. Agendate la vuelta o esta prueba queda a medias."
+        },
+        {
+          code: "SEO.6", title: "El blog en inglés salió del índice", sub: "Tres consecuencias de una sola entrada",
+          steps: ["<code>curl -s https://energycurve.app/blog | grep -i \'name=\\\"robots\\\"\'</code>", "Confirmá que <code>/blog</code> no esté en el sitemap", "En <code>/es/blog</code>, confirmá que ya no declare un alternate <code>hreflang=\"en\"</code>"],
+          expect: "<code>noindex, follow</code>, fuera del sitemap, y sin alternate en inglés desde el español.",
+          ifNot: "Las tres salen de una sola entrada en <code>NOINDEX_PAGES</code>: si una falla y las otras no, es un bug de verdad y no un olvido de configuración."
+        },
+        {
+          code: "SEO.7", title: "El 404 con marca, en los dos grupos de ruta", sub: "Donde el split casi rompe algo",
+          steps: ["Probá <code>/nope</code>, <code>/es/nope</code>, un slug de post inexistente en cada idioma, y un id de dashboard que no exista", "Mirá el código de estado y la página que sale"],
+          expect: "404 en todos (o 307 a auth en el del dashboard), nunca 500, y la página con marca — no la de Next.",
+          ifNot: "Éste es el caso caro: una llamada a <code>cookies()</code> en <code>app/not-found.tsx</code> convierte el 404 en 500 para los posts estáticos. Si ves un 500, avisá antes de seguir."
+        },
+        {
+          code: "SEO.8", title: "«Seguir leyendo» y el CTA al final", sub: "Los cinco posts, uno por uno",
+          steps: ["Abrí cada uno de los 5 posts hasta el final", "Contá los artículos sugeridos y fijate que el que estás leyendo no esté", "Confirmá que estén ordenados del más reciente al más viejo", "Tocá el botón «Analizá tu set gratis»"],
+          expect: "Tres artículos del mismo idioma, sin el actual, más recientes primero; y el botón lleva a <code>/signup</code>.",
+          ifNot: "Con 5 posts publicados, cada uno tiene exactamente 4 candidatos y muestra 3. Si alguno muestra menos, anotá cuál."
+        },
+        {
+          code: "SEO.9", title: "El lastmod de un artículo se mueve solo", sub: "La trampa de .next incluida",
+          steps: ["<strong>Borrá <code>.next</code> primero</strong> — los artículos se leen con <code>readFileSync</code> en build y el bundler no los ve como dependencia", "Cambiá <code>updatedAt</code> en el frontmatter de un post", "Rebuild y mirá el sitemap"],
+          expect: "Sólo se mueve el <code>lastmod</code> de ese post. Los demás quedan en su fecha y las páginas de marketing en la del build.",
+          ifNot: "Si no cambió nada, casi seguro es <code>.next</code> viejo: así fue como el arreglo de las descripciones pareció no aplicar. Reintentá con el borrado antes de anotarlo."
+        }
+      ]
+    },
+    {
+      code: "A2",
+      title: "Migraciones, cron y región",
+      meta: "~30 min · consolas",
+      why: "Cuatro de estos son los quince minutos mejor invertidos de toda la auditoría: convierten seis controles escritos en seis que efectivamente corren. La 0029 no la nombra ningún documento — la encontré contando archivos, no leyendo.",
+      tests: [
+        { code: "A2.1", title: "Aplicar 0027 en dev", sub: "admin_audit_log", steps: ["SQL Editor del proyecto de dev", "Pegá <code>supabase/migrations/0027_admin_audit_log.sql</code>"], expect: "La tabla existe y el panel de admin deja de decir que falta la migración.", ifNot: "Anotá el error del editor tal cual." },
+        { code: "A2.2", title: "Aplicar 0028 en dev", sub: "analysis_blob_retention", steps: ["Mismo editor", "Pegá <code>0028_analysis_blob_retention.sql</code>"], expect: "Aplicada sin error.", ifNot: "Si dice que ya existe, es idempotente a propósito: anotalo y seguí." },
+        { code: "A2.3", title: "Aplicar o confirmar 0029", sub: "rate_limit_buckets — no figura en ningún documento", steps: ["Pegá <code>0029_rate_limit_buckets.sql</code>", "Confirmá si ya estaba aplicada"], expect: "Aplicada o confirmada.", ifNot: "Éste es el hallazgo: G-2 dice «0027 y 0028» y son tres. Anotá cuál era el estado real." },
+        { code: "A2.4", title: "Setear CRON_SECRET en Vercel", sub: "Sin esto ningún barrido corre", steps: ["Vercel → Settings → Environment Variables", "<code>CRON_SECRET</code> con un valor largo y aleatorio", "Redeploy"], expect: "La ruta de retención deja de responder 503.", ifNot: "El 503 es correcto por diseño: un endpoint que borra datos y falla abierto es peor que uno que no corre nunca." },
+        { code: "A2.5", title: "Confirmar 0021 y 0023–0026 en producción", sub: "Tarea abierta en Desarrollo", steps: ["SQL Editor del proyecto de PRODUCCIÓN", "Verificá que cada tabla y columna exista"], expect: "Las cinco confirmadas.", ifNot: "Ojo: el panel de Supabase muestra la insignia verde <code>main PRODUCTION</code> en los DOS proyectos — etiqueta la rama, no el entorno. Ya hizo que una migración se corriera dos veces en dev." },
+        { code: "A2.6", title: "Confirmar la región de Supabase", sub: "Hoy la política puede estar diciendo algo falso", steps: ["Supabase → Settings → General", "Anotá la región exacta"], expect: "Región confirmada.", ifNot: "Si no es UE, hay que corregir la política de privacidad: la frase «Supabase (región UE)» se quitó justamente porque nadie la había verificado." },
+        { code: "A2.7", title: "Setear BACKSTAGE_ADMIN_EMAILS", sub: "Hallazgo S-08: no está en producción", steps: ["Vercel → Environment Variables", "Tu mail en <code>BACKSTAGE_ADMIN_EMAILS</code>"], expect: "El allowlist de admin existe en producción.", ifNot: "Anotá si ya estaba y con qué valor." }
+      ]
+    },
+    {
+      code: "A3",
+      title: "El pico objetivo",
+      meta: "~15 min · una decisión",
+      why: "Sin este número una prueba de carga produce un gráfico, no una respuesta. Es lo único que separa «así se comporta hoy» de «alcanza o no alcanza», y no lo puede decidir nadie más que vos.",
+      tests: [
+        { code: "A3.1", title: "Definir el pico", sub: "Alcanza con órdenes de magnitud", steps: ["¿Cuántos usuarios simultáneos en el peor momento?", "¿Cuántos análisis por hora?", "¿Qué latencia en el dashboard ya se siente rota?"], expect: "Tres números, aunque sean aproximados.", ifNot: "Si no tenés intuición, partí del peor viernes que imagines en seis meses y multiplicá por tres." }
+      ]
+    },
+    {
+      code: "A4",
+      title: "Backups y restauración",
+      meta: "~90 min · la nota más baja del scorecard",
+      why: "Operación sacó 4/10 y esta es la fila que la hunde. Un backup que nunca se restauró es una hipótesis, no un control — y es lo primero que prueba un comprador en due diligence.",
+      tests: [
+        { code: "A4.1", title: "Inventariar qué backups existen", sub: "Hoy nadie verificó cuáles, ni cada cuánto, ni cuánto se retienen", steps: ["Supabase → Database → Backups", "Anotá: frecuencia, retención, y si Point-in-Time Recovery está habilitado"], expect: "Tres datos escritos.", ifNot: "Si el plan no incluye PITR, eso también es el hallazgo." },
+        { code: "A4.2", title: "Restaurar de verdad y cronometrar", sub: "A un proyecto descartable, no sobre dev", steps: ["Creá un proyecto nuevo y descartable", "Restaurá el último backup ahí", "<strong>Cronometralo</strong> de punta a punta", "Verificá que los datos estén: contá filas de una tabla que conozcas"], expect: "Restauración completa, con el número de minutos anotado. Ese número ES el RTO.", ifNot: "Si falla, eso es el hallazgo más importante de toda la auditoría y hay que tratarlo como incidente." }
+      ]
+    },
+    {
+      code: "A5",
+      title: "Recorrido como DJ real",
+      meta: "2 × 90 min · cierra 5 tareas de Auditoría360",
+      why: "La fase F1 entera. Su criterio de validación no es un checklist: es poner a alguien a hacer la tarea real del producto y mirar dónde se traba. La fricción es una reacción humana — un test puede afirmar que el botón existe, nunca que el flujo te dio bronca.",
+      tests: [
+        { code: "A5.1", title: "Recorrido funcional y catálogo de features", sub: "Confirmar que todo lo prometido existe y anda", steps: ["Recorré el producto como auditor, no como dueño", "Contrastá contra las 28 capabilities marcadas <code>shipped</code>", "Marcá cada una: anda / anda a medias / no está"], expect: "Las 28 con veredicto.", ifNot: "Una capability declarada shipped que no anda es un hallazgo de severidad alta: la matriz de precios la vende." },
+        { code: "A5.2", title: "Bugs residuales", sub: "Los que el desarrollo pasó por alto", steps: ["Importá un tracklist real tuyo", "Leé la curva, aplicá los arreglos sugeridos", "Exportá a Rekordbox y a Traktor", "Abrí los dos archivos en su programa"], expect: "El set vuelve al programa con hotcues, loops y tags intactos.", ifNot: "Éste es el camino del P0 del 07/09. Si algo se perdió, parar todo y avisarme." },
+        { code: "A5.3", title: "Consistencia de UX y estados de error", sub: "Coherencia visual y de comportamiento", steps: ["Forzá errores a propósito: archivo corrupto, playlist vacía, sin BPM", "Mirá si el mensaje dice qué pasó y cómo arreglarlo"], expect: "Ningún estado roto ni mensaje genérico en los caminos críticos.", ifNot: "Sacá captura del estado y anotá qué esperabas leer." },
+        { code: "A5.4", title: "Fricción en flujos críticos", sub: "Onboarding, valor central, conversión", steps: ["Hacé el recorrido de un usuario nuevo con una cuenta vacía", "Cronometrá cuánto tardás desde signup hasta ver tu primera curva", "Anotá cada vez que dudaste qué hacer"], expect: "El camino a la primera curva, medido en minutos y en dudas.", ifNot: "Las dudas valen más que los minutos. Anotá la frase exacta que te hizo dudar." },
+        { code: "A5.5", title: "Catalogar hallazgos por severidad", sub: "Base para el plan de remediación", steps: ["Juntá todo lo de A5.1–A5.4", "Ordenalos por lo que costaría si llega a un usuario, no por lo fácil que sean"], expect: "Lista con severidad asignada.", ifNot: "Si no encontraste nada, decilo: también es un resultado, sólo que hay que decir cuánto tiempo miraste." },
+        { code: "A5.6", title: "Set largo", sub: "Más de 80 tracks", steps: ["Importá una playlist de más de 80 tracks", "Corré el análisis"], expect: "La página carga en segundos y simplemente no ofrece sugerencia de reordenamiento.", ifNot: "Si tarda más de 10 segundos o se cae, el tope de 80 no está haciendo efecto: severidad alta." }
+      ]
+    },
+    {
+      code: "A6",
+      title: "Consolas y continuidad",
+      meta: "2 × 60 min · sólo vos tenés los accesos",
+      why: "Las consolas nunca se auditaron y está declarado como tal. El bus factor 1 es el riesgo dominante del producto entero: si mañana no estás, lo que falla no es el código.",
+      tests: [
+        { code: "A6.1", title: "IAM y configuración de cloud", sub: "Mínimo privilegio", steps: ["Vercel, Supabase, WorkOS, Stripe: revisá quién tiene acceso y con qué rol", "Anotá cualquier token o integración que no reconozcas"], expect: "Inventario de accesos por proveedor.", ifNot: "Un token que no reconocés es un hallazgo, no un olvido: anotalo antes de borrarlo." },
+        { code: "A6.2", title: "KMS y rotación de claves", sub: "Qué claves existen y cuándo se rotaron", steps: ["Listá cada secreto de producción y su antigüedad", "Definí cada cuánto se rotan"], expect: "Lista con fecha de última rotación.", ifNot: "Si nunca se rotó ninguna, escribí eso: es el estado honesto." },
+        { code: "A6.3", title: "Acceso de emergencia delegado", sub: "La medida del Art. 32 con mejor relación costo-beneficio que queda", steps: ["Gestor de contraseñas con acceso de emergencia, o sobre sellado", "Delegalo a alguien de confianza", "Sumá un segundo contacto en hello@energycurve.app"], expect: "Alguien más puede entrar si vos no estás.", ifNot: "Sin esto, nadie puede contestar un DSAR ni notificar una brecha en 72 horas." }
+      ]
+    },
+    {
+      code: "A7",
+      title: "Terceros",
+      meta: "Semanas de calendario, no de esfuerzo",
+      why: "Seis tareas de Seguridad y una de Privacy dependen de esto. Arrancalo hoy aunque no lo toques más en un mes: lo que tarda es la contraparte, no vos.",
+      tests: [
+        { code: "A7.1", title: "Contratar el pentest", sub: "Desbloquea 5 tareas de Seguridad", steps: ["Pedí presupuesto a dos o tres", "Alcance: aplicación e infraestructura", "Agendá fecha"], expect: "Contratado con fecha.", ifNot: "Automatizarlo lo convierte en un scanner. El valor está en que alguien encadene tres fallos que ninguna regla ve por separado." },
+        { code: "A7.2", title: "Firmar y verificar los DPAs", sub: "Seis son autoservicio", steps: ["Vercel, Supabase, WorkOS, Stripe, PostHog, Resend, Anthropic", "Para cada uno: aceptá el DPA y verificá si incorpora SCC por referencia, o si está en dataprivacyframework.gov", "Decidí qué hacer con GetSongBPM, donde no hay DPA posible"], expect: "Cada proveedor con su mecanismo y su fecha, reemplazando el «Sin verificar».", ifNot: "Un documento que escribe «SCC ✓» sobre un supuesto es peor que uno con la celda vacía." }
+      ]
+    },
+    {
+      code: "A8",
+      title: "Etiquetado de energía por oído",
+      meta: "3 × 60 min · Energy Model v3",
+      why: "El modelo v3 predice energía desde cinco features y no tiene etiquetas reales contra las cuales calibrarse. Vos se las das. El arnés ya está cargado con los 60 tracks de <code>_POOL</code>.",
+      tests: [
+        { code: "A8.1", title: "Fijar las tres anclas", sub: "Antes de puntuar nada más", steps: ["Cargá <code>_POOL</code> en el arnés", "Escuchá y elegí: el más tranquilo, el pico más grande, y uno genuinamente ambiguo", "Fijalos en 2, 5 y 9"], expect: "Tres anclas puestas. De oído, sin mirar el BPM.", ifNot: "Si elegís por BPM metés el baseline en la escala por la puerta de atrás y después no se puede saber si v3 empata porque no sirve o porque etiquetaste con BPM." },
+        { code: "A8.2", title: "Puntuar los 60", sub: "De a 15, exportando cada tanda", steps: ["Puntuá 15, copiá el JSON, pegalo en un archivo fechado", "Repetí hasta 60", "Mirá la línea ámbar del contador: te dice qué nota falta"], expect: "Unos 55-60 usables. El mínimo útil es 40; abajo de 18 el código se niega a ajustar.", ifNot: "Si a los 40 sigue diciendo que falta un 2 y un 3, el corpus está cargado al extremo alto y hay que ir a buscar tracks tranquilos a propósito." },
+        { code: "A8.3", title: "Medir tu propia consistencia", sub: "Segunda sentada — es el techo real del modelo", steps: ["Elegí 5 tracks ya puntuados que NO sean anclas", "<strong>Borrales la nota</strong> con la opción vacía del select", "Puntualos a ciegas", "Comparalos contra el JSON exportado de la primera sentada"], expect: "Reproducirte dentro de ±1.", ifNot: "Si no te reproducís, un modelo con error 1.0 ya está en el piso de ruido y ninguna feature nueva lo mejora. El export es el único registro de la primera lectura: re-puntuar sobrescribe." }
+      ]
+    },
+    {
+      code: "UX",
+      title: "Casos de borde que esperan las cuentas",
+      meta: "~60 min · los 5 que quedaron abiertos",
+      why: "Están catalogados en <code>docs/qa/ux-edge-cases.md</code> y ninguno se declaró verificado. Los cinco dependen de A1 — por eso A1 va primero.",
+      tests: [
+        { code: "UX.1", title: "Estados vacíos autenticado", sub: "Dashboard recién creado, primer set, primer análisis", steps: ["Con la cuenta FREE recién hecha, recorré el dashboard vacío", "Creá el primer set, corré el primer análisis"], expect: "Cada estado vacío explica qué hacer, en los dos idiomas.", ifNot: "Anotá la ruta y qué decía la pantalla." },
+        { code: "UX.2", title: "Errores de Stripe en checkout", sub: "Tarjeta rechazada, sesión expirada", steps: ["Tarjeta de rechazo de Stripe: <code>4000 0000 0000 0002</code>", "Y dejá una sesión de checkout abierta hasta que expire"], expect: "El error dice qué pasó y cómo seguir, sin dejar la cuenta a medias.", ifNot: "Una cuenta que quedó entre planes es severidad alta: toca dinero." },
+        { code: "UX.3", title: "Gig Mode sin conexión", sub: "PWA en una cabina sin señal", steps: ["Abrí Gig Mode con un set cargado", "Cortá la conexión (modo avión)", "Seguí usándolo"], expect: "Sigue andando con lo que ya tenía.", ifNot: "Éste es el caso de uso real del feature: en una cabina no hay señal." },
+        { code: "UX.4", title: "Revocación de acceso en vivo", sub: "Necesita las dos cuentas a la vez", steps: ["Cuenta A comparte un set con cuenta B", "B lo abre y se queda mirándolo", "A revoca el acceso mientras B mira"], expect: "B pierde el acceso con un mensaje claro, no con una pantalla rota.", ifNot: "Anotá qué vio B exactamente en el momento de la revocación." },
+        { code: "UX.5", title: "Cuota agotada a mitad de flujo", sub: "Con la cuenta FREE", steps: ["Consumí la cuota del plan FREE", "Intentá la acción que la excede, ya empezada"], expect: "Te lo dice antes de gastar, y ofrece el camino a PRO sin perder lo hecho.", ifNot: "Una cuota chequeada después de la llamada igual cuesta lo que venía a ahorrar." }
+      ]
+    }
+  ];
+
+  var STATUS_LABEL = {};
+  STATUSES.forEach(function (s) { STATUS_LABEL[s.v] = s.label; });
+
+  var state = {};
+  var dbRef = null;
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function allTests() {
+    var out = [];
+    SESSIONS.forEach(function (s) {
+      s.tests.forEach(function (t) { out.push(t); });
+    });
+    return out;
+  }
+
+  function statusOf(code) {
+    var row = state[code];
+    return (row && row.status) || "pending";
+  }
+
+  function renderTally() {
+    var counts = { pending: 0, running: 0, pass: 0, fail: 0, blocked: 0 };
+    allTests().forEach(function (t) {
+      var s = statusOf(t.code);
+      if (counts[s] === undefined) counts[s] = 0;
+      counts[s]++;
+    });
+
+    var el = document.getElementById("tally");
+    el.innerHTML = STATUSES.map(function (s) {
+      return '<div class="tally-cell"><span class="n s-' + s.v + '">' +
+        (counts[s.v] || 0) + '</span><span class="k">' + s.label + "</span></div>";
+    }).join("");
+
+    document.getElementById("tally-total").textContent = allTests().length;
+  }
+
+  function renderRow(t) {
+    var st = statusOf(t.code);
+    var notes = (state[t.code] && state[t.code].notes) || "";
+
+    return '' +
+      '<article class="row" data-status="' + st + '" id="row-' + t.code + '">' +
+        '<button class="row-head" type="button" aria-expanded="false" aria-controls="body-' + t.code + '">' +
+          '<span class="code">' + t.code + "</span>" +
+          "<span><span class=\"row-title\">" + t.title + "</span>" +
+            '<span class="row-sub">' + t.sub + "</span></span>" +
+          '<span class="pill s-' + st + '">' + STATUS_LABEL[st] + "</span>" +
+        "</button>" +
+        '<div class="row-body" id="body-' + t.code + '" hidden>' +
+          '<p class="block-label">Pasos</p>' +
+          '<ol class="steps">' + t.steps.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ol>" +
+          '<p class="block-label">Qué tenés que ver</p>' +
+          '<p class="expect">' + t.expect + "</p>" +
+          '<p class="block-label">Si no lo ves</p>' +
+          '<p class="ifnot">' + t.ifNot + "</p>" +
+          '<div class="controls">' +
+            '<div class="segmented" role="group" aria-label="Estado de ' + t.code + '">' +
+              STATUSES.map(function (s) {
+                return '<button class="seg" type="button" data-code="' + t.code + '" data-v="' + s.v +
+                  '" aria-pressed="' + (s.v === st) + '">' + s.label + "</button>";
+              }).join("") +
+            "</div>" +
+            '<textarea data-code="' + t.code + '" placeholder="Qué viste, qué anotaste, qué falló…">' + esc(notes) + "</textarea>" +
+            '<span class="saved" data-saved="' + t.code + '"></span>' +
+          "</div>" +
+        "</div>" +
+      "</article>";
+  }
+
+  function render() {
+    document.getElementById("sessions").innerHTML = SESSIONS.map(function (s) {
+      return '' +
+        '<section class="session">' +
+          '<div class="session-head">' +
+            '<span class="session-code">' + s.code + "</span>" +
+            "<h2>" + s.title + "</h2>" +
+            '<span class="session-meta">' + s.meta + "</span>" +
+          "</div>" +
+          '<p class="session-why">' + s.why + "</p>" +
+          '<div class="rows">' + s.tests.map(renderRow).join("") + "</div>" +
+        "</section>";
+    }).join("");
+
+    renderTally();
+  }
+
+  function refreshRow(code) {
+    var st = statusOf(code);
+    var row = document.getElementById("row-" + code);
+    if (!row) return;
+
+    row.setAttribute("data-status", st);
+
+    var pill = row.querySelector(".pill");
+    pill.className = "pill s-" + st;
+    pill.textContent = STATUS_LABEL[st];
+
+    row.querySelectorAll(".seg").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.v === st));
+    });
+
+    renderTally();
+  }
+
+  function flag(code, text, kind) {
+    var el = document.querySelector('[data-saved="' + code + '"]');
+    if (!el) return;
+    el.textContent = text;
+    el.className = "saved" + (kind ? " " + kind : "");
+    if (kind === "ok") {
+      window.setTimeout(function () {
+        if (el.textContent === text) el.textContent = "";
+      }, 2200);
+    }
+  }
+
+  function persist(code) {
+    if (!dbRef) {
+      flag(code, "sin guardar", "err");
+      return;
+    }
+
+    var body = {
+      status: statusOf(code),
+      notes: (state[code] && state[code].notes) || "",
+      updatedAt: new Date().toISOString()
+    };
+
+    dbRef.doc("tests/" + code).set(body).then(function () {
+      flag(code, "guardado", "ok");
+    }, function () {
+      flag(code, "no se guardó", "err");
+    });
+  }
+
+  var timers = {};
+
+  document.addEventListener("click", function (e) {
+    var head = e.target.closest(".row-head");
+    if (head) {
+      var body = document.getElementById(head.getAttribute("aria-controls"));
+      var open = head.getAttribute("aria-expanded") === "true";
+      head.setAttribute("aria-expanded", String(!open));
+      body.hidden = open;
+      return;
+    }
+
+    var seg = e.target.closest(".seg");
+    if (seg) {
+      var code = seg.dataset.code;
+      state[code] = state[code] || {};
+      state[code].status = seg.dataset.v;
+      refreshRow(code);
+      persist(code);
+    }
+  });
+
+  document.addEventListener("input", function (e) {
+    var ta = e.target.closest("textarea[data-code]");
+    if (!ta) return;
+
+    var code = ta.dataset.code;
+    state[code] = state[code] || {};
+    state[code].notes = ta.value;
+
+    window.clearTimeout(timers[code]);
+    flag(code, "escribiendo…");
+    timers[code] = window.setTimeout(function () { persist(code); }, 700);
+  });
+
+  render();
+
+  // The page renders complete from its own definitions; the store only carries
+  // what changes. So a viewer sees the full plan immediately and saved results
+  // fill in when db answers — or never, if it cannot, without blanking the page.
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("db").then(function (db) {
+      if (!db) return;
+      dbRef = db;
+
+      db.collection("tests").onSnapshot(function (snap) {
+        snap.docs.forEach(function (d) {
+          var data = d.data() || {};
+          var focused = document.activeElement;
+          var editing = focused &&
+            focused.matches("textarea[data-code]") &&
+            focused.dataset.code === d.id;
+
+          state[d.id] = state[d.id] || {};
+          state[d.id].status = data.status || "pending";
+
+          // Never clobber a textarea someone is typing in: the snapshot that
+          // echoes your own write arrives mid-keystroke.
+          if (!editing) {
+            state[d.id].notes = data.notes || "";
+            var ta = document.querySelector('textarea[data-code="' + d.id + '"]');
+            if (ta && ta.value !== state[d.id].notes) ta.value = state[d.id].notes;
+          }
+
+          refreshRow(d.id);
+        });
+      }, function () { /* store unreachable: the page still works, unsaved */ });
+    });
+  }
+})();
+</script>
+

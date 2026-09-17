@@ -124,5 +124,26 @@ De F5 (`docs/qa/findings-f5-precision.md`) y del corpus sintético
 | Set compartido cuyo dueño revoca el acceso **mientras el colaborador lo mira** | necesita dos cuentas simultáneas |
 | Cuota de plan agotada a mitad de flujo | necesita cuenta FREE con cuota consumida |
 
-Los cinco dependen del mismo bloqueante que F3 entero. Ninguno se declara
-verificado.
+Los cinco dependían del mismo bloqueante que F3 entero: las tres cuentas de
+prueba. **Ese bloqueante se levantó el 17/09** —las cuentas existen y
+`.env.e2e.local` está escrito— así que los cinco están disponibles. Ninguno se
+declara verificado todavía: disponible y verificado no son lo mismo, y confundirlos
+es exactamente lo que este documento existe para no hacer.
+
+### 4b · Lo que dejó abierto el SEO técnico (PR #227)
+
+Distinto bloqueante: éstos no esperan las cuentas, esperan el deploy. El PR se
+verificó contra un build de producción local y se mergeó sin deployar.
+
+| Caso | Por qué no lo cierra un test |
+|---|---|
+| `lang="es"` en el HTML que sirve producción | Los tests fijan lo que cada layout declara; lo que llega del servidor lo dice `curl` contra el sitio |
+| El navegador deja de ofrecer «Translate this page» en `/es` | Es el navegador reaccionando al atributo, no algo que el HTML afirme |
+| Rich Results Test sobre un post | Nuestros tests verifican que el JSON-LD parsea y tiene los campos; que Google lo acepte es de Google |
+| La tarjeta social en WhatsApp, X y Slack | Un test ve la etiqueta `og:image`; sólo un scraper dice si la imagen resuelve |
+| Sitemap y hreflang en Search Console | Los errores de hreflang aparecen días después de subirlo, en una consola a la que sólo accede Robertino |
+| 404 con marca en los dos grupos de ruta | Una llamada a `cookies()` en `app/not-found.tsx` convierte el 404 de un post estático en 500 — es comportamiento de runtime en la plataforma real |
+| «Seguir leyendo» y el CTA al final de cada post | Que muestre 3, excluya el actual y respete el orden es verificable; que se vea bien y que el botón lleve a `/signup` se mira |
+| `lastmod` de un artículo se mueve solo | Los artículos se leen con `readFileSync` en build, así que un `.next` viejo sirve el texto anterior y la prueba miente si no se borra primero |
+
+Los ocho están en la sesión `SEO` del banco de pruebas, con los pasos.
