@@ -53,7 +53,10 @@ export function KeyTable({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="font-heading text-xl font-semibold text-white">
+        <h2
+          id="key-table-title"
+          className="font-heading text-xl font-semibold text-white"
+        >
           {copy.tableTitle[locale]}
         </h2>
         <div className="flex flex-col gap-1">
@@ -75,7 +78,23 @@ export function KeyTable({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/8">
+      {/*
+        Focusable on purpose. The table is 420px wide at minimum, so on a phone
+        this box genuinely scrolls sideways — and a region you can only reach by
+        dragging is a region a keyboard user cannot read the right-hand columns
+        of. `tabindex="0"` makes it a scroll stop; the heading names it, so what
+        gets announced on arrival is "Equivalencias" and not "group".
+
+        Found by adding the tools to the WCAG sweep: mobile-safari flagged
+        `scrollable-region-focusable` (serious) on both wheel pages. Desktop
+        never did, because at that width the table fits and nothing scrolls.
+      */}
+      <div
+        className="overflow-x-auto rounded-2xl border border-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/45"
+        tabIndex={0}
+        role="region"
+        aria-labelledby="key-table-title"
+      >
         <table className="w-full min-w-[420px] text-left text-sm">
           <thead className="bg-white/[0.04] text-[11px] uppercase tracking-[0.14em] text-white/55">
             <tr>

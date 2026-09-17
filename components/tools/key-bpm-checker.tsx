@@ -12,6 +12,7 @@ import {
   type PitchRange,
 } from "@/lib/tools/harmonic-tools"
 import { captureToolEvent } from "@/lib/tools/tool-events"
+import { useTypedBeforeHydration } from "@/lib/tools/use-typed-before-hydration"
 
 /**
  * Two tracks in, three readings out.
@@ -51,6 +52,15 @@ export function KeyBpmChecker({ locale }: { locale: SiteLocale }) {
     () => checkCompatibility(a, b, { pitchLock: keyLock }),
     [a, b, keyLock]
   )
+
+  // Anything typed into these four before hydration is in the DOM and not in
+  // state; without this the page answers about a track nobody entered.
+  useTypedBeforeHydration([
+    ["track-a-key", a.key, (value) => setA((prev) => ({ ...prev, key: value }))],
+    ["track-a-bpm", a.bpm, (value) => setA((prev) => ({ ...prev, bpm: value }))],
+    ["track-b-key", b.key, (value) => setB((prev) => ({ ...prev, key: value }))],
+    ["track-b-bpm", b.bpm, (value) => setB((prev) => ({ ...prev, bpm: value }))],
+  ])
 
   const hasInput = Boolean(b.key.trim() || b.bpm.trim())
 
