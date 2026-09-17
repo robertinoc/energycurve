@@ -124,8 +124,11 @@ De F5 (`docs/qa/findings-f5-precision.md`) y del corpus sintético
 | Set compartido cuyo dueño revoca el acceso **mientras el colaborador lo mira** | necesita dos cuentas simultáneas |
 | Cuota de plan agotada a mitad de flujo | necesita cuenta FREE con cuota consumida |
 
-Los cinco dependen del mismo bloqueante que F3 entero. Ninguno se declara
-verificado.
+Los cinco dependían del mismo bloqueante que F3 entero: las tres cuentas de
+prueba. **Ese bloqueante se levantó el 17/09** —las cuentas existen y
+`.env.e2e.local` está escrito— así que los cinco están disponibles. Ninguno se
+declara verificado todavía: disponible y verificado no son lo mismo, y confundirlos
+es exactamente lo que este documento existe para no hacer.
 
 ### 4b · Lo que dejó abierto el SEO técnico (PR #227)
 
