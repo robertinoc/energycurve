@@ -34,6 +34,18 @@ const PUBLIC_PAGES = [
   ["terms (es)", "/es/terms"],
   ["privacy (es)", "/es/privacy"],
   ["blog index (es)", "/es/blog"],
+  // The public tools. They arrived in two batches (#229, #231) and neither added
+  // them here, so the WCAG sweep skipped the only pages on the site a stranger
+  // is expected to *operate* rather than read — and #229's own Lighthouse run
+  // caught an unlabelled file input on its first pass.
+  ["tools hub", "/tools"],
+  ["energy curve tool", "/tools/energy-curve"],
+  ["camelot wheel", "/tools/camelot-wheel"],
+  ["key and BPM checker", "/tools/key-bpm-compatibility"],
+  ["tools hub (es)", "/es/herramientas"],
+  ["energy curve tool (es)", "/es/herramientas/curva-de-energia"],
+  ["camelot wheel (es)", "/es/herramientas/rueda-camelot"],
+  ["key and BPM checker (es)", "/es/herramientas/compatibilidad-tonalidad-bpm"],
 ] as const
 
 async function violationsOn(page: Page, path: string) {
