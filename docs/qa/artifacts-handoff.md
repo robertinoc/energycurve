@@ -89,6 +89,72 @@ el número de cobertura.
 
 ---
 
+## Las pruebas manuales: dónde se anotan y cómo llegan al repo
+
+Las ~36 pruebas que ningún test puede correr —las que necesitan una consola, un
+oído o una tarjeta— se anotan en una página, no en este archivo:
+
+**[Banco de Pruebas EnergyCurve](https://claude.ai/artifact/S4cBUXpSRXp3X9z1REwQgA)**
+— copia de trabajo, cuenta personal. Es el único lugar donde se registra estado
+y notas.
+
+### Cómo está hecha, porque determina qué se puede automatizar
+
+La página guarda cada prueba como un documento en su propio almacén:
+
+| | |
+|---|---|
+| Colección | `tests` |
+| Id del documento | el código de la prueba (`A1.4`, `J2.3`, `UX.5`) |
+| Campos | `status` (`pending` \| `running` \| `pass` \| `fail` \| `blocked`), `notes`, `updatedAt` |
+
+Quien abre la página escribe ahí al tocar un estado o tipear una nota. Claude lee
+y escribe el mismo almacén con la herramienta `ArtifactData` contra esa URL. Los
+dos lados ven lo mismo porque **es el mismo almacén**, no una copia sincronizada.
+
+### Lo que NO se puede hacer, y conviene no volver a intentarlo
+
+- **La página no puede escribir en el repo.** Corre en el visor de claude.ai, sin
+  acceso a git. No hay forma de que tocar "Pasa" produzca un commit.
+- **El repo no puede escribir en la página.** Nada en CI tiene credenciales del
+  almacén del artifact.
+- **Las dos páginas no se sincronizan entre sí.** La original vive en la cuenta
+  de `migbirds` y ésta en la personal; cada artifact tiene su propio almacén y
+  son organizaciones distintas, así que no hay enlace posible ni en un sentido ni
+  en el otro. La de migbirds quedó **congelada**: anotar en las dos es la forma
+  segura de perder resultados.
+
+### El puente es Claude, a pedido
+
+1. Vos anotás en la página mientras probás.
+2. Le pedís a Claude que lo traiga al repo.
+3. Claude lee la colección `tests` y actualiza la tabla de abajo en un commit.
+
+No hay un proceso que corra solo, y decirlo es parte del traspaso: si nadie pide
+el paso 2, esta tabla envejece y la página tiene la verdad.
+
+### Último estado leído — 17/09/2026
+
+Instantánea, no fuente de verdad. La fuente es la página.
+
+| Sesión | Pruebas | Estado |
+|---|---|---|
+| A1 — las tres cuentas de prueba | 4 | `A1.4` bloqueada por `A1.1`–`A1.3`; el resto sin correr |
+| J — feedback de Jordi | 8 | Sin correr |
+| J2 — la tabla armónica (PR #225) | 4 | Sin correr |
+| A2 — migraciones, cron y región | 7 | Sin correr |
+| A3 — el pico objetivo | 1 | Sin correr |
+| A4 — backups y restauración | 2 | Sin correr |
+| A5 — recorrido como DJ real | 6 | Sin correr |
+| A6 — consolas y continuidad | 3 | Sin correr |
+| A7 — terceros | 2 | Sin correr |
+| A8 — etiquetado por oído | 3 | Sin correr |
+| UX — casos de borde | 5 | Sin correr |
+
+**A1 sigue siendo el cuello de botella**: desbloquea 9 de las 36. Las seis claves
+que hay que escribir en `.env.e2e.local` son las que lee `e2e/helpers/accounts.ts`,
+que hoy saltea los tests anunciándolo en el reporte — nunca los pasa en falso.
+
 ## Lo que estos artefactos NO cubren
 
 Decirlo es parte del traspaso. Una auditoría que herede este índice creyendo que
