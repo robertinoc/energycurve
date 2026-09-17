@@ -543,6 +543,54 @@ export function formatKey(
 }
 
 /**
+ * A key moved by whole semitones, as a Camelot code.
+ *
+ * One semitone up is **seven positions clockwise**, because the wheel is laid
+ * out in fifths: twelve fifths get you back where you started, and seven of them
+ * land a semitone higher. So this is geometry the wheel already has, not a new
+ * rule about what mixes.
+ *
+ * The ring never changes — transposing a minor key gives a minor key.
+ */
+export function transposeCamelot(
+  camelot: string | null | undefined,
+  semitones: number
+): string | null {
+  const position = parseCamelot(toCamelot(camelot))
+
+  if (!position || !Number.isFinite(semitones)) {
+    return null
+  }
+
+  const shifted = position.num - 1 + Math.round(semitones) * 7
+  // `%` keeps the sign in JS, so a downward shift needs the extra wrap.
+  const num = (((shifted % 12) + 12) % 12) + 1
+
+  return `${num}${position.ring}`
+}
+
+/**
+ * Semitones of pitch change caused by playing a track `ratio` faster.
+ *
+ * On a deck **without key lock**, tempo and pitch are the same knob: speed the
+ * record up and it rises. An equal-tempered semitone is a frequency ratio of
+ * 2^(1/12), so the familiar "about 6% per semitone" is 0.0594631 — a
+ * consequence of that, which is why this computes it rather than storing it.
+ * Reporting the number to a DJ pitched ±8% is the difference between "your key
+ * moved" and "your key is now 5A".
+ *
+ * Returns a real number, not a whole one: +6% is 1.01 semitones, and rounding
+ * before the caller sees it would hide that the answer is approximate.
+ */
+export function semitonesForTempoChange(ratio: number): number {
+  if (!Number.isFinite(ratio) || ratio <= -1) {
+    return 0
+  }
+
+  return 12 * Math.log2(1 + ratio)
+}
+
+/**
  * A sortable index for a key: wheel position, then ring.
  *
  * Sorting the rendered strings would order "10A" before "2A" and put Open Key
