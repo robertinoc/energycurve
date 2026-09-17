@@ -19,6 +19,11 @@ const HINTS: Record<
   // Declaration order is emission order: keep this descending by priority.
   "/": { changeFrequency: "weekly", priority: 1 },
   "/pricing": { changeFrequency: "monthly", priority: 0.9 },
+  // The free tool is the page a stranger is most likely to arrive on, so it
+  // ranks with the homepage rather than with the reference pages. The hub sits
+  // just under it: useful, but nobody searches for a list of tools.
+  "/tools/energy-curve": { changeFrequency: "monthly", priority: 0.9 },
+  "/tools": { changeFrequency: "monthly", priority: 0.6 },
   "/blog": { changeFrequency: "weekly", priority: 0.7 },
   "/install": { changeFrequency: "monthly", priority: 0.5 },
   // A reference page a DJ lands on from the import screen or a search for

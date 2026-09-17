@@ -8,6 +8,12 @@ interface CTAButtonProps {
   children: React.ReactNode
   variant?: "primary" | "secondary"
   className?: string
+  /**
+   * Fired as the visitor leaves. Optional, and only used where the click is
+   * itself the thing worth knowing — the free tool's signup CTA, which is the
+   * conversion the page exists to produce.
+   */
+  onClick?: () => void
 }
 
 export function CTAButton({
@@ -15,10 +21,12 @@ export function CTAButton({
   children,
   variant = "primary",
   className,
+  onClick,
 }: CTAButtonProps) {
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
         buttonVariants({ size: "lg", variant: variant === "primary" ? "default" : "outline" }),
         variant === "primary"

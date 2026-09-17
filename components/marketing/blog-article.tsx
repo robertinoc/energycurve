@@ -171,7 +171,15 @@ function ArticleCta({ locale }: { locale: BlogPost["locale"] }) {
       <p className="max-w-xl text-sm leading-7 text-white/64">
         {BLOG_COPY.ctaBody[locale]}
       </p>
-      <CTAButton href="/signup">{BLOG_COPY.ctaTitle[locale]}</CTAButton>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+        <CTAButton href="/signup">{BLOG_COPY.ctaTitle[locale]}</CTAButton>
+        <Link
+          href={localizedPath("/tools/energy-curve", locale)}
+          className="text-sm text-ec-cyan underline-offset-4 hover:underline"
+        >
+          {BLOG_COPY.ctaTool[locale]}
+        </Link>
+      </div>
     </section>
   )
 }

@@ -8,6 +8,8 @@ import {
   parseDurationSeconds,
   type ImportedTrack,
   type ParsedImport,
+  type ParseImportOptions,
+  type PlaylistChoice,
 } from "@/lib/playlists/imported-track"
 import {
   extractCollectionElements,
@@ -52,6 +54,35 @@ export function isRekordboxXml(xml: string): boolean {
   return xml.includes("<DJ_PLAYLISTS")
 }
 
+/**
+ * The playlists inside a Rekordbox export, in file order, so a caller can offer
+ * the choice instead of guessing. Returns [] for a collection-only export, which
+ * is not an error: the whole collection is then the tracklist.
+ */
+export function listRekordboxPlaylists(xml: string): PlaylistChoice[] {
+  const guard = inspectXmlDocument(xml)
+
+  if (!guard.ok) {
+    return []
+  }
+
+  const root = (
+    parser.parse(xml) as {
+      DJ_PLAYLISTS?: { PLAYLISTS?: { NODE?: RawNode[] } }
+    }
+  ).DJ_PLAYLISTS
+
+  if (!root) {
+    return []
+  }
+
+  return playlistNodesOf(root).map((node, index) => ({
+    index,
+    name: (node["@_Name"] ?? "").trim() || null,
+    trackCount: node.TRACK?.length ?? 0,
+  }))
+}
+
 function toImportedTrack(
   raw: RawTrack,
   sourcePayload: string | null
@@ -82,21 +113,37 @@ function toImportedTrack(
   }
 }
 
-/** Depth-first search for the first playlist node (Type "1") with entries. */
-function findFirstPlaylistNode(node: RawNode): RawNode | null {
+/**
+ * Depth-first collection of every playlist node (Type "1") that has entries.
+ *
+ * This used to stop at the first one, which is how a library export holding
+ * forty playlists was silently read as whichever one happened to come first in
+ * the file. Collecting them all costs one more walk of a tree that is already in
+ * memory, and lets a caller ask which one the DJ meant.
+ *
+ * Folders (Type "0") are walked through but never returned: they hold playlists,
+ * they are not playlists.
+ */
+function collectPlaylistNodes(node: RawNode, into: RawNode[]): void {
   if (node["@_Type"] === "1" && (node.TRACK?.length ?? 0) > 0) {
-    return node
+    into.push(node)
   }
 
   for (const child of node.NODE ?? []) {
-    const found = findFirstPlaylistNode(child)
+    collectPlaylistNodes(child, into)
+  }
+}
 
-    if (found) {
-      return found
-    }
+function playlistNodesOf(root: {
+  PLAYLISTS?: { NODE?: RawNode[] }
+}): RawNode[] {
+  const nodes: RawNode[] = []
+
+  for (const node of root.PLAYLISTS?.NODE ?? []) {
+    collectPlaylistNodes(node, nodes)
   }
 
-  return null
+  return nodes
 }
 
 /**
@@ -107,7 +154,10 @@ function findFirstPlaylistNode(node: RawNode): RawNode | null {
  * node is present we resolve it in order; otherwise we fall back to the full
  * collection order. Throws if the XML is unparseable or has no tracks.
  */
-export function parseRekordbox(xml: string): ParsedImport {
+export function parseRekordbox(
+  xml: string,
+  options: ParseImportOptions = {}
+): ParsedImport {
   // Structural check before the parser touches it: a DOCTYPE, an entity
   // declaration or absurd nesting is refused without building a tree. See
   // lib/playlists/xml-guard.ts for why a library limit alone is not enough.
@@ -153,22 +203,20 @@ export function parseRekordbox(xml: string): ParsedImport {
     positionOf.set(track, index)
   })
 
-  // Resolve the first playlist node's ordered references, if any.
+  // Resolve the selected playlist node's ordered references, if any. The
+  // default is index 0 — the first playlist in the file, which is what this
+  // parser has always read.
   let ordered: RawTrack[] = []
   let playlistName: string | null = null
 
-  const rootNodes = root.PLAYLISTS?.NODE ?? []
+  const playlistNodes = playlistNodesOf(root)
+  const playlistNode = playlistNodes[options.playlistIndex ?? 0]
 
-  for (const node of rootNodes) {
-    const playlistNode = findFirstPlaylistNode(node)
-
-    if (playlistNode) {
-      playlistName = (playlistNode["@_Name"] ?? "").trim() || null
-      ordered = (playlistNode.TRACK ?? [])
-        .map((ref) => (ref["@_Key"] ? byId.get(ref["@_Key"]) : undefined))
-        .filter((t): t is RawTrack => Boolean(t))
-      break
-    }
+  if (playlistNode) {
+    playlistName = (playlistNode["@_Name"] ?? "").trim() || null
+    ordered = (playlistNode.TRACK ?? [])
+      .map((ref) => (ref["@_Key"] ? byId.get(ref["@_Key"]) : undefined))
+      .filter((t): t is RawTrack => Boolean(t))
   }
 
   // Fall back to full collection order when there's no playlist node.

@@ -36,6 +36,11 @@ export const BLOG_COPY = {
     en: "Analyze your set for free",
     es: "Analizá tu set gratis",
   },
+  /** The no-account alternative, beside the signup CTA rather than instead of it. */
+  ctaTool: {
+    en: "Or try the free tool, no account →",
+    es: "O probá la herramienta gratis, sin cuenta →",
+  },
   ctaBody: {
     en: "Paste a tracklist or import from Rekordbox, Traktor or M3U8, and see the curve before you play.",
     es: "Pegá una lista de temas o importá de Rekordbox, Traktor o M3U8, y mirá la curva antes de tocar.",

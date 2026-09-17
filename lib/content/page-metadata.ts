@@ -97,6 +97,30 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
       es: "Los términos que regulan tu uso de EnergyCurve.",
     },
   },
+  /**
+   * The tools hub. One tool today; the page exists so the second one has
+   * somewhere to land, and so "free dj tools" has a page to match.
+   */
+  "/tools": {
+    title: {
+      en: "Free tools for DJs",
+      es: "Herramientas gratis para DJs",
+    },
+    description: {
+      en: "Free tools for preparing a DJ set: analyze the energy curve, score it, and find the jumps. No sign-up, and your files never leave the browser.",
+      es: "Herramientas gratis para preparar un set: analizá la curva de energía, mirá el score y encontrá los saltos. Sin cuenta y sin subir tus archivos.",
+    },
+  },
+  "/tools/energy-curve": {
+    title: {
+      en: "Energy curve analyzer — free, no sign-up",
+      es: "Analizador de curva de energía — gratis, sin cuenta",
+    },
+    description: {
+      en: "Load a Rekordbox, Traktor or M3U8 playlist and see your set energy curve scored 1 to 10. Free, no sign-up, and nothing ever leaves your browser.",
+      es: "Subí tu playlist de Rekordbox, Traktor o M3U8 y mirá la curva de energía de tu set con un score de 1 a 10. Gratis, sin cuenta y sin subir archivos.",
+    },
+  },
   "/blog": {
     /**
      * Not the bare word "Blog" in both languages: the locale test rejects a title

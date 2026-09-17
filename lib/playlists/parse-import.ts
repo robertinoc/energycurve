@@ -6,15 +6,28 @@ import {
   type SupportedGenre,
 } from "@/lib/product/strategy"
 import { mapGenreTag } from "@/lib/playlists/genre-mapping"
-import type { ImportedTrack, ParsedImport } from "@/lib/playlists/imported-track"
+import type {
+  ImportedTrack,
+  ParsedImport,
+  ParseImportOptions,
+  PlaylistChoice,
+} from "@/lib/playlists/imported-track"
 import { isM3u8, parseM3u8 } from "@/lib/playlists/parse-m3u8"
-import { isRekordboxXml, parseRekordbox } from "@/lib/playlists/parse-rekordbox"
+import {
+  isRekordboxXml,
+  listRekordboxPlaylists,
+  parseRekordbox,
+} from "@/lib/playlists/parse-rekordbox"
 import {
   isRekordboxTxt,
   parseRekordboxTxt,
 } from "@/lib/playlists/parse-rekordbox-txt"
 import { isCsvPlaylist, parseCsv } from "@/lib/playlists/parse-csv"
-import { isTraktorNml, parseTraktor } from "@/lib/playlists/parse-traktor"
+import {
+  isTraktorNml,
+  listTraktorPlaylists,
+  parseTraktor,
+} from "@/lib/playlists/parse-traktor"
 
 export { mapGenreTag } from "@/lib/playlists/genre-mapping"
 
@@ -27,17 +40,20 @@ export class UnsupportedImportError extends Error {}
  * — plus CSV, which is what every other tool can produce and what our own
  * export writes. Throws UnsupportedImportError for anything else.
  */
-export function parseImport(fileContents: string): ParsedImport {
+export function parseImport(
+  fileContents: string,
+  options: ParseImportOptions = {}
+): ParsedImport {
   if (isM3u8(fileContents)) {
     return parseM3u8(fileContents)
   }
 
   if (isRekordboxXml(fileContents)) {
-    return parseRekordbox(fileContents)
+    return parseRekordbox(fileContents, options)
   }
 
   if (isTraktorNml(fileContents)) {
-    return parseTraktor(fileContents)
+    return parseTraktor(fileContents, options)
   }
 
   // Both tabular readers need a resolvable header, which is what keeps a
@@ -55,6 +71,26 @@ export function parseImport(fileContents: string): ParsedImport {
   throw new UnsupportedImportError(
     "Unrecognized file. Export a playlist as Rekordbox (XML, TXT or M3U8), Traktor NML, or a CSV with a title column."
   )
+}
+
+/**
+ * The playlists a library export contains, so a caller can offer the choice.
+ *
+ * Only the two library formats carry more than one: an M3U8 or a CSV *is* one
+ * playlist, so they answer with an empty list — "nothing to choose", not "no
+ * tracks". A caller shows a picker when this returns two or more and otherwise
+ * parses as before.
+ */
+export function listPlaylists(fileContents: string): PlaylistChoice[] {
+  if (isRekordboxXml(fileContents)) {
+    return listRekordboxPlaylists(fileContents)
+  }
+
+  if (isTraktorNml(fileContents)) {
+    return listTraktorPlaylists(fileContents)
+  }
+
+  return []
 }
 
 export interface GenreBreakdownEntry {

@@ -56,16 +56,19 @@ export function ManualCreatePanel({
   locale,
   customContexts,
   customGenres,
+  initialText = "",
 }: {
   locale: SiteLocale
   customContexts: UserContext[]
   customGenres: UserGenre[]
+  /** Pre-filled from a set analysed on the free tool before signing up. */
+  initialText?: string
 }) {
   const [state, formAction, isPending] = useActionState(
     createPlaylistWithTracksAction,
     initialPlaylistActionState
   )
-  const [text, setText] = useState("")
+  const [text, setText] = useState(initialText)
   const [format, setFormat] = useState<TracklistFormat>("artist-track")
 
   // Live preview only — the server re-parses the raw text on submit.

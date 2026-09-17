@@ -86,6 +86,18 @@ export function HeroSection({
               </a>
             </div>
 
+            {/* A third way in, deliberately not a third button: someone who
+                isn't ready to sign up can see the thing work first. Text rather
+                than a button keeps the two real CTAs above unambiguous. */}
+            <p className="text-sm leading-6 text-white/64">
+              <Link
+                href={localizedPath("/tools/energy-curve", copy.locale)}
+                className="text-ec-cyan underline-offset-4 hover:underline"
+              >
+                {copy.hero.tryFree}
+              </Link>
+            </p>
+
             <div className="max-w-3xl space-y-1.5 text-sm leading-6 text-white/64">
               <p>{copy.hero.support}</p>
               <p className="text-white/50">
@@ -783,6 +795,13 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
               {
                 href: localizedPath("/pricing", copy.locale),
                 label: copy.pricing.navLabel,
+              },
+              // Above the blog because it is the one resource here a stranger
+              // can use without an account — and the page most likely to be the
+              // first thing they ever see of us.
+              {
+                href: localizedPath("/tools/energy-curve", copy.locale),
+                label: copy.footer.freeTool,
               },
               // Without this the blog is orphaned: only the sitemap reaches it.
               { href: localizedPath("/blog", copy.locale), label: copy.footer.blog },
