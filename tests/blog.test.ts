@@ -200,3 +200,88 @@ describe("the real articles", () => {
     }
   })
 })
+
+describe("article structured data", () => {
+  /** Parsed back from the string the page actually embeds, not the object. */
+  async function graphFor(slug: string) {
+    const { getPost, postUpdatedAt } = await import("@/lib/blog/posts")
+    const { buildArticleStructuredData } = await import(
+      "@/lib/blog/structured-data"
+    )
+    const { serializeStructuredData } = await import("@/lib/seo")
+
+    const post = getPost("es", slug)!
+    const serialized = serializeStructuredData(
+      buildArticleStructuredData(post, postUpdatedAt(post))
+    )
+
+    // The escaper replaces `<` and `>` with < / >, which is still
+    // valid JSON — so round-tripping proves both the shape and the escaping.
+    return { post, serialized, graph: JSON.parse(serialized)["@graph"] }
+  }
+
+  it("publishes a BlogPosting and a BreadcrumbList for every article", async () => {
+    const { allPublishedPosts } = await import("@/lib/blog/posts")
+
+    for (const post of allPublishedPosts()) {
+      const { graph } = await graphFor(post.slug)
+      expect(
+        graph.map((node: { "@type": string }) => node["@type"]),
+        post.slug
+      ).toEqual(["BlogPosting", "BreadcrumbList"])
+    }
+  })
+
+  it("fills every field a rich result needs", async () => {
+    const { post, graph } = await graphFor("esta-bien-el-orden-de-mi-set")
+    const [article] = graph
+
+    expect(article.headline).toBe(post.title)
+    expect(article.description).toBe(post.description)
+    expect(article.datePublished).toBe(post.publishedAt)
+    expect(article.dateModified).toBe(post.publishedAt)
+    expect(article.inLanguage).toBe("es")
+    expect(article.author).toMatchObject({ "@type": "Person", name: "ROBERTINOC" })
+    expect(article.image).toContain("/opengraph-image")
+    expect(article.mainEntityOfPage["@id"]).toBe(
+      "https://energycurve.app/es/blog/esta-bien-el-orden-de-mi-set"
+    )
+  })
+
+  it("embeds the same publisher the home page declares", async () => {
+    // By `@id` alone it would be a reference to a node defined on another page,
+    // which a consumer reading only the article cannot resolve.
+    const { buildLandingStructuredData } = await import("@/lib/seo")
+    const { graph } = await graphFor("esta-bien-el-orden-de-mi-set")
+
+    const home = buildLandingStructuredData({ locale: "es" })["@graph"].find(
+      (node) => node["@type"] === "Organization"
+    )
+
+    expect(graph[0].publisher).toEqual(home)
+  })
+
+  it("walks Inicio > Blog > article, in Spanish", async () => {
+    const { graph } = await graphFor("esta-bien-el-orden-de-mi-set")
+    const crumbs = graph[1].itemListElement
+
+    expect(crumbs.map((crumb: { name: string }) => crumb.name)).toEqual([
+      "Inicio",
+      "Blog",
+      "¿Está bien el orden de mi set? Cómo saberlo antes de tocar",
+    ])
+    expect(crumbs.map((crumb: { item: string }) => crumb.item)).toEqual([
+      "https://energycurve.app/es",
+      "https://energycurve.app/es/blog",
+      "https://energycurve.app/es/blog/esta-bien-el-orden-de-mi-set",
+    ])
+  })
+
+  it("dates an unrevised article from its publication, not today", async () => {
+    const { allPublishedPosts, postUpdatedAt } = await import("@/lib/blog/posts")
+
+    for (const post of allPublishedPosts()) {
+      expect(postUpdatedAt(post), post.slug).toBe(post.updatedAt ?? post.publishedAt)
+    }
+  })
+})

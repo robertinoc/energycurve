@@ -7,7 +7,7 @@ import {
   releaseEditTurnAction,
   reorderSharedTracksAction,
   takeEditTurnAction,
-} from "@/app/dashboard/playlists/actions"
+} from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"

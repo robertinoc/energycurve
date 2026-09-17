@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { BookmarkPlus } from "lucide-react"
 
-import { saveCurveTemplateAction } from "@/app/dashboard/playlists/template-actions"
+import { saveCurveTemplateAction } from "@/app/(en)/dashboard/playlists/template-actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"

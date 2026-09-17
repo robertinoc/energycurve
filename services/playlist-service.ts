@@ -258,7 +258,7 @@ export async function getOwnedPlaylistWithTracks(
  *
  * Two callers, and each has something that stands in for ownership:
  *
- * - `app/c/[token]/page.tsx` — the share token's HMAC is verified first, so an
+ * - `app/(en)/c/[token]/page.tsx` — the share token's HMAC is verified first, so an
  *   id cannot be walked without producing a valid signature.
  * - `services/collaboration-service.ts` → `getSharedPlaylist`, which reads
  *   `set_collaborators` for (playlist_id, invited_email) and returns null

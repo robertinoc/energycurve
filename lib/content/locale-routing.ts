@@ -55,6 +55,44 @@ export const LOCALIZED_PATHS = [
 export type LocalizedPath = (typeof LOCALIZED_PATHS)[number]
 
 /**
+ * Pages that exist in a language but should not be indexed in it.
+ *
+ * `/blog` in English is the only one, and it is here rather than deleted because
+ * the page is genuinely useful: it says, in English, that the articles are in
+ * Spanish and links to them. What it is not is a search result. It has no
+ * articles, so it competes with `/es/blog` for the same queries while answering
+ * none of them, and an empty index is the kind of page that drags a small site's
+ * whole assessment down.
+ *
+ * `noindex, follow` rather than `noindex, nofollow`: a crawler that lands here
+ * should still walk through to the Spanish articles. Being listed here has three
+ * consequences, all of them applied from this one entry — the page emits a
+ * `noindex` directive, it is left out of the sitemap, and no other page
+ * advertises it as an `hreflang` alternate.
+ */
+const NOINDEX_PAGES: ReadonlyArray<`${SiteLocale}:${LocalizedPath}`> = [
+  "en:/blog",
+]
+
+/** Whether this page, in this language, should be offered to a search engine. */
+export function isIndexable(path: LocalizedPath, locale: SiteLocale): boolean {
+  return !NOINDEX_PAGES.includes(`${locale}:${path}`)
+}
+
+/**
+ * The languages of `path` that are worth advertising — the ones an `hreflang`
+ * set and the sitemap should mention.
+ *
+ * Pointing `hreflang="en"` at a page we have asked Google not to index is a
+ * contradiction, and the crawler resolves it by trusting neither half.
+ */
+export function indexableLocales(path: LocalizedPath): SiteLocale[] {
+  return (["en", PREFIXED_LOCALE] as const).filter((locale) =>
+    isIndexable(path, locale)
+  )
+}
+
+/**
  * The URL for `path` in `locale`.
  *
  * `localizedPath("/pricing", "es")` → `/es/pricing`

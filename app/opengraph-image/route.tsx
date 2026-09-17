@@ -3,13 +3,23 @@ import { ImageResponse } from "next/og"
 /**
  * Social card for energycurve.app. Drawn here rather than shipped as a PNG so
  * it stays in sync with the brand tokens and needs no design round-trip.
+ *
+ * A route handler rather than the `opengraph-image` file convention, and the
+ * reason is the two root layouts. The convention derives its URL from the
+ * segment it sits in: at `app/` it served `/opengraph-image`, but `app/` no
+ * longer has a layout, so Next resolved its metadata with no `metadataBase` and
+ * warned on every build. Moving it into a route group silenced that and renamed
+ * it to `/opengraph-image-35z9bs` — a hash that changes with the content, which
+ * is fine for a tag Next writes and fatal for the URL `lib/seo.ts` hard-codes
+ * into `og:image` on every page.
+ *
+ * As a handler the URL is the directory name and nothing else decides it. The
+ * dimensions below are mirrored in `SOCIAL_IMAGE` in lib/seo.ts, which is what
+ * `og:image:width` and `og:image:height` are built from.
  */
-export const size = { width: 1200, height: 630 }
-export const contentType = "image/png"
-export const alt =
-  "EnergyCurve — analyze your DJ set's energy curve and fix the order before you play"
+const SIZE = { width: 1200, height: 630 }
 
-export default function OpengraphImage() {
+export function GET() {
   return new ImageResponse(
     (
       <div
@@ -96,6 +106,6 @@ export default function OpengraphImage() {
         </div>
       </div>
     ),
-    size
+    SIZE
   )
 }

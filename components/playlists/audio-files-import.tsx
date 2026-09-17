@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AudioLines, FolderOpen, Music4, TriangleAlert } from "lucide-react"
 
-import { importAudioFilesAction } from "@/app/dashboard/playlists/actions"
+import { importAudioFilesAction } from "@/app/(en)/dashboard/playlists/actions"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

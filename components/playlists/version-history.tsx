@@ -8,7 +8,7 @@ import {
   compareVersionAction,
   markAsPlayedAction,
   restoreVersionAction,
-} from "@/app/dashboard/playlists/actions"
+} from "@/app/(en)/dashboard/playlists/actions"
 import { VersionComparisonView } from "@/components/playlists/version-comparison"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { formatTemplate } from "@/lib/content/analysis-copy"

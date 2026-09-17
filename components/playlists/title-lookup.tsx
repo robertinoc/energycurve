@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { Loader2, Search } from "lucide-react"
 
-import { lookupTitlesAction } from "@/app/dashboard/playlists/actions"
+import { lookupTitlesAction } from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"

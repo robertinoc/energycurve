@@ -7,7 +7,7 @@ import {
   IDLE_ACCOUNT_STATE,
   updateNameAction,
   type AccountActionState,
-} from "@/app/dashboard/account/actions"
+} from "@/app/(en)/dashboard/account/actions"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 

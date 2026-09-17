@@ -6,7 +6,7 @@ import { Loader2, UserPlus, X } from "lucide-react"
 import {
   inviteCollaboratorAction,
   removeCollaboratorAction,
-} from "@/app/dashboard/playlists/actions"
+} from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"

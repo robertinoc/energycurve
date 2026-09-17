@@ -15,6 +15,19 @@ export interface BlogPost {
   description: string
   /** ISO date. Null means draft — see `listPosts`. */
   publishedAt: string | null
+  /**
+   * ISO date of the last substantive edit, or null when the article hasn't been
+   * revised since it went up.
+   *
+   * Optional in the frontmatter and absent from all five articles today, which is
+   * the honest state: none has been revised. It exists because `lastmod` and
+   * `dateModified` are claims about this article, and the alternative to a real
+   * per-article date is the build timestamp — which would tell a crawler that
+   * every article changed every time anything in the repo was deployed. Read it
+   * through `postUpdatedAt`, never directly, so the fallback is the same
+   * everywhere.
+   */
+  updatedAt: string | null
   /** The query this was written against, from the AEO baseline. Not rendered. */
   targetQuery: string | null
   /**
@@ -86,6 +99,7 @@ function readPost(locale: SiteLocale, fileName: string): BlogPost {
     title: fields.title!,
     description: fields.description!,
     publishedAt: fields.publishedAt ?? null,
+    updatedAt: fields.updatedAt ?? null,
     targetQuery: fields.targetQuery ?? null,
     blocks: parseMarkdown(body),
   }
@@ -131,6 +145,18 @@ export function listPosts(
     // instead of a reminder to come back and flip them by hand.
     .filter((post) => post.publishedAt !== null && post.publishedAt <= today)
     .sort((a, b) => (a.publishedAt! < b.publishedAt! ? 1 : -1))
+}
+
+/**
+ * The date this article last changed: its revision date if it has one, otherwise
+ * the day it was published.
+ *
+ * Safe on any published post — `listPosts` has already excluded the ones whose
+ * `publishedAt` is null, which is what makes the non-null assertion true rather
+ * than hopeful.
+ */
+export function postUpdatedAt(post: BlogPost): string {
+  return post.updatedAt ?? post.publishedAt!
 }
 
 /** One published post, or null. Drafts read as absent, same as the index. */

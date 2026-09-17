@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { AudioLines, Check, Loader2, TriangleAlert } from "lucide-react"
 
-import { applyMeasuredAudioAction } from "@/app/dashboard/playlists/actions"
+import { applyMeasuredAudioAction } from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
 import { analyzeAudioFile } from "@/lib/audio/analyze-track"
 import { toTrackAudioFeatures } from "@/lib/audio/track-features"

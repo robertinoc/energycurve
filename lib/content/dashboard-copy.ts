@@ -107,7 +107,7 @@ export const DASHBOARD_COPY = {
       en: "The dashboard didn't load",
       es: "El dashboard no cargó",
     },
-    // App-wide variant (app/error.tsx covers every route, not just /dashboard).
+    // App-wide variant (app/(en)/error.tsx covers every route, not just /dashboard).
     crashTitleApp: {
       en: "This page didn't load",
       es: "Esta página no cargó",
@@ -135,7 +135,7 @@ export const DASHBOARD_COPY = {
     // 404. Ten `notFound()` calls existed with no not-found.tsx behind any of
     // them, so every one rendered Next's built-in page: unstyled, English only,
     // no way back. Two variants because the two audiences are not the same
-    // person — see app/not-found.tsx and app/dashboard/not-found.tsx.
+    // person — see app/not-found.tsx and app/(en)/dashboard/not-found.tsx.
     missingTitle: {
       en: "This page doesn't exist",
       es: "Esta página no existe",
@@ -1050,7 +1050,7 @@ export const DASHBOARD_COPY = {
     detailsHeading: { en: "Details", es: "Datos" },
     nameLabel: { en: "Name", es: "Nombre" },
     emailLabel: { en: "Email", es: "Email" },
-    // Rectification (Art. 16). Name only — see app/dashboard/account/actions.ts
+    // Rectification (Art. 16). Name only — see app/(en)/dashboard/account/actions.ts
     // for why the email is not editable here.
     nameEditHeading: { en: "Change your name", es: "Cambiá tu nombre" },
     nameEditHint: {

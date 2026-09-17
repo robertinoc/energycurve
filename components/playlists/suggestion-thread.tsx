@@ -6,7 +6,7 @@ import { Check, Loader2, MessageSquare } from "lucide-react"
 import {
   addSuggestionAction,
   resolveSuggestionAction,
-} from "@/app/dashboard/playlists/actions"
+} from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { formatTemplate } from "@/lib/content/analysis-copy"

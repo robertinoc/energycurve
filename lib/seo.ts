@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import {
+  indexableLocales,
+  isIndexable,
   LOCALIZED_PATHS,
   localizedPath,
-  PREFIXED_LOCALE,
   type LocalizedPath,
 } from "@/lib/content/locale-routing"
 import { pageMetadata } from "@/lib/content/page-metadata"
@@ -34,6 +35,91 @@ export function openGraphLocale(locale: SiteLocale): string {
   return OG_LOCALES[locale]
 }
 
+/** The other language's Open Graph locale — `og:locale:alternate`. */
+function alternateOpenGraphLocale(locale: SiteLocale): string {
+  return OG_LOCALES[locale === "en" ? "es" : "en"]
+}
+
+/**
+ * The social card, stated explicitly rather than inherited.
+ *
+ * `app/opengraph-image/route.tsx` is a file-based convention, and Next only merged it
+ * into the metadata of the page sitting in the same segment — the English
+ * landing page. Every other page, `/pricing` and the whole `/es` subtree
+ * included, declares an `openGraph` object of its own, and that object won an
+ * image it never set: it shipped with none. So `/es` carried six `og:` tags
+ * where `/` carried eleven, and a shared Spanish link previewed as a bare title.
+ *
+ * Naming it here puts the same card on every localized page. The dimensions are
+ * the ones `app/opengraph-image/route.tsx` declares; a scraper that has to fetch the
+ * PNG to learn its size often just skips the image.
+ */
+const SOCIAL_IMAGE = {
+  url: `${SITE_URL}/opengraph-image`,
+  width: 1200,
+  height: 630,
+  type: "image/png",
+  alt: "EnergyCurve — analyze your DJ set's energy curve and fix the order before you play",
+} as const
+
+/**
+ * The defaults every page inherits from its root layout: the title template, the
+ * fallback description, and the site-wide directives.
+ *
+ * Takes a locale because the app has two root layouts, one per language — see
+ * components/layout/site-html.tsx. The title and description here are only
+ * fallbacks (every marketing page sets its own through `marketingMetadata`), but
+ * a fallback in the wrong language is still the wrong language.
+ */
+export function buildRootMetadata(locale: SiteLocale): Metadata {
+  const { title, description } = pageMetadata("/", locale)
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: title,
+      template: "%s | EnergyCurve",
+    },
+    description,
+    keywords: SEO_KEYWORDS,
+    applicationName: "EnergyCurve",
+    category: "music",
+    // The company on the receipt, stated in the metadata too.
+    publisher: OPERATING_COMPANY.name,
+    creator: OPERATING_COMPANY.name,
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+    // Set GOOGLE_SITE_VERIFICATION in the environment to claim the domain in
+    // Search Console; the tag is omitted entirely when the variable is unset.
+    verification: process.env.GOOGLE_SITE_VERIFICATION
+      ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+      : undefined,
+    icons: {
+      icon: [
+        {
+          url: "/brand-kit/app-icon.png",
+          type: "image/png",
+        },
+      ],
+      shortcut: ["/brand-kit/app-icon.png"],
+      apple: ["/apple-touch-icon.png"],
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "EnergyCurve",
+    },
+  }
+}
+
 /**
  * The `alternates` block for one page in one language: a self-referencing
  * canonical plus the `hreflang` set.
@@ -44,17 +130,34 @@ export function openGraphLocale(locale: SiteLocale): string {
  * language canonicalises to itself and the two are related through `languages`
  * instead.
  *
- * `x-default` points at English: it's what a crawler should serve when it can't
- * match a user's language to either version.
+ * Only indexable languages are listed, which today means `/es/blog` no longer
+ * offers an English alternate: `/blog` is `noindex`, and naming a page you have
+ * asked a crawler to ignore as the English version of this one is a claim and a
+ * retraction in the same head.
+ *
+ * `x-default` is what a crawler serves when it can't match a visitor's language
+ * to any version. It points at English where English is indexable, and at the
+ * only surviving language where it isn't — for the blog index that is Spanish,
+ * which is also the only place the articles exist.
  */
-export function buildAlternates(path: string, locale: SiteLocale) {
+export function buildAlternates(path: LocalizedPath, locale: SiteLocale) {
+  const canonical = localizedPath(path, locale)
+
+  // A page we've asked not to index doesn't belong in an `hreflang` cluster in
+  // either direction: it can't be the answer for a language, and naming its
+  // neighbours would invite a crawler to treat the group as one indexable set.
+  if (!isIndexable(path, locale)) {
+    return { canonical }
+  }
+
+  const offered = indexableLocales(path)
+
   return {
-    canonical: localizedPath(path, locale),
-    languages: {
-      en: localizedPath(path, "en"),
-      [PREFIXED_LOCALE]: localizedPath(path, PREFIXED_LOCALE),
-      "x-default": localizedPath(path, "en"),
-    },
+    canonical,
+    languages: Object.fromEntries([
+      ...offered.map((code) => [code, localizedPath(path, code)]),
+      ["x-default", localizedPath(path, offered.includes("en") ? "en" : offered[0])],
+    ]),
   }
 }
 
@@ -146,25 +249,49 @@ interface StructuredDataOptions {
  * - FAQPage → the Q&A block, generated from the same copy the page renders so
  *   the markup can never contradict the visible text.
  */
-export function buildLandingStructuredData({
-  locale = "en",
-}: StructuredDataOptions = {}) {
-  const copy = getSiteCopy(locale)
-
-  const organization = {
+/**
+ * The publisher entity, in one place.
+ *
+ * Lifted out of the landing graph when the blog articles needed a `publisher`:
+ * a `BlogPosting` that referenced `#organization` by `@id` alone would be
+ * pointing at a node defined on a different page, and a consumer reading only
+ * the article gets a dangling reference. So each page that needs it embeds the
+ * whole thing, under the same `@id` — which is exactly what an `@id` is for.
+ * Two copies of a definition that can't disagree, because there is one source.
+ */
+export function buildOrganization(locale: SiteLocale = "en") {
+  return {
     "@type": "Organization",
     "@id": `${SITE_URL}/#organization`,
     name: "EnergyCurve",
     url: SITE_URL,
     logo: `${SITE_URL}/brand-kit/logo-horizontal.png`,
     email: "hello@energycurve.app",
-    description: copy.footer.description,
+    description: getSiteCopy(locale).footer.description,
     parentOrganization: {
       "@type": "Organization",
       name: OPERATING_COMPANY.name,
       url: OPERATING_COMPANY.url,
     },
   }
+}
+
+/** The social card URL, for consumers outside this module. */
+export const SOCIAL_IMAGE_URL = SOCIAL_IMAGE.url
+
+/**
+ * The social card as an Open Graph image entry, for pages that build their own
+ * `openGraph` block rather than going through `marketingMetadata` — today, the
+ * blog articles. Without it a shared article previews as a bare title, and the
+ * `image` its JSON-LD claims is one no scraper ever sees.
+ */
+export const SOCIAL_IMAGES = [SOCIAL_IMAGE]
+
+export function buildLandingStructuredData({
+  locale = "en",
+}: StructuredDataOptions = {}) {
+  const copy = getSiteCopy(locale)
+  const organization = buildOrganization(locale)
 
   const application = {
     "@type": "SoftwareApplication",
@@ -291,6 +418,16 @@ export function marketingMetadata(
      */
     title: isLanding ? { absolute: title } : title,
     description,
+    /**
+     * Spread, not `robots: cond ? x : undefined`. Next treats a key that is
+     * present and undefined as an override, so the ternary form silently
+     * stripped `index, follow` and the whole `googleBot` block — max-snippet,
+     * max-image-preview — from every page that wasn't noindex. Omitting the key
+     * is what lets the root layout's value through.
+     */
+    ...(isIndexable(path, locale)
+      ? {}
+      : { robots: { index: false, follow: true } }),
     alternates: buildAlternates(path, locale),
     openGraph: {
       title: socialTitle,
@@ -299,11 +436,14 @@ export function marketingMetadata(
       siteName: "EnergyCurve",
       type: "website",
       locale: openGraphLocale(locale),
+      alternateLocale: alternateOpenGraphLocale(locale),
+      images: [SOCIAL_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
       title: socialTitle,
       description,
+      images: [SOCIAL_IMAGE],
     },
   }
 }

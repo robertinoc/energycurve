@@ -64,7 +64,7 @@ const FILES = sourceFiles().map((path) => ({
 const UNGUARDED: Record<string, Record<string, string>> = {
   // Loads a playlist by id with no owner filter at all.
   getPlaylistWithTracksById: {
-    "app/c/[token]/page.tsx":
+    "app/(en)/c/[token]/page.tsx":
       "the HMAC in the share token is verified before this runs, and an id " +
       "cannot be walked without producing a valid signature",
     "services/collaboration-service.ts":
@@ -73,18 +73,18 @@ const UNGUARDED: Record<string, Record<string, string>> = {
   },
   // Reads every suggestion on a playlist — free text plus author emails.
   listSuggestions: {
-    "app/dashboard/playlists/[id]/page.tsx":
+    "app/(en)/dashboard/playlists/[id]/page.tsx":
       "the page loads the playlist through getOwnedPlaylistWithTracks and calls " +
       "notFound() first, so a non-owner never reaches this line",
-    "app/dashboard/shared/[id]/page.tsx":
+    "app/(en)/dashboard/shared/[id]/page.tsx":
       "getSharedPlaylist has already returned null → notFound() for anyone " +
       "without a collaborator row",
   },
   // Reads who holds the edit turn on any playlist, including their profile id.
   getLockState: {
-    "app/dashboard/playlists/actions.ts":
+    "app/(en)/dashboard/playlists/actions.ts":
       "reached only inside reorderSharedTracksAction, after mayHoldLock",
-    "app/dashboard/shared/[id]/page.tsx":
+    "app/(en)/dashboard/shared/[id]/page.tsx":
       "same collaborator gate as above, earlier in the same page",
     "services/collaboration-service.ts":
       "takeEditLock calls mayHoldLock before this, and the UPDATE is " +

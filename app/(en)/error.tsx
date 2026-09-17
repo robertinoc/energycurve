@@ -14,8 +14,8 @@ const COPY = DASHBOARD_COPY.home
  * App-wide error boundary — the one that actually catches layout failures.
  *
  * A segment's own error.tsx wraps that segment's CHILDREN, not its layout:
- * a throw inside app/dashboard/layout.tsx (session check, profile lookup,
- * sidebar playlists) skips app/dashboard/error.tsx entirely and bubbles up
+ * a throw inside app/(en)/dashboard/layout.tsx (session check, profile lookup,
+ * sidebar playlists) skips app/(en)/dashboard/error.tsx entirely and bubbles up
  * here. Without this file it escaped the app altogether and the browser
  * rendered its own "page couldn't load" screen — no message, no way back,
  * and no error reference to trace in the logs.

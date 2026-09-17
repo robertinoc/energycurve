@@ -19,7 +19,7 @@ import { describe, expect, it } from "vitest"
  * today.
  */
 
-const PAGE = join(process.cwd(), "app", "c", "[token]", "page.tsx")
+const PAGE = join(process.cwd(), "app", "(en)", "c", "[token]", "page.tsx")
 const source = readFileSync(PAGE, "utf8")
 
 /** Comments explain what the page deliberately does *not* do; strip them. */

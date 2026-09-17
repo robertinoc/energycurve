@@ -257,7 +257,7 @@ describe("set version history", () => {
   /**
    * `getVersion` and `listVersions` take a playlist id, not a profile id — the
    * caller proves ownership of the playlist first (both call sites in
-   * `app/dashboard/playlists/actions.ts` do, verified 2026-09-12). What the
+   * `app/(en)/dashboard/playlists/actions.ts` do, verified 2026-09-12). What the
    * service still owes is that the version id alone is not a key to the whole
    * table, and that is what these pin: a valid id from someone else's set,
    * requested through a playlist you do own, has to come back empty.

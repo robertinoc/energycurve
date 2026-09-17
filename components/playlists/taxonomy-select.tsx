@@ -14,7 +14,7 @@ import { Check, ChevronDown, Plus, X } from "lucide-react"
 import {
   createCustomTaxonomyAction,
   deleteCustomTaxonomyAction,
-} from "@/app/dashboard/playlists/actions"
+} from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { formatTemplate } from "@/lib/content/analysis-copy"

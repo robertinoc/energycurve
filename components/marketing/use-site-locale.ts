@@ -40,21 +40,6 @@ export function useSiteLocale(path: LocalizedPath, locale: SiteLocale) {
   const redirected = useRef(false)
 
   useEffect(() => {
-    /**
-     * `<html lang>` lives in the root layout, which cannot know the route.
-     * Deriving it server-side would mean reading the request in that layout, and
-     * that opts **every** page in the app out of static rendering — a real cost
-     * on every request, paid for an attribute Google explicitly ignores when
-     * deciding a page's language (it uses `hreflang` and the visible copy, both
-     * of which are correct in the served HTML).
-     *
-     * So it is corrected here instead. The value that matters is the one screen
-     * readers announce, and they read the live attribute.
-     */
-    document.documentElement.lang = locale
-  }, [locale])
-
-  useEffect(() => {
     // Guarded by a ref rather than an empty dep array so a fast double-mount in
     // development can't fire two navigations.
     if (redirected.current || locale === PREFIXED_LOCALE) {

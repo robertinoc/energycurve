@@ -42,7 +42,7 @@ function isMatched(pathname: string, matcherPaths: string[]) {
   })
 }
 
-/** `app/dashboard/layout.tsx` -> `/dashboard`; route groups are dropped. */
+/** `app/(en)/dashboard/layout.tsx` -> `/dashboard`; route groups are dropped. */
 function routeForFile(file: string) {
   const segments = relative(join(repoRoot, "app"), file)
     .split(sep)

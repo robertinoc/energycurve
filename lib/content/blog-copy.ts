@@ -25,6 +25,21 @@ export const BLOG_COPY = {
   },
   readSpanish: { en: "Read them in Spanish", es: "Leerlos en español" },
   backToIndex: { en: "All articles", es: "Todos los artículos" },
+  /**
+   * The end of an article used to be a single "all articles" link, which asks a
+   * reader who just finished something to go back to a list and choose again.
+   * Three named articles and one thing to do are a better answer to "what now",
+   * and they are also the only internal links these pages had.
+   */
+  keepReading: { en: "Keep reading", es: "Seguir leyendo" },
+  ctaTitle: {
+    en: "Analyze your set for free",
+    es: "Analizá tu set gratis",
+  },
+  ctaBody: {
+    en: "Paste a tracklist or import from Rekordbox, Traktor or M3U8, and see the curve before you play.",
+    es: "Pegá una lista de temas o importá de Rekordbox, Traktor o M3U8, y mirá la curva antes de tocar.",
+  },
   /** Reading time is not shown: a five-minute estimate on a four-minute read is noise. */
   publishedOn: { en: "Published", es: "Publicado el" },
 } as const

@@ -54,6 +54,8 @@ See [docs/roadmap-status.md](/Users/robertinoc/Documents/code/energycurve/docs/r
 
 ```text
 app/
+  (en)/          English routes — marketing, auth, dashboard, backstage
+  (es)/es/       Spanish marketing routes
 components/
 docs/
 lib/
@@ -62,6 +64,13 @@ supabase/migrations/
 tests/
 types/
 ```
+
+`(en)` and `(es)` are route groups, so they do not appear in any URL: `/pricing`
+and `/es/pricing` are exactly where they look. They exist because each one has
+its own root layout, and a root layout is the only place `<html lang>` can be
+written — a single root cannot know which language the route below it renders
+in. Everything else about the shell is shared through
+`components/layout/site-html.tsx`.
 
 ## Environment Variables
 

@@ -3,7 +3,7 @@
 import { useActionState, useMemo, useState } from "react"
 import { TriangleAlert } from "lucide-react"
 
-import { createPlaylistWithTracksAction } from "@/app/dashboard/playlists/actions"
+import { createPlaylistWithTracksAction } from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

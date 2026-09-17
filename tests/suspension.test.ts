@@ -72,7 +72,7 @@ describe("the routes that cost something check it", () => {
     // file, which is most of the writes in the product. One check there beats
     // twenty-five that can each be forgotten.
     const source = readFileSync(
-      join(process.cwd(), "app/dashboard/playlists/actions.ts"),
+      join(process.cwd(), "app/(en)/dashboard/playlists/actions.ts"),
       "utf8"
     )
 

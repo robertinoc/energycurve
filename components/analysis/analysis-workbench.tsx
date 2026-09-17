@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { CircleCheck, History, Loader2, Sparkles } from "lucide-react"
 
-import { reorderTracksAction } from "@/app/dashboard/playlists/actions"
+import { reorderTracksAction } from "@/app/(en)/dashboard/playlists/actions"
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
 import type { ExportPlaylist } from "@/lib/playlists/export"
 import {

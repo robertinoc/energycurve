@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 // The panel imports a server action, which drags `server-only` into a plain node
 // render. Stubbed rather than restructuring the component: the action is a
 // dependency of the button, not of the markup under test.
-vi.mock("@/app/dashboard/playlists/actions", () => ({
+vi.mock("@/app/(en)/dashboard/playlists/actions", () => ({
   restoreVersionAction: vi.fn(),
 }))
 
