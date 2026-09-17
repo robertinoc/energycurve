@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react"
 
 import {
   deletePlaylistAction,
-} from "@/app/dashboard/playlists/actions"
+} from "@/app/(en)/dashboard/playlists/actions"
 import {
   initialPlaylistActionState,
 } from "@/lib/playlists/action-state"

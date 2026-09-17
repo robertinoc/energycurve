@@ -67,7 +67,7 @@ rules:
       - pattern: getPlaylistWithTracksById(...)
     paths:
       exclude:
-        - "app/c/**"
+        - "app/(en)/c/**"
         - "services/collaboration-service.ts"
         - "services/playlist-service.ts"
         - "tests/**"

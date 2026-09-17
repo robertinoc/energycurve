@@ -2,8 +2,8 @@
 
 Five Spanish articles, live since 20 Aug 2026 at `/es/blog` (the EN index at
 `/blog` shows an honest empty state until English articles exist). The
-where-does-the-blog-live decision landed on **same repo**: routes in `app/blog/`
-and `app/es/blog/`, pipeline in `lib/blog/`, chrome copy in
+where-does-the-blog-live decision landed on **same repo**: routes in `app/(en)/blog/`
+and `app/(es)/es/blog/`, pipeline in `lib/blog/`, chrome copy in
 `lib/content/blog-copy.ts`, and a deliberately restricted markdown renderer that
 throws on syntax it doesn't support — so a new article using anything fancier
 fails `tests/blog.test.ts` instead of rendering broken.
@@ -11,6 +11,20 @@ fails `tests/blog.test.ts` instead of rendering broken.
 To add an article: drop a `.md` file in `es/` whose filename equals its `slug`
 and fill the frontmatter; it appears in the index, the sitemap, and its own
 route on the next build. An article with `publishedAt: null` stays a draft.
+
+One local gotcha: these files are read with `readFileSync` at build time, so the
+bundler doesn't know a page depends on them. Editing an article and rebuilding
+can serve the previous text from `.next`; `rm -rf .next` before checking your
+change. CI and Vercel build from empty, so they never see this.
+
+Frontmatter keys: `title`, `description` and `slug` are required; `locale`,
+`targetQuery` and `publishedAt` are the rest of what the five articles use.
+Descriptions are 140–155 characters, enforced by `tests/blog.test.ts`: past ~155
+Google truncates the snippet mid-sentence, and much under 140 leaves a third of
+it blank. `updatedAt` is optional and means the last substantive revision — set it when you
+edit a published article, and the sitemap's `lastmod` and the `dateModified` in
+the article's `BlogPosting` both follow it. Leave it out and both fall back to
+`publishedAt`, which is the honest answer for an article nobody has touched.
 
 ## Why Spanish first
 

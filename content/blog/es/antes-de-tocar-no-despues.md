@@ -1,6 +1,6 @@
 ---
 title: "Analizá tu set antes de tocarlo, no después"
-description: "Las herramientas que analizan la energía de un set trabajan sobre la grabación, cuando la fecha ya pasó. Analizarlo antes cambia qué podés hacer con el resultado."
+description: "Casi todas las herramientas leen la energía sobre la grabación, cuando la fecha ya pasó. Analizar el set antes cambia qué podés hacer con el resultado."
 slug: antes-de-tocar-no-despues
 locale: es
 targetQuery: "analizar la energía de un set de DJ"

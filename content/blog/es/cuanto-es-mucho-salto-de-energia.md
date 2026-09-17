@@ -1,6 +1,6 @@
 ---
 title: "¿Cuánto es mucho salto de energía entre dos temas?"
-description: "Las reglas del tipo 'no pases del 8% de BPM' sirven poco cuando el problema no es el tempo. Cómo mirar los saltos de tu propia lista."
+description: "Las reglas del tipo 'no pases del 8% de BPM' sirven poco cuando el problema no es el tempo. Cómo mirar los saltos de energía de tu propia lista."
 slug: cuanto-es-mucho-salto-de-energia
 locale: es
 targetQuery: "salto de energía entre tracks DJ"

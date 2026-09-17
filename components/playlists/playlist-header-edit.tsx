@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react"
 import { Pencil } from "lucide-react"
 
-import { updatePlaylistDetailsAction } from "@/app/dashboard/playlists/actions"
+import { updatePlaylistDetailsAction } from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

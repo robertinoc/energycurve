@@ -159,7 +159,7 @@ lo que un data room pregunta —"¿cómo cumplen X?"— sin releer el dossier en
 | **Art. 5(2)** Responsabilidad proactiva | Este dossier, más los tests que verifican sus afirmaciones |
 | **Art. 7(3)** Retiro del consentimiento | `analytics-runtime.ts`: el retiro llega al tercero, no solo a nuestros call sites |
 | **Art. 15/20** Acceso y portabilidad | `services/data-export-service.ts` |
-| **Art. 16** Rectificación | `app/dashboard/account/actions.ts` (nombre) |
+| **Art. 16** Rectificación | `app/(en)/dashboard/account/actions.ts` (nombre) |
 | **Art. 17** Supresión | `deleteUserEverywhere` ⚠️ solo como acción de admin |
 | **Art. 25** Privacidad desde el diseño | `privacy-by-design.md` §5 ⚠️ el link público sigue activo por defecto |
 | **Art. 28** Encargados | `/subprocessors` + test ⬜ DPAs sin firmar |

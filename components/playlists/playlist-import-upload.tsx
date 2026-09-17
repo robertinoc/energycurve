@@ -6,7 +6,7 @@ import { CheckCircle2, UploadCloud } from "lucide-react"
 
 import {
   importPlaylistAction,
-} from "@/app/dashboard/playlists/actions"
+} from "@/app/(en)/dashboard/playlists/actions"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
 import { AudioFilesImport } from "@/components/playlists/audio-files-import"
 import { ManualCreatePanel } from "@/components/playlists/manual-create-panel"

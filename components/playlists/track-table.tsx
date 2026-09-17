@@ -14,7 +14,7 @@ import {
   addTrackAction,
   removeTrackAction,
   updateTrackAction,
-} from "@/app/dashboard/playlists/actions"
+} from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,7 +22,7 @@ import { energyBarGradient, energyColor } from "@/lib/charts/energy-colors"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
-import { rememberKeyNotationAction } from "@/app/dashboard/key-notation-actions"
+import { rememberKeyNotationAction } from "@/app/(en)/dashboard/key-notation-actions"
 import {
   DEFAULT_KEY_NOTATION,
   formatKey,

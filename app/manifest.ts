@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next"
 
 /**
  * PWA manifest. start_url is /login on purpose: the login page redirects
- * authenticated users straight to /dashboard (see app/login/page.tsx), so
+ * authenticated users straight to /dashboard (see app/(en)/login/page.tsx), so
  * the installed app opens the dashboard for logged-in users and the login
  * screen (with its signup cross-link) for everyone else.
  */

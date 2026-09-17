@@ -442,11 +442,11 @@ describe("sharing is gated on the owner, and only the owner", () => {
    */
   const OWNER_SIDE = [
     "services/collaboration-service.ts",
-    "app/dashboard/playlists/[id]/page.tsx",
+    "app/(en)/dashboard/playlists/[id]/page.tsx",
   ]
   const COLLABORATOR_SIDE = [
-    "app/dashboard/shared/page.tsx",
-    "app/dashboard/shared/[id]/page.tsx",
+    "app/(en)/dashboard/shared/page.tsx",
+    "app/(en)/dashboard/shared/[id]/page.tsx",
   ]
 
   it("checks b2b_sets on the owner's side", () => {

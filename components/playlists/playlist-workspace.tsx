@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react"
 
-import { reorderTracksAction } from "@/app/dashboard/playlists/actions"
+import { reorderTracksAction } from "@/app/(en)/dashboard/playlists/actions"
 import { GenreNote } from "@/components/playlists/genre-note"
 import { SetCurve } from "@/components/playlists/set-curve"
 import { TrackTable, type TrackEnergyView } from "@/components/playlists/track-table"

@@ -45,7 +45,7 @@ describe("Art. 16 — rectification", () => {
     // rots in, and the reason these canaries point this way.
     expect(MATRIX).toMatch(/\| 16 \| Rectificación \| ⚠️/)
 
-    const action = source("app/dashboard/account/actions.ts")
+    const action = source("app/(en)/dashboard/account/actions.ts")
     expect(action).toMatch(/updateNameAction/)
 
     // The half that is still open, and pinned so it cannot close silently:

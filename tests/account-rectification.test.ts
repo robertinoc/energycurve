@@ -52,7 +52,7 @@ vi.mock("@/lib/observability/logger", () => ({
 vi.mock("@/lib/server-locale", () => ({ getRequestLocale: async () => "en" }))
 
 const { updateNameAction, IDLE_ACCOUNT_STATE } = await import(
-  "@/app/dashboard/account/actions"
+  "@/app/(en)/dashboard/account/actions"
 )
 
 function form(fields: Record<string, string>): FormData {

@@ -200,3 +200,175 @@ describe("the real articles", () => {
     }
   })
 })
+
+describe("article descriptions fit a search result", () => {
+  /**
+   * 140–155 characters, the same band the `/es` home description was cut to.
+   *
+   * The ceiling is the real defect: Google stops rendering a description at
+   * roughly 155, so two of these articles were being truncated mid-sentence in
+   * the one place a stranger decides whether to click. The floor is the other
+   * half of the same idea — a 118-character description leaves a third of the
+   * snippet blank, and this is the only copy on the page written for that slot.
+   *
+   * It applies to articles and not to `PAGE_METADATA`, where a legal page that
+   * needs nine words has nothing to gain from padding to forty.
+   */
+  const MIN = 140
+  const MAX = 155
+
+  it("keeps every published article inside the band", async () => {
+    const { allPublishedPosts } = await import("@/lib/blog/posts")
+    const posts = allPublishedPosts()
+
+    expect(posts.length).toBeGreaterThan(0)
+
+    for (const post of posts) {
+      expect(
+        post.description.length,
+        `${post.slug}: ${post.description.length} chars — "${post.description}"`
+      ).toBeGreaterThanOrEqual(MIN)
+
+      expect(
+        post.description.length,
+        `${post.slug}: ${post.description.length} chars — "${post.description}"`
+      ).toBeLessThanOrEqual(MAX)
+    }
+  })
+})
+
+describe("the English blog route is shaped for the content it has", () => {
+  it("renders on demand while there are no English articles", async () => {
+    /**
+     * `app/(en)/blog/[slug]/page.tsx` deliberately has no `generateStaticParams`
+     * while `content/blog/en/` is empty: it would return `[]`, which Next reads
+     * as "prerender this route's shell" rather than "there is nothing to
+     * prerender" — and a prerendered 404 that reaches a not-found reading the
+     * request returns a 500.
+     *
+     * The day an English article exists that stops being true, and prerendering
+     * is what you want. Nobody adding an article will think to check, so this
+     * fails and says so.
+     */
+    const { listPosts } = await import("@/lib/blog/posts")
+    const { readFileSync } = await import("node:fs")
+    const { join } = await import("node:path")
+
+    const route = readFileSync(
+      join(process.cwd(), "app/(en)/blog/[slug]/page.tsx"),
+      "utf8"
+    )
+
+    // The export, not the word: the route's comment explains its own absence.
+    const EXPORT = /export\s+(async\s+)?function\s+generateStaticParams/
+
+    if (listPosts("en").length === 0) {
+      expect(route).not.toMatch(EXPORT)
+      return
+    }
+
+    expect(
+      EXPORT.test(route),
+      "English articles exist now — add generateStaticParams back to " +
+        "app/(en)/blog/[slug]/page.tsx so they are prerendered, the way the " +
+        "Spanish route already is"
+    ).toBe(true)
+  })
+
+  it("prerenders the Spanish articles, which do exist", async () => {
+    const { readFileSync } = await import("node:fs")
+    const { join } = await import("node:path")
+
+    const route = readFileSync(
+      join(process.cwd(), "app/(es)/es/blog/[slug]/page.tsx"),
+      "utf8"
+    )
+
+    expect(route).toMatch(/export\s+(async\s+)?function\s+generateStaticParams/)
+  })
+})
+
+describe("article structured data", () => {
+  /** Parsed back from the string the page actually embeds, not the object. */
+  async function graphFor(slug: string) {
+    const { getPost, postUpdatedAt } = await import("@/lib/blog/posts")
+    const { buildArticleStructuredData } = await import(
+      "@/lib/blog/structured-data"
+    )
+    const { serializeStructuredData } = await import("@/lib/seo")
+
+    const post = getPost("es", slug)!
+    const serialized = serializeStructuredData(
+      buildArticleStructuredData(post, postUpdatedAt(post))
+    )
+
+    // The escaper replaces `<` and `>` with < / >, which is still
+    // valid JSON — so round-tripping proves both the shape and the escaping.
+    return { post, serialized, graph: JSON.parse(serialized)["@graph"] }
+  }
+
+  it("publishes a BlogPosting and a BreadcrumbList for every article", async () => {
+    const { allPublishedPosts } = await import("@/lib/blog/posts")
+
+    for (const post of allPublishedPosts()) {
+      const { graph } = await graphFor(post.slug)
+      expect(
+        graph.map((node: { "@type": string }) => node["@type"]),
+        post.slug
+      ).toEqual(["BlogPosting", "BreadcrumbList"])
+    }
+  })
+
+  it("fills every field a rich result needs", async () => {
+    const { post, graph } = await graphFor("esta-bien-el-orden-de-mi-set")
+    const [article] = graph
+
+    expect(article.headline).toBe(post.title)
+    expect(article.description).toBe(post.description)
+    expect(article.datePublished).toBe(post.publishedAt)
+    expect(article.dateModified).toBe(post.publishedAt)
+    expect(article.inLanguage).toBe("es")
+    expect(article.author).toMatchObject({ "@type": "Person", name: "ROBERTINOC" })
+    expect(article.image).toContain("/opengraph-image")
+    expect(article.mainEntityOfPage["@id"]).toBe(
+      "https://energycurve.app/es/blog/esta-bien-el-orden-de-mi-set"
+    )
+  })
+
+  it("embeds the same publisher the home page declares", async () => {
+    // By `@id` alone it would be a reference to a node defined on another page,
+    // which a consumer reading only the article cannot resolve.
+    const { buildLandingStructuredData } = await import("@/lib/seo")
+    const { graph } = await graphFor("esta-bien-el-orden-de-mi-set")
+
+    const home = buildLandingStructuredData({ locale: "es" })["@graph"].find(
+      (node) => node["@type"] === "Organization"
+    )
+
+    expect(graph[0].publisher).toEqual(home)
+  })
+
+  it("walks Inicio > Blog > article, in Spanish", async () => {
+    const { graph } = await graphFor("esta-bien-el-orden-de-mi-set")
+    const crumbs = graph[1].itemListElement
+
+    expect(crumbs.map((crumb: { name: string }) => crumb.name)).toEqual([
+      "Inicio",
+      "Blog",
+      "¿Está bien el orden de mi set? Cómo saberlo antes de tocar",
+    ])
+    expect(crumbs.map((crumb: { item: string }) => crumb.item)).toEqual([
+      "https://energycurve.app/es",
+      "https://energycurve.app/es/blog",
+      "https://energycurve.app/es/blog/esta-bien-el-orden-de-mi-set",
+    ])
+  })
+
+  it("dates an unrevised article from its publication, not today", async () => {
+    const { allPublishedPosts, postUpdatedAt } = await import("@/lib/blog/posts")
+
+    for (const post of allPublishedPosts()) {
+      expect(postUpdatedAt(post), post.slug).toBe(post.updatedAt ?? post.publishedAt)
+    }
+  })
+})

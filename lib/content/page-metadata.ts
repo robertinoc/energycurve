@@ -27,7 +27,14 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
     },
     description: {
       en: "Analyze your DJ set's energy curve, score it 1–10, and get the exact track moves that fix it. Imports Rekordbox, Traktor, M3U8, and your own audio files — exports the corrected order back.",
-      es: "Analizá la curva de energía de tu set, obtené un score de 1 a 10 y los movimientos concretos que lo arreglan. Importa desde Rekordbox, Traktor, M3U8 y tus propios archivos de audio — y exporta el orden corregido de vuelta.",
+      /**
+       * 146 characters. The previous one was 227, which is roughly seventy past
+       * where Google stops rendering a description — the Spanish snippet was
+       * being cut mid-sentence, and the half that got cut was the half naming
+       * the import formats. Fitting is the whole point; "curva de energía" is
+       * kept because it is the phrase the page is trying to be found for.
+       */
+      es: "EnergyCurve analiza la curva de energía de tu set y te dice qué temas mover. Importa desde Rekordbox, Traktor o M3U8 y exporta el orden corregido.",
     },
   },
   "/pricing": {

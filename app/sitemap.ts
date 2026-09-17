@@ -1,7 +1,11 @@
 import type { MetadataRoute } from "next"
 
-import { LOCALIZED_PATHS, localizedPath } from "@/lib/content/locale-routing"
-import { allPublishedPosts } from "@/lib/blog/posts"
+import {
+  indexableLocales,
+  LOCALIZED_PATHS,
+  localizedPath,
+} from "@/lib/content/locale-routing"
+import { allPublishedPosts, postUpdatedAt } from "@/lib/blog/posts"
 import { SITE_URL } from "@/lib/seo"
 
 /**
@@ -39,29 +43,40 @@ const HINTS: Record<
  * crawling, which is the slower half of the job the sitemap exists to do.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  // Evaluated when the sitemap is generated, which for these statically
-  // rendered pages is the build — i.e. the last time the site actually changed.
-  // It used to be a frozen literal, which meant every deploy after the day it
-  // was written told crawlers nothing had moved.
+  // Evaluated when the sitemap is generated, which for these pages is the build
+  // — i.e. the last time the site actually changed. It used to be a frozen
+  // literal, which meant every deploy after the day it was written told crawlers
+  // nothing had moved. The articles do better than this (see below); a marketing
+  // page has no equivalent per-page date short of reading git history, which a
+  // shallow CI clone doesn't reliably have.
   const lastModified = new Date()
 
   // Articles, each in the one language it was written in. No `alternates` block:
   // there is no translation, and claiming one would point a crawler at a 404.
+  //
+  // `lastmod` is the article's own revision date, falling back to its publication
+  // date — never the build. An article that hasn't been touched since August
+  // should still say August after a December deploy, or `lastmod` stops meaning
+  // anything and gets ignored.
   const articles: MetadataRoute.Sitemap = allPublishedPosts().map((post) => ({
     url: `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}`,
-    lastModified: new Date(post.publishedAt!),
+    lastModified: new Date(postUpdatedAt(post)),
     changeFrequency: "yearly",
     priority: 0.6,
   }))
 
+  // Only the languages a page is actually offered in. `/blog` is `noindex` in
+  // English, so the English URL is absent and the Spanish one's `alternates`
+  // names Spanish alone — a sitemap that lists a page we've asked Google not to
+  // index is asking and un-asking in the same file.
   const pages: MetadataRoute.Sitemap = LOCALIZED_PATHS.flatMap((path) => {
-    const languages = {
-      en: `${SITE_URL}${localizedPath(path, "en")}`,
-      es: `${SITE_URL}${localizedPath(path, "es")}`,
-    }
+    const offered = indexableLocales(path)
+    const languages = Object.fromEntries(
+      offered.map((locale) => [locale, `${SITE_URL}${localizedPath(path, locale)}`])
+    )
 
-    return (["en", "es"] as const).map((locale) => ({
-      url: languages[locale],
+    return offered.map((locale) => ({
+      url: `${SITE_URL}${localizedPath(path, locale)}`,
       lastModified,
       ...HINTS[path],
       alternates: { languages },

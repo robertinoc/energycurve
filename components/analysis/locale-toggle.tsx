@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 
-import { rememberLocaleAction } from "@/app/dashboard/locale-actions"
+import { rememberLocaleAction } from "@/app/(en)/dashboard/locale-actions"
 import { ANALYSIS_LOCALE_COOKIE } from "@/lib/analysis-locale"
 import { ANALYSIS_UI } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"

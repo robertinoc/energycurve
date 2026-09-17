@@ -1,6 +1,6 @@
 ---
 title: "¿Está bien el orden de mi set? Cómo saberlo antes de tocar"
-description: "Todas las guías te explican cómo armar un arco de energía. Ninguna te dice si el orden que ya tenés es bueno. Acá va cómo evaluarlo, con criterios concretos."
+description: "Todas las guías explican cómo armar un arco de energía. Ninguna te dice si el orden que ya tenés es bueno. Acá va cómo evaluarlo, con criterios concretos."
 slug: esta-bien-el-orden-de-mi-set
 locale: es
 targetQuery: "cómo ordenar los tracks de un set de DJ"
