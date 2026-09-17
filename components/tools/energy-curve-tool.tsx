@@ -79,9 +79,14 @@ function toImportedTracks(analysis: ToolAnalysis): ImportedTrack[] {
 function ProblemCount({
   label,
   count,
+  href,
+  hrefLabel,
 }: {
   label: string
   count: number
+  /** An optional way through to the tool that explains this number. */
+  href?: string
+  hrefLabel?: string
 }) {
   return (
     <div className="flex-1 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
@@ -93,6 +98,14 @@ function ProblemCount({
         {count}
       </p>
       <p className="mt-0.5 text-xs leading-5 text-white/60">{label}</p>
+      {href && hrefLabel && count > 0 && (
+        <Link
+          href={href}
+          className="mt-1.5 inline-block text-xs font-semibold text-ec-cyan underline-offset-4 hover:underline"
+        >
+          {hrefLabel}
+        </Link>
+      )}
     </div>
   )
 }
@@ -445,6 +458,11 @@ export function EnergyCurveTool({ locale }: { locale: SiteLocale }) {
                 <ProblemCount
                   label={copy.harmonicClashes[locale]}
                   count={stage.analysis.problems.harmonicClashes}
+                  // The count says how many; the wheel says what to do about
+                  // one. Only offered here because this is the only number on
+                  // the page another tool can actually answer.
+                  href={localizedPath("/tools/camelot-wheel", locale)}
+                  hrefLabel={copy.seeOnWheel[locale]}
                 />
                 <ProblemCount
                   label={copy.misplacedPeaks[locale]}

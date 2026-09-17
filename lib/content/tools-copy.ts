@@ -42,9 +42,10 @@ export const TOOLS_HUB_COPY = {
     es: "En camino",
   },
   comingUpBody: {
-    en: "A Camelot wheel you can read at a glance, and a key-compatibility calculator for two tracks. Same rules: free, no account, nothing uploaded.",
-    es: "Una rueda Camelot que se lee de un vistazo, y una calculadora de compatibilidad entre dos temas. Las mismas reglas: gratis, sin cuenta y sin subir nada.",
+    en: "More small tools that answer one question each. Same rules every time: free, no account, and nothing you load leaves your browser.",
+    es: "Más herramientas chicas que contestan una pregunta cada una. Las mismas reglas siempre: gratis, sin cuenta, y nada de lo que cargues sale de tu navegador.",
   },
+  /** Kept: the breadcrumb and the WebApplication name still read the tool by it. */
   toolName: {
     en: "Energy curve analyzer",
     es: "Analizador de curva de energía",
@@ -52,6 +53,19 @@ export const TOOLS_HUB_COPY = {
   toolBlurb: {
     en: "Load a playlist and see its energy curve, a score out of 10, and how many problems it has.",
     es: "Cargá una playlist y mirá su curva de energía, un score sobre 10 y cuántos problemas tiene.",
+  },
+  wheelName: { en: "Camelot wheel", es: "Rueda Camelot" },
+  wheelBlurb: {
+    en: "Pick a key and see everything that mixes with it, and what each move does to a room.",
+    es: "Elegí una tonalidad y mirá todo lo que mezcla con ella, y qué le hace cada movimiento a la pista.",
+  },
+  checkerName: {
+    en: "Key and BPM checker",
+    es: "Compatibilidad de tonalidad y BPM",
+  },
+  checkerBlurb: {
+    en: "Two tracks in: whether they mix, how far the tempo has to move, and what that does to the key.",
+    es: "Dos temas: si mezclan, cuánto tiene que moverse el tempo y qué le hace eso a la tonalidad.",
   },
 } as const
 
@@ -117,6 +131,10 @@ export const TOOL_COPY = {
     energyJumps: { en: "Energy jumps", es: "Saltos de energía" },
     harmonicClashes: { en: "Harmonic clashes", es: "Choques armónicos" },
     misplacedPeaks: { en: "Misplaced peaks", es: "Picos mal ubicados" },
+    seeOnWheel: {
+      en: "See on the Camelot wheel →",
+      es: "Ver en la rueda Camelot →",
+    },
     noProblems: {
       en: "Nothing flagged. The curve follows the shape and the steps stay inside what the genre takes.",
       es: "No encontró nada. La curva sigue la forma y los pasos se quedan dentro de lo que el género aguanta.",

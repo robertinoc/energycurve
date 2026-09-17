@@ -83,6 +83,20 @@ const CARD_OVERRIDES: Partial<
       es: "EnergyCurve — mirá la curva de energía de tu set gratis y sin cuenta",
     },
   },
+  "/tools/camelot-wheel": {
+    path: "/opengraph-image/camelot-wheel",
+    alt: {
+      en: "EnergyCurve — an interactive Camelot wheel showing which keys mix",
+      es: "EnergyCurve — una rueda Camelot interactiva que muestra qué tonalidades mezclan",
+    },
+  },
+  "/tools/key-bpm-compatibility": {
+    path: "/opengraph-image/key-bpm",
+    alt: {
+      en: "EnergyCurve — check whether two tracks mix, by key and by BPM",
+      es: "EnergyCurve — chequeá si dos temas mezclan, por tonalidad y por BPM",
+    },
+  },
 }
 
 function socialImage(locale: SiteLocale, path?: LocalizedPath) {

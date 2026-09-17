@@ -23,6 +23,10 @@ const HINTS: Record<
   // ranks with the homepage rather than with the reference pages. The hub sits
   // just under it: useful, but nobody searches for a list of tools.
   "/tools/energy-curve": { changeFrequency: "monthly", priority: 0.9 },
+  // The two reference tools: useful, linked, and less likely than the analyser
+  // to be the page somebody arrives on.
+  "/tools/camelot-wheel": { changeFrequency: "monthly", priority: 0.8 },
+  "/tools/key-bpm-compatibility": { changeFrequency: "monthly", priority: 0.8 },
   "/tools": { changeFrequency: "monthly", priority: 0.6 },
   "/blog": { changeFrequency: "weekly", priority: 0.7 },
   "/install": { changeFrequency: "monthly", priority: 0.5 },
