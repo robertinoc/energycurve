@@ -147,3 +147,24 @@ verificó contra un build de producción local y se mergeó sin deployar.
 | `lastmod` de un artículo se mueve solo | Los artículos se leen con `readFileSync` en build, así que un `.next` viejo sirve el texto anterior y la prueba miente si no se borra primero |
 
 Los ocho están en la sesión `SEO` del banco de pruebas, con los pasos.
+
+### 4c · Lo que dejó abierto la herramienta pública (PR #229)
+
+Es la primera página del producto que alguien ve sin tener cuenta, así que un
+error genérico acá cuesta más que adentro.
+
+| Caso | Por qué no lo cierra un test |
+|---|---|
+| Una colección de Rekordbox entera, con el selector de playlist | Los tests usan fixtures; el caso raro está en una librería real de cuarenta playlists — y es donde vivía el bug que el PR encontró de paso |
+| Traktor, M3U8, CSV de Excel en español y el `.txt` UTF-16, con archivos propios | Mismo motivo: un fixture por formato no es una librería |
+| Que nada del archivo salga por red **en producción** | El E2E lo afirma, pero corre sin PostHog; el entorno con scripts de terceros es otro |
+| El pase a signup de punta a punta, y qué se pierde | Cruza el registro y la sesión; el E2E corre sin sesión a propósito |
+| El gráfico en un teléfono con datos móviles | Los puntos huecos —energía inventada— tienen que distinguirse de los llenos a ojo |
+| Los cuatro eventos en PostHog, sin datos del archivo | La consola es de Robertino |
+| Accesibilidad de las cuatro páginas nuevas | **No están en el barrido de axe** (ver abajo) |
+| Errores: set de dos temas, archivo corrupto, formato no soportado | Que el mensaje diga qué pasó y cómo seguir se lee, no se afirma |
+| Indexación y rich result de FAQ | Semanas de calendario, y Search Console |
+
+**Hueco conocido:** las cuatro URLs nuevas no figuran en `PUBLIC_PAGES` de
+`e2e/accessibility.spec.ts`. El barrido WCAG 2.1 AA de la superficie pública no
+las cubre, y `TOOL.7` es hoy toda su cobertura.

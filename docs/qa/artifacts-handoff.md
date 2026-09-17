@@ -139,7 +139,7 @@ dos lados ven lo mismo porque **es el mismo almacén**, no una copia sincronizad
 No hay un proceso que corra solo, y decirlo es parte del traspaso: si nadie pide
 el paso 2, esta tabla envejece y la página tiene la verdad.
 
-### Último estado leído — 17/09/2026 (tarde)
+### Último estado leído — 17/09/2026 (después del PR #229)
 
 Instantánea, no fuente de verdad. La fuente es la página.
 
@@ -148,7 +148,8 @@ Instantánea, no fuente de verdad. La fuente es la página.
 | A1 — las tres cuentas de prueba | 4 | **Las cuatro pasan (17/09).** Las tres cuentas existen y `.env.e2e.local` está escrito |
 | J — feedback de Jordi | 8 | Sin correr |
 | J2 — la tabla armónica (PR #225) | 4 | Sin correr |
-| SEO — lo que el SEO técnico no puede probar solo (PR #227) | 9 | Sin correr — **esperan el deploy**, no las cuentas |
+| SEO — lo que el SEO técnico no puede probar solo (PR #227) | 9 | Sin correr |
+| TOOL — la herramienta pública, con archivos de verdad (PR #229) | 9 | Sin correr |
 | A2 — migraciones, cron y región | 7 | Sin correr |
 | A3 — el pico objetivo | 1 | Sin correr |
 | A4 — backups y restauración | 2 | Sin correr |
@@ -158,9 +159,10 @@ Instantánea, no fuente de verdad. La fuente es la página.
 | A8 — etiquetado por oído | 3 | Sin correr |
 | UX — casos de borde | 5 | Sin correr |
 
-Son **54 pruebas**, no 36: el encabezado de la página original decía 32 mientras
-su propio plan ya tenía 41 filas, y ese número se venía arrastrando. El contador
-de la página se calcula solo, así que el que vale es el que muestra arriba.
+Son **63 pruebas** en 13 sesiones. El contador de la página se calcula solo, así
+que el que vale es el que muestra arriba: el encabezado de la página original
+decía 32 mientras su propio plan ya tenía 41 filas, y ese número se arrastró
+durante varias actualizaciones antes de que alguien lo contara.
 
 **A1 está hecha, y con eso no queda nada bloqueado.** Desbloqueaba nueve pruebas
 —las cinco de UX de la página más los cuatro E2E automatizados, que no son filas—
@@ -175,11 +177,24 @@ tracker**. Acá quedaron anotadas desde su reporte, no desde un click en esta
 página. Es la divergencia que esta sección advierte dos párrafos más arriba, y la
 primera vez que pasó de verdad.
 
-**La sesión SEO no espera a A1.** El PR #227 se mergeó sin deployar y se verificó
-contra un build local, así que sus nueve pruebas esperan a que producción sirva
-`dac198b` o posterior. Todo lo que un test puede afirmar sobre ese HTML ya está en
-`tests/locale-routing.test.ts` y `tests/blog.test.ts`; lo que queda es lo que sólo
-se ve en el sitio servido, en un navegador de verdad o en un validador ajeno.
+**Las sesiones SEO y TOOL dependen del deploy, no de A1.** Los PRs #227 y #229 se
+mergearon sin deployar y se verificaron contra builds locales. Robertino avisó el
+17/09 que ya están en producción; **Claude no pudo confirmarlo** —el proxy de su
+contenedor bloquea `energycurve.app`— así que el primer paso de las dos sesiones
+sigue siendo mirar qué commit sirve producción.
+
+Lo que un test puede afirmar sobre ese HTML ya está en `tests/locale-routing.test.ts`,
+`tests/blog.test.ts` y `tests/tool-energy-curve.test.ts`, y `e2e/tools.spec.ts`
+vigila cada request de la herramienta y falla si un título o un artista aparece en
+una URL o un cuerpo. Lo que queda en las dos sesiones es lo que sólo se ve en el
+sitio servido, con una librería real, en un teléfono o en una consola ajena.
+
+**Un hueco que salió al leer el #229:** las cuatro URLs nuevas
+(`/tools`, `/tools/energy-curve`, `/es/herramientas`,
+`/es/herramientas/curva-de-energia`) no están en `PUBLIC_PAGES` de
+`e2e/accessibility.spec.ts`, así que el barrido de axe sobre la superficie pública
+no las toca. `TOOL.7` es hoy su única cobertura. Agregarlas a esa lista es el
+arreglo, y no se hizo acá para no empujar un cambio de E2E sin haberlo corrido.
 
 ## Lo que estos artefactos NO cubren
 

@@ -482,7 +482,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">54</strong>
+      <strong id="tally-total">63</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -491,7 +491,7 @@
 
   <div class="gate">
     <span class="tag">Cuello&nbsp;de&nbsp;botella</span>
-    <p><strong>A1 está hecha (17/09) y con eso no queda nada bloqueado.</strong> Las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX se pueden correr y los cuatro E2E automatizados también — en la máquina donde vive ese archivo, no en el contenedor de Claude. Lo único que sigue esperando algo son las nueve de SEO, que esperan el deploy.</p>
+    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy ya salió según Robertino, con lo que las sesiones SEO y TOOL también arrancan — Claude no pudo confirmarlo desde su contenedor, que tiene el dominio bloqueado, así que el primer paso de las dos sigue siendo mirar qué commit sirve producción.</p>
   </div>
 
   <main id="sessions"></main>
@@ -694,6 +694,68 @@
           steps: ["<strong>Borrá <code>.next</code> primero</strong> — los artículos se leen con <code>readFileSync</code> en build y el bundler no los ve como dependencia", "Cambiá <code>updatedAt</code> en el frontmatter de un post", "Rebuild y mirá el sitemap"],
           expect: "Sólo se mueve el <code>lastmod</code> de ese post. Los demás quedan en su fecha y las páginas de marketing en la del build.",
           ifNot: "Si no cambió nada, casi seguro es <code>.next</code> viejo: así fue como el arreglo de las descripciones pareció no aplicar. Reintentá con el borrado antes de anotarlo."
+        }
+      ]
+    },
+    {
+      code: "TOOL",
+      title: "La herramienta pública, con archivos de verdad",
+      meta: "~60 min · necesita tu librería y el teléfono",
+      why: "El PR #229 abrió la primera página que analiza un set sin cuenta. Lo que se puede automatizar ya está: <code>tests/tool-energy-curve.test.ts</code> cubre los cuatro formatos, el conteo de problemas y el set sin tags; <code>e2e/tools.spec.ts</code> corre en los dos idiomas y —lo más importante— vigila cada request de la página y falla si un título o un artista aparece en una URL o un cuerpo. Lo que queda es lo que necesita tu librería real, un teléfono, una consola ajena o una cuenta nueva. Ojo con una cosa al leer los resultados: la promesa de la página es que nada del archivo sale por red, así que cualquier hallazgo ahí es severidad alta, no un detalle.",
+      tests: [
+        {
+          code: "TOOL.1", title: "Tu colección entera, y el selector de playlist", sub: "El bug que encontró el PR de paso",
+          steps: ["Exportá tu colección real de Rekordbox, con todas las playlists", "Cargala en la herramienta", "Mirá la lista de playlists: tienen que estar todas, con los nombres legibles", "Elegí una que <strong>no</strong> sea la primera del archivo y mirá la curva"],
+          expect: "Están todas, y la curva es la del set que elegiste.",
+          ifNot: "Antes los dos parsers de XML caminaban el árbol hasta encontrar el primer nodo con temas y paraban: una colección de cuarenta playlists se leía como la que estuviera primero, sin aviso. Si volvés a ver el set equivocado, es esa regresión y toca también la importación de la app."
+        },
+        {
+          code: "TOOL.2", title: "Los otros formatos, con archivos tuyos", sub: "Traktor, M3U8, CSV de Excel y el .txt UTF-16",
+          steps: ["Probá un NML de Traktor real", "Un M3U8 exportado por tu software", "Un CSV guardado por Excel en español (separador <code>;</code>)", "Y el <code>.txt</code> de Rekordbox, que viene en UTF-16"],
+          expect: "Los cuatro entran y dibujan una curva coherente con el set.",
+          ifNot: "Los tests usan un fixture por formato; tu librería tiene los casos raros. Si uno falla, guardá el archivo: es el mejor insumo para el arreglo."
+        },
+        {
+          code: "TOOL.3", title: "Nada del archivo sale por red — en producción", sub: "Con la analítica encendida, que en CI no está",
+          steps: ["Abrí la herramienta en producción con las devtools en Network", "Aceptá las cookies, para que PostHog cargue", "Cargá un set con nombres reconocibles", "Filtrá los requests buscando un título y un artista"],
+          expect: "Ningún request lleva títulos ni artistas: ni fetch, ni server action, ni evento de analítica.",
+          ifNot: "El E2E ya lo afirma, pero corre sin PostHog. Éste es el mismo chequeo en el entorno que tiene scripts de terceros. Si aparece algo, es severidad alta y la página deja de poder prometer lo que promete."
+        },
+        {
+          code: "TOOL.4", title: "El pase a signup, de punta a punta", sub: "Y qué se pierde en el camino, que es a propósito",
+          steps: ["Cargá un set con BPM y tonalidad en la herramienta", "Tocá «Ver cómo arreglarlo»", "Registrate con una cuenta nueva", "Mirá qué te ofrece la pantalla de importación del dashboard"],
+          expect: "El set está esperándote y no tenés que volver a cargarlo. Llegan los nombres, sin BPM ni tonalidad, y un cartel lo dice y te ofrece importar el archivo.",
+          ifNot: "La pérdida es de diseño: guardar todo implicaría un backend, que es lo único que esta página promete no tener. Lo que sí es un hallazgo es que el cartel no aparezca, o que el set no esté."
+        },
+        {
+          code: "TOOL.5", title: "En el teléfono, con datos móviles", sub: "Mobile first es una afirmación, no un layout",
+          steps: ["Abrí la página en el teléfono, sin wifi", "Cargá un set y mirá el gráfico", "Fijate si se distinguen los puntos huecos —los de energía inventada— de los llenos", "Corré Lighthouse mobile contra producción, no contra un build local"],
+          expect: "El gráfico se lee, el bloque bloqueado se entiende, el CTA se toca sin pelearse. Lighthouse en el orden de 88 de performance y 100 de SEO y accesibilidad.",
+          ifNot: "Los números del PR son de un build local en una máquina de escritorio. Si producción da bastante menos, anotá los tres números y el modelo de teléfono."
+        },
+        {
+          code: "TOOL.6", title: "Los cuatro eventos en PostHog", sub: "Que lleguen, y que no traigan de más",
+          steps: ["Cargá un archivo, probá el set de ejemplo, mirá el resultado y tocá el CTA", "En PostHog buscá <code>tool_file_loaded</code>, <code>tool_example_loaded</code>, <code>tool_result_shown</code> y <code>tool_signup_click</code>", "Abrí las propiedades de cada uno"],
+          expect: "Los cuatro llegan, con el idioma, y ninguno trae nombres de temas, artistas ni el nombre del archivo.",
+          ifNot: "Un evento demasiado detallado es el mismo bug que un fetch: rompe la promesa de la página. Anotá la propiedad exacta."
+        },
+        {
+          code: "TOOL.7", title: "Accesibilidad de las cuatro páginas nuevas", sub: "Hoy no las mira nadie automáticamente",
+          steps: ["Recorré la herramienta sólo con teclado: cargar archivo, elegir playlist, llegar al CTA", "Probá el input de archivo con lector de pantalla —es el que tuvo que ganarse un <code>aria-label</code>—", "Repetí en la página en inglés"],
+          expect: "Todo alcanzable por teclado, con foco visible, y el input se anuncia con nombre.",
+          ifNot: "<strong>Hueco conocido:</strong> las cuatro URLs nuevas no están en <code>PUBLIC_PAGES</code> de <code>e2e/accessibility.spec.ts</code>, así que el barrido de axe no las toca. Hasta que se agreguen, esta prueba es la única cobertura que tienen."
+        },
+        {
+          code: "TOOL.8", title: "Lo que la herramienta rechaza", sub: "Un error que explica sirve; uno genérico no",
+          steps: ["Probá un set de dos temas", "Un archivo corrupto a propósito", "Un formato que no soporta, un PDF por ejemplo"],
+          expect: "Cada uno dice qué pasó y cómo seguir, sin dejar la página a medias.",
+          ifNot: "Ésta es la primera página del producto que ve alguien que llegó de Google. Un mensaje genérico acá cuesta más que adentro."
+        },
+        {
+          code: "TOOL.9", title: "Que Google la encuentre", sub: "Semanas de calendario, no de esfuerzo",
+          steps: ["Confirmá que las 4 URLs nuevas estén en el sitemap y devuelvan 200", "Subilas en Search Console", "Volvé en unos días: indexación, y si aparece el rich result de FAQ"],
+          expect: "Las cuatro indexadas, y el FAQ mostrándose como rich result en la página de la herramienta.",
+          ifNot: "Toda la página existe para esto. Si no entra al índice, es el hallazgo más importante de la sesión."
         }
       ]
     },
