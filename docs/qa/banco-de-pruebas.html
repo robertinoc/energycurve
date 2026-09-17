@@ -743,7 +743,7 @@
           code: "TOOL.7", title: "Accesibilidad de las cuatro páginas nuevas", sub: "Hoy no las mira nadie automáticamente",
           steps: ["Recorré la herramienta sólo con teclado: cargar archivo, elegir playlist, llegar al CTA", "Probá el input de archivo con lector de pantalla —es el que tuvo que ganarse un <code>aria-label</code>—", "Repetí en la página en inglés"],
           expect: "Todo alcanzable por teclado, con foco visible, y el input se anuncia con nombre.",
-          ifNot: "<strong>Hueco conocido:</strong> las cuatro URLs nuevas no están en <code>PUBLIC_PAGES</code> de <code>e2e/accessibility.spec.ts</code>, así que el barrido de axe no las toca. Hasta que se agreguen, esta prueba es la única cobertura que tienen."
+          ifNot: "El barrido de axe ya cubre las ocho páginas de herramientas —se agregaron el 17/09— y da cero violaciones. Lo que axe no ve es justamente esto: que el recorrido por teclado tenga sentido y que el lector de pantalla anuncie algo útil. Un hallazgo acá es real aunque el barrido esté verde."
         },
         {
           code: "TOOL.8", title: "Lo que la herramienta rechaza", sub: "Un error que explica sirve; uno genérico no",

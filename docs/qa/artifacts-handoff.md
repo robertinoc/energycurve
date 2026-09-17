@@ -189,12 +189,14 @@ vigila cada request de la herramienta y falla si un título o un artista aparece
 una URL o un cuerpo. Lo que queda en las dos sesiones es lo que sólo se ve en el
 sitio servido, con una librería real, en un teléfono o en una consola ajena.
 
-**Un hueco que salió al leer el #229:** las cuatro URLs nuevas
-(`/tools`, `/tools/energy-curve`, `/es/herramientas`,
-`/es/herramientas/curva-de-energia`) no están en `PUBLIC_PAGES` de
-`e2e/accessibility.spec.ts`, así que el barrido de axe sobre la superficie pública
-no las toca. `TOOL.7` es hoy su única cobertura. Agregarlas a esa lista es el
-arreglo, y no se hizo acá para no empujar un cambio de E2E sin haberlo corrido.
+**Un hueco que salió al leer el #229, y terminó siendo más grande:** ninguna de
+las páginas de herramientas estaba en `PUBLIC_PAGES` de
+`e2e/accessibility.spec.ts`. No eran cuatro sino **ocho** —el #231 sumó la rueda
+Camelot y el chequeador de key/BPM en los dos idiomas y tampoco se agregó—, así
+que las únicas páginas del sitio que un desconocido *opera* en vez de leer eran
+las que axe nunca miraba. Ya están las ocho, y el barrido da cero violaciones.
+`TOOL.7` sigue existiendo porque cubre lo que axe no ve: el recorrido por teclado
+y lo que anuncia un lector de pantalla.
 
 ## Lo que estos artefactos NO cubren
 

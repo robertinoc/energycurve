@@ -161,10 +161,13 @@ error genérico acá cuesta más que adentro.
 | El pase a signup de punta a punta, y qué se pierde | Cruza el registro y la sesión; el E2E corre sin sesión a propósito |
 | El gráfico en un teléfono con datos móviles | Los puntos huecos —energía inventada— tienen que distinguirse de los llenos a ojo |
 | Los cuatro eventos en PostHog, sin datos del archivo | La consola es de Robertino |
-| Accesibilidad de las cuatro páginas nuevas | **No están en el barrido de axe** (ver abajo) |
+| Accesibilidad de las ocho páginas de herramientas | Axe ya las cubre (agregadas el 17/09, cero violaciones); lo que queda es el teclado y el lector de pantalla, que ningún barrido ve |
 | Errores: set de dos temas, archivo corrupto, formato no soportado | Que el mensaje diga qué pasó y cómo seguir se lee, no se afirma |
 | Indexación y rich result de FAQ | Semanas de calendario, y Search Console |
 
-**Hueco conocido:** las cuatro URLs nuevas no figuran en `PUBLIC_PAGES` de
-`e2e/accessibility.spec.ts`. El barrido WCAG 2.1 AA de la superficie pública no
-las cubre, y `TOOL.7` es hoy toda su cobertura.
+**Hueco cerrado el 17/09:** las ocho páginas de herramientas —no cuatro; el #231
+sumó otras cuatro sin agregarlas— faltaban en `PUBLIC_PAGES` de
+`e2e/accessibility.spec.ts`. Ya están, y el barrido WCAG 2.1 AA da cero
+violaciones en las ocho. Axe encuentra alrededor de un tercio de las barreras
+reales, así que `TOOL.7` sigue siendo necesaria: un barrido verde es un piso, no
+un certificado.
