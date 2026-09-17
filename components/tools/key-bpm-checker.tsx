@@ -54,9 +54,19 @@ export function KeyBpmChecker({ locale }: { locale: SiteLocale }) {
 
   const hasInput = Boolean(b.key.trim() || b.bpm.trim())
 
+  /**
+   * One track's two inputs.
+   *
+   * `set` takes an updater, not a value, and that is load-bearing rather than
+   * style. Both inputs write to the same state object, so `set({ ...track, bpm })`
+   * closes over whatever `track` was at render — and two changes landing before a
+   * re-render make the second one overwrite the first with a stale field. CI
+   * caught exactly that: a filled key vanishing the moment the BPM beside it was
+   * typed.
+   */
   function field(
     track: typeof a,
-    set: (next: typeof a) => void,
+    set: (update: (prev: typeof a) => typeof a) => void,
     id: string,
     label: string
   ) {
@@ -76,7 +86,9 @@ export function KeyBpmChecker({ locale }: { locale: SiteLocale }) {
             <input
               id={`${id}-key`}
               value={track.key}
-              onChange={(event) => set({ ...track, key: event.target.value })}
+              onChange={(event) =>
+                set((prev) => ({ ...prev, key: event.target.value }))
+              }
               placeholder={copy.keyPlaceholder[locale]}
               className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 font-mono text-sm text-white placeholder:text-white/30 focus:border-ec-cyan focus:outline-none"
               data-testid={`${id}-key`}
@@ -93,7 +105,9 @@ export function KeyBpmChecker({ locale }: { locale: SiteLocale }) {
               id={`${id}-bpm`}
               inputMode="decimal"
               value={track.bpm}
-              onChange={(event) => set({ ...track, bpm: event.target.value })}
+              onChange={(event) =>
+                set((prev) => ({ ...prev, bpm: event.target.value }))
+              }
               placeholder={copy.bpmPlaceholder[locale]}
               className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 font-mono text-sm text-white placeholder:text-white/30 focus:border-ec-cyan focus:outline-none"
               data-testid={`${id}-bpm`}

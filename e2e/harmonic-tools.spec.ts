@@ -114,6 +114,24 @@ for (const { locale, path } of CHECKER) {
       await expect(result).toContainText("st)")
     })
 
+    test("keeps both fields when they are filled in either order", async ({
+      page,
+    }) => {
+      // The regression this is named for: the two inputs of one track share a
+      // state object, and writing them with a stale copy made the second entry
+      // wipe the first. Both orders, because only one of them was broken.
+      await page.goto(path)
+
+      await page.getByTestId("track-b-bpm").fill("136")
+      await page.getByTestId("track-b-key").fill("5A")
+      await expect(page.getByTestId("checker-result")).toContainText("st)")
+
+      await page.reload()
+      await page.getByTestId("track-b-key").fill("5A")
+      await page.getByTestId("track-b-bpm").fill("136")
+      await expect(page.getByTestId("checker-result")).toContainText("st)")
+    })
+
     test("half-time is a matched tempo, not a jump", async ({ page }) => {
       await page.goto(path)
 
