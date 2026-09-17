@@ -180,16 +180,43 @@ describe("hreflang and canonicals", () => {
   })
 
   it("writes the card's alt text in the page's own language", () => {
-    // The drawing is one English PNG, but `og:image:alt` is text we emit — it is
-    // what a screen reader announces on a shared link. An English sentence on a
-    // Spanish page would be this branch's own bug, committed again.
+    // `og:image:alt` is text we emit — it is what a screen reader announces on a
+    // shared link. An English sentence on a Spanish page would be this branch's
+    // own bug, committed again.
+    //
+    // Asserted as "the two differ and neither is empty" rather than by looking
+    // for a phrase: there are three cards now, one per tool, and pinning a
+    // keyword would only be pinning whichever card was written first.
     for (const path of LOCALIZED_PATHS) {
       const alt = (locale: "en" | "es") =>
         (marketingMetadata(path, locale).openGraph?.images as { alt: string }[])[0].alt
 
-      expect(alt("es"), path).toContain("curva de energía")
-      expect(alt("en"), path).toContain("energy curve")
+      expect(alt("es").length, path).toBeGreaterThan(20)
+      expect(alt("en").length, path).toBeGreaterThan(20)
       expect(alt("es"), path).not.toBe(alt("en"))
+    }
+  })
+
+  it("gives each tool its own social card", () => {
+    // A link to a page that says "no sign-up" should not preview as a pitch for
+    // the product you sign up for — and two tools sharing one card is the same
+    // mismatch one step down.
+    const cardOf = (path: (typeof LOCALIZED_PATHS)[number]) =>
+      (marketingMetadata(path, "en").openGraph?.images as { url: string }[])[0]
+        .url
+
+    const tools = [
+      "/tools/energy-curve",
+      "/tools/camelot-wheel",
+      "/tools/key-bpm-compatibility",
+    ] as const
+
+    const cards = tools.map(cardOf)
+    expect(new Set(cards).size).toBe(tools.length)
+
+    // And none of them is the site-wide default.
+    for (const card of cards) {
+      expect(card).not.toBe(cardOf("/"))
     }
   })
 

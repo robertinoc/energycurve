@@ -44,6 +44,8 @@ export const LOCALIZED_PATHS = [
   "/pricing",
   "/tools",
   "/tools/energy-curve",
+  "/tools/camelot-wheel",
+  "/tools/key-bpm-compatibility",
   "/blog",
   "/install",
   "/energy-tags",
@@ -76,6 +78,9 @@ export type LocalizedPath = (typeof LOCALIZED_PATHS)[number]
 const ES_SLUGS: Partial<Record<LocalizedPath, string>> = {
   "/tools": "/herramientas",
   "/tools/energy-curve": "/herramientas/curva-de-energia",
+  "/tools/camelot-wheel": "/herramientas/rueda-camelot",
+  "/tools/key-bpm-compatibility":
+    "/herramientas/compatibilidad-tonalidad-bpm",
 }
 
 /** The reverse table, so a Spanish URL can be read back to its path. */

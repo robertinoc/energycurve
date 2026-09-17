@@ -121,6 +121,26 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
       es: "Subí tu playlist de Rekordbox, Traktor o M3U8 y mirá la curva de energía de tu set con un score de 1 a 10. Gratis, sin cuenta y sin subir archivos.",
     },
   },
+  "/tools/camelot-wheel": {
+    title: {
+      en: "Camelot wheel — compatible keys",
+      es: "Rueda Camelot — tonalidades compatibles",
+    },
+    description: {
+      en: "Interactive Camelot wheel: pick a key and see what mixes with it and what each move does. Full table of Camelot, Open Key and musical notation.",
+      es: "Rueda Camelot interactiva: elegí una tonalidad y mirá con cuáles mezcla y qué hace cada movimiento. Tabla completa Camelot, Open Key y notación musical.",
+    },
+  },
+  "/tools/key-bpm-compatibility": {
+    title: {
+      en: "Key and BPM compatibility checker",
+      es: "Compatibilidad de tonalidad y BPM",
+    },
+    description: {
+      en: "Do these two tracks mix? Harmonic compatibility, BPM difference, half-time, and what key you land in once you pitch. Free, no account, no sign-up needed.",
+      es: "¿Mezclan estos dos temas? Compatibilidad armónica, diferencia de BPM, half-time y en qué tonalidad queda el tema si ajustás el pitch. Gratis y sin cuenta.",
+    },
+  },
   "/blog": {
     /**
      * Not the bare word "Blog" in both languages: the locale test rejects a title
