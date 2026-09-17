@@ -68,6 +68,30 @@ export type ImportSource =
   | "csv"
   | "files"
 
+/**
+ * One playlist inside a library export, for a caller that wants to offer the
+ * choice.
+ *
+ * `index` rather than the name is what selects it: playlist names repeat — a DJ
+ * with "Friday" under two folders is normal — and a name would silently pick
+ * whichever came first, which is the bug this type exists to end.
+ */
+export interface PlaylistChoice {
+  index: number
+  /** The name as the software wrote it, or null for an unnamed playlist. */
+  name: string | null
+  trackCount: number
+}
+
+export interface ParseImportOptions {
+  /**
+   * Which playlist to read, as an index into `listPlaylists()`. Defaults to 0 —
+   * the first in the file, which is what every caller got before this existed.
+   * Out of range falls back to the whole collection rather than throwing.
+   */
+  playlistIndex?: number
+}
+
 export interface ParsedImport {
   source: ImportSource
   /** Playlist name from the file, when present. */

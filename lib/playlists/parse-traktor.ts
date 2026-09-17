@@ -9,6 +9,8 @@ import {
   parseDurationSeconds,
   type ImportedTrack,
   type ParsedImport,
+  type ParseImportOptions,
+  type PlaylistChoice,
 } from "@/lib/playlists/imported-track"
 import {
   extractCollectionElements,
@@ -139,23 +141,55 @@ function toImportedTrack(
   }
 }
 
-function findFirstPlaylistNode(node: RawNode): RawNode | null {
+/**
+ * Depth-first collection of every playlist node with entries. Folders are walked
+ * through, never returned. See the twin in parse-rekordbox.ts for why this stops
+ * being "find the first one".
+ */
+function collectPlaylistNodes(node: RawNode, into: RawNode[]): void {
   if (
     node["@_TYPE"] === "PLAYLIST" &&
     (node.PLAYLIST?.ENTRY?.length ?? 0) > 0
   ) {
-    return node
+    into.push(node)
   }
 
   for (const child of node.SUBNODES?.NODE ?? []) {
-    const found = findFirstPlaylistNode(child)
+    collectPlaylistNodes(child, into)
+  }
+}
 
-    if (found) {
-      return found
-    }
+function playlistNodesOf(root: { PLAYLISTS?: { NODE?: RawNode[] } }): RawNode[] {
+  const nodes: RawNode[] = []
+
+  for (const node of root.PLAYLISTS?.NODE ?? []) {
+    collectPlaylistNodes(node, nodes)
   }
 
-  return null
+  return nodes
+}
+
+/** The playlists inside a Traktor export, in file order. */
+export function listTraktorPlaylists(xml: string): PlaylistChoice[] {
+  const guard = inspectXmlDocument(xml)
+
+  if (!guard.ok) {
+    return []
+  }
+
+  const root = (
+    parser.parse(xml) as { NML?: { PLAYLISTS?: { NODE?: RawNode[] } } }
+  ).NML
+
+  if (!root) {
+    return []
+  }
+
+  return playlistNodesOf(root).map((node, index) => ({
+    index,
+    name: (node["@_NAME"] ?? "").trim() || null,
+    trackCount: node.PLAYLIST?.ENTRY?.length ?? 0,
+  }))
 }
 
 /**
@@ -167,7 +201,10 @@ function findFirstPlaylistNode(node: RawNode): RawNode | null {
  * playlist node's ordered PRIMARYKEY references. Falls back to collection
  * order when no playlist node is present. Throws if unparseable/empty.
  */
-export function parseTraktor(xml: string): ParsedImport {
+export function parseTraktor(
+  xml: string,
+  options: ParseImportOptions = {}
+): ParsedImport {
   // Structural check before the parser touches it: a DOCTYPE, an entity
   // declaration or absurd nesting is refused without building a tree. See
   // lib/playlists/xml-guard.ts for why a library limit alone is not enough.
@@ -215,19 +252,16 @@ export function parseTraktor(xml: string): ParsedImport {
   let ordered: RawEntry[] = []
   let playlistName: string | null = null
 
-  for (const node of root.PLAYLISTS?.NODE ?? []) {
-    const playlistNode = findFirstPlaylistNode(node)
+  const playlistNode = playlistNodesOf(root)[options.playlistIndex ?? 0]
 
-    if (playlistNode) {
-      playlistName = (playlistNode["@_NAME"] ?? "").trim() || null
-      ordered = (playlistNode.PLAYLIST?.ENTRY ?? [])
-        .map((entry) => {
-          const key = entry.PRIMARYKEY?.["@_KEY"]
-          return key ? byLocation.get(key) : undefined
-        })
-        .filter((e): e is RawEntry => Boolean(e))
-      break
-    }
+  if (playlistNode) {
+    playlistName = (playlistNode["@_NAME"] ?? "").trim() || null
+    ordered = (playlistNode.PLAYLIST?.ENTRY ?? [])
+      .map((entry) => {
+        const key = entry.PRIMARYKEY?.["@_KEY"]
+        return key ? byLocation.get(key) : undefined
+      })
+      .filter((e): e is RawEntry => Boolean(e))
   }
 
   const source = ordered.length > 0 ? ordered : collectionEntries
