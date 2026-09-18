@@ -482,7 +482,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">71</strong>
+      <strong id="tally-total">79</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -906,6 +906,62 @@
         { code: "UX.3", title: "Gig Mode sin conexión", sub: "PWA en una cabina sin señal", steps: ["Abrí Gig Mode con un set cargado", "Cortá la conexión (modo avión)", "Seguí usándolo"], expect: "Sigue andando con lo que ya tenía.", ifNot: "Éste es el caso de uso real del feature: en una cabina no hay señal." },
         { code: "UX.4", title: "Revocación de acceso en vivo", sub: "Necesita las dos cuentas a la vez", steps: ["Cuenta A comparte un set con cuenta B", "B lo abre y se queda mirándolo", "A revoca el acceso mientras B mira"], expect: "B pierde el acceso con un mensaje claro, no con una pantalla rota.", ifNot: "Anotá qué vio B exactamente en el momento de la revocación." },
         { code: "UX.5", title: "Cuota agotada a mitad de flujo", sub: "Con la cuenta FREE", steps: ["Consumí la cuota del plan FREE", "Intentá la acción que la excede, ya empezada"], expect: "Te lo dice antes de gastar, y ofrece el camino a PRO sin perder lo hecho.", ifNot: "Una cuota chequeada después de la llamada igual cuesta lo que venía a ahorrar." }
+      ]
+    },
+    {
+      code: "CONT",
+      title: "Fundación de contenido: guías y glosario",
+      meta: "~50 min · necesita la rama <code>seo/content-foundation</code> mergeada",
+      why: "Ocho pruebas que ningún test automático puede cerrar. Las rutas, el schema y los links rotos ya los vigila CI; lo que queda es lo que necesita un ojo, un oído de DJ, un teléfono de verdad o un validador ajeno. Dos de ellas — CONT.4 y CONT.5 — son las que más valen: una decide si el contenido es <em>cierto</em>, la otra si Google lo entiende.",
+      tests: [
+        {
+          code: "CONT.1", title: "Los componentes en un teléfono real", sub: "Varias curvas en una misma página",
+          steps: ["Abrí la guía de prueba en tu teléfono", "Bajá hasta el final pasando por los dos <code>CurvaDemo</code>", "Girá el teléfono a horizontal y volvé"],
+          expect: "Ninguna curva desborda el ancho ni empuja la página de costado, y la tabla de la escala scrollea sola sin arrastrar el resto.",
+          ifNot: "Sacá captura con el ancho visible. Un desbordamiento horizontal en mobile es el mismo tipo de bug que la rueda Camelot tuvo en el #232."
+        },
+        {
+          code: "CONT.2", title: "La escala de energía contra el score real", sub: "Que la tabla no diga una cosa y la app otra",
+          steps: ["Abrí <code>&lt;EscalaEnergia&gt;</code> en la guía de prueba", "Abrí un set tuyo ya analizado en el dashboard", "Compará: un tema de 124 BPM que la app puntúa 6, ¿cae en la banda que la tabla describe?"],
+          expect: "Las bandas de la tabla y los números que muestra la app cuentan la misma historia.",
+          ifNot: "Éste es el hallazgo más serio posible de esta sesión: significa que la tabla se desprendió de <code>lib/product/strategy.ts</code>. Anotá el tema, su BPM y los dos números."
+        },
+        {
+          code: "CONT.3", title: "El tooltip de término, con teclado y con voz", sub: "Lo que axe no mira",
+          steps: ["En la guía de prueba, llegá a un <code>&lt;Termino&gt;</code> sólo con Tab", "Abrí el tooltip con teclado y cerralo con Escape", "Repetí con el lector de pantalla encendido (VoiceOver o NVDA)"],
+          expect: "Se llega, se abre, se cierra y se lee la definición corta sin tocar el mouse.",
+          ifNot: "Un barrido verde es un piso, no un certificado: axe encuentra como un tercio de las barreras reales. Anotá qué anunció el lector."
+        },
+        {
+          code: "CONT.4", title: "Las 21 definiciones, leídas por un DJ", sub: "La única prueba que decide si el contenido sirve",
+          steps: ["Leé las 21 entradas del glosario en español", "Marcá cada una: correcta / discutible / mal", "Mirá especialmente las que Claude dejó marcadas como dudosas en el resumen del PR"],
+          expect: "Las 21 con veredicto tuyo.",
+          ifNot: "Una definición mal en una página que aspira a salir primera en Google es peor que no tener la página. Corregila en el archivo de datos, no en el HTML."
+        },
+        {
+          code: "CONT.5", title: "Rich Results Test sobre el glosario y la guía", sub: "Un validador ajeno, no el nuestro",
+          steps: ["Pegá la URL de una entrada del glosario en el Rich Results Test de Google", "Repetí con el índice del glosario y con la guía de prueba", "Anotá qué tipos detecta y qué advierte"],
+          expect: "<code>DefinedTerm</code> en la entrada, <code>DefinedTermSet</code> en el índice, <code>Article</code> y <code>FAQPage</code> en la guía, y <code>BreadcrumbList</code> en las tres. Sin errores.",
+          ifNot: "Nuestros tests validan que el JSON-LD sea JSON válido y tenga los tipos; no validan que Google los acepte. La diferencia entre las dos cosas es esta prueba."
+        },
+        {
+          code: "CONT.6", title: "La guía de prueba no se indexa", sub: "Tres consecuencias de un solo flag",
+          steps: ["Abrí la guía de prueba y mirá el <code>&lt;meta name=\"robots\"&gt;</code> en el HTML del servidor", "Buscala en <code>/sitemap.xml</code>", "Entrá al índice de guías y confirmá que no figura"],
+          expect: "<code>noindex</code>, fuera del sitemap y fuera del índice. Las tres.",
+          ifNot: "Si aparece en alguno de los tres lados, el flag <code>draft</code> no está viajando entero. Es contenido de relleno publicándose con nuestro nombre."
+        },
+        {
+          code: "CONT.7", title: "Los términos enlazados dentro de los 5 artículos", sub: "Que no arruinen la lectura",
+          steps: ["Leé los 5 artículos de corrido, como lector", "Mirá dónde cayeron los links a glosario", "Confirmá que se enlaza sólo la primera aparición de cada término"],
+          expect: "Los links ayudan y no distraen; ningún párrafo quedó sembrado de azul.",
+          ifNot: "Los <code>.md</code> no se tocaron a propósito: el enlazado pasa por <code>lib/blog/link-terms.ts</code>. Si sobra un link, se saca de ahí."
+        },
+        {
+          code: "CONT.8", title: "El glosario en producción y en Search Console", sub: "Después del deploy, no antes",
+          steps: ["Confirmá primero qué commit sirve producción", "Reenviá el sitemap en Search Console", "A los días, mirá cobertura y errores de hreflang de las rutas nuevas"],
+          expect: "Las 46 URLs nuevas descubiertas, sin errores de hreflang.",
+          ifNot: "Depende de SEO-E01 a SEO-E05, que siguen sin empezar: sin la consola reclamada no hay dónde mirar. Esa alta es tuya."
+        }
       ]
     }
   ];
