@@ -1,4 +1,4 @@
-import { signOut, withAuth } from "@workos-inc/authkit-nextjs"
+import { withAuth } from "@workos-inc/authkit-nextjs"
 import { redirect } from "next/navigation"
 
 import {

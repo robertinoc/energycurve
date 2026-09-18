@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import {
   indexableLocales,
   isIndexable,
-  LOCALIZED_PATHS,
   localizedPath,
   type LocalizedPath,
 } from "@/lib/content/locale-routing"
@@ -208,20 +207,6 @@ export function buildAlternates(path: LocalizedPath, locale: SiteLocale) {
       ["x-default", localizedPath(path, offered.includes("en") ? "en" : offered[0])],
     ]),
   }
-}
-
-/** Absolute URLs for every language of every localized page — for the sitemap. */
-export function localizedSitemapEntries(): {
-  path: string
-  urls: Record<SiteLocale, string>
-}[] {
-  return LOCALIZED_PATHS.map((path) => ({
-    path,
-    urls: {
-      en: `${SITE_URL}${localizedPath(path, "en")}`,
-      es: `${SITE_URL}${localizedPath(path, "es")}`,
-    },
-  }))
 }
 
 /** The legal entity that operates EnergyCurve — the name that shows up on a

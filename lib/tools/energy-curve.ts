@@ -29,10 +29,10 @@ import type { PlaylistContext, SupportedGenre } from "@/lib/product/strategy"
 export const MIN_TOOL_TRACKS = 2
 
 /** The default read of a set when nobody has said otherwise. */
-export const DEFAULT_CONTEXT: PlaylistContext = "main"
+const DEFAULT_CONTEXT: PlaylistContext = "main"
 
 /** The genre used when no track carries a tag we recognise and no BPM fits a band. */
-export const FALLBACK_GENRE: SupportedGenre = "house"
+const FALLBACK_GENRE: SupportedGenre = "house"
 
 export interface ToolProblemCounts {
   /**

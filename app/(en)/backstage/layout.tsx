@@ -1,10 +1,7 @@
-import { signOut } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
-import { redirect } from "next/navigation"
 
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { signOutAndReturnTo } from "@/lib/auth/sign-out"
-import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { requireBackstageSession } from "@/lib/backstage/guard"
 
 import { BackstageShell } from "./BackstageShell"
