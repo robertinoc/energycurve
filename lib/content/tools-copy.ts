@@ -67,6 +67,16 @@ export const TOOLS_HUB_COPY = {
     en: "Two tracks in: whether they mix, how far the tempo has to move, and what that does to the key.",
     es: "Dos temas: si mezclan, cuánto tiene que moverse el tempo y qué le hace eso a la tonalidad.",
   },
+  /** Placed beside the tools because a word you cannot define is the reason a
+      tool's output does not help. */
+  glossaryName: {
+    en: "DJ glossary",
+    es: "Glosario para DJs",
+  },
+  glossaryBlurb: {
+    en: "Twenty-one terms that come up while preparing a set, each with an example.",
+    es: "Veintiún términos que aparecen al preparar un set, cada uno con un ejemplo.",
+  },
 } as const
 
 export const TOOL_COPY = {

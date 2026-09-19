@@ -36,6 +36,16 @@ export type InlineNode =
   | { kind: "strong"; text: string }
   | { kind: "em"; text: string }
   | { kind: "link"; text: string; href: string }
+  /**
+   * A glossary term, with the definition that goes in its tooltip.
+   *
+   * The parser never produces one: there is no markdown syntax for it, and
+   * adding one would mean editing the articles. `lib/blog/link-terms.ts`
+   * produces it afterwards, by splitting a `text` node. It lives in this union
+   * so the renderer's switch stays exhaustive and the type checker knows the
+   * node can arrive.
+   */
+  | { kind: "term"; text: string; id: string; href: string; short: string }
 
 export type BlogBlock =
   | { kind: "heading"; level: 2 | 3 | 4; inline: InlineNode[] }
