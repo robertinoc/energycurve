@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
-import { ChevronDown, Menu, X } from "lucide-react"
+import { useEffect, useId, useRef, useState } from "react"
+import { ChevronDown, Menu, X, type LucideIcon } from "lucide-react"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { CTAButton } from "@/components/marketing/cta-button"
@@ -15,6 +15,22 @@ export interface NavLink {
   label: string
   /** Opens in a new tab and gets the usual safety attributes. */
   external?: boolean
+  /**
+   * Decorative only, and `aria-hidden` at the render site: the link text
+   * already names the destination, and an icon announced beside it says the
+   * same thing twice to anybody using a screen reader.
+   *
+   * From `lucide-react`, which this file already imports for the chevron and
+   * the hamburger — so the icons cost no new dependency. Hand-drawn SVGs would
+   * have added a second way of doing the same thing in the same component.
+   */
+  icon?: LucideIcon
+}
+
+/** A labelled block inside a group's panel. */
+export interface NavSection {
+  label: string
+  items: NavLink[]
 }
 
 /**
@@ -24,7 +40,15 @@ export interface NavLink {
  */
 export type NavEntry =
   | ({ kind: "link" } & NavLink)
+  /** A short flat list, which is still the right shape for four anchors. */
   | { kind: "group"; label: string; items: NavLink[] }
+  /**
+   * A panel. Past about six items a dropdown stops being read and starts being
+   * skimmed, so the Resources menu groups instead of growing — and once it is
+   * grouped it is wide rather than long, which is why this renders in two
+   * columns on desktop and as labelled sections on a phone.
+   */
+  | { kind: "group"; label: string; sections: NavSection[] }
 
 interface LandingNavbarProps {
   entries: NavEntry[]
@@ -52,10 +76,13 @@ function NavAnchor({
   link,
   className,
   onNavigate,
+  icon,
 }: {
   link: NavLink
   className: string
   onNavigate?: () => void
+  /** Already `aria-hidden` by the time it gets here. */
+  icon?: React.ReactNode
 }) {
   if (link.external) {
     return (
@@ -66,6 +93,7 @@ function NavAnchor({
         className={className}
         onClick={onNavigate}
       >
+        {icon}
         {link.label}
       </a>
     )
@@ -75,27 +103,100 @@ function NavAnchor({
   // through next/link so they don't reload the app.
   return link.href.startsWith("#") ? (
     <a href={link.href} className={className} onClick={onNavigate}>
+      {icon}
       {link.label}
     </a>
   ) : (
     <Link href={link.href} className={className} onClick={onNavigate}>
+      {icon}
       {link.label}
     </Link>
+  )
+}
+
+/** One row inside a panel or a mobile section. */
+function NavItem({
+  link,
+  activeSection,
+  onNavigate,
+}: {
+  link: NavLink
+  activeSection: string | null
+  onNavigate: () => void
+}) {
+  const Icon = link.icon
+
+  return (
+    <NavAnchor
+      link={link}
+      onNavigate={onNavigate}
+      className={cn(
+        "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition",
+        isActive(link.href, activeSection)
+          ? "bg-white/[0.06] text-white"
+          : "text-white/70 hover:bg-white/[0.05] hover:text-white"
+      )}
+      icon={
+        Icon ? (
+          <Icon aria-hidden className="size-4 shrink-0 text-[#22D3EE]/70" strokeWidth={1.75} />
+        ) : null
+      }
+    />
+  )
+}
+
+/**
+ * A labelled block. `role="group"` with `aria-labelledby` is what makes the
+ * heading a heading to a screen reader rather than a stray line of text above
+ * some links.
+ */
+function SectionBlock({
+  section,
+  activeSection,
+  onNavigate,
+}: {
+  section: NavSection
+  activeSection: string | null
+  onNavigate: () => void
+}) {
+  const headingId = useId()
+
+  return (
+    <div role="group" aria-labelledby={headingId} className="flex flex-col gap-0.5">
+      {/* ec-eyebrow is cyan on the panel's #0C0917: 10.89:1, measured. */}
+      <p id={headingId} className="ec-eyebrow px-3 pb-1 text-[0.66rem]">
+        {section.label}
+      </p>
+      {section.items.map((item) => (
+        <NavItem
+          key={item.href}
+          link={item}
+          activeSection={activeSection}
+          onNavigate={onNavigate}
+        />
+      ))}
+    </div>
   )
 }
 
 function NavGroup({
   label,
   items,
+  sections,
   activeSection,
 }: {
   label: string
-  items: NavLink[]
+  items?: NavLink[]
+  sections?: NavSection[]
   activeSection: string | null
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const groupActive = items.some((item) => isActive(item.href, activeSection))
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelId = useId()
+
+  const flat = sections ? sections.flatMap((section) => section.items) : items ?? []
+  const groupActive = flat.some((item) => isActive(item.href, activeSection))
 
   // A menu that only closes from its own trigger is a menu that gets left open.
   useEffect(() => {
@@ -105,7 +206,11 @@ function NavGroup({
       if (!ref.current?.contains(event.target as Node)) setOpen(false)
     }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false)
+      if (event.key !== "Escape") return
+      setOpen(false)
+      // Escape without this leaves focus on a panel that no longer exists, and
+      // the next Tab restarts from the top of the document.
+      triggerRef.current?.focus()
     }
 
     document.addEventListener("pointerdown", onPointerDown)
@@ -119,9 +224,11 @@ function NavGroup({
   return (
     <div ref={ref} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="true"
         aria-expanded={open}
+        aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
         className={cn(itemClasses(groupActive), "inline-flex items-center gap-1")}
       >
@@ -133,20 +240,32 @@ function NavGroup({
       </button>
 
       {open ? (
-        <div className="absolute left-0 top-full z-50 mt-2 min-w-[13rem] rounded-2xl border border-white/12 bg-[#0C0917]/97 p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-          {items.map((item) => (
-            <NavAnchor
-              key={item.href}
-              link={item}
-              onNavigate={() => setOpen(false)}
-              className={cn(
-                "block rounded-xl px-3 py-2 text-sm transition",
-                isActive(item.href, activeSection)
-                  ? "bg-white/[0.06] text-white"
-                  : "text-white/70 hover:bg-white/[0.05] hover:text-white"
-              )}
-            />
-          ))}
+        <div
+          id={panelId}
+          className={cn(
+            "absolute left-0 top-full z-50 mt-2 rounded-2xl border border-white/12 bg-[#0C0917]/97 p-2 shadow-[0_24px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl",
+            // A four-section panel is wider than it is long; one column would
+            // run past the fold on a laptop.
+            sections ? "grid w-[34rem] grid-cols-2 gap-x-2 gap-y-3" : "min-w-[13rem]"
+          )}
+        >
+          {sections
+            ? sections.map((section) => (
+                <SectionBlock
+                  key={section.label}
+                  section={section}
+                  activeSection={activeSection}
+                  onNavigate={() => setOpen(false)}
+                />
+              ))
+            : (items ?? []).map((item) => (
+                <NavItem
+                  key={item.href}
+                  link={item}
+                  activeSection={activeSection}
+                  onNavigate={() => setOpen(false)}
+                />
+              ))}
         </div>
       ) : null}
     </div>
@@ -186,7 +305,8 @@ export function LandingNavbar({
                 <NavGroup
                   key={entry.label}
                   label={entry.label}
-                  items={entry.items}
+                  items={"items" in entry ? entry.items : undefined}
+                  sections={"sections" in entry ? entry.sections : undefined}
                   activeSection={activeSection}
                 />
               ) : (
@@ -241,21 +361,25 @@ export function LandingNavbar({
               <div className="flex flex-col gap-3">
                 {entries.map((entry) =>
                   entry.kind === "group" ? (
-                    <div key={entry.label} className="flex flex-col gap-1">
-                      <p className="ec-eyebrow px-3 text-[0.66rem]">{entry.label}</p>
-                      {entry.items.map((item) => (
-                        <NavAnchor
-                          key={item.href}
-                          link={item}
+                    <div key={entry.label} className="flex flex-col gap-3">
+                      {"sections" in entry ? (
+                        // One column, always. Two 190px columns on a 390px
+                        // screen is why the panel is desktop-only.
+                        entry.sections.map((section) => (
+                          <SectionBlock
+                            key={section.label}
+                            section={section}
+                            activeSection={activeSection}
+                            onNavigate={() => setOpen(false)}
+                          />
+                        ))
+                      ) : (
+                        <SectionBlock
+                          section={{ label: entry.label, items: entry.items }}
+                          activeSection={activeSection}
                           onNavigate={() => setOpen(false)}
-                          className={cn(
-                            "rounded-2xl px-3 py-2 text-sm transition",
-                            isActive(item.href, activeSection)
-                              ? "bg-white/[0.06] text-white"
-                              : "text-white/72 hover:bg-white/[0.04] hover:text-white"
-                          )}
                         />
-                      ))}
+                      )}
                     </div>
                   ) : (
                     <NavAnchor

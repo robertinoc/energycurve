@@ -28,6 +28,16 @@ interface SiteCopySchema {
     faq: LocalizedLabel
     contact: LocalizedLabel
     cta: LocalizedLabel
+    /**
+     * Headings for the Resources panel. Ten loose items in a dropdown get
+     * scanned and abandoned; four labelled groups get read. Named for what the
+     * visitor wants to do, not for what kind of page it is — "Try it free" is
+     * the only one of the four that needs no account, so it goes first.
+     */
+    groupTry: LocalizedLabel
+    groupLearn: LocalizedLabel
+    groupReference: LocalizedLabel
+    groupPlans: LocalizedLabel
   }
   hero: {
     title: LocalizedLabel
@@ -264,6 +274,10 @@ interface SiteCopySchema {
     resources: LocalizedLabel
     stagelink: LocalizedLabel
     freeTool: LocalizedLabel
+    /** The two tools that reached no menu until now, plus the hub. */
+    camelotWheel: LocalizedLabel
+    keyBpmChecker: LocalizedLabel
+    toolsHub: LocalizedLabel
     blog: LocalizedLabel
     glossary: LocalizedLabel
     guides: LocalizedLabel
@@ -313,6 +327,10 @@ const siteCopy: SiteCopySchema = {
   nav: {
     features: { en: "Features", es: "Características" },
     how: { en: "How it Works", es: "Cómo funciona" },
+    groupTry: { en: "Try it free", es: "Probalo gratis" },
+    groupLearn: { en: "Learn", es: "Aprender" },
+    groupReference: { en: "Before you import", es: "Antes de importar" },
+    groupPlans: { en: "Plans & answers", es: "Planes y respuestas" },
     story: { en: "Story", es: "Historia" },
     faq: { en: "FAQ", es: "FAQ" },
     contact: { en: "Contact", es: "Contacto" },
@@ -1433,13 +1451,33 @@ const siteCopy: SiteCopySchema = {
     },
     resources: { en: "Resources", es: "Recursos" },
     stagelink: { en: "StageLink", es: "StageLink" },
+    /*
+     * Named by what the visitor gets, not by what the page is. "Free energy
+     * curve tool" describes the artefact; a stranger scanning a menu is asking
+     * what they would be able to do, and these are the only pages on the site
+     * that answer it without an account.
+     */
     freeTool: {
-      en: "Free energy curve tool",
-      es: "Curva de energía gratis",
+      en: "See your set's energy curve",
+      es: "Mirá la curva de tu set",
+    },
+    camelotWheel: {
+      en: "Which keys mix together",
+      es: "Qué tonalidades mezclan",
+    },
+    keyBpmChecker: {
+      en: "Check if two tracks mix",
+      es: "Fijate si dos temas mezclan",
+    },
+    toolsHub: {
+      en: "All free tools",
+      es: "Todas las herramientas",
     },
     // Both languages call it Blog; the EN index has its own honest empty state.
     blog: { en: "Blog", es: "Blog" },
-    glossary: { en: "Glossary", es: "Glosario" },
+    // "Glossary" is the filing cabinet; this is what is inside it. Forty-two
+    // pages hang off this one link, so the label is doing real work.
+    glossary: { en: "DJ terms, explained", es: "Términos de DJ, explicados" },
     guides: { en: "Guides", es: "Guías" },
     /**
      * The two reference pages. Labelled by the question they answer rather than
@@ -1448,12 +1486,12 @@ const siteCopy: SiteCopySchema = {
      * here is the one a DJ would search for.
      */
     energyTags: {
-      en: "Where energy tags live",
-      es: "Dónde viven las etiquetas de energía",
+      en: "Why energy values go missing",
+      es: "Por qué se pierden los valores de energía",
     },
     importFormats: {
-      en: "Playlist formats we read",
-      es: "Formatos de playlist que leemos",
+      en: "What we can import",
+      es: "Qué podemos importar",
     },
     legal: { en: "Legal", es: "Legal" },
     privacy: { en: "Privacy Policy", es: "Política de Privacidad" },
@@ -1645,6 +1683,10 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       faq: siteCopy.nav.faq[locale],
       contact: siteCopy.nav.contact[locale],
       cta: siteCopy.nav.cta[locale],
+      groupTry: siteCopy.nav.groupTry[locale],
+      groupLearn: siteCopy.nav.groupLearn[locale],
+      groupReference: siteCopy.nav.groupReference[locale],
+      groupPlans: siteCopy.nav.groupPlans[locale],
     },
     hero: {
       title: siteCopy.hero.title[locale],
@@ -1901,6 +1943,9 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       resources: siteCopy.footer.resources[locale],
       stagelink: siteCopy.footer.stagelink[locale],
       freeTool: siteCopy.footer.freeTool[locale],
+      camelotWheel: siteCopy.footer.camelotWheel[locale],
+      keyBpmChecker: siteCopy.footer.keyBpmChecker[locale],
+      toolsHub: siteCopy.footer.toolsHub[locale],
       blog: siteCopy.footer.blog[locale],
       glossary: siteCopy.footer.glossary[locale],
       energyTags: siteCopy.footer.energyTags[locale],
