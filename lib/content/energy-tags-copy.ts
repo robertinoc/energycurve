@@ -1,3 +1,4 @@
+import type { FaqEntry } from "@/lib/content/content-nodes"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
 /**
@@ -122,6 +123,62 @@ const NOT_READ: Localized[] = [
   },
 ]
 
+/**
+ * The four questions this page gets asked, and its own answers to them.
+ *
+ * Bilingual and un-resolved on purpose: the page renders them through the shared
+ * `<FAQ>` block and `buildReferenceStructuredData` reads the same array to build
+ * the `FAQPage` entities. One source, so the markup cannot claim an answer the
+ * page does not show — the rule `AGENTS.md` sets for the landing FAQ.
+ *
+ * Every answer restates something already on this page rather than adding a new
+ * claim: the import is not Mixed In Key-only, a bare number is accepted in one
+ * field and not the others, "0 of 24" is a format mismatch, and no tags at all
+ * is a supported case rather than a failure.
+ */
+export const ENERGY_TAGS_FAQ: FaqEntry[] = [
+  {
+    question: {
+      en: "Do I need Mixed In Key for this to work?",
+      es: "¿Necesito Mixed In Key para que esto funcione?",
+    },
+    answer: {
+      en: "No. Mixed In Key writes to the comment field and we read that, but we also read a field named ENERGY, Grouping, and lyrics — so Lexicon DJ, Serato, your own script, or a value you typed in by hand all work. If your energy lives somewhere we don't read yet, tell us and we'll add it.",
+      es: "No. Mixed In Key escribe en el campo de comentario y lo leemos, pero también leemos un campo llamado ENERGY, Grouping y las lyrics — así que Lexicon DJ, Serato, un script propio o un valor que escribiste a mano funcionan igual. Si tu energía vive en un campo que todavía no leemos, decinos y lo agregamos.",
+    },
+  },
+  {
+    question: {
+      en: "Can I just write the number on its own, like \"7\"?",
+      es: "¿Puedo escribir sólo el número, como \"7\"?",
+    },
+    answer: {
+      en: "Only in a field named ENERGY, where a bare number settles it. Everywhere else the word \"Energy\" has to appear next to the value — \"Energy 7\" — because a lone number in a comment or a grouping is far more likely to be a catalogue number, a year or a rating than an energy value, and reading it as energy would quietly reshape your set.",
+      es: "Sólo en un campo llamado ENERGY, donde un número solo alcanza. En el resto tiene que aparecer la palabra \"Energy\" al lado del valor — \"Energy 7\" — porque un número suelto en un comentario o en el grouping es mucho más probable que sea un número de catálogo, un año o un rating que una energía, y leerlo como energía te reordenaría el set en silencio.",
+    },
+  },
+  {
+    question: {
+      en: "It says it found energy for 0 of my tracks. What now?",
+      es: "Dice que encontró energía en 0 de mis temas. ¿Y ahora?",
+    },
+    answer: {
+      en: "That is a format mismatch, not a broken import, and the table above tells you which field to change. After every import EnergyCurve reports how many tracks it found energy for and which field it read it from, so you can check the fix rather than guess at it.",
+      es: "Eso es un problema de formato, no una importación rota, y la tabla de arriba te dice qué campo cambiar. Después de cada importación EnergyCurve te dice para cuántos temas encontró energía y de qué campo la leyó, así verificás el arreglo en lugar de adivinarlo.",
+    },
+  },
+  {
+    question: {
+      en: "What if none of my tracks have energy tags at all?",
+      es: "¿Y si ninguno de mis temas tiene etiquetas de energía?",
+    },
+    answer: {
+      en: "The analysis still runs. EnergyCurve estimates the curve from BPM, genre and position, and you can edit any value by hand in the track table. Tags are what let the analysis start from measured data instead of an estimate — they are not a requirement for using the product.",
+      es: "El análisis corre igual. EnergyCurve estima la curva por BPM, género y posición, y podés editar cualquier valor a mano en la tabla de temas. Los tags son lo que hace que el análisis arranque de datos reales en lugar de una estimación — no son un requisito para usar el producto.",
+    },
+  },
+]
+
 export function getEnergyTagsCopy(locale: SiteLocale) {
   const pick = (value: Localized) => value[locale]
 
@@ -170,6 +227,15 @@ export function getEnergyTagsCopy(locale: SiteLocale) {
       note: pick(row.note),
     })),
     notRead: NOT_READ.map(pick),
+    faqHeading: locale === "es" ? "Preguntas frecuentes" : "Common questions",
+    siblingIntro:
+      locale === "es"
+        ? "Esta página es la mitad de la respuesta: de qué tag leemos la energía."
+        : "This page is half the answer: which tag we read energy from.",
+    siblingLink:
+      locale === "es"
+        ? "La otra mitad es qué lee EnergyCurve de cada formato de playlist."
+        : "The other half is what EnergyCurve reads from each playlist format.",
   }
 }
 

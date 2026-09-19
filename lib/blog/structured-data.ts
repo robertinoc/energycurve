@@ -1,6 +1,7 @@
 import type { BlogPost } from "@/lib/blog/posts"
+import { articleCardUrl } from "@/lib/blog/social-card"
 import { localizedPath } from "@/lib/content/locale-routing"
-import { buildOrganization, SITE_URL, SOCIAL_IMAGE_URL } from "@/lib/seo"
+import { buildOrganization, SITE_URL } from "@/lib/seo"
 
 /**
  * The author of every article on this site.
@@ -57,12 +58,12 @@ export function buildArticleStructuredData(post: BlogPost, updatedAt: string) {
         inLanguage: post.locale,
         author: AUTHOR,
         publisher: buildOrganization(post.locale),
-        // No per-article artwork exists yet, so every article shares the site
-        // card. Stating it is still worth doing: an article with no `image` is
-        // ineligible for several of the results this markup exists to qualify
-        // for, and the shared card is accurate — it is what actually previews
-        // when someone shares the link.
-        image: SOCIAL_IMAGE_URL,
+        // The article's own card (SEO-E18), which is also what
+        // `generateMetadata` puts in `og:image`. Those two have to be the same
+        // URL: an `image` in JSON-LD that no scraper ever fetches is a claim
+        // about a picture nobody sees. Before this they were both the site
+        // card, which was accurate and identical for all five articles.
+        image: articleCardUrl(post),
         mainEntityOfPage: {
           "@type": "WebPage",
           "@id": url,

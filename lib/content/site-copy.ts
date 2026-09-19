@@ -267,6 +267,8 @@ interface SiteCopySchema {
     blog: LocalizedLabel
     glossary: LocalizedLabel
     guides: LocalizedLabel
+    energyTags: LocalizedLabel
+    importFormats: LocalizedLabel
     legal: LocalizedLabel
     privacy: LocalizedLabel
     terms: LocalizedLabel
@@ -288,6 +290,9 @@ interface SiteCopySchema {
     note: LocalizedLabel
     openApp: LocalizedLabel
     backHome: LocalizedLabel
+    faqHeading: LocalizedLabel
+    /** `question`/`answer`, so it can be handed straight to the shared `<FAQ>`. */
+    faq: { question: LocalizedLabel; answer: LocalizedLabel }[]
   }
   ui: {
     login: LocalizedLabel
@@ -1436,6 +1441,20 @@ const siteCopy: SiteCopySchema = {
     blog: { en: "Blog", es: "Blog" },
     glossary: { en: "Glossary", es: "Glosario" },
     guides: { en: "Guides", es: "Guías" },
+    /**
+     * The two reference pages. Labelled by the question they answer rather than
+     * by their slug: "Energy tags" means nothing to somebody who has not yet
+     * discovered that their energy values are not being read, and the phrasing
+     * here is the one a DJ would search for.
+     */
+    energyTags: {
+      en: "Where energy tags live",
+      es: "Dónde viven las etiquetas de energía",
+    },
+    importFormats: {
+      en: "Playlist formats we read",
+      es: "Formatos de playlist que leemos",
+    },
     legal: { en: "Legal", es: "Legal" },
     privacy: { en: "Privacy Policy", es: "Política de Privacidad" },
     terms: { en: "Terms of Service", es: "Términos del Servicio" },
@@ -1515,6 +1534,52 @@ const siteCopy: SiteCopySchema = {
     },
     openApp: { en: "Open EnergyCurve", es: "Abrir EnergyCurve" },
     backHome: { en: "Back to home", es: "Volver al inicio" },
+    faqHeading: { en: "Common questions", es: "Preguntas frecuentes" },
+    /**
+     * The three questions an install page is actually asked. Rendered through
+     * the shared `<FAQ>` block, and read by `buildInstallStructuredData` to
+     * build the `FAQPage` — one source, so the markup cannot claim an answer
+     * the page does not show.
+     *
+     * The offline answer is deliberately narrow and deliberately unflattering.
+     * The service worker in `public/sw.js` caches exactly two things: hashed
+     * static assets, and navigations matching the Gig Mode route. Everything
+     * else needs the network. "Yes, it works offline" would be the easy answer
+     * and it would be false in a booth, which is the one place it would be
+     * tested.
+     */
+    faq: [
+      {
+        question: {
+          en: "Does the installed app work offline?",
+          es: "¿La app instalada funciona sin conexión?",
+        },
+        answer: {
+          en: "Only Gig Mode does, and that is on purpose. A set you have opened in Gig Mode stays openable with no signal, because that is the screen you need in a booth. The rest of the app — importing, analysing, your library — needs a connection, and we would rather say so than have you find out during a set.",
+          es: "Sólo el Gig Mode, y es a propósito. Un set que ya abriste en Gig Mode se sigue pudiendo abrir sin señal, porque esa es la pantalla que necesitás en la cabina. El resto de la app — importar, analizar, tu librería — necesita conexión, y preferimos decirlo antes de que lo descubras tocando.",
+        },
+      },
+      {
+        question: {
+          en: "Can I install it on an iPhone?",
+          es: "¿La puedo instalar en un iPhone?",
+        },
+        answer: {
+          en: "Yes, from Safari: open energycurve.app, tap the Share button, and choose \"Add to Home Screen\". It has to be Safari — on iOS, adding to the home screen is a Safari feature, so the same steps in Chrome or Firefox will not offer it.",
+          es: "Sí, desde Safari: abrí energycurve.app, tocá el botón Compartir y elegí \"Agregar a pantalla de inicio\". Tiene que ser Safari — en iOS, agregar a la pantalla de inicio es una función de Safari, así que los mismos pasos en Chrome o Firefox no te la van a ofrecer.",
+        },
+      },
+      {
+        question: {
+          en: "How do updates work?",
+          es: "¿Cómo se actualiza?",
+        },
+        answer: {
+          en: "By themselves. There is no app store and nothing to download: the installed app is the website, so you get the current version every time you open it with a connection. You never have to reinstall it to get a new feature.",
+          es: "Sola. No hay tienda de apps ni nada que descargar: la app instalada es el sitio, así que cada vez que la abrís con conexión ya tenés la versión actual. Nunca hace falta reinstalarla para tener algo nuevo.",
+        },
+      },
+    ],
   },
   ui: {
     login: { en: "Login", es: "Ingresar" },
@@ -1653,14 +1718,36 @@ export function getSiteCopy(locale: SiteLocale = "en") {
         {
           title: siteCopy.how.step1.title[locale],
           description: siteCopy.how.step1.desc[locale],
+          /**
+           * The import step is the one place on the landing where a reader is
+           * already thinking about their own files, which makes it the only
+           * honest place to link the two reference pages from. Same labels as
+           * the footer — it is the same pair of questions, and a second wording
+           * would be a second thing to keep true.
+           *
+           * Paths, not URLs: the component localizes them, so `/es` gets the
+           * Spanish twin without this table knowing how routing works.
+           */
+          links: [
+            {
+              path: "/import-formats",
+              label: siteCopy.footer.importFormats[locale],
+            },
+            {
+              path: "/energy-tags",
+              label: siteCopy.footer.energyTags[locale],
+            },
+          ] as { path: string; label: string }[],
         },
         {
           title: siteCopy.how.step2.title[locale],
           description: siteCopy.how.step2.desc[locale],
+          links: [] as { path: string; label: string }[],
         },
         {
           title: siteCopy.how.step3.title[locale],
           description: siteCopy.how.step3.desc[locale],
+          links: [] as { path: string; label: string }[],
         },
       ],
     },
@@ -1816,6 +1903,8 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       freeTool: siteCopy.footer.freeTool[locale],
       blog: siteCopy.footer.blog[locale],
       glossary: siteCopy.footer.glossary[locale],
+      energyTags: siteCopy.footer.energyTags[locale],
+      importFormats: siteCopy.footer.importFormats[locale],
       guides: siteCopy.footer.guides[locale],
       legal: siteCopy.footer.legal[locale],
       privacy: siteCopy.footer.privacy[locale],
@@ -1838,6 +1927,10 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       note: siteCopy.install.note[locale],
       openApp: siteCopy.install.openApp[locale],
       backHome: siteCopy.install.backHome[locale],
+      faqHeading: siteCopy.install.faqHeading[locale],
+      // Unresolved: `<FAQ>` picks the language itself, and the structured-data
+      // builder needs both halves.
+      faq: siteCopy.install.faq,
     },
     ui: {
       login: siteCopy.ui.login[locale],

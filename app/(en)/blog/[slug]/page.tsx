@@ -4,12 +4,12 @@ import { notFound } from "next/navigation"
 import { BlogArticle } from "@/components/marketing/blog-article"
 import { buildArticleStructuredData } from "@/lib/blog/structured-data"
 import { getPost, listPosts, postUpdatedAt } from "@/lib/blog/posts"
+import { articleCardUrl } from "@/lib/blog/social-card"
 import { localizedPath } from "@/lib/content/locale-routing"
 import {
   openGraphLocale,
   serializeStructuredData,
   SITE_URL,
-  socialImages,
 } from "@/lib/seo"
 
 const LOCALE = "en" as const
@@ -55,6 +55,20 @@ export async function generateMetadata({
 
   const path = localizedPath(`/blog/${post.slug}`, LOCALE)
   const url = `${SITE_URL}${path}`
+  /**
+   * The article's own card (SEO-E18) rather than the site's. Same URL as
+   * the `image` on its `BlogPosting`, because a preview and a claim about
+   * a preview that disagree are worse than either alone.
+   */
+  const card = [
+    {
+      url: articleCardUrl(post),
+      width: 1200,
+      height: 630,
+      type: "image/png",
+      alt: post.title,
+    },
+  ]
 
   return {
     title: post.title,
@@ -71,13 +85,13 @@ export async function generateMetadata({
       publishedTime: post.publishedAt ?? undefined,
       modifiedTime: postUpdatedAt(post),
       locale: openGraphLocale(LOCALE),
-      images: socialImages(LOCALE),
+      images: card,
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.description,
-      images: socialImages(LOCALE),
+      images: card,
     },
   }
 }

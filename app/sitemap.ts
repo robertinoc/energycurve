@@ -10,6 +10,7 @@ import {
   glossaryTermPath,
   guidePath,
 } from "@/lib/content/glossary/paths"
+import { pageLastModified } from "@/lib/content/page-metadata"
 import { GLOSSARY_TERMS } from "@/lib/content/glossary/terms"
 import { publishedGuides } from "@/lib/content/guides/guides"
 import { supportedLocales } from "@/lib/content/site-copy"
@@ -56,6 +57,27 @@ const HINTS: Record<
 }
 
 /**
+ * Adds `x-default` to a language map, for parity with the `<head>`.
+ *
+ * `buildAlternates` in `lib/seo.ts` has emitted `x-default` on every page since
+ * the locale split; the sitemap never did, so the two halves of the same
+ * declaration disagreed about whether a default existed. A crawler reconciling
+ * them has no reason to prefer either.
+ *
+ * Points at English where English is offered, and at the only surviving language
+ * where it is not — the same rule `buildAlternates` applies, because two rules
+ * would eventually produce two answers.
+ */
+function alternateLanguages(languages: Record<string, string>) {
+  const codes = Object.keys(languages)
+
+  return {
+    ...languages,
+    "x-default": languages[codes.includes("en") ? "en" : codes[0]],
+  }
+}
+
+/**
  * Public, indexable routes only — auth and dashboard pages stay out.
  *
  * Both languages of every page are listed, each carrying the `alternates.languages`
@@ -63,14 +85,6 @@ const HINTS: Record<
  * crawling, which is the slower half of the job the sitemap exists to do.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  // Evaluated when the sitemap is generated, which for these pages is the build
-  // — i.e. the last time the site actually changed. It used to be a frozen
-  // literal, which meant every deploy after the day it was written told crawlers
-  // nothing had moved. The articles do better than this (see below); a marketing
-  // page has no equivalent per-page date short of reading git history, which a
-  // shallow CI clone doesn't reliably have.
-  const lastModified = new Date()
-
   // Articles, each in the one language it was written in. No `alternates` block:
   // there is no translation, and claiming one would point a crawler at a 404.
   //
@@ -78,10 +92,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // date — never the build. An article that hasn't been touched since August
   // should still say August after a December deploy, or `lastmod` stops meaning
   // anything and gets ignored.
+  //
+  // `monthly` rather than `yearly`: the five articles are being revised — the
+  // two that describe the pre-#231 harmonic rule are already known to need it —
+  // and `yearly` on a page we intend to edit this quarter asks a crawler to come
+  // back after the change it is meant to notice.
   const articles: MetadataRoute.Sitemap = allPublishedPosts().map((post) => ({
     url: `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}`,
     lastModified: new Date(postUpdatedAt(post)),
-    changeFrequency: "yearly",
+    changeFrequency: "monthly",
     priority: 0.6,
   }))
 
@@ -91,13 +110,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // index is asking and un-asking in the same file.
   const pages: MetadataRoute.Sitemap = LOCALIZED_PATHS.flatMap((path) => {
     const offered = indexableLocales(path)
-    const languages = Object.fromEntries(
-      offered.map((locale) => [locale, `${SITE_URL}${localizedPath(path, locale)}`])
+    const languages = alternateLanguages(
+      Object.fromEntries(
+        offered.map((locale) => [
+          locale,
+          `${SITE_URL}${localizedPath(path, locale)}`,
+        ])
+      )
     )
 
     return offered.map((locale) => ({
       url: `${SITE_URL}${localizedPath(path, locale)}`,
-      lastModified,
+      // The page's own date, not the build's. See `PAGE_LAST_MODIFIED`.
+      lastModified: pageLastModified(path),
       ...HINTS[path],
       alternates: { languages },
     }))
@@ -108,16 +133,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // the fixed pages their slug differs per language, which is why the URL comes
   // from the entry rather than from `ES_SLUGS`.
   const entries: MetadataRoute.Sitemap = GLOSSARY_TERMS.flatMap((term) => {
-    const languages = Object.fromEntries(
-      supportedLocales.map((locale) => [
-        locale,
-        `${SITE_URL}${glossaryTermPath(term, locale)}`,
-      ])
+    const languages = alternateLanguages(
+      Object.fromEntries(
+        supportedLocales.map((locale) => [
+          locale,
+          `${SITE_URL}${glossaryTermPath(term, locale)}`,
+        ])
+      )
     )
 
     return supportedLocales.map((locale) => ({
       url: `${SITE_URL}${glossaryTermPath(term, locale)}`,
-      lastModified,
+      // The glossary's date, shared by all twenty-one entries, because that is
+      // the truth: they were written and are revised as one body of copy, and
+      // the index page shows every one of them. A per-entry `updatedAt` would be
+      // twenty-one dates to maintain to express a fact none of them has yet —
+      // that one entry changed without the others. Add the field on the day one
+      // does.
+      lastModified: pageLastModified("/glossary"),
       changeFrequency: "monthly" as const,
       priority: 0.5,
       alternates: { languages },
@@ -128,11 +161,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // which is one of the three things its flag has to do. The other two are the
   // `noindex` directive and its absence from the index page.
   const guides: MetadataRoute.Sitemap = publishedGuides().flatMap((guide) => {
-    const languages = Object.fromEntries(
-      supportedLocales.map((locale) => [
-        locale,
-        `${SITE_URL}${guidePath(guide, locale)}`,
-      ])
+    const languages = alternateLanguages(
+      Object.fromEntries(
+        supportedLocales.map((locale) => [
+          locale,
+          `${SITE_URL}${guidePath(guide, locale)}`,
+        ])
+      )
     )
 
     return supportedLocales.map((locale) => ({

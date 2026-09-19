@@ -203,3 +203,57 @@ export function pageMetadata(path: LocalizedPath, locale: SiteLocale) {
   const meta = PAGE_METADATA[path]
   return { title: meta.title[locale], description: meta.description[locale] }
 }
+
+/**
+ * The day each page's content last actually changed — the sitemap's `lastmod`.
+ *
+ * Until now every fixed page reported `new Date()`, which is the build clock.
+ * That is the same number for all sixteen of them and a different number on
+ * every deploy, so it told a crawler that the whole site changes whenever
+ * anything ships and that nothing in it is older than anything else. A `lastmod`
+ * that moves for pages that did not move is not a weak signal, it is a wrong
+ * one, and the documented response to an unreliable `lastmod` is to stop reading
+ * it. The articles already did this properly — they report their own revision
+ * date — and this is that idea applied to the pages.
+ *
+ * **Maintained by hand, and that is the design.** The obvious alternative is to
+ * ask git at build time, and it does not work here: CI checks out with
+ * `actions/checkout`'s default depth of 1, so the repository contains exactly
+ * one commit and `git log -1 -- <file>` answers with that commit's date for
+ * every file alike. Verified on a `--depth 1` clone on 19 Sep 2026: two files
+ * changed months apart both reported the same timestamp. Deriving the date from
+ * git would reproduce the bug this map exists to fix, while looking rigorous.
+ *
+ * Seeded from the full local history (the last commit touching each page's
+ * component and copy file), so the dates here started out true rather than
+ * guessed.
+ *
+ * **When you change a page's copy, change its date.** A date that is merely
+ * stale is still honest — it says "not since then", which is the claim
+ * `lastmod` makes. Dates share a value where pages genuinely changed together:
+ * the four legal pages are one copy file and one edit.
+ */
+export const PAGE_LAST_MODIFIED: Record<LocalizedPath, string> = {
+  "/": "2026-09-19",
+  "/pricing": "2026-09-11",
+  "/tools": "2026-09-19",
+  "/tools/energy-curve": "2026-09-19",
+  "/tools/camelot-wheel": "2026-09-17",
+  "/tools/key-bpm-compatibility": "2026-09-17",
+  "/blog": "2026-09-11",
+  "/glossary": "2026-09-19",
+  "/guide": "2026-09-19",
+  "/install": "2026-08-18",
+  "/energy-tags": "2026-09-07",
+  "/import-formats": "2026-09-11",
+  // One copy file, one edit: these four genuinely changed together.
+  "/privacy": "2026-09-11",
+  "/terms": "2026-09-11",
+  "/cookie-policy": "2026-09-11",
+  "/subprocessors": "2026-09-11",
+}
+
+/** The `lastmod` for one page, as a Date. */
+export function pageLastModified(path: LocalizedPath): Date {
+  return new Date(`${PAGE_LAST_MODIFIED[path]}T00:00:00Z`)
+}

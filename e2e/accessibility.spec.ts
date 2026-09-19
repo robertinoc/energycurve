@@ -59,6 +59,18 @@ const PUBLIC_PAGES = [
   ["glossary entry (es)", "/es/glosario/curva-de-energia"],
   ["guide index (es)", "/es/guia"],
   ["draft guide (es)", "/es/guia/componentes"],
+  // SEO-E30. The two reference pages were outside the sweep in both languages,
+  // and they are dense data tables inside horizontally scrollable regions —
+  // the exact shape that produced the keyboard trap #232 found on the Camelot
+  // wheel. They also gained a `<details>` FAQ in this branch.
+  ["energy tags", "/energy-tags"],
+  ["import formats", "/import-formats"],
+  ["energy tags (es)", "/es/energy-tags"],
+  ["import formats (es)", "/es/import-formats"],
+  // One article, Spanish, because Spanish is the only language they exist in.
+  // Like the glossary, the five are one component rendered with different
+  // words, so one of them tests the markup.
+  ["blog article (es)", "/es/blog/antes-de-tocar-no-despues"],
 ] as const
 
 async function violationsOn(page: Page, path: string) {
