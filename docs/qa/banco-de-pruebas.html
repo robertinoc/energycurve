@@ -482,7 +482,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">79</strong>
+      <strong id="tally-total">87</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -491,14 +491,14 @@
 
   <div class="gate">
     <span class="tag">Cuello&nbsp;de&nbsp;botella</span>
-    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy ya salió según Robertino, con lo que las sesiones SEO y TOOL también arrancan — Claude no pudo confirmarlo desde su contenedor, que tiene el dominio bloqueado, así que el primer paso de las dos sigue siendo mirar qué commit sirve producción.</p>
+    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy salió: el 19/09 se confirmó que producción sirve <code>b9721a4</code> (buildeada 11:46:04 UTC), con la fundación de contenido adentro — se dedujo del propio sitemap servido, sin entrar a Vercel. Así que las sesiones SEO, TOOL y CONT arrancan. La <strong>SEO2</strong> es la excepción: mide el lote 2, que está en rama y todavía no se deployó.</p>
   </div>
 
   <main id="sessions"></main>
 
   <footer>
     <p>El estado y las notas se guardan solos y los leo desde acá para actualizar Asana. El JSON de etiquetas de A8 y la evidencia de cada prueba viven donde siempre — esto registra qué se probó y qué pasó, no reemplaza el artefacto.</p>
-    <p><strong>Ésta es la copia de trabajo.</strong> Vive en la cuenta personal, que es la única en la que Claude puede escribir: la original quedó en la cuenta de migbirds y no se puede sincronizar con ésta — cada página tiene su propio almacenamiento. Anotá acá y en ningún otro lado. El traspaso al repo lo hace Claude leyendo esta página: <code>docs/qa/artifacts-handoff.md</code> explica cómo.</p>
+    <p><strong>Hay dos copias de esta página, una por cuenta, y no se sincronizan.</strong> Cada una tiene su propio almacenamiento, así que el estado y las notas que anotes acá no aparecen en la otra. El <em>mapa</em> — esto que estás leyendo — sale del repo (<code>docs/qa/banco-de-pruebas.html</code>) y cada cuenta lo republica a la suya desde ese mismo archivo, que es lo que impide que el contenido diverja. <strong>El estado anotalo en una sola</strong>: si se anota en las dos, hay que reconciliarlo a mano. El circuito completo está en <code>docs/qa/artifacts-handoff.md</code>.</p>
   </footer>
 </div>
 
