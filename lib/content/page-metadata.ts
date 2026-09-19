@@ -240,7 +240,7 @@ export const PAGE_LAST_MODIFIED: Record<LocalizedPath, string> = {
   "/tools/energy-curve": "2026-09-19",
   "/tools/camelot-wheel": "2026-09-17",
   "/tools/key-bpm-compatibility": "2026-09-17",
-  "/blog": "2026-09-11",
+  "/blog": "2026-09-19",
   "/glossary": "2026-09-19",
   "/guide": "2026-09-19",
   "/install": "2026-08-18",

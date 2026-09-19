@@ -49,3 +49,6 @@ next-env.d.ts
 
 # cached signed-in browser state for the authenticated e2e suite
 e2e/.auth/
+
+# Lighthouse CI report output (SEO-E29) — uploaded as a CI artifact, never committed.
+.lighthouseci/

@@ -5,6 +5,7 @@ slug: cuanto-es-mucho-salto-de-energia
 locale: es
 targetQuery: "salto de energía entre tracks DJ"
 publishedAt: 2026-08-20
+tags: curva de energía, transiciones, BPM
 ---
 
 La regla que más se repite es "no cambies más de 6 u 8% de BPM entre dos temas". Es

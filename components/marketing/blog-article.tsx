@@ -74,6 +74,19 @@ function ArticleCta({ locale }: { locale: BlogPost["locale"] }) {
         >
           {BLOG_COPY.ctaTool[locale]}
         </Link>
+        {/* SEO-E15. `localizedPath`, not an absolute URL: the articles used to
+            carry one hard-coded `https://energycurve.app/es` and it is the kind
+            of link that survives a domain change by breaking quietly.
+
+            Outside the prose on purpose — `linkGlossaryTerms` rewrites text
+            nodes inside the body, and a link added there would be competing
+            with the term links for the same sentence. */}
+        <Link
+          href={localizedPath("/import-formats", locale)}
+          className="text-sm text-ec-cyan underline-offset-4 hover:underline"
+        >
+          {BLOG_COPY.ctaFormats[locale]}
+        </Link>
       </div>
     </section>
   )

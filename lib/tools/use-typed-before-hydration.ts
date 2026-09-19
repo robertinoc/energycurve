@@ -44,7 +44,14 @@ export function useTypedBeforeHydration(fields: readonly TypedField[]): void {
       if (
         !(
           element instanceof HTMLInputElement ||
-          element instanceof HTMLTextAreaElement
+          element instanceof HTMLTextAreaElement ||
+          // A `<select>` loses a pre-hydration choice exactly the way a text
+          // box loses a pre-hydration keystroke, and more easily: picking from
+          // a native dropdown is one gesture, so it lands inside the window
+          // rather than spanning it. Added for the blog index's tag filter
+          // (SEO-E16) rather than reimplemented beside it — the bug is the
+          // same bug, and two copies of this fix would drift.
+          element instanceof HTMLSelectElement
         )
       ) {
         continue

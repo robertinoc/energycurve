@@ -1,20 +1,25 @@
 import type { BlogPost } from "@/lib/blog/posts"
-import { articleCardUrl } from "@/lib/blog/social-card"
+import { articleImageUrl } from "@/lib/blog/social-card"
+import { BLOG_COPY } from "@/lib/content/blog-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import { buildOrganization, SITE_URL } from "@/lib/seo"
 
 /**
- * The author of every article on this site.
+ * The author, as a `Person` rather than the `Organization`: the articles are
+ * written in one voice, in first person, and an answer engine quoting one should
+ * be able to say who wrote it.
  *
- * A `Person`, not the `Organization`: the articles are written in one voice, in
- * first person, and an answer engine quoting one should be able to say who wrote
- * it. `url` points at the site rather than a personal profile we don't publish.
+ * Read off the post since SEO-E12. Every article today resolves to the site's
+ * default author, which is true — but a guest post has to be able to name its
+ * guest without a change here, and a constant is how that gets forgotten.
  */
-const AUTHOR = {
-  "@type": "Person",
-  name: "ROBERTINOC",
-  url: SITE_URL,
-} as const
+function author(post: BlogPost) {
+  return {
+    "@type": "Person",
+    name: post.author.name,
+    url: post.author.url,
+  }
+}
 
 /** "Blog", in the language the article is written in. */
 const BLOG_CRUMB: Record<BlogPost["locale"], string> = {
@@ -26,6 +31,75 @@ const BLOG_CRUMB: Record<BlogPost["locale"], string> = {
 const HOME_CRUMB: Record<BlogPost["locale"], string> = {
   en: "Home",
   es: "Inicio",
+}
+
+/**
+ * `Blog` + `BreadcrumbList` for an index page — SEO-E16.
+ *
+ * The index had no structured data at all, which left a crawler to infer that a
+ * list of five links was a blog. `Blog` with a `blogPost` list says what the
+ * page is and what is on it in one node, and each entry carries enough to be
+ * useful on its own — an answer engine that reads the index and never fetches an
+ * article still knows the titles, the dates and the URLs.
+ *
+ * Built from the same `BlogPost[]` the page renders, so the list cannot name an
+ * article the page does not show. Emitted only when there are articles: a `Blog`
+ * declaring zero posts is a claim about emptiness, and the English index is
+ * `noindex` precisely because it is empty.
+ */
+export function buildBlogIndexStructuredData(
+  posts: BlogPost[],
+  locale: BlogPost["locale"]
+) {
+  const url = `${SITE_URL}${localizedPath("/blog", locale)}`
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Blog",
+        "@id": `${url}#blog`,
+        name: BLOG_CRUMB[locale],
+        description: BLOG_COPY.intro[locale],
+        url,
+        inLanguage: locale,
+        publisher: buildOrganization(locale),
+        blogPost: posts.map((post) => ({
+          "@type": "BlogPosting",
+          "@id": `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}#article`,
+          headline: post.title,
+          description: post.description,
+          url: `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}`,
+          datePublished: post.publishedAt,
+          dateModified: post.updatedAt ?? post.publishedAt,
+          inLanguage: post.locale,
+          author: author(post),
+          image: articleImageUrl(post),
+          // The tags, as schema's own word for them. `keywords` on an article is
+          // one of the few places the property is actually read.
+          ...(post.tags.length > 0 ? { keywords: post.tags.join(", ") } : {}),
+        })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${url}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: HOME_CRUMB[locale],
+            item: `${SITE_URL}${localizedPath("/", locale)}`,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: BLOG_CRUMB[locale],
+            item: url,
+          },
+        ],
+      },
+    ],
+  }
 }
 
 /**
@@ -56,14 +130,15 @@ export function buildArticleStructuredData(post: BlogPost, updatedAt: string) {
         datePublished: post.publishedAt,
         dateModified: updatedAt,
         inLanguage: post.locale,
-        author: AUTHOR,
+        author: author(post),
         publisher: buildOrganization(post.locale),
         // The article's own card (SEO-E18), which is also what
         // `generateMetadata` puts in `og:image`. Those two have to be the same
         // URL: an `image` in JSON-LD that no scraper ever fetches is a claim
-        // about a picture nobody sees. Before this they were both the site
-        // card, which was accurate and identical for all five articles.
-        image: articleCardUrl(post),
+        // about a picture nobody sees. A frontmatter `image` overrides the
+        // generated card — both paths go through `articleImageUrl` so the two
+        // cannot disagree.
+        image: articleImageUrl(post),
         mainEntityOfPage: {
           "@type": "WebPage",
           "@id": url,

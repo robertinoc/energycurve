@@ -7,6 +7,17 @@ import {
   type BlogBlock,
   type InlineNode,
 } from "@/lib/blog/markdown"
+import {
+  alternatesFor,
+  DEFAULT_AUTHOR,
+  listPosts,
+  parsePost,
+  postAlternates,
+  relatedPosts,
+  resolveTranslation,
+  tagsInUse,
+  type BlogPost,
+} from "@/lib/blog/posts"
 
 /** Flattens a tree back to its words, for assertions about content not shape. */
 const textOf = (nodes: InlineNode[]) => nodes.map((node) => node.text).join("")
@@ -369,6 +380,279 @@ describe("article structured data", () => {
 
     for (const post of allPublishedPosts()) {
       expect(postUpdatedAt(post), post.slug).toBe(post.updatedAt ?? post.publishedAt)
+    }
+  })
+})
+
+/**
+ * SEO-E12 — the frontmatter the blog model gained, and the strictness it kept.
+ *
+ * `parsePost` is the parser without the filesystem, so a rule can be tested by
+ * handing it a bad article rather than writing one to disk.
+ */
+describe("the blog frontmatter model", () => {
+  const article = (frontmatter: string) =>
+    `---\ntitle: "T"\ndescription: "D"\nslug: s\n${frontmatter}\n---\n\nBody.\n`
+
+  it("defaults the author to the site's own", () => {
+    expect(parsePost(article("publishedAt: 2026-01-01"), "es", "a.md").author).toEqual(
+      DEFAULT_AUTHOR
+    )
+  })
+
+  it("lets an article name its own author and URL", () => {
+    const post = parsePost(
+      article("author: Jordi\nauthorUrl: https://example.com/jordi"),
+      "es",
+      "a.md"
+    )
+
+    expect(post.author).toEqual({
+      name: "Jordi",
+      url: "https://example.com/jordi",
+    })
+  })
+
+  it("keeps the default URL for an author who has no page", () => {
+    expect(parsePost(article("author: Jordi"), "es", "a.md").author).toEqual({
+      name: "Jordi",
+      url: DEFAULT_AUTHOR.url,
+    })
+  })
+
+  /**
+   * A half-filled record would attribute the article to the default author
+   * under somebody else's URL, which is worse than either field being absent.
+   */
+  it("refuses an authorUrl with no author", () => {
+    expect(() =>
+      parsePost(article("authorUrl: https://example.com"), "es", "a.md")
+    ).toThrow(/authorUrl without author/)
+  })
+
+  it("reads tags as a comma-separated list, trimmed", () => {
+    expect(parsePost(article("tags: orden,  energía , BPM"), "es", "a.md").tags).toEqual(
+      ["orden", "energía", "BPM"]
+    )
+  })
+
+  /** A typo, not two tags. Dropping it silently loses an article from a filter. */
+  it("refuses an empty entry in tags", () => {
+    expect(() => parsePost(article("tags: orden,, BPM"), "es", "a.md")).toThrow(
+      /empty entry in tags/
+    )
+  })
+
+  it("has no tags when the field is absent", () => {
+    expect(parsePost(article("publishedAt: 2026-01-01"), "es", "a.md").tags).toEqual([])
+  })
+
+  it("accepts a site-relative or http image", () => {
+    expect(parsePost(article("image: /cards/a.png"), "es", "a.md").image).toBe(
+      "/cards/a.png"
+    )
+    expect(
+      parsePost(article("image: https://cdn.example.com/a.png"), "es", "a.md").image
+    ).toBe("https://cdn.example.com/a.png")
+  })
+
+  /**
+   * Frontmatter reaches `og:image` and `author.url`, so a hostile scheme here is
+   * the same injection the markdown link parser already refuses — arriving
+   * through a quieter door.
+   */
+  it.each(["javascript:alert(1)", "data:text/html,x", "ftp://host/a.png"])(
+    "refuses %s as an image",
+    (value) => {
+      expect(() => parsePost(article(`image: ${value}`), "es", "a.md")).toThrow(
+        /site-relative or http/
+      )
+    }
+  )
+
+  it("still refuses what it refused before", () => {
+    expect(() => parsePost("no frontmatter", "es", "a.md")).toThrow(/no frontmatter/)
+    expect(() => parsePost('---\ntitle: "T"\n', "es", "a.md")).toThrow(/unterminated/)
+    expect(() => parsePost(article("not a valid line"), "es", "a.md")).toThrow(
+      /malformed frontmatter line/
+    )
+    expect(() =>
+      parsePost('---\ndescription: "D"\nslug: s\n---\n\nx\n', "es", "a.md")
+    ).toThrow(/missing title/)
+  })
+})
+
+/**
+ * SEO-E12 — `translationOf`, and the rule that a declared translation which
+ * does not exist is worse than no declaration at all.
+ */
+describe("translated pairs", () => {
+  const post = (
+    slug: string,
+    locale: "en" | "es",
+    translationOf: string | null = null,
+    tags: string[] = []
+  ): BlogPost => ({
+    slug,
+    locale,
+    title: slug,
+    description: "d",
+    publishedAt: "2026-01-01",
+    updatedAt: null,
+    targetQuery: null,
+    author: DEFAULT_AUTHOR,
+    translationOf,
+    tags,
+    image: null,
+    blocks: [],
+  })
+
+  it("resolves a pair that names itself from both sides", () => {
+    const es = post("orden-del-set", "es", "set-order")
+    const en = post("set-order", "en", "orden-del-set")
+
+    expect(resolveTranslation(es, [en])?.slug).toBe("set-order")
+    expect(resolveTranslation(en, [es])?.slug).toBe("orden-del-set")
+  })
+
+  /** The half-landed pair: one side claims, the other has not shipped yet. */
+  it("refuses a claim the other side does not return", () => {
+    const es = post("orden-del-set", "es", "set-order")
+    const en = post("set-order", "en", null)
+
+    expect(resolveTranslation(es, [en])).toBeNull()
+  })
+
+  it("refuses a claim that points at nothing", () => {
+    expect(resolveTranslation(post("orden-del-set", "es", "nope"), [])).toBeNull()
+  })
+
+  it("refuses a claim pointing at an article in the same language", () => {
+    expect(resolveTranslation(post("a", "es", "b"), [post("b", "es", "a")])).toBeNull()
+  })
+
+  it("resolves nothing when the article makes no claim", () => {
+    expect(resolveTranslation(post("a", "es"), [post("b", "en", "a")])).toBeNull()
+  })
+
+  /**
+   * The acceptance criterion for SEO-E12, stated as the thing a crawler reads:
+   * a resolved pair names both URLs from both directions, plus one default.
+   */
+  describe("the hreflang a pair emits", () => {
+    const es = post("orden-del-set", "es", "set-order")
+    const en = post("set-order", "en", "orden-del-set")
+
+    it("names both languages, from the Spanish side", () => {
+      expect(alternatesFor(es, [en])).toEqual({
+        es: "/es/blog/orden-del-set",
+        en: "/blog/set-order",
+        "x-default": "/blog/set-order",
+      })
+    })
+
+    it("names both languages, from the English side", () => {
+      expect(alternatesFor(en, [es])).toEqual({
+        en: "/blog/set-order",
+        es: "/es/blog/orden-del-set",
+        "x-default": "/blog/set-order",
+      })
+    })
+
+    /** x-default points at English from either side — one page, one default. */
+    it("agrees on the default from either direction", () => {
+      expect(alternatesFor(es, [en])["x-default"]).toBe(
+        alternatesFor(en, [es])["x-default"]
+      )
+    })
+
+    it("falls back to the article alone when the pair does not resolve", () => {
+      const lonely = post("orden-del-set", "es", "set-order")
+
+      expect(alternatesFor(lonely, [post("set-order", "en", null)])).toEqual({
+        es: "/es/blog/orden-del-set",
+      })
+    })
+  })
+
+  describe("related articles", () => {
+    it("prefers the article sharing the most tags", () => {
+      const subject = post("subject", "es", null, ["orden", "energía"])
+      const pool = [
+        post("none", "es", null, ["bpm"]),
+        post("one", "es", null, ["orden"]),
+        post("two", "es", null, ["orden", "energía"]),
+      ]
+
+      expect(relatedPosts(subject, pool).map((p) => p.slug)).toEqual([
+        "two",
+        "one",
+        "none",
+      ])
+    })
+
+    it("matches tags case-insensitively", () => {
+      const subject = post("subject", "es", null, ["Orden"])
+      const pool = [post("a", "es", null, ["bpm"]), post("b", "es", null, ["orden"])]
+
+      expect(relatedPosts(subject, pool)[0].slug).toBe("b")
+    })
+
+    /** An untagged article must still end with three things to read next. */
+    it("tops up with recent articles when tags run out", () => {
+      const subject = post("subject", "es")
+      const pool = [post("a", "es"), post("b", "es"), post("c", "es")]
+
+      expect(relatedPosts(subject, pool)).toHaveLength(3)
+    })
+
+    it("never offers the article being read, or another language", () => {
+      const subject = post("subject", "es", null, ["orden"])
+
+      expect(
+        relatedPosts(subject, [subject, post("en-one", "en", null, ["orden"])])
+      ).toEqual([])
+    })
+  })
+
+  describe("tags in use", () => {
+    it("lists each tag once, most used first", () => {
+      expect(
+        tagsInUse([
+          post("a", "es", null, ["orden", "bpm"]),
+          post("b", "es", null, ["Orden"]),
+        ])
+      ).toEqual(["orden", "bpm"])
+    })
+
+    it("is empty when nothing is tagged", () => {
+      expect(tagsInUse([post("a", "es")])).toEqual([])
+    })
+  })
+})
+
+/** The five published articles, against the model they now carry. */
+describe("the real articles under the new model", () => {
+  it("gives every one of them tags, an author and a parsed body", () => {
+    const posts = listPosts("es")
+    expect(posts.length).toBeGreaterThan(0)
+
+    for (const post of posts) {
+      expect(post.tags.length, `${post.slug} has no tags`).toBeGreaterThan(0)
+      expect(post.author).toEqual(DEFAULT_AUTHOR)
+      expect(post.image).toBeNull()
+      expect(post.blocks.length).toBeGreaterThan(0)
+    }
+  })
+
+  /**
+   * No pair exists yet — the English articles are SEO-E13/E14 and unwritten —
+   * so every article must declare itself and nothing else. This is the
+   * assertion that fails the day somebody sets `translationOf` on one side only.
+   */
+  it("declares no translation it cannot back up", () => {
+    for (const post of listPosts("es")) {
+      expect(postAlternates(post)).toEqual({ es: `/es/blog/${post.slug}` })
     }
   })
 })

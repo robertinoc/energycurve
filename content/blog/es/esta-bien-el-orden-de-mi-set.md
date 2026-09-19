@@ -5,6 +5,7 @@ slug: esta-bien-el-orden-de-mi-set
 locale: es
 targetQuery: "cómo ordenar los tracks de un set de DJ"
 publishedAt: 2026-08-20
+tags: orden del set, curva de energía, preparar el set
 ---
 
 Hay muchísimo escrito sobre cómo *armar* un set: empezá tranquilo, subí de a poco,

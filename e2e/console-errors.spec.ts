@@ -48,6 +48,12 @@ const PAGES = [
   ["blog article (es)", "/es/blog/antes-de-tocar-no-despues"],
   ["landing", "/"],
   ["landing (es)", "/es"],
+  // The blog index gained a controlled `<select>` (SEO-E16). That is the exact
+  // shape of the #232 bug: a value that lives in the DOM before React attaches,
+  // is never seen by it, and is then contradicted by the first render. Server
+  // HTML assertions cannot see it, which is why this sweep exists.
+  ["blog index (es)", "/es/blog"],
+  ["blog index", "/blog"],
 ] as const
 
 /**

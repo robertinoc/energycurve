@@ -3,8 +3,14 @@ import { notFound } from "next/navigation"
 
 import { BlogArticle } from "@/components/marketing/blog-article"
 import { buildArticleStructuredData } from "@/lib/blog/structured-data"
-import { getPost, listPosts, postUpdatedAt } from "@/lib/blog/posts"
-import { articleCardUrl } from "@/lib/blog/social-card"
+import {
+  getPost,
+  listPosts,
+  postAlternates,
+  postUpdatedAt,
+  relatedPosts,
+} from "@/lib/blog/posts"
+import { articleImageUrl } from "@/lib/blog/social-card"
 import { localizedPath } from "@/lib/content/locale-routing"
 import {
   openGraphLocale,
@@ -62,7 +68,7 @@ export async function generateMetadata({
    */
   const card = [
     {
-      url: articleCardUrl(post),
+      url: articleImageUrl(post),
       width: 1200,
       height: 630,
       type: "image/png",
@@ -75,7 +81,12 @@ export async function generateMetadata({
     description: post.description,
     alternates: {
       canonical: url,
-      languages: { en: path },
+      /**
+       * The translated pair when `translationOf` resolves on both sides,
+       * and this article alone when it does not. Never a declared
+       * translation that 404s — see `resolveTranslation`.
+       */
+      languages: postAlternates(post),
     },
     openGraph: {
       title: post.title,
@@ -110,12 +121,10 @@ export default async function BlogArticlePage({
     notFound()
   }
 
-  // Newest first already, so "the three most recent others" is a filter and a
-  // slice. Same language only: sending a reader from an article to one they
-  // can't read is worse than showing them two.
-  const related = listPosts(LOCALE)
-    .filter((other) => other.slug !== post.slug)
-    .slice(0, 3)
+  // Ranked by shared tags and topped up with recent articles, so the block
+  // is never empty. Same language only: sending a reader from an article to
+  // one they can't read is worse than showing them two.
+  const related = relatedPosts(post, listPosts(LOCALE))
 
   const structuredData = buildArticleStructuredData(post, postUpdatedAt(post))
 

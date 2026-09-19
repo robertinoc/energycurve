@@ -80,10 +80,42 @@ const securityHeaders = [
   },
 ]
 
+/** The apex the canonical URLs point at. `www` is a duplicate of it. */
+const WWW_HOST = "www.energycurve.app"
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   turbopack: {
     root: process.cwd(),
+  },
+  /**
+   * `www` is the same site at a second address — SEO-E07.
+   *
+   * Every canonical, every `hreflang` and every sitemap entry names the apex, so
+   * a `www` that answers 200 is a duplicate of the whole site competing with it.
+   *
+   * **This half does nothing on its own.** A redirect runs inside the app, and
+   * the app only sees a request that reached the project — so until
+   * `www.energycurve.app` exists as a domain on the Vercel project, nothing
+   * resolves that host and this code is never reached. Adding the domain is the
+   * other half and it is Robertino's: Vercel Project → Settings → Domains → add
+   * `www.energycurve.app`. Vercel will offer to redirect it to the apex itself,
+   * which is fine and makes this block redundant rather than wrong — belt and
+   * braces, as the plan asks.
+   *
+   * `permanent: true` emits 308, not 301. They mean the same thing to a search
+   * engine — a permanent move — and 308 additionally preserves the method, so a
+   * POST to the wrong host is not silently downgraded to GET.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: WWW_HOST }],
+        destination: "https://energycurve.app/:path*",
+        permanent: true,
+      },
+    ]
   },
   async headers() {
     return [

@@ -28,3 +28,20 @@ export function articleCardPath(locale: SiteLocale, slug: string): string {
 export function articleCardUrl(post: BlogPost): string {
   return `${SITE_URL}${articleCardPath(post.locale, post.slug)}`
 }
+
+/**
+ * The image to advertise for an article: its own artwork when the frontmatter
+ * names one, otherwise the card drawn from its title and standfirst.
+ *
+ * One function so `og:image` and `BlogPosting.image` cannot pick differently —
+ * the same reason `articleCardUrl` exists. A site-relative `image` is made
+ * absolute here, because a scraper reading `og:image` has no base to resolve it
+ * against.
+ */
+export function articleImageUrl(post: BlogPost): string {
+  if (!post.image) {
+    return articleCardUrl(post)
+  }
+
+  return post.image.startsWith("/") ? `${SITE_URL}${post.image}` : post.image
+}
