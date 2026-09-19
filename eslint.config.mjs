@@ -16,6 +16,12 @@ const eslintConfig = defineConfig([
     "docs/brand-kit/**",
     // Claude Code session artifacts (agent worktrees are full repo copies):
     ".claude/**",
+    // Design-system material imported from Claude Design (PR #241). Same class
+    // as docs/brand-kit above: previews and build helpers that arrive from a
+    // generator, not app code anybody writes here. Linting them turned main's
+    // CI red the moment they landed — nineteen errors in files whose style is
+    // decided somewhere else, and which re-arrive unchanged on the next import.
+    ".design-sync/**",
     // Generated coverage report. Istanbul's HTML bundles ship their own
     // eslint-disable headers, which this config then reports as unused —
     // two warnings on every local run, from files nobody wrote.
