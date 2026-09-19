@@ -38,7 +38,12 @@ export function HeroSection({
   signupHref: string
 }) {
   return (
-    <SectionReveal>
+    // `eager`: the hero is the first screen, so it is rendered visible by the
+    // server rather than revealed after hydration (SEO-E32). Nothing above the
+    // fold has an entrance to animate — the reader is already looking at it —
+    // and an `opacity: 0` wrapper means the browser counts none of this as
+    // painted until React attaches.
+    <SectionReveal eager>
       <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.38)] backdrop-blur">
         <AmbientGlow tone="violet" className="ambient-drift-slow left-[-6rem] top-[-5rem] h-[18rem] w-[18rem] opacity-55" />
         <AmbientGlow tone="cyan" className="ambient-drift-reverse right-[-4rem] top-[4rem] h-[18rem] w-[18rem] opacity-35" />

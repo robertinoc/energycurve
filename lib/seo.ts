@@ -302,15 +302,55 @@ interface StructuredDataOptions {
  * whole thing, under the same `@id` — which is exactly what an `@id` is for.
  * Two copies of a definition that can't disagree, because there is one source.
  */
+/**
+ * Profiles that are the same entity as this Organization — SEO-E22.
+ *
+ * **Every URL here must be a profile that exists and is ours.** A `sameAs`
+ * pointing at a page that 404s, or at somebody else's account with a similar
+ * name, is worse than an absent property: the whole point of the array is to
+ * let an engine resolve "EnergyCurve" to one thing, and a bad entry resolves it
+ * to two.
+ *
+ * `stagelink.art` is deliberately **not** here. It is the operating company's
+ * site, which is a different entity and is already stated as
+ * `parentOrganization` below. Listing it as `sameAs` would claim the two
+ * organizations are one.
+ *
+ * Verified on 19 Sep 2026: the Instagram profile exists (a handle that does not
+ * exist returns no `og:title`, this one returns "EnergyCurve (@energycurve.app)").
+ * It is empty — no posts yet — which is a reason to post, not a reason to hide
+ * the profile from the entity graph.
+ *
+ * The plan (SEO-E22) also wants Product Hunt, AlternativeTo, Crunchbase and a
+ * Wikidata item. None of them exist yet — checked the same day, Product Hunt
+ * returns 404 — and creating them is Robertino's, not something to invent here.
+ * Add the URL to this array the day a profile goes up.
+ */
+const ENTITY_PROFILES: readonly string[] = [
+  "https://www.instagram.com/energycurve.app/",
+]
+
 export function buildOrganization(locale: SiteLocale = "en") {
   return {
     "@type": "Organization",
     "@id": `${SITE_URL}/#organization`,
     name: "EnergyCurve",
+    /**
+     * The disambiguator, for the brand collision in
+     * `docs/brand-name-collision.md`: energycurve.com is an agritech company
+     * that owns every slot on the bare branded query. "EnergyCurve DJ" is the
+     * string that separates us from a bag of fertiliser, and it is the one a
+     * person types when the first search gives them hay.
+     */
+    alternateName: "EnergyCurve DJ",
     url: SITE_URL,
     logo: `${SITE_URL}/brand-kit/logo-horizontal.png`,
     email: "hello@energycurve.app",
     description: getSiteCopy(locale).footer.description,
+    // Omitted entirely while the list is empty rather than emitted as `[]`: an
+    // empty array is a claim to have no profiles, which is a different and
+    // less useful statement than saying nothing.
+    ...(ENTITY_PROFILES.length > 0 ? { sameAs: [...ENTITY_PROFILES] } : {}),
     parentOrganization: {
       "@type": "Organization",
       name: OPERATING_COMPANY.name,

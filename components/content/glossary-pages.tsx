@@ -50,7 +50,7 @@ export function GlossaryIndexPage({ locale }: { locale: SiteLocale }) {
         countLabel={GLOSSARY_COPY.count[locale]}
       />
 
-      <CTA variant="tool" locale={locale} />
+      <CTA variant="tool" locale={locale} page={glossaryIndexPath(locale)} />
     </PageShell>
   )
 }
@@ -182,7 +182,11 @@ export function GlossaryTermPage({
           </section>
         )}
 
-        <CTA variant="tool" locale={locale} />
+        <CTA
+          variant="tool"
+          locale={locale}
+          page={glossaryTermPath(term, locale)}
+        />
 
         <nav>
           <Link

@@ -147,7 +147,11 @@ export function GuidePage({
             >
               {section.heading[locale]}
             </h2>
-            <ContentBody nodes={section.nodes} locale={locale} />
+            <ContentBody
+              nodes={section.nodes}
+              locale={locale}
+              page={guidePath(guide, locale)}
+            />
           </section>
         ))}
 

@@ -17,9 +17,12 @@ import type { SiteLocale } from "@/lib/content/site-copy"
 export function ContentBody({
   nodes,
   locale,
+  page,
 }: {
   nodes: ContentNode[]
   locale: SiteLocale
+  /** The path these nodes are rendered on, for the CTA's funnel event. */
+  page: string
 }) {
   return (
     <>
@@ -57,7 +60,14 @@ export function ContentBody({
               />
             )
           case "cta":
-            return <CTA key={index} variant={node.variant} locale={locale} />
+            return (
+              <CTA
+                key={index}
+                variant={node.variant}
+                locale={locale}
+                page={page}
+              />
+            )
         }
       })}
     </>

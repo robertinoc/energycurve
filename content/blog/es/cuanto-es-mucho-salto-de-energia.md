@@ -27,8 +27,13 @@ una unidad estándar, y por eso conviene ponerle una: del 1 al 10, un salto de m
 abajo el margen es más chico todavía, porque bajar la pista es fácil y volver a
 subirla no.
 
-**El armónico.** Tonalidades incompatibles suenan mal aunque el resto encaje. La rueda
-Camelot resuelve esto: quedate en la misma, en la relativa, o movete una posición.
+**El armónico.** Tonalidades incompatibles suenan mal aunque el resto encaje. Acá
+conviene desconfiar de la regla corta que se repite en todos lados — quedate en la
+misma, en la relativa, o movete una posición —, porque deja afuera un montón de
+mezclas que funcionan. Qué se lleva bien con una tonalidad concreta te lo dice la
+rueda Camelot, que trabaja con una tabla de transiciones bastante más ancha que
+esa regla: [abrila con tu tonalidad](/es/herramientas/rueda-camelot) y fijate qué
+ofrece de verdad.
 
 ## Por qué las reglas generales no alcanzan
 
