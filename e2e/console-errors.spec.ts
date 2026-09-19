@@ -35,6 +35,19 @@ const PAGES = [
   ["energy curve tool (es)", "/es/herramientas/curva-de-energia"],
   ["camelot wheel (es)", "/es/herramientas/rueda-camelot"],
   ["key and BPM checker (es)", "/es/herramientas/compatibilidad-tonalidad-bpm"],
+  // The routes this branch touched. All three gained rendered copy and a
+  // `<script type="application/ld+json">` emitted from a server component into
+  // a client-component page, which is precisely the arrangement that produced
+  // the hydration bug in #232 — and which server HTML assertions cannot see.
+  ["energy tags", "/energy-tags"],
+  ["import formats", "/import-formats"],
+  ["install", "/install"],
+  ["energy tags (es)", "/es/energy-tags"],
+  ["import formats (es)", "/es/import-formats"],
+  ["install (es)", "/es/install"],
+  ["blog article (es)", "/es/blog/antes-de-tocar-no-despues"],
+  ["landing", "/"],
+  ["landing (es)", "/es"],
 ] as const
 
 /**

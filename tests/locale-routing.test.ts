@@ -303,9 +303,27 @@ describe("sitemap", () => {
         )
       )!
 
-      expect(Object.keys(languages).sort(), entry.url).toEqual(
+      /**
+       * `x-default` is not a language and is excluded from the comparison; the
+       * assertion this test exists for is that no *language* is named which we
+       * have asked a crawler to ignore. It was added to the sitemap in SEO-E09
+       * for parity with the `<head>`, which has emitted it since the locale
+       * split, and it must point at one of the languages already listed —
+       * asserted below rather than assumed.
+       */
+      const languageCodes = Object.keys(languages).filter(
+        (code) => code !== "x-default"
+      )
+
+      expect(languageCodes.sort(), entry.url).toEqual(
         [...indexableLocales(path)].sort()
       )
+
+      expect(languages["x-default"], entry.url).toBeDefined()
+      expect(
+        languageCodes.map((code) => languages[code]),
+        entry.url
+      ).toContain(languages["x-default"])
     }
   })
 

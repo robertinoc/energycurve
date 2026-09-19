@@ -20,7 +20,12 @@ import {
   buildGuideStructuredData,
 } from "@/lib/content/structured-data"
 import { marketingMetadata, serializeStructuredData, SITE_URL } from "@/lib/seo"
-import { pageMetadata } from "@/lib/content/page-metadata"
+import { allPublishedPosts, postUpdatedAt } from "@/lib/blog/posts"
+import {
+  LOCALIZED_PATHS,
+  localizedPath,
+} from "@/lib/content/locale-routing"
+import { pageLastModified, pageMetadata } from "@/lib/content/page-metadata"
 import { supportedLocales } from "@/lib/content/site-copy"
 import type { Metadata } from "next"
 
@@ -241,7 +246,29 @@ describe("the new content pages", () => {
         expect(entry?.alternates?.languages).toEqual({
           en: `${SITE_URL}${glossaryTermPath(term, "en")}`,
           es: `${SITE_URL}${glossaryTermPath(term, "es")}`,
+          // Parity with the `<head>`, which has emitted `x-default` since the
+          // locale split. English is the default wherever English is offered.
+          "x-default": `${SITE_URL}${glossaryTermPath(term, "en")}`,
         })
+      }
+    })
+
+    /**
+     * SEO-E09. Every entry that declares alternates declares a default too —
+     * the sitemap and the `<head>` used to disagree about whether one existed,
+     * and a crawler reconciling them has no reason to prefer either.
+     */
+    it("declares x-default wherever it declares languages", () => {
+      for (const entry of entries) {
+        const languages = entry.alternates?.languages
+
+        if (!languages) continue
+
+        expect(
+          languages["x-default"],
+          `${entry.url} declares languages but no x-default`
+        ).toBeDefined()
+        expect(Object.values(languages)).toContain(languages["x-default"])
       }
     })
 
@@ -262,6 +289,76 @@ describe("the new content pages", () => {
 
       expect(glossaryUrls + indexes + guides).toBe(46)
       expect(urls).toHaveLength(78)
+    })
+  })
+
+  /**
+   * SEO-E09 — `lastmod` says when the page changed, not when it was built.
+   *
+   * The acceptance criterion is that two static pages do not share a timestamp
+   * unless they genuinely have not changed, so the test that matters is not
+   * "each entry has a date" but "the dates distinguish pages from each other".
+   */
+  describe("sitemap lastmod", () => {
+    const entries = sitemap()
+
+    it("gives every entry a date", () => {
+      for (const entry of entries) {
+        expect(entry.lastModified, `${entry.url} has no lastmod`).toBeDefined()
+      }
+    })
+
+    /**
+     * The bug this replaced: `new Date()` at module scope, so all sixteen fixed
+     * pages reported one identical build timestamp. Asserting that the fixed
+     * pages carry several distinct dates is what fails if anyone reintroduces it.
+     */
+    it("does not give every fixed page the same timestamp", () => {
+      const fixedPages = entries.filter((entry) =>
+        LOCALIZED_PATHS.some(
+          (path) =>
+            entry.url === `${SITE_URL}${localizedPath(path, "en")}` ||
+            entry.url === `${SITE_URL}${localizedPath(path, "es")}`
+        )
+      )
+
+      const distinct = new Set(
+        fixedPages.map((entry) => String(entry.lastModified))
+      )
+
+      expect(fixedPages.length).toBeGreaterThan(10)
+      expect(distinct.size).toBeGreaterThan(1)
+    })
+
+    /** A build timestamp has a time of day on it; a content date does not. */
+    it("reports dates rather than build clocks", () => {
+      for (const path of LOCALIZED_PATHS) {
+        const date = pageLastModified(path)
+
+        expect(date.getUTCHours()).toBe(0)
+        expect(date.getUTCMinutes()).toBe(0)
+        expect(Number.isNaN(date.getTime())).toBe(false)
+      }
+    })
+
+    /**
+     * An article that has never been revised reports the day it was published,
+     * which is the whole reason `postUpdatedAt` exists.
+     */
+    it("dates each article by its own revision, not the build", () => {
+      for (const post of allPublishedPosts()) {
+        const entry = entries.find(
+          (one) =>
+            one.url ===
+            `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}`
+        )
+
+        expect(String(entry?.lastModified)).toBe(
+          String(new Date(postUpdatedAt(post)))
+        )
+        // Revised or not, an article is a page we intend to edit this quarter.
+        expect(entry?.changeFrequency).toBe("monthly")
+      }
     })
   })
 })

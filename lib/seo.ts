@@ -24,6 +24,15 @@ export const SITE_URL = "https://energycurve.app"
  * peninsular Spanish would be wrong about the text we actually ship. Note this
  * is only Open Graph's dialect hint; `hreflang` below stays the bare `es` so the
  * page is offered to every Spanish speaker rather than one region.
+ *
+ * **Not `es_AR`, which the SEO plan asks for.** `og:locale` is not a free-form
+ * ISO pair — it is drawn from the consumer's own enumeration, and Facebook's
+ * supported-locale list contains exactly two Spanish entries, `es_ES` and
+ * `es_LA`. `es_AR` is not one of them, so the tag the plan proposes would be a
+ * value no scraper has a meaning for, on the pages whose previews it exists to
+ * fix. The plan's instinct — say the dialect honestly — is right, and `es_LA`
+ * is the closest admissible value to it. Decision 27 in `docs/decisions.md`;
+ * pinned by `tests/seo.test.ts`.
  */
 const OG_LOCALES: Record<SiteLocale, string> = {
   en: "en_US",
@@ -129,7 +138,6 @@ export function buildRootMetadata(locale: SiteLocale): Metadata {
       template: "%s | EnergyCurve",
     },
     description,
-    keywords: SEO_KEYWORDS,
     applicationName: "EnergyCurve",
     category: "music",
     // The company on the receipt, stated in the metadata too.
@@ -216,25 +224,26 @@ export const OPERATING_COMPANY = {
   url: "https://stagelink.art",
 } as const
 
-export const SEO_KEYWORDS = [
-  "DJ set analysis",
-  // "energy flow" and "energy arc" are what DJs actually type — the Aug-2026
-  // baseline found both outrank "energy curve" in real usage, so they belong
-  // here even though the brand uses the third synonym.
-  "energy curve",
-  "DJ set energy flow",
-  "energy arc",
-  "DJ setlist planner",
-  "set prep",
-  "harmonic mixing",
-  "Camelot wheel",
-  "Traktor NML",
-  "Rekordbox XML",
-  "track order",
-  "BPM and key analysis",
-  "DJ set preparation",
-  "set energy score",
-]
+/**
+ * There is deliberately no keyword set here any more.
+ *
+ * The site used to emit `<meta name="keywords">` from a fourteen-item English
+ * list, on every page in both languages. Google's own documentation puts the
+ * tag under "unsupported tags": "The meta-keyword tag is not used by Google
+ * Search, and it has no effect on indexing and ranking at all."
+ *
+ * The plan offered two ways out — translate the list, or drop it. Translating
+ * it buys a second list to keep true, forever, in exchange for something the
+ * search engine states it ignores. Dropping it costs nothing measurable and
+ * removes the one piece of metadata on this site that was English on a Spanish
+ * page. A list nobody reads is not neutral: it is a claim we were making in the
+ * wrong language.
+ *
+ * The vocabulary knowledge the list encoded — that DJs type "energy flow" and
+ * "energy arc" more than "energy curve" — is not lost with it. It belongs to the
+ * copy, where it is actually read, and it is recorded in `AGENTS.md` and in
+ * `docs/seo-aeo-baseline-2026-08.md`. Decision 28 in `docs/decisions.md`.
+ */
 
 /**
  * The published price points.

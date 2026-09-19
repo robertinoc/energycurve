@@ -3,6 +3,7 @@
 import Link from "next/link"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
+import { FAQ } from "@/components/content/blocks"
 import { LanguageToggle } from "@/components/marketing/language-toggle"
 import { useSiteLocale } from "@/components/marketing/use-site-locale"
 import { localizedPath } from "@/lib/content/locale-routing"
@@ -114,6 +115,15 @@ export function InstallGuide({ locale }: { locale: SiteLocale }) {
             {copy.noteTitle}
           </h2>
           <p className="mt-2 text-sm leading-6 text-white/70">{copy.note}</p>
+        </section>
+
+        {/* Native `<details>`, so every answer is in the HTML while collapsed —
+            and so the route file's `FAQPage` is these exact strings. */}
+        <section className="space-y-2">
+          <h2 className="font-heading text-lg font-semibold">
+            {copy.faqHeading}
+          </h2>
+          <FAQ entries={copy.faq} locale={locale} />
         </section>
 
         <div className="flex flex-col gap-3 sm:flex-row">

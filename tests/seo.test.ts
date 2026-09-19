@@ -5,8 +5,10 @@ import { getLegalCopy } from "@/lib/content/legal-copy"
 import { buildBrandedEmail } from "@/lib/email/build-email-html"
 import {
   buildLandingStructuredData,
+  buildRootMetadata,
+  marketingMetadata,
+  openGraphLocale,
   OPERATING_COMPANY,
-  SEO_KEYWORDS,
   SITE_URL,
 } from "@/lib/seo"
 
@@ -82,12 +84,53 @@ describe("landing structured data", () => {
     }
   )
 
-  it("keeps a non-empty keyword set", () => {
-    expect(SEO_KEYWORDS.length).toBeGreaterThan(4)
-    for (const keyword of SEO_KEYWORDS) {
-      expect(keyword.trim()).not.toBe("")
+  /**
+   * Decision 28. The `<meta name="keywords">` tag is gone on purpose, and the
+   * way it comes back is somebody adding `keywords:` to a metadata object
+   * because the field exists and looks unfilled. Asserting its absence is what
+   * makes that a failing test rather than a silent regression.
+   */
+  it.each(supportedLocales)(
+    "emits no meta keywords, in either language (%s)",
+    (locale) => {
+      expect(buildRootMetadata(locale).keywords).toBeUndefined()
+
+      for (const path of ["/", "/pricing", "/energy-tags"] as const) {
+        expect(marketingMetadata(path, locale).keywords).toBeUndefined()
+      }
     }
+  )
+})
+
+/**
+ * Decision 27 — the Open Graph dialect hint for Spanish.
+ *
+ * Pinned in one place because the SEO plan asks for `es_AR` and a future reader
+ * of the plan will try to "fix" this. `es_AR` is not in Facebook's
+ * supported-locale list; `es_LA` is. The test states the value and the reason
+ * lives in `lib/seo.ts` and `docs/decisions.md`.
+ */
+describe("the Spanish Open Graph locale", () => {
+  it("is es_LA, and never es_AR", () => {
+    expect(openGraphLocale("es")).toBe("es_LA")
+    expect(openGraphLocale("en")).toBe("en_US")
   })
+
+  /**
+   * The plan's gap #10 was that pages said `es_LA` while articles said `es_AR`.
+   * Both now come through `openGraphLocale`, so the only way they can disagree
+   * again is if one of them stops calling it — which is what this asserts.
+   */
+  it.each(supportedLocales)(
+    "is the same value on every marketing page (%s)",
+    (locale) => {
+      const expected = openGraphLocale(locale)
+
+      for (const path of ["/", "/pricing", "/energy-tags", "/blog"] as const) {
+        expect(marketingMetadata(path, locale).openGraph?.locale).toBe(expected)
+      }
+    }
+  )
 })
 
 describe("StageLink LLC billing transparency", () => {

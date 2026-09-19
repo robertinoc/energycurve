@@ -486,6 +486,69 @@ distance on the Camelot wheel.
 - The 80-track reorder search is ~27% slower, because more candidate swaps now
   improve the objective. The lever if it ever matters is `REORDER_MAX_TRACKS`.
 
+## 27. The Spanish `og:locale` stays `es_LA`, against the SEO plan
+
+`og:locale` for Spanish pages is `es_LA`. `docs/seo/SEO-PLAN.md` (SEO-E10) asks
+for `es_AR`; we are not doing that, and this entry exists so the question is
+settled rather than re-opened by the next reader of the plan.
+
+**Why**
+
+- `og:locale` is not a free-form `language_TERRITORY` pair that any consumer
+  parses by ISO rules. It is read against the consumer's own enumeration, and
+  **Facebook's supported-locale list has exactly two Spanish entries: `es_ES`
+  and `es_LA`.** `es_AR` is not one of them. Verified 19 Sep 2026 against the
+  published list.
+- So the plan's proposal would replace a value scrapers recognise with one they
+  do not, on precisely the tags that exist to make a shared Spanish link preview
+  correctly. It would be a regression dressed as a correction.
+- The plan's underlying instinct is right and is already honoured: the copy is
+  Rioplatense (voseo throughout), so labelling it `es_ES` would be wrong about
+  the text we ship. `es_LA` is the closest admissible value to the truth.
+- The ISO objection to `es_LA` is real and worth writing down: in ISO 3166-1
+  alpha-2, `LA` is Laos. It does not decide this, because the tag is consumed
+  against Facebook's table rather than ISO's — but it is the reason this looks
+  wrong at a glance and keeps getting "fixed".
+
+**Consequence**
+
+- `OG_LOCALES` in `lib/seo.ts` is the single source; pages and blog articles
+  both read it through `openGraphLocale()`. The plan's gap #10 (pages saying
+  `es_LA` while articles said `es_AR`) cannot recur without one of them
+  bypassing that function.
+- Pinned by `tests/seo.test.ts` — the value itself, and that every marketing
+  page in a language agrees on it.
+- **Search targeting does not depend on this.** `hreflang` stays the bare `es`,
+  so the page is offered to every Spanish speaker rather than one country. That
+  separation is what makes a dialect hint safe to be specific about.
+
+## 28. No `<meta name="keywords">`, in either language
+
+The keyword set is gone rather than translated. `buildRootMetadata` no longer
+emits a `keywords` field and `SEO_KEYWORDS` no longer exists.
+
+**Why**
+
+- Google's documentation lists it under unsupported tags: "The meta-keyword tag
+  is not used by Google Search, and it has no effect on indexing and ranking at
+  all." Verified 19 Sep 2026.
+- SEO-E10 offered two options: add Spanish terms, or drop the property. The
+  fourteen-item list was English and shipped on every `/es` page too, so the
+  status quo was the one option that is not defensible — a bilingual site
+  asserting its subject matter in one language only.
+- Translating it means a second list to keep true forever, in exchange for
+  something the authority states it ignores. Dropping it costs nothing
+  measurable and removes the last piece of English metadata from Spanish pages.
+
+**Consequence**
+
+- The vocabulary the list encoded — DJs search "energy flow" and "energy arc"
+  more than "energy curve" — is not lost. It belongs in the copy, where it is
+  read, and it is recorded in `AGENTS.md` and
+  `docs/seo-aeo-baseline-2026-08.md`.
+- `tests/seo.test.ts` asserts the absence, because the way this comes back is
+  somebody filling in a `keywords:` field that looks empty.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.

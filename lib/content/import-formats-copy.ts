@@ -1,3 +1,4 @@
+import type { FaqEntry } from "@/lib/content/content-nodes"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
 /**
@@ -163,6 +164,60 @@ const COLUMNS: ColumnRow[] = [
   },
 ]
 
+/**
+ * The four questions this page gets asked, and its own answers.
+ *
+ * Same contract as the energy-tags FAQ: bilingual, un-resolved, rendered through
+ * the shared `<FAQ>` block and read by `buildReferenceStructuredData` to build
+ * the `FAQPage`. The page and the markup are the same words.
+ *
+ * Each answer restates the tables above rather than adding a claim — which
+ * format carries what, the one column we insist on, that header order does not
+ * matter, and that both delimiters work.
+ */
+export const IMPORT_FORMATS_FAQ: FaqEntry[] = [
+  {
+    question: {
+      en: "Which format should I export?",
+      es: "¿Qué formato me conviene exportar?",
+    },
+    answer: {
+      en: "Traktor NML or Rekordbox XML if your software writes one: they carry BPM, key, genre, energy, length and the file path, which is everything the analysis can use. CSV is the most flexible and almost every tool produces one. M3U8 carries only file paths and lengths, so there is nothing in it for us to read beyond the order.",
+      es: "NML de Traktor o XML de Rekordbox si tu software los escribe: traen BPM, tonalidad, género, energía, duración y la ruta del archivo, o sea todo lo que el análisis puede usar. El CSV es el más flexible y casi cualquier herramienta lo genera. El M3U8 sólo trae rutas y duraciones, así que ahí no hay nada para leer más allá del orden.",
+    },
+  },
+  {
+    question: {
+      en: "What is the minimum a CSV needs?",
+      es: "¿Qué es lo mínimo que necesita un CSV?",
+    },
+    answer: {
+      en: "A title column. That is the only one we insist on — a row with no title is not a track. Everything else (artist, BPM, key, genre, energy, length) is optional and simply gives the analysis more to work with. Row order is play order.",
+      es: "Una columna de título. Es la única que exigimos — una fila sin título no es un track. Todo lo demás (artista, BPM, tonalidad, género, energía, duración) es opcional y sólo le da más material al análisis. El orden de las filas es el orden de reproducción.",
+    },
+  },
+  {
+    question: {
+      en: "Does the column order matter?",
+      es: "¿Importa el orden de las columnas?",
+    },
+    answer: {
+      en: "No. Columns are resolved by header name, not by position, and several spellings are accepted for each one — the table above lists them, and they are the same synonyms the importer actually matches against. Accents are fine.",
+      es: "No. Las columnas se resuelven por el nombre del encabezado, no por la posición, y aceptamos varios nombres para cada una — la tabla de arriba los lista, y son los mismos sinónimos contra los que compara el importador. Los acentos no molestan.",
+    },
+  },
+  {
+    question: {
+      en: "My CSV uses semicolons instead of commas. Is that a problem?",
+      es: "Mi CSV usa punto y coma en vez de comas. ¿Es un problema?",
+    },
+    answer: {
+      en: "No, both work. Opening a CSV in Excel on a Spanish or German locale and saving it gives you semicolons, and we read those too. A title containing a comma needs quotes around it, which is what every export already does.",
+      es: "No, los dos funcionan. Si abrís un CSV en Excel con configuración regional en español o alemán y lo guardás, te devuelve punto y coma, y eso también lo leemos. Un título que tenga una coma adentro tiene que ir entre comillas, que es lo que ya hace cualquier export.",
+    },
+  },
+]
+
 export function getImportFormatsCopy(locale: SiteLocale) {
   const pick = (value: Localized) => value[locale]
 
@@ -206,6 +261,15 @@ export function getImportFormatsCopy(locale: SiteLocale) {
       carries: pick(row.carries),
       relinks: row.relinks,
     })),
+    faqHeading: locale === "es" ? "Preguntas frecuentes" : "Common questions",
+    siblingIntro:
+      locale === "es"
+        ? "Esta página cubre qué trae cada formato."
+        : "This page covers what each format carries.",
+    siblingLink:
+      locale === "es"
+        ? "Si lo que falta es la energía, mirá de qué tag la leemos."
+        : "If it is energy that is missing, see which tag we read it from.",
     columns: COLUMNS.map((row) => ({
       field: pick(row.field),
       accepted: row.accepted,

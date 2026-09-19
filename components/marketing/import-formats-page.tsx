@@ -4,9 +4,13 @@ import Link from "next/link"
 import { ArrowLeft, Check, Minus } from "lucide-react"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
+import { FAQ } from "@/components/content/blocks"
 import { LanguageToggle } from "@/components/marketing/language-toggle"
 import { useSiteLocale } from "@/components/marketing/use-site-locale"
-import { getImportFormatsCopy } from "@/lib/content/import-formats-copy"
+import {
+  getImportFormatsCopy,
+  IMPORT_FORMATS_FAQ,
+} from "@/lib/content/import-formats-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
@@ -49,10 +53,28 @@ export function ImportFormatsPage({ locale }: { locale: SiteLocale }) {
         </header>
 
         <section className="space-y-3">
-          <h2 className="font-heading text-lg font-semibold">
+          <h2
+            id="import-formats-formats"
+            className="font-heading text-lg font-semibold"
+          >
             {t.formatsHeading}
           </h2>
-          <div className="overflow-x-auto rounded-xl border border-white/10">
+          {/* Same barrier, same fix as the Camelot tables (#232): a table
+              that scrolls sideways is a region a keyboard user cannot reach
+              the right-hand columns of. `tabindex="0"` makes it a scroll stop
+              and the heading names it, so what gets announced on arrival is
+              the section's own title rather than "group".
+
+              Found by adding these two pages to the WCAG sweep in SEO-E30:
+              mobile-safari flagged `scrollable-region-focusable` (serious) on
+              all four of them. Desktop never did — at that width the table
+              fits and nothing scrolls, which is why it survived this long. */}
+          <div
+            className="overflow-x-auto rounded-xl border border-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/45"
+            tabIndex={0}
+            role="region"
+            aria-labelledby="import-formats-formats"
+          >
             <table className="w-full min-w-[34rem] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 bg-white/[0.03] text-[10.5px] uppercase tracking-[0.14em] text-white/48">
@@ -99,13 +121,31 @@ export function ImportFormatsPage({ locale }: { locale: SiteLocale }) {
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-heading text-lg font-semibold">
+          <h2
+            id="import-formats-columns"
+            className="font-heading text-lg font-semibold"
+          >
             {t.columnsHeading}
           </h2>
           <p className="max-w-2xl text-sm leading-6 text-white/56">
             {t.columnsNote}
           </p>
-          <div className="overflow-x-auto rounded-xl border border-white/10">
+          {/* Same barrier, same fix as the Camelot tables (#232): a table
+              that scrolls sideways is a region a keyboard user cannot reach
+              the right-hand columns of. `tabindex="0"` makes it a scroll stop
+              and the heading names it, so what gets announced on arrival is
+              the section's own title rather than "group".
+
+              Found by adding these two pages to the WCAG sweep in SEO-E30:
+              mobile-safari flagged `scrollable-region-focusable` (serious) on
+              all four of them. Desktop never did — at that width the table
+              fits and nothing scrolls, which is why it survived this long. */}
+          <div
+            className="overflow-x-auto rounded-xl border border-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/45"
+            tabIndex={0}
+            role="region"
+            aria-labelledby="import-formats-columns"
+          >
             <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 bg-white/[0.03] text-[10.5px] uppercase tracking-[0.14em] text-white/48">
@@ -161,6 +201,25 @@ export function ImportFormatsPage({ locale }: { locale: SiteLocale }) {
             {t.delimiterBody}
           </p>
         </section>
+
+        {/* Native `<details>` through the shared block; the route file's
+            `FAQPage` is built from these exact strings. */}
+        <section className="space-y-2">
+          <h2 className="font-heading text-lg font-semibold">{t.faqHeading}</h2>
+          <FAQ entries={IMPORT_FORMATS_FAQ} locale={locale} />
+        </section>
+
+        {/* The sibling reference page — see the matching note on
+            `energy-tags-page.tsx`. */}
+        <p className="text-sm leading-6 text-white/56">
+          {t.siblingIntro}{" "}
+          <Link
+            href={localizedPath("/energy-tags", locale)}
+            className="text-white/80 underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
+          >
+            {t.siblingLink}
+          </Link>
+        </p>
       </div>
     </main>
   )

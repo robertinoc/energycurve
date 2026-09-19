@@ -667,8 +667,8 @@
         },
         {
           code: "SEO.5", title: "Sitemap en producción y Search Console", sub: "Sólo vos tenés la consola",
-          steps: ["<code>curl -s https://energycurve.app/sitemap.xml | grep -c \'&lt;loc&gt;\'</code>", "Confirmá que den 24 y que <code>/blog</code> no esté", "Subí el sitemap en Search Console", "Volvé en unos días a mirar cobertura y errores de hreflang"],
-          expect: "24 URLs, sin <code>/blog</code>, y Search Console lo acepta sin errores de hreflang.",
+          steps: ["<code>curl -s https://energycurve.app/sitemap.xml | grep -c \'&lt;loc&gt;\'</code>", "Confirmá el número contra el build y que <code>/blog</code> no esté", "Search Console ya está reclamada (19/09): reenviá el sitemap", "Volvé en unos días a mirar cobertura y errores de hreflang"],
+          expect: "El número que devuelva el build del día — eran 24 cuando se escribió esta prueba, 32 tras las herramientas y <strong>78</strong> desde la fundación de contenido — sin <code>/blog</code>, y Search Console lo acepta sin errores de hreflang.",
           ifNot: "Los errores de hreflang aparecen días después, no al subirlo. Agendate la vuelta o esta prueba queda a medias."
         },
         {
@@ -692,7 +692,7 @@
         {
           code: "SEO.9", title: "El lastmod de un artículo se mueve solo", sub: "La trampa de .next incluida",
           steps: ["<strong>Borrá <code>.next</code> primero</strong> — los artículos se leen con <code>readFileSync</code> en build y el bundler no los ve como dependencia", "Cambiá <code>updatedAt</code> en el frontmatter de un post", "Rebuild y mirá el sitemap"],
-          expect: "Sólo se mueve el <code>lastmod</code> de ese post. Los demás quedan en su fecha y las páginas de marketing en la del build.",
+          expect: "Sólo se mueve el <code>lastmod</code> de ese post. Los demás quedan en su fecha, y las páginas de marketing en la suya — desde SEO-E09 salen de <code>PAGE_LAST_MODIFIED</code> y ya no del reloj del build.",
           ifNot: "Si no cambió nada, casi seguro es <code>.next</code> viejo: así fue como el arreglo de las descripciones pareció no aplicar. Reintentá con el borrado antes de anotarlo."
         }
       ]
@@ -960,7 +960,63 @@
           code: "CONT.8", title: "El glosario en producción y en Search Console", sub: "Después del deploy, no antes",
           steps: ["Confirmá primero qué commit sirve producción", "Reenviá el sitemap en Search Console", "A los días, mirá cobertura y errores de hreflang de las rutas nuevas"],
           expect: "Las 46 URLs nuevas descubiertas, sin errores de hreflang.",
-          ifNot: "Depende de SEO-E01 a SEO-E05, que siguen sin empezar: sin la consola reclamada no hay dónde mirar. Esa alta es tuya."
+          ifNot: "Search Console y Bing quedaron reclamados el 19/09 (SEO-E01 y E02), así que ahora sí hay dónde mirar. Lo que sigue abierto es SEO-E03 a E05: la medición de base, el tracker de visibilidad en IA y el mapa de keywords."
+        }
+      ]
+    },
+    {
+      code: "SEO2",
+      title: "Schema, tarjetas y lastmod del lote 2",
+      meta: "~45 min · necesita el deploy · Search Console ya reclamada",
+      why: "El lote 2 (SEO-E09, E10, E11, E18, E19, E20, E24, E30) agregó <code>TechArticle</code> y <code>FAQPage</code> a las dos páginas de referencia, dos <code>HowTo</code> a <code>/install</code>, una tarjeta social por artículo, <code>lastmod</code> real por página y <code>/llms.txt</code>. Todo eso está verificado contra un build de producción local: los tipos de JSON-LD, que el JSON parsee, que los <code>lastmod</code> sean seis fechas distintas y no un reloj de build. Lo que no se puede verificar desde acá es si un validador ajeno lo acepta, si un scraper dibuja la tarjeta, y si el <code>&lt;details&gt;</code> se puede usar con teclado. Eso es esta sesión.",
+      tests: [
+        {
+          code: "SEO2.1", title: "Rich Results Test sobre las dos páginas de referencia", sub: "El criterio de aceptación de SEO-E19, textual",
+          steps: ["Abrí el Rich Results Test de Google", "Pegá <code>/energy-tags</code> en producción, y después <code>/import-formats</code>", "Repetí las dos en el validador de schema.org", "Repetí con las versiones <code>/es/*</code>"],
+          expect: "Detecta <code>TechArticle</code>, <code>FAQPage</code> y <code>BreadcrumbList</code> en las cuatro, con las 4 preguntas de cada página, sin errores.",
+          ifNot: "Nuestros tests afirman que el grafo tiene esos tipos y que las preguntas salen de la copia renderizada. Que Google lo acepte es otra cosa: si marca algo, anotá el campo exacto que nombra."
+        },
+        {
+          code: "SEO2.2", title: "Los dos HowTo de /install", sub: "La decisión de no unificarlos",
+          steps: ["Pegá <code>/install</code> en el Rich Results Test", "Contá cuántos <code>HowTo</code> detecta", "Mirá los pasos de cada uno"],
+          expect: "<strong>Dos</strong> <code>HowTo</code> — Android y iOS — con sus pasos separados, más un <code>FAQPage</code> de 3 preguntas.",
+          ifNot: "Si detecta uno solo con ocho pasos, el grafo se unificó en algún lado: eso le diría a un lector que abra el menú de Chrome y después toque el botón Compartir de Safari. Es el bug que la separación existe para evitar."
+        },
+        {
+          code: "SEO2.3", title: "La tarjeta social de un artículo, en un scraper real", sub: "SEO-E18, donde sólo se ve",
+          steps: ["Pegá dos artículos distintos en un chat de WhatsApp", "Pegá uno en X y otro en Slack", "Mirá si las dos tarjetas son distintas entre sí", "Fijate que el título completo entre y que la curva de abajo no quede cortada"],
+          expect: "Cada artículo previsualiza con su propio título y su propia bajada. Antes los cinco compartían la misma tarjeta del sitio.",
+          ifNot: "El texto se dibuja a 54/27px para que el título y la bajada entren. Si un título largo empuja la curva fuera de la tarjeta, anotá cuál artículo y sacá captura: se ajusta el tamaño en <code>app/social-card.tsx</code>."
+        },
+        {
+          code: "SEO2.4", title: "Las FAQ nuevas con teclado y lector de pantalla", sub: "Lo que axe no mira",
+          steps: ["En <code>/energy-tags</code>, llegá al primer <code>&lt;details&gt;</code> sólo con Tab", "Abrilo y cerralo con Enter o Espacio", "Repetí en <code>/import-formats</code> y en <code>/install</code>", "Encendé VoiceOver o NVDA y escuchá cómo anuncia la pregunta y la respuesta"],
+          expect: "Se llega, se abre y se cierra sin mouse, y el lector anuncia el estado (abierto/cerrado) y después la respuesta.",
+          ifNot: "Son once bloques nuevos de <code>&lt;details&gt;</code> nativo. El barrido de axe los cubre y está verde, pero eso es un piso: anotá qué anunció el lector."
+        },
+        {
+          code: "SEO2.5", title: "La respuesta de «anda sin conexión» contra la realidad", sub: "La única afirmación nueva que puede volverse mentira",
+          steps: ["Instalá la app en un teléfono", "Abrí un set en Gig Mode con conexión", "Poné el teléfono en modo avión y recargá esa pantalla", "Con el avión todavía puesto, probá entrar a la librería y a importar"],
+          expect: "El set de Gig Mode abre sin señal. Lo demás no, y la FAQ de <code>/install</code> dice exactamente eso.",
+          ifNot: "Si algo más funciona offline, la respuesta quedó corta y hay que ampliarla. Si Gig Mode <em>no</em> abre, la respuesta es directamente falsa y hay que corregirla antes que nada: es la única prueba de esta sesión que puede dejar una mentira publicada."
+        },
+        {
+          code: "SEO2.6", title: "Lighthouse mobile de las dos páginas de referencia", sub: "Contra producción, no contra localhost",
+          steps: ["Lighthouse en modo mobile sobre <code>/energy-tags</code> y <code>/import-formats</code> en producción", "Anotá LCP, CLS y TBT de cada una", "Compará contra <code>docs/qa/performance-baseline-2026-09.md</code>"],
+          expect: "Sin regresión frente a la línea de base. Las dos páginas ganaron una FAQ y un enlace, no JavaScript.",
+          ifNot: "Si algo se movió, anotá cuál de las tres métricas y en qué página. El presupuesto que SEO-E29 va a poner en CI sale de estos números."
+        },
+        {
+          code: "SEO2.7", title: "/llms.txt leído por un modelo", sub: "Para qué existe el archivo",
+          steps: ["Abrí <code>https://energycurve.app/llms.txt</code> y leelo entero una vez", "Pegáselo a ChatGPT o Claude y preguntá «¿qué es EnergyCurve y en qué se diferencia de Mixed In Key?»", "Preguntá también «¿en qué idioma están los artículos?»"],
+          expect: "La respuesta sale del archivo, nombra el contraste del set contra el tema, y dice que los artículos están en español.",
+          ifNot: "El archivo se genera de las mismas fuentes que el sitio, así que si dice algo raro, lo raro está en la fuente. Anotá la frase exacta y de qué sección salió."
+        },
+        {
+          code: "SEO2.8", title: "El lastmod nuevo, en Search Console", sub: "Días después, no al subirlo",
+          steps: ["Reenviá el sitemap ahora que las páginas fijas tienen fecha propia", "A los días, mirá si cambió «Última rastreo» de las páginas que no se tocaron", "Mirá si aparecen errores nuevos de hreflang por el <code>x-default</code> del sitemap"],
+          expect: "Las páginas que no cambiaron dejan de re-rastrearse en cada deploy, y el <code>x-default</code> no genera errores.",
+          ifNot: "Antes las 73 entradas compartían el reloj del build, o sea que cada deploy decía que todo el sitio había cambiado. Si el comportamiento no cambia en un par de semanas, anotalo: quiere decir que el <code>lastmod</code> ya había dejado de creerse."
         }
       ]
     }

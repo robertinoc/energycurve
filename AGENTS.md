@@ -32,8 +32,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
   highlights use a `soon` flag that renders a clock and a "Soon" label. The free
   tier's highlights must contain no `soon` at all — everything it advertises has
   to already work. Tests enforce both.
-- Paid schema.org offers stay `PreOrder`. Flip them to `InStock` in the same
-  change that ships Stripe checkout, not before.
+- Paid schema.org offers are `InStock`, and have been since checkout shipped.
+  This line used to say they stay `PreOrder` until then; that day has passed and
+  `lib/seo.ts` has said `InStock` for a while, so the instruction had become the
+  opposite of the rule. **Availability and the buttons move together** — telling
+  a search engine a plan cannot be bought while `/pricing` opens a live Stripe
+  session is the inaccurate half of the pair, in either direction.
 - Tier rule for new features: audio + engine/planning depth is **PRO**; variable
   cost (AI, lookups), multi-user, or whole-library workflow is **PRO+**. The
   heuristic (non-AI) reordering is never paywalled.
@@ -49,12 +53,30 @@ either locale. Do not "clean up" those mentions.
 
 ## SEO / AEO conventions
 
-- `lib/seo.ts` is the single source for the canonical origin, the keyword set,
-  and the schema.org graphs. The FAQPage entities are generated from the same
-  copy the page renders, so markup can never contradict visible text — keep it
-  that way rather than hand-writing JSON-LD.
+The plan this work follows is `docs/seo/SEO-PLAN.md` (phases 0–5, task IDs
+`SEO-E##`). Read its §0 and §6 before starting an SEO task; the constraints
+below are the ones it leans on.
+
+- `lib/seo.ts` is the single source for the canonical origin and the site-wide
+  schema.org graphs, and every other builder hangs off it: `lib/blog/`,
+  `lib/tools/` and `lib/content/` each own their own page types. No page
+  hand-writes JSON-LD; every one of them calls a builder and
+  `serializeStructuredData`.
+- **Every `FAQPage` is generated from the array the page renders**, never from a
+  second copy written beside it. That now covers the landing, the three tools,
+  the guides, the two reference pages and `/install` — a question that is not on
+  the page cannot reach the markup, which is what makes the schema safe to ship
+  without re-reading two files.
 - The FAQ uses native `<details>` so every answer ships in the HTML while
   collapsed. Don't replace it with a JS-only accordion.
+- **There is no `<meta name="keywords">`, deliberately** (decision 28), and the
+  Spanish `og:locale` is `es_LA` and not `es_AR`, also deliberately
+  (decision 27) — the SEO plan asks for `es_AR` and is wrong about it. Both are
+  pinned by `tests/seo.test.ts`.
+- Sitemap `lastmod` comes from `PAGE_LAST_MODIFIED` in
+  `lib/content/page-metadata.ts`, not the build clock. **Change a page's copy,
+  change its date.** Deriving it from git does not work: CI clones at depth 1,
+  so every file reports the same commit date.
 - Vocabulary: DJs search "energy flow" and "energy arc" more than "energy
   curve", and Mixed In Key's 1-10 means *per-track* energy while ours scores the
   *whole set* — the FAQ disambiguates this deliberately. Baseline and the full

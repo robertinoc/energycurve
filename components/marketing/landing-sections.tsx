@@ -291,6 +291,20 @@ export function HowItWorksSection({
                   <div className="space-y-2">
                     <h3 className="text-lg font-medium text-white">{step.title}</h3>
                     <p className="text-sm leading-6 text-white/62">{step.description}</p>
+                    {step.links.length > 0 ? (
+                      <ul className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5">
+                        {step.links.map((link) => (
+                          <li key={link.path}>
+                            <Link
+                              href={localizedPath(link.path, copy.locale)}
+                              className="text-sm text-white/72 underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
+                            >
+                              {link.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -814,6 +828,20 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
               {
                 href: localizedPath("/guide", copy.locale),
                 label: copy.footer.guides,
+              },
+              // The two reference pages. Until now the only public pages that
+              // linked to them were the free tool and a handful of glossary and
+              // guide entries — everything else reached them through the
+              // sitemap, which is the slow half of the job. They answer the two
+              // questions a DJ has *before* exporting a playlist, so the footer
+              // is where somebody who has not hit the problem yet finds them.
+              {
+                href: localizedPath("/import-formats", copy.locale),
+                label: copy.footer.importFormats,
+              },
+              {
+                href: localizedPath("/energy-tags", copy.locale),
+                label: copy.footer.energyTags,
               },
               {
                 href: localizedPath("/install", copy.locale),

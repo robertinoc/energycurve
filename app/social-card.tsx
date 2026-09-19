@@ -16,12 +16,29 @@ import { ImageResponse } from "next/og"
  */
 export const SOCIAL_CARD_SIZE = { width: 1200, height: 630 }
 
+/**
+ * Type sizes, and why they are a parameter now.
+ *
+ * The four hand-written cards each carry one short line, sized to fill the card.
+ * An article card carries the article's own title and standfirst — up to about
+ * 60 and 155 characters — and at the original 68/34 that is roughly four
+ * hundred pixels of text in three hundred pixels of space. The block does not
+ * clip, it pushes the curve off the bottom of the card, which is only visible
+ * once somebody shares the link.
+ *
+ * So the sizes come from the caller, defaulting to exactly what the existing
+ * cards already use. `renderSocialCard` stays the one place the card is drawn.
+ */
 export function renderSocialCard({
   headline,
   subhead,
+  headlineSize = 68,
+  subheadSize = 34,
 }: {
   headline: string
   subhead: string
+  headlineSize?: number
+  subheadSize?: number
 }) {
   return new ImageResponse(
     (
@@ -64,7 +81,7 @@ export function renderSocialCard({
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div
             style={{
-              fontSize: 68,
+              fontSize: headlineSize,
               fontWeight: 700,
               color: "#FFFFFF",
               lineHeight: 1.1,
@@ -76,7 +93,7 @@ export function renderSocialCard({
           </div>
           <div
             style={{
-              fontSize: 34,
+              fontSize: subheadSize,
               color: "rgba(255,255,255,0.62)",
               lineHeight: 1.35,
               maxWidth: 900,
