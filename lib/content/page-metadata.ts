@@ -157,6 +157,26 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
       es: "Cómo leer la energía de un set antes de tocarlo: orden, saltos de energía, y qué hacer cuando tus temas no traen BPM ni tonalidad.",
     },
   },
+  "/glossary": {
+    title: {
+      en: "DJ glossary — 21 terms explained",
+      es: "Glosario para DJs — 21 términos explicados",
+    },
+    description: {
+      en: "Twenty-one words that come up while preparing a DJ set — energy curve, key, Camelot, phrasing, drop — each explained plainly with an example.",
+      es: "Veintiún términos que aparecen al preparar un set — curva de energía, tonalidad, Camelot, phrasing, drop — explicados con un ejemplo concreto.",
+    },
+  },
+  "/guide": {
+    title: {
+      en: "Guides to preparing a DJ set",
+      es: "Guías para preparar un set",
+    },
+    description: {
+      en: "Long-form guides on preparing a DJ set: reading an energy curve, ordering tracks, and deciding what to move before you play rather than after.",
+      es: "Guías largas sobre preparar un set: leer una curva de energía, ordenar los temas y decidir qué mover antes de tocar y no después de haber tocado.",
+    },
+  },
   "/cookie-policy": {
     title: {
       en: "Cookie Policy",

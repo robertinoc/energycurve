@@ -47,6 +47,8 @@ export const LOCALIZED_PATHS = [
   "/tools/camelot-wheel",
   "/tools/key-bpm-compatibility",
   "/blog",
+  "/glossary",
+  "/guide",
   "/install",
   "/energy-tags",
   "/import-formats",
@@ -81,6 +83,13 @@ const ES_SLUGS: Partial<Record<LocalizedPath, string>> = {
   "/tools/camelot-wheel": "/herramientas/rueda-camelot",
   "/tools/key-bpm-compatibility":
     "/herramientas/compatibilidad-tonalidad-bpm",
+  // Same reasoning as the tools: these two pages exist to be found by someone
+  // typing "glosario dj" or "guía para armar un set", and an English slug on
+  // them throws away the words the search is made of. The entries underneath
+  // carry their own per-language slug — see `lib/content/glossary/paths.ts`,
+  // because a `[slug]` route cannot be expressed in this table at all.
+  "/glossary": "/glosario",
+  "/guide": "/guia",
 }
 
 /** The reverse table, so a Spanish URL can be read back to its path. */

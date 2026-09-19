@@ -805,6 +805,16 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
               },
               // Without this the blog is orphaned: only the sitemap reaches it.
               { href: localizedPath("/blog", copy.locale), label: copy.footer.blog },
+              // Same reason as the blog. The glossary is forty-two pages that
+              // otherwise hang off nothing but the sitemap and each other.
+              {
+                href: localizedPath("/glossary", copy.locale),
+                label: copy.footer.glossary,
+              },
+              {
+                href: localizedPath("/guide", copy.locale),
+                label: copy.footer.guides,
+              },
               {
                 href: localizedPath("/install", copy.locale),
                 label: copy.install.footerLink,

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Activity, Music4, Scale } from "lucide-react"
+import { Activity, BookOpen, Music4, Scale } from "lucide-react"
 
 import { PageShell } from "@/components/marketing/page-shell"
 import { TOOLS_HUB_COPY } from "@/lib/content/tools-copy"
@@ -73,6 +73,24 @@ export function ToolsHubPage({ locale }: { locale: SiteLocale }) {
           </li>
         ))}
       </ul>
+
+      {/* The glossary, offered here rather than only in the footer: a reader who
+          came for a tool and met a word they do not know is exactly who it is
+          for, and this is where they meet the word. */}
+      <Link
+        href={localizedPath("/glossary", locale)}
+        className="flex items-start gap-4 rounded-2xl border border-white/8 bg-white/[0.02] p-5 transition hover:border-white/16 hover:bg-white/[0.04]"
+      >
+        <BookOpen className="mt-0.5 size-5 shrink-0 text-ec-cyan/70" aria-hidden />
+        <span>
+          <span className="block font-heading text-lg font-semibold text-white">
+            {TOOLS_HUB_COPY.glossaryName[locale]}
+          </span>
+          <span className="mt-1 block text-sm leading-6 text-white/60">
+            {TOOLS_HUB_COPY.glossaryBlurb[locale]}
+          </span>
+        </span>
+      </Link>
 
       <section className="rounded-2xl border border-dashed border-white/10 p-5">
         <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.14em] text-white/50">

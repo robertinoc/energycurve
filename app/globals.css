@@ -462,3 +462,70 @@
     will-change: transform, opacity;
   }
 }
+
+@layer utilities {
+  /*
+   * A glossary term inside a piece of content, with its definition attached.
+   *
+   * CSS rather than a React popover, and that is the whole design: the
+   * definition is in the server's HTML, the keyboard path is the link's own
+   * focus, and there is no state — so no controlled input, and none of the
+   * before-hydration trouble the tool pages had to solve in #232.
+   *
+   * Shown on :hover and on :focus-within. The second one is what makes it
+   * reachable with a keyboard: tab to the link and the tip appears, Escape is
+   * not needed because blurring hides it again.
+   */
+  .ec-term {
+    position: relative;
+    display: inline-block;
+  }
+  .ec-term-link {
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+  }
+  .ec-term-tip {
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    left: 0;
+    z-index: 20;
+    display: block;
+    width: max-content;
+    max-width: min(20rem, 80vw);
+    padding: 0.5rem 0.7rem;
+    border-radius: 0.65rem;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    background: #12101c;
+    color: rgb(255 255 255 / 0.78);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+
+    /* Hidden without display:none, so a screen reader following
+       aria-describedby still finds the text. */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 120ms ease;
+  }
+  .ec-term:hover .ec-term-tip,
+  .ec-term:focus-within .ec-term-tip {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* On a narrow screen an absolutely positioned tip can leave the viewport;
+     pinning it to the left edge of the line is less clever and always legible. */
+  @media (max-width: 480px) {
+    .ec-term-tip {
+      left: 0;
+      right: auto;
+      max-width: calc(100vw - 3rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ec-term-tip {
+      transition: none;
+    }
+  }
+}

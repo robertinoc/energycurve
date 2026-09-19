@@ -46,6 +46,19 @@ const PUBLIC_PAGES = [
   ["energy curve tool (es)", "/es/herramientas/curva-de-energia"],
   ["camelot wheel (es)", "/es/herramientas/rueda-camelot"],
   ["key and BPM checker (es)", "/es/herramientas/compatibilidad-tonalidad-bpm"],
+  // The content pages. One glossary entry rather than all twenty-one: they are
+  // one component rendered with different words, and sweeping forty-two pages
+  // would add minutes to every CI run to re-test the same markup. The draft
+  // guide is here because it is the page that carries every component at once,
+  // which makes it the most interesting page on the site for this sweep.
+  ["glossary index", "/glossary"],
+  ["glossary entry", "/glossary/energy-curve"],
+  ["guide index", "/guide"],
+  ["draft guide", "/guide/components"],
+  ["glossary index (es)", "/es/glosario"],
+  ["glossary entry (es)", "/es/glosario/curva-de-energia"],
+  ["guide index (es)", "/es/guia"],
+  ["draft guide (es)", "/es/guia/componentes"],
 ] as const
 
 async function violationsOn(page: Page, path: string) {

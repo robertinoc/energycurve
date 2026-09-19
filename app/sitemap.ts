@@ -6,6 +6,13 @@ import {
   localizedPath,
 } from "@/lib/content/locale-routing"
 import { allPublishedPosts, postUpdatedAt } from "@/lib/blog/posts"
+import {
+  glossaryTermPath,
+  guidePath,
+} from "@/lib/content/glossary/paths"
+import { GLOSSARY_TERMS } from "@/lib/content/glossary/terms"
+import { publishedGuides } from "@/lib/content/guides/guides"
+import { supportedLocales } from "@/lib/content/site-copy"
 import { SITE_URL } from "@/lib/seo"
 
 /**
@@ -29,6 +36,10 @@ const HINTS: Record<
   "/tools/key-bpm-compatibility": { changeFrequency: "monthly", priority: 0.8 },
   "/tools": { changeFrequency: "monthly", priority: 0.6 },
   "/blog": { changeFrequency: "weekly", priority: 0.7 },
+  // The glossary index is a hub for forty-two entries and is the page most
+  // likely to be the one a definition search lands on first.
+  "/glossary": { changeFrequency: "monthly", priority: 0.7 },
+  "/guide": { changeFrequency: "monthly", priority: 0.7 },
   "/install": { changeFrequency: "monthly", priority: 0.5 },
   // A reference page a DJ lands on from the import screen or a search for
   // "where does <tool> write energy" — it changes when a tag format is added.
@@ -92,7 +103,48 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }))
   })
 
+  // Glossary entries and guides. Unlike the articles these do exist in both
+  // languages, so each one carries a reciprocal `alternates` block — and unlike
+  // the fixed pages their slug differs per language, which is why the URL comes
+  // from the entry rather than from `ES_SLUGS`.
+  const entries: MetadataRoute.Sitemap = GLOSSARY_TERMS.flatMap((term) => {
+    const languages = Object.fromEntries(
+      supportedLocales.map((locale) => [
+        locale,
+        `${SITE_URL}${glossaryTermPath(term, locale)}`,
+      ])
+    )
+
+    return supportedLocales.map((locale) => ({
+      url: `${SITE_URL}${glossaryTermPath(term, locale)}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+      alternates: { languages },
+    }))
+  })
+
+  // `publishedGuides()` and not `GUIDES`: a draft guide is absent from here,
+  // which is one of the three things its flag has to do. The other two are the
+  // `noindex` directive and its absence from the index page.
+  const guides: MetadataRoute.Sitemap = publishedGuides().flatMap((guide) => {
+    const languages = Object.fromEntries(
+      supportedLocales.map((locale) => [
+        locale,
+        `${SITE_URL}${guidePath(guide, locale)}`,
+      ])
+    )
+
+    return supportedLocales.map((locale) => ({
+      url: `${SITE_URL}${guidePath(guide, locale)}`,
+      lastModified: new Date(guide.updatedAt),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+      alternates: { languages },
+    }))
+  })
+
   // Pages first, in priority order, then the articles — the file is read
   // top-down, so the homepage should not sit below a blog post.
-  return [...pages, ...articles]
+  return [...pages, ...entries, ...guides, ...articles]
 }

@@ -265,6 +265,8 @@ interface SiteCopySchema {
     stagelink: LocalizedLabel
     freeTool: LocalizedLabel
     blog: LocalizedLabel
+    glossary: LocalizedLabel
+    guides: LocalizedLabel
     legal: LocalizedLabel
     privacy: LocalizedLabel
     terms: LocalizedLabel
@@ -1432,6 +1434,8 @@ const siteCopy: SiteCopySchema = {
     },
     // Both languages call it Blog; the EN index has its own honest empty state.
     blog: { en: "Blog", es: "Blog" },
+    glossary: { en: "Glossary", es: "Glosario" },
+    guides: { en: "Guides", es: "Guías" },
     legal: { en: "Legal", es: "Legal" },
     privacy: { en: "Privacy Policy", es: "Política de Privacidad" },
     terms: { en: "Terms of Service", es: "Términos del Servicio" },
@@ -1811,6 +1815,8 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       stagelink: siteCopy.footer.stagelink[locale],
       freeTool: siteCopy.footer.freeTool[locale],
       blog: siteCopy.footer.blog[locale],
+      glossary: siteCopy.footer.glossary[locale],
+      guides: siteCopy.footer.guides[locale],
       legal: siteCopy.footer.legal[locale],
       privacy: siteCopy.footer.privacy[locale],
       terms: siteCopy.footer.terms[locale],
