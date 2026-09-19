@@ -577,14 +577,14 @@ El key lock desacopla las dos cosas. Con la función encendida podés mover el t
 
 Tiene un costo. Mantener la tonalidad con el tempo cambiado es un procesamiento de señal, y a partir de cierto punto se escucha: aparecen artefactos metálicos, sobre todo en las voces. Cuánto se puede estirar antes de que moleste depende del equipo y del material, y es algo que conviene probar con tus propios temas en vez de fiarse de un número.
 
-Práctica común: tenerlo encendido por defecto y apagarlo a propósito cuando querés el efecto del cambio de tono. Nuestro chequeador asume key lock encendido, y lo dice, porque el veredicto cambia según eso.`,
+Práctica común: tenerlo encendido por defecto y apagarlo a propósito cuando querés el efecto del cambio de tono. Nuestro chequeador tiene un interruptor de key lock justamente porque el veredicto cambia según cómo lo tengas: con key lock apagado te dice a qué tonalidad se va a mover el tema en realidad.`,
       en: `Without key lock, changing a track's speed changes its [key](/glossary/key) as well: it is what happened with vinyl, and it is physics rather than a design decision. Raise the [pitch](/glossary/pitch) and everything rises in tone.
 
 Key lock decouples the two. With it on you can move the tempo while the key stays put, which is what makes [harmonic mixing](/glossary/harmonic-mixing) possible when two tracks need to meet in the middle on speed: without key lock, a tempo adjustment of several per cent is no longer the same track in key terms, and the compatibility you checked no longer holds.
 
 It has a cost. Holding key steady at a changed tempo is signal processing, and past a point you hear it: metallic artefacts appear, on vocals above all. How far you can stretch before it becomes a problem depends on the material and the system, and it is worth testing with your own tracks rather than trusting a number.
 
-Common practice: leave it on by default and switch it off deliberately when you want the pitch-shift effect. Our checker assumes key lock is on, and says so, because the verdict depends on it.`,
+Common practice: leave it on by default and switch it off deliberately when you want the pitch-shift effect. Our checker has a key lock switch for exactly this reason: with it off, it tells you which key the track will actually play in rather than the one you matched on paper.`,
     },
     links: [{ path: "/tools/key-bpm-compatibility", label: { es: "Chequeador de tonalidad y BPM", en: "Key and BPM checker" } }],
     see: ["pitch", "tonalidad", "mezcla-armonica"],
