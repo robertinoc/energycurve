@@ -1392,8 +1392,8 @@ const siteCopy: SiteCopySchema = {
       es: "\u00bfPodemos contar esta visita?",
     },
     body: {
-      en: "We use PostHog to see which parts of EnergyCurve get used, so we know what to fix. It stores a cookie. It never records your screen, never stores your IP address, and never sees your music. Say no and nothing is stored \u2014 the app works exactly the same.",
-      es: "Usamos PostHog para ver qu\u00e9 partes de EnergyCurve se usan, y as\u00ed saber qu\u00e9 arreglar. Guarda una cookie. Nunca graba tu pantalla, nunca guarda tu IP, y nunca ve tu m\u00fasica. Si dec\u00eds que no, no se guarda nada \u2014 la app funciona exactamente igual.",
+      en: "We use PostHog to see which parts of the app get used. It never records your screen, your IP or your music. Say no and it still works.",
+      es: "Usamos PostHog para ver qu\u00e9 partes de la app se usan. Nunca graba tu pantalla, tu IP ni tu m\u00fasica. Si dec\u00eds que no, funciona igual.",
     },
     accept: { en: "Yes, count it", es: "S\u00ed, cont\u00e1la" },
     reject: { en: "No, thanks", es: "No, gracias" },

@@ -482,7 +482,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">103</strong>
+      <strong id="tally-total">110</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -491,7 +491,7 @@
 
   <div class="gate">
     <span class="tag">Cuello&nbsp;de&nbsp;botella</span>
-    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy salió: el 19/09 se confirmó que producción tiene <strong>el lote 3 adentro</strong> — <code>/es/blog</code> sirve el nodo <code>Blog</code> de JSON-LD, que agregó ese lote, y la home todavía no dice «EnergyCurve DJ», que agrega el lote 4. Se dedujo de lo servido, sin entrar a Vercel. Así que las sesiones SEO, TOOL, CONT, <strong>SEO2</strong> y <strong>SEO3</strong> arrancan. La <strong>SEO4</strong> es la excepción: mide el lote 4, que está en rama y todavía no se deployó.</p>
+    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy avanzó: el 19/09 se confirmó con <code>curl</code> que producción tiene <strong>el lote 4 adentro</strong> — la home sirve <code>alternateName: "EnergyCurve DJ"</code> y el <code>sameAs</code> de Instagram, que agregó ese lote. Se dedujo de lo servido, sin entrar a Vercel; Vercel no expone un build id, así que el commit exacto queda sin confirmar. Así que las sesiones SEO, TOOL, CONT, <strong>SEO2</strong>, <strong>SEO3</strong> y <strong>SEO4</strong> arrancan. La <strong>SEO5</strong> es la excepción parcial: dos de sus siete pruebas miden el lote 5, que está en rama y todavía no se deployó; las otras cinco son lectura y se pueden hacer ya.</p>
   </div>
 
   <main id="sessions"></main>
@@ -1101,7 +1101,7 @@
           ifNot: "Si el elemento LCP es otro, cambió algo desde el 19/09 y el diagnóstico hay que rehacerlo — mirando el campo, no infiriéndolo. Es exactamente el error que este lote corrigió."
         },
         {
-          code: "SEO4.4", title: "Acortar el párrafo del banner: tu decisión", sub: "Lo único que falta para llegar a 2,5 s",
+          code: "SEO4.4", title: "Acortar el párrafo del banner: tu decisión", sub: "RESUELTA el 19/09 — decidiste acortarlo. El resultado, en SEO5.2",
           steps: ["Leé el párrafo actual del banner completo", "Decidí si se puede decir lo mismo en menos de la mitad del texto, sin perder las tres promesas (no graba la pantalla, no guarda la IP, no ve tu música)", "Si sí: escribí la versión corta y pasámela", "Si no: decilo y el umbral de LCP se queda en 7 s"],
           expect: "Una decisión escrita, en cualquiera de los dos sentidos.",
           ifNot: "No es una tarea de performance disfrazada: el texto es una declaración de privacidad deliberada y acortarlo cambia qué le prometemos a alguien en el primer segundo. Por eso no se tocó sin vos. El link a la política de cookies ya está ahí abajo."
@@ -1129,6 +1129,56 @@
           steps: ["Leé el párrafo armónico de <code>cuanto-es-mucho-salto-de-energia</code>", "Y el punto 3 de <code>esta-bien-el-orden-de-mi-set</code>", "Seguí el link a la rueda Camelot desde los dos", "Fijate si lo que dicen ahora coincide con lo que la rueda te muestra"],
           expect: "Ninguno de los dos repite la regla angosta como si fuera la verdad: los dos dicen que deja mezclas afuera y mandan a la rueda, que lee de la tabla de transiciones. Y «rueda Camelot» sigue enlazada al glosario, además del link a la herramienta.",
           ifNot: "Si alguno todavía afirma «la misma, la relativa o una quinta» como regla completa, quedó sin corregir. Y si el link al glosario desapareció, es el bug que casi se mete en este lote: poner «rueda Camelot» adentro del link a la herramienta se come el enlace al glosario."
+        }
+      ]
+    },
+    {
+      code: "SEO5",
+      title: "El banner acortado, producción verificada y el mapa de consultas",
+      meta: "~30 min · dos pruebas necesitan el deploy · dos son lectura, no clicks",
+      why: "El lote 5 tiene un resultado que conviene saber antes de probar: <strong>acortar el párrafo del banner no alcanzó para llegar a 2,5 s</strong>. El texto bajó de 250 a 134 caracteres, el párrafo pasó de 43 206 a 25 080 px², y aun así sigue ganando el LCP en <code>/</code> y <code>/es</code> — porque el rival ahí mide 17 856 px², y <em>dos líneas llenas ya son 18 240</em>. Sí ganó <code>/pricing</code>: de 5,12 s a 3,62 s. El umbral de Lighthouse <strong>se queda en 7 s</strong>, porque bajarlo a 2,5 era condicional a que las cuatro rutas cumplieran y cumplieron dos. Todo medido hoy y escrito en <code>docs/qa/lighthouse-budgets.md</code>. El resto del lote no es código: una verificación de producción con curl y un mapa de 126 consultas reales.",
+      tests: [
+        {
+          code: "SEO5.1", title: "El banner nuevo, leído como declaración de privacidad", sub: "Lo que el visitante ve en el primer segundo",
+          steps: ["Abrí <code>/es</code> en una ventana privada para que el banner aparezca", "Leé el párrafo entero, en voz alta si podés", "Repetí en <code>/</code> y leé la versión inglesa", "Preguntate: ¿sigue diciendo las tres cosas — que no graba la pantalla, que no guarda la IP, que no ve tu música — y que decir que no no rompe nada?"],
+          expect: "En español, tu texto tal cual lo aprobaste, sin una coma cambiada. En inglés, una versión equivalente escrita para este lote, con las mismas tres promesas y la misma última frase. El link a la política de cookies sigue abajo.",
+          ifNot: "Si el inglés dice algo que el español no dice, o al revés, es un problema de verdad: son la misma promesa legal en dos idiomas. Anotá la frase exacta que sobra o falta."
+        },
+        {
+          code: "SEO5.2", title: "El LCP después de acortar, en producción", sub: "Una ruta mejoró, dos no — mirá cuál y por qué",
+          steps: ["Cuando esté deployado: Lighthouse mobile sobre <code>/pricing</code>", "Abrí «Largest Contentful Paint element» y leé qué elemento es", "Repetí sobre <code>/</code>", "Compará los dos elementos entre sí"],
+          expect: "En <code>/pricing</code> el elemento LCP ya <strong>no</strong> es el banner: es el párrafo del encabezado de la página, y el número baja a ~3,6 s. En <code>/</code> el elemento sigue siendo el párrafo del banner y el número sigue en ~5,6 s. Esa diferencia no es un error: el párrafo mide lo mismo en las dos, pero en <code>/</code> el rival es más chico.",
+          ifNot: "Si <code>/pricing</code> sigue midiendo el banner, el deploy no salió. Si <code>/</code> mejoró sola, algo más cambió y hay que mirar qué — midiendo el elemento, no suponiéndolo."
+        },
+        {
+          code: "SEO5.3", title: "Los 95 caracteres: la decisión que queda", sub: "Con el número exacto, no con una estimación",
+          steps: ["Leé la sección «Qué falta para llegar a 2,5 s» de <code>docs/qa/lighthouse-budgets.md</code>", "Mirá la tabla de líneas: el techo son 744 px de texto, o sea ~95 caracteres", "Tu texto tiene 131", "Decidí entre las tres salidas: recortar ~36 caracteres más, probar la vía de pintar el banner en el primer paint, o dejar el LCP donde está y el umbral en 7 s"],
+          expect: "Una decisión escrita, cualquiera de las tres. La tercera es legítima: 5,6 s con un banner honesto puede valer más que 2 s con uno mutilado.",
+          ifNot: "Lo que <strong>no</strong> hay que hacer está escrito en el mismo documento: partir el párrafo en dos <code>&lt;p&gt;</code>, bajarle la opacidad o retrasarlo. Las tres bajan el número sin cambiar nada de lo que el visitante ve."
+        },
+        {
+          code: "SEO5.4", title: "El rojo de la verificación de producción", sub: "Una sola cosa falló, y es de una línea",
+          steps: ["Abrí <code>docs/seo/verificacion-produccion-2026-09.md</code>", "Andá a la sección «Lo que quedó en rojo»", "Abrí <code>docs/roadmap-status.md</code> y buscá una mención a <code>docs/seo/SEO-PLAN.md</code>", "Confirmá que no está"],
+          expect: "Las fases 1 y 3 están verdes contra producción con el comando y la salida de cada una. La fase 0 no: <code>AGENTS.md</code> apunta al plan, <code>docs/roadmap-status.md</code> no. Por eso la fase 0 no se marcó verificada.",
+          ifNot: "Si preferís que lo arregle en el próximo lote, decilo. No se arregló acá porque la tarea era verificar, y un rojo listado vale más que un tilde apurado."
+        },
+        {
+          code: "SEO5.5", title: "El mapa de consultas, leído por vos", sub: "La columna de huecos es la lista de qué escribir",
+          steps: ["Abrí <code>docs/seo/keyword-map.md</code> y andá directo a «La lista de qué escribir después»", "Leé los cinco bloques", "Mirá la tabla de conteo: en español 2 de 28 consultas de aprendizaje quedan sin página; en inglés, 11 de 30", "Decidí si el orden de esos cinco bloques coincide con tu instinto"],
+          expect: "126 consultas, 49 sin página. El bloque más grande son las páginas de comparación — 20 de 21 consultas sin página — que es SEO-E23 y está frenado esperando qué se puede afirmar de cada competidor.",
+          ifNot: "Si algún hueco te parece que ya está cubierto por una página que el mapa no encontró, decime cuál: el mapeo lo hice contra las 78 URLs del sitemap, y una página que no esté ahí no la vi."
+        },
+        {
+          code: "SEO5.6", title: "El pase de Reddit que falta", sub: "La fuente que da la pregunta entera",
+          steps: ["Entrá a r/DJs y r/Beatmatch desde tu navegador", "Buscá <code>energy curve</code>, <code>set order</code>, <code>mixed in key alternative</code>, <code>how to structure a set</code>", "Anotá los títulos que sean preguntas de verdad, con las palabras del que pregunta", "Pasámelos y los sumo al mapa"],
+          expect: "Diez o quince títulos alcanzan para cambiar el orden de la lista de qué escribir.",
+          ifNot: "No lo pude hacer yo: la API de Reddit devuelve 403 sin OAuth y el dominio está bloqueado en el entorno donde corro. Está anotado como pase faltante en el mapa, junto con Search Console, que no tiene datos todavía porque el sitio se registró el 19/09."
+        },
+        {
+          code: "SEO5.7", title: "El banner con teclado y lector de pantalla", sub: "Cambió el texto, no la estructura — pero confirmalo",
+          steps: ["En una ventana privada, abrí <code>/es</code> y navegá al banner sólo con Tab", "Escuchá cómo lee el párrafo un lector de pantalla", "Tabulá hasta los dos botones y el link de la política", "Elegí «No, gracias» y confirmá que el banner se va y no vuelve al recargar"],
+          expect: "El párrafo se lee entero y de corrido, los dos botones tienen el mismo peso, y el link a la política es alcanzable con teclado. La barrida de accesibilidad automática sigue en 100 — pero eso no escucha, y esta prueba sí.",
+          ifNot: "Si el rechazo no persiste al recargar, mirá <code>localStorage</code>: la clave es <code>ec.analytics-consent.v1</code> y guarda el string pelado <code>denied</code>, no un JSON."
         }
       ]
     }
