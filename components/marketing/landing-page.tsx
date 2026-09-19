@@ -1,6 +1,18 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import {
+  BookOpen,
+  Compass,
+  Download,
+  FileAudio,
+  GitCompareArrows,
+  HelpCircle,
+  LineChart,
+  Newspaper,
+  Tag,
+  Wrench,
+} from "lucide-react"
 
 import {
   AmbientGlow,
@@ -115,15 +127,96 @@ export function LandingPage({ locale }: { locale: SiteLocale }) {
         { href: "#story", label: copy.nav.story },
       ],
     },
+    /*
+     * Resources was five items while the site published seventy-eight URLs, and
+     * the three pages no menu reached were the only ones a stranger can use
+     * without an account. Grouped rather than lengthened: ten loose rows in a
+     * dropdown get skimmed, four labelled blocks get read.
+     *
+     * "Try it free" is first because it is the only group that answers "can I
+     * see this work before I sign up".
+     *
+     * `/guide` is deliberately absent: its index is empty — the one guide that
+     * exists is `draft: true` — and sending traffic to an empty index is worse
+     * than not sending it.
+     */
     {
       kind: "group",
       label: copy.footer.resources,
-      items: [
-        { href: "#faq", label: copy.nav.faq },
-        { href: localizedPath("/pricing", locale), label: copy.pricing.navLabel },
-        { href: localizedPath("/blog", locale), label: copy.footer.blog },
-        { href: localizedPath("/install", locale), label: copy.install.footerLink },
-        { href: "https://stagelink.art", label: copy.footer.stagelink, external: true },
+      sections: [
+        {
+          label: copy.nav.groupTry,
+          items: [
+            {
+              href: localizedPath("/tools/energy-curve", locale),
+              label: copy.footer.freeTool,
+              icon: LineChart,
+            },
+            {
+              href: localizedPath("/tools/camelot-wheel", locale),
+              label: copy.footer.camelotWheel,
+              icon: Compass,
+            },
+            {
+              href: localizedPath("/tools/key-bpm-compatibility", locale),
+              label: copy.footer.keyBpmChecker,
+              icon: GitCompareArrows,
+            },
+            {
+              href: localizedPath("/tools", locale),
+              label: copy.footer.toolsHub,
+              icon: Wrench,
+            },
+          ],
+        },
+        {
+          label: copy.nav.groupLearn,
+          items: [
+            { href: localizedPath("/blog", locale), label: copy.footer.blog, icon: Newspaper },
+            {
+              href: localizedPath("/glossary", locale),
+              label: copy.footer.glossary,
+              icon: BookOpen,
+            },
+          ],
+        },
+        {
+          label: copy.nav.groupReference,
+          items: [
+            {
+              href: localizedPath("/import-formats", locale),
+              label: copy.footer.importFormats,
+              icon: FileAudio,
+            },
+            {
+              href: localizedPath("/energy-tags", locale),
+              label: copy.footer.energyTags,
+              icon: Tag,
+            },
+            {
+              href: localizedPath("/install", locale),
+              label: copy.install.footerLink,
+              icon: Download,
+            },
+          ],
+        },
+        {
+          label: copy.nav.groupPlans,
+          items: [
+            {
+              href: localizedPath("/pricing", locale),
+              label: copy.pricing.navLabel,
+              icon: Tag,
+            },
+            { href: "#faq", label: copy.nav.faq, icon: HelpCircle },
+            {
+              href: "https://stagelink.art",
+              label: copy.footer.stagelink,
+              external: true,
+              icon: Compass,
+            },
+          ],
+        },
       ],
     },
     { kind: "link", href: "#contact", label: copy.nav.contact },
