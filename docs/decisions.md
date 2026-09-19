@@ -549,6 +549,44 @@ emits a `keywords` field and `SEO_KEYWORDS` no longer exists.
 - `tests/seo.test.ts` asserts the absence, because the way this comes back is
   somebody filling in a `keywords:` field that looks empty.
 
+## 29. Spanish is Latin American with Rioplatense voseo, and that is now settled
+
+All Spanish copy on the site — marketing pages, glossary, guides, articles,
+transactional email — is written in Latin American Spanish using Rioplatense
+voseo. Confirmed by Robertino on 19 Sep 2026.
+
+**Why**
+
+- **It is already shipped and indexed.** The five published articles and the
+  forty-two glossary pages from #237 are written in that register. This is not a
+  preference being expressed for the first time; it is a fact about live pages
+  being written down before somebody changes it by halves.
+- The question was genuinely open. The handoff recorded it as undecided because
+  Jordi, the alpha DJ whose feedback drove the harmonic table, writes from
+  Spain — a real argument for neutral Spanish. Robertino decided against it:
+  the product is built in Argentina and the voice is the one it already has.
+- **Not reversible cheaply.** Switching register means rewriting every indexed
+  Spanish page, and a page rewritten after it ranks loses the thing it earned.
+  Half-switching is worse than either: a site that says "vos" in the glossary
+  and "tú" in an article reads as machine-translated, which is the single
+  impression this copy most needs to avoid.
+
+**Consequence**
+
+- **Vocabulary, fixed.** These are the words, and the wrong column is wrong even
+  where it is more common elsewhere:
+  - **tonalidad**, not "key"
+  - **temas**, not "canciones" and not "tracks"
+  - **librería**, not "biblioteca"
+  - **toque** / **tocar**, not "pinchar"
+  - **placa**, not "tarjeta de sonido"
+- Verb forms follow voseo: *creá*, *analizá*, *mirá*, *tenés*, *podés* — never
+  *crea*, *analiza*, *mira*, *tienes*, *puedes*.
+- This applies to new copy and to edits of old copy. A rewrite of an existing
+  Spanish sentence keeps the register it is already in.
+- `content/blog/README.md` already states the rule for articles; this entry
+  widens it to the whole site and records who decided it and when.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.
