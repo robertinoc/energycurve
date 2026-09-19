@@ -44,7 +44,10 @@ tiene que estar pasando en la pista en ese momento — no qué tema te gusta má
 
 Dos temas seguidos en tonalidades que chocan se escuchan mal aunque el BPM calce
 perfecto. Si tus temas tienen la tonalidad en los tags, revisá que los vecinos sean
-compatibles: la misma tonalidad, la relativa, o una quinta arriba o abajo.
+compatibles — pero no con la regla corta de «la misma, la relativa o una quinta»:
+ese resumen descarta mezclas que suenan bien. La rueda Camelot trabaja con la tabla
+completa, así que [probá el par ahí](/es/herramientas/rueda-camelot) en lugar de
+descartarlo de memoria.
 
 Si no tienen tonalidad en los tags, ese chequeo no lo podés hacer a ojo — y ahí sí
 hace falta una herramienta que la lea del audio.

@@ -1,8 +1,5 @@
-import Link from "next/link"
-
-import { CTAButton } from "@/components/marketing/cta-button"
+import { ContentCtaLink } from "@/components/content/cta-link"
 import { COMPONENT_COPY, CTA_COPY } from "@/lib/content/content-copy"
-import { localizedPath } from "@/lib/content/locale-routing"
 import type {
   Bilingual,
   ComparisonRow,
@@ -183,9 +180,16 @@ export function FAQ({
 export function CTA({
   variant,
   locale,
+  page,
 }: {
   variant: "tool" | "signup"
   locale: SiteLocale
+  /**
+   * The path this CTA sits on. Carried into `content_cta_click` so the funnel
+   * can tell a reference page apart from an article (SEO-E28) — the question
+   * being which kind of page actually sends people to the tool.
+   */
+  page: string
 }) {
   const copy = CTA_COPY[variant]
 
@@ -197,16 +201,14 @@ export function CTA({
       <p className="max-w-xl text-sm leading-6 text-white/64">
         {copy.body[locale]}
       </p>
-      {variant === "signup" ? (
-        <CTAButton href="/signup">{copy.action[locale]}</CTAButton>
-      ) : (
-        <Link
-          href={localizedPath("/tools/energy-curve", locale)}
-          className="text-sm text-ec-cyan underline-offset-4 hover:underline"
-        >
-          {copy.action[locale]} →
-        </Link>
-      )}
+      {/* Only the anchor is a client component — see `cta-link.tsx`. The words
+          above it stay server-rendered, which is the whole point of this block. */}
+      <ContentCtaLink
+        variant={variant}
+        locale={locale}
+        page={page}
+        label={copy.action[locale]}
+      />
     </section>
   )
 }

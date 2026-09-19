@@ -4,7 +4,7 @@ import Link from "next/link"
 import { ArrowLeft, Check, Minus } from "lucide-react"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
-import { FAQ } from "@/components/content/blocks"
+import { CTA, FAQ } from "@/components/content/blocks"
 import { LanguageToggle } from "@/components/marketing/language-toggle"
 import { useSiteLocale } from "@/components/marketing/use-site-locale"
 import {
@@ -230,6 +230,17 @@ export function EnergyTagsPage({ locale }: { locale: SiteLocale }) {
             {t.siblingLink}
           </Link>
         </p>
+
+        {/* SEO-E28. The first step of the "organic → first analysis" funnel,
+            on the two pages a DJ most often arrives at from a search before
+            they have an account. The free tool rather than signup: somebody who
+            came here to find out whether their files will even import is not
+            ready to create an account, and asking is how you lose them.
+
+            Deliberately not a fourth link in the sibling paragraph above — a
+            bordered block is a different offer, not another underline competing
+            with the glossary terms and the sibling page. */}
+        <CTA variant="tool" locale={locale} page={localizedPath("/energy-tags", locale)} />
       </div>
     </main>
   )

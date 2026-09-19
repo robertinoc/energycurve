@@ -5,6 +5,7 @@ import { getLegalCopy } from "@/lib/content/legal-copy"
 import { buildBrandedEmail } from "@/lib/email/build-email-html"
 import {
   buildLandingStructuredData,
+  buildOrganization,
   buildRootMetadata,
   marketingMetadata,
   openGraphLocale,
@@ -315,5 +316,51 @@ describe("the landing FAQ answers stand on their own", () => {
   it("still has every question it had", () => {
     expect(getSiteCopy("es").faq.items).toHaveLength(13)
     expect(getSiteCopy("en").faq.items).toHaveLength(13)
+  })
+})
+
+/**
+ * SEO-E22 — the organization entity, and the two properties that make it
+ * resolvable.
+ */
+describe("the organization entity", () => {
+  it("carries the DJ disambiguator", () => {
+    // Not decoration: `energycurve.com` is an agritech company that holds the
+    // bare branded query. See docs/brand-name-collision.md.
+    expect(buildOrganization("en").alternateName).toBe("EnergyCurve DJ")
+    expect(buildOrganization("es").alternateName).toBe("EnergyCurve DJ")
+  })
+
+  /**
+   * The rule worth pinning is not "sameAs exists" — it is that everything in it
+   * is a real profile of *this* entity. A wrong entry resolves the brand to two
+   * things, which is the opposite of what the property is for.
+   */
+  it("lists only absolute profile URLs, and never the parent company", () => {
+    const org = buildOrganization("en") as { sameAs?: string[] }
+
+    for (const url of org.sameAs ?? []) {
+      expect(url).toMatch(/^https:\/\//)
+
+      // Compared by host, not by substring: the Instagram handle is literally
+      // `energycurve.app`, which is correct and would fail a naive contains
+      // check. What must not appear is our *own site* (already in `url`) or the
+      // operating company's (already in `parentOrganization`) — listing either
+      // would claim two different entities are one.
+      const host = new URL(url).host
+
+      expect(host).not.toBe("energycurve.app")
+      expect(host).not.toBe("www.energycurve.app")
+      expect(host).not.toBe("stagelink.art")
+    }
+  })
+
+  it("names StageLink LLC as the parent rather than as itself", () => {
+    const org = buildOrganization("en") as {
+      parentOrganization: { name: string; url: string }
+    }
+
+    expect(org.parentOrganization.name).toBe(OPERATING_COMPANY.name)
+    expect(org.parentOrganization.url).toBe(OPERATING_COMPANY.url)
   })
 })
