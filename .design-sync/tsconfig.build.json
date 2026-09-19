@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["./*"],
+      "next/image": ["./.design-sync/shims/next-image.tsx"]
+    }
+  }
+}
