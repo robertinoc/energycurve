@@ -548,6 +548,43 @@
       ]
     },
     {
+      title: "El menú Recursos, después de agruparlo",
+      meta: "~10 min · sin cuenta · los dos idiomas",
+      why: "El desplegable pasó de cinco items sueltos a un panel de cuatro grupos, y sumó las tres herramientas gratis que no se alcanzaban desde ningún menú. Lo automático cubre accesibilidad e hidratación; acá queda lo que una máquina no juzga: si se lee, si entra en pantalla, y si el copy dice algo.",
+      tests: [
+        {
+          code: "N.1", title: "Teclado, de punta a punta", sub: "Abrir, recorrer, cerrar, y el foco de vuelta",
+          steps: ["Cargá la landing sin tocar el mouse", "Tabulá hasta <code>Recursos</code>", "Abrilo con Enter", "Seguí tabulando: tenés que entrar al panel", "Cerrá con Escape"],
+          expect: "Abre con Enter, el primer Tab cae en el primer item, Escape cierra y el foco vuelve al botón — no al principio de la página.",
+          ifNot: "Si el foco se pierde, el siguiente Tab arranca desde el logo. Ese es el síntoma."
+        },
+        {
+          code: "N.2", title: "El panel entra en una laptop", sub: "Dos columnas, cuatro grupos",
+          steps: ["Abrí <code>Recursos</code> a 1440 de ancho", "Mirá que los cuatro encabezados se lean", "Repetí a 1280"],
+          expect: "Queda dentro de la pantalla y no se corta por abajo. Los encabezados en cian se distinguen de los items.",
+          ifNot: "Anotá el ancho exacto donde se corta."
+        },
+        {
+          code: "N.3", title: "Mobile a 390 px", sub: "Lista, no dos columnas apretadas",
+          steps: ["Poné el navegador en 390 px", "Abrí la hamburguesa", "Recorré hasta abajo"],
+          expect: "Una columna con encabezados. Nada se sale a lo ancho y no aparece scroll horizontal.",
+          ifNot: "Si hay scroll horizontal, decime en qué item empieza."
+        },
+        {
+          code: "N.4", title: "El copy dice algo, en los dos idiomas", sub: "Era la mitad del trabajo",
+          steps: ["Abrí el panel en inglés y leé los once items como si no conocieras el producto", "Cambiá a español y repetí"],
+          expect: "Cada item dice qué ganás entrando, no cómo se llama el archivo. En español, voseo: «Mirá la curva de tu set», «Fijate si dos temas mezclan».",
+          ifNot: "Si alguno suena a nota técnica, marcámelo: ése es el que hay que reescribir."
+        },
+        {
+          code: "N.5", title: "Las tres herramientas llegan a donde dicen", sub: "Eran las que no se alcanzaban",
+          steps: ["Entrá a las cuatro de «Probalo gratis»", "Volvé y repetí en español"],
+          expect: "Las cuatro abren, y en español caen en <code>/es/herramientas/...</code>, no en la ruta en inglés.",
+          ifNot: "Una ruta en inglés bajo <code>/es</code> significa que se escribió a mano en vez de pasar por <code>localizedPath()</code>."
+        }
+      ]
+    },
+    {
       code: "J",
       title: "Lo que salió del feedback de Jordi",
       meta: "~45 min · necesita A1 y un NML real",
