@@ -482,7 +482,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">87</strong>
+      <strong id="tally-total">95</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -491,7 +491,7 @@
 
   <div class="gate">
     <span class="tag">Cuello&nbsp;de&nbsp;botella</span>
-    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy salió: el 19/09 se confirmó que producción sirve <code>b9721a4</code> (buildeada 11:46:04 UTC), con la fundación de contenido adentro — se dedujo del propio sitemap servido, sin entrar a Vercel. Así que las sesiones SEO, TOOL y CONT arrancan. La <strong>SEO2</strong> es la excepción: mide el lote 2, que está en rama y todavía no se deployó.</p>
+    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy salió: el 19/09 se confirmó que producción tiene <strong>el lote 2 adentro</strong> — <code>/llms.txt</code> responde 200 y el sitemap trae 73 <code>x-default</code>, que es lo que agregó ese lote. Se dedujo de lo servido, sin entrar a Vercel. Así que las sesiones SEO, TOOL, CONT y <strong>SEO2</strong> arrancan. La <strong>SEO3</strong> es la excepción: mide el lote 3, que está en rama y todavía no se deployó.</p>
   </div>
 
   <main id="sessions"></main>
@@ -1017,6 +1017,62 @@
           steps: ["Reenviá el sitemap ahora que las páginas fijas tienen fecha propia", "A los días, mirá si cambió «Última rastreo» de las páginas que no se tocaron", "Mirá si aparecen errores nuevos de hreflang por el <code>x-default</code> del sitemap"],
           expect: "Las páginas que no cambiaron dejan de re-rastrearse en cada deploy, y el <code>x-default</code> no genera errores.",
           ifNot: "Antes las 73 entradas compartían el reloj del build, o sea que cada deploy decía que todo el sitio había cambiado. Si el comportamiento no cambia en un par de semanas, anotalo: quiere decir que el <code>lastmod</code> ya había dejado de creerse."
+        }
+      ]
+    },
+    {
+      code: "SEO3",
+      title: "El blog con modelo: tags, pares e índice filtrable",
+      meta: "~40 min · necesita el deploy · Search Console ya reclamada",
+      why: "El lote 3 le dio modelo al blog: <code>tags</code>, <code>author</code>, <code>translationOf</code> e <code>image</code> en el frontmatter, relacionados por tag, índice con filtro y <code>Blog</code> JSON-LD, las 13 respuestas de la FAQ reescritas para que la primera oración se sostenga sola, y presupuestos de Lighthouse en CI. Todo eso está verificado contra un build de producción local: 2421 tests, los tipos de JSON-LD, 12–14 enlaces salientes por artículo. Lo que no se puede verificar desde acá es lo que necesita un validador ajeno, un teléfono, un lector de pantalla o un motor de respuestas. Y hay un hallazgo abierto que sólo se cierra mirándolo: el LCP.",
+      tests: [
+        {
+          code: "SEO3.1", title: "El filtro del índice antes de que hidrate", sub: "El bug del #232, en un control nuevo",
+          steps: ["Abrí <code>/es/blog</code> en un teléfono con la red throttleada (DevTools → Slow 4G)", "<strong>Apenas aparezca el desplegable, elegí un tema</strong> — antes de que termine de cargar el JS", "Esperá a que la página termine de hidratar", "Mirá si la lista quedó filtrada por lo que elegiste"],
+          expect: "La elección sobrevive: la lista muestra sólo los artículos de ese tema, no todos.",
+          ifNot: "Si la lista vuelve a mostrarlos todos, <code>useTypedBeforeHydration</code> no está adoptando el valor del <code>&lt;select&gt;</code>. Es exactamente el bug del #232 en otro control. Anotá el tema que elegiste y cuánto tardó en hidratar."
+        },
+        {
+          code: "SEO3.2", title: "El desplegable con teclado y lector de pantalla", sub: "Un control nativo, pero igual hay que escucharlo",
+          steps: ["Llegá al filtro sólo con Tab", "Abrilo y elegí con las flechas, sin mouse", "Encendé VoiceOver o NVDA y escuchá cómo anuncia la etiqueta y el conteo de artículos"],
+          expect: "Se llega, se abre y se elige sin mouse, y el lector anuncia «Filtrar por tema» y después cuántos artículos quedaron.",
+          ifNot: "El conteo tiene <code>aria-live=\"polite\"</code>, así que debería anunciarse solo al cambiar. Si no dice nada, anotá qué leyó."
+        },
+        {
+          code: "SEO3.3", title: "Rich Results Test sobre el índice y un artículo", sub: "Un validador ajeno, no el nuestro",
+          steps: ["Pegá <code>/es/blog</code> en el Rich Results Test de Google", "Pegá también un artículo cualquiera", "Repetí los dos en el validador de schema.org"],
+          expect: "En el índice, <code>Blog</code> con los 5 artículos adentro y <code>BreadcrumbList</code>. En el artículo, <code>BlogPosting</code> y <code>BreadcrumbList</code>, con <code>author</code> y <code>keywords</code>. Sin errores.",
+          ifNot: "Nuestros tests afirman que el grafo tiene esos tipos y que el JSON parsea. Que Google lo acepte es otra cosa: anotá el campo exacto que nombre."
+        },
+        {
+          code: "SEO3.4", title: "Las respuestas de la FAQ, arrancadas de contexto", sub: "SEO-E21, leído como lo lee un motor",
+          steps: ["Abrí la landing y desplegá las 13 preguntas", "Leé <strong>sólo la primera oración</strong> de cada respuesta, tapando el resto", "Preguntale a ChatGPT o a Perplexity «¿el score de EnergyCurve es por tema o del set?» y mirá qué cita"],
+          expect: "Las 13 primeras oraciones se entienden solas. Ninguna arranca con «Sí.» o «No.» a secas.",
+          ifNot: "Un test ya impide el «Sí.» pelado y exige más de cuatro palabras. Lo que el test no puede juzgar es si la oración <em>responde</em>. Si alguna suena a relleno, anotá cuál y reescribila en <code>site-copy.ts</code>."
+        },
+        {
+          code: "SEO3.5", title: "El LCP de 5,5 segundos", sub: "El hallazgo abierto de este lote",
+          steps: ["Corré Lighthouse mobile sobre <code>/</code> en producción", "Anotá LCP, y al lado FCP y Speed Index", "Abrí el detalle «Largest Contentful Paint element» y mirá qué elemento es", "Repetí con <code>prefers-reduced-motion: reduce</code> activado en el sistema"],
+          expect: "Confirmar lo medido en local: la página pinta en ~1,2 s y el LCP cae recién con la hidratación, cerca de 5,5 s. Con <em>reduce motion</em> debería mejorar, porque las secciones nacen visibles.",
+          ifNot: "Si con reduce motion el LCP baja mucho, eso confirma que la causa es <code>SectionReveal</code> y define el arreglo: que el bloque de la primera pantalla no dependa del revelado. Está documentado en <code>docs/qa/lighthouse-budgets.md</code> y es una tarea aparte, con capturas antes y después."
+        },
+        {
+          code: "SEO3.6", title: "Los presupuestos de Lighthouse en un PR de verdad", sub: "Que el guardián agarre algo que no sea una prueba",
+          steps: ["Abrí un PR cualquiera y mirá el paso «Lighthouse budgets» en CI", "Fijate cuánto tarda y si los números del runner se parecen a los locales", "Bajá el reporte del artifact <code>lighthouse-report</code>"],
+          expect: "El paso corre y pasa. Los números del runner van a ser peores que los locales — por eso el techo de LCP es 7 s y no 5,6 s.",
+          ifNot: "Si falla por varianza y no por una regresión real, anotá los tres valores del runner. El umbral se sube <strong>una vez</strong>, con el número medido escrito al lado; un gate que se afloja dos veces ya no es un gate."
+        },
+        {
+          code: "SEO3.7", title: "El primer par traducido", sub: "Cuando exista. Hoy no hay ninguno",
+          steps: ["Cuando se publique el primer artículo en inglés, poné <code>translationOf</code> en los <strong>dos</strong> archivos", "Mirá el <code>&lt;head&gt;</code> de los dos: tiene que haber <code>hreflang</code> en los dos sentidos más <code>x-default</code>", "Después probá sacarlo de un solo lado y mirá qué pasa"],
+          expect: "Con los dos lados, cada artículo nombra al otro. Con un lado solo, <strong>ninguno de los dos</strong> declara nada — que es lo correcto: un alternate que 404 es peor que no tenerlo.",
+          ifNot: "Ojo con el prefijo: el bug que este lote encontró era justamente que el <code>hreflang</code> español apuntaba a <code>/blog/…</code> en vez de <code>/es/blog/…</code>. Si volvés a ver una URL sin <code>/es</code>, es esa regresión."
+        },
+        {
+          code: "SEO3.8", title: "La entrada build-up, leída por un DJ", sub: "La corrección que pidió Robertino",
+          steps: ["Leé <code>/es/glosario/build-up</code> entera", "Fijate si después de leerla podés explicar la diferencia con una intro larga", "Comparala con <code>/es/glosario/breakdown</code> y <code>/es/glosario/drop</code>, que la enlazan"],
+          expect: "Queda claro que lo que define al build-up es que la energía va dirigida a algún lado y resuelve, no que dure mucho.",
+          ifNot: "Ésa era exactamente la confusión que la entrada tenía que despejar y no despejaba. Si sigue sin quedar claro, anotá con qué frase te trabaste."
         }
       ]
     }

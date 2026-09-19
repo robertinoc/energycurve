@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:coverage": "vitest run --coverage",
+    "lhci": "lhci autorun",
     "sbom": "cyclonedx-npm --omit dev --output-reproducible --output-format json --output-file docs/security/sbom/energycurve-sbom.cdx.json",
     "sast": "semgrep --config=.semgrep/energycurve.yml --error --severity=ERROR --quiet ."
   },
@@ -43,6 +44,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@cyclonedx/cyclonedx-npm": "^6.0.1",
+    "@lhci/cli": "0.15.1",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

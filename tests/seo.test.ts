@@ -255,3 +255,65 @@ describe("transactional email identifies the operator", () => {
     expect(text).toContain("StageLink LLC")
   })
 })
+
+/**
+ * SEO-E21 — every FAQ answer opens with a sentence that survives being quoted
+ * on its own.
+ *
+ * This is how an answer engine uses the page: it lifts the first sentence and
+ * shows it beside the question, with none of the paragraph around it. "Sí." and
+ * "De todo el set." are perfectly good conversation and useless quotations — the
+ * reader sees an answer that answers nothing.
+ *
+ * The rule is mechanical enough to assert: the opening sentence has to carry its
+ * own subject, which in practice means it is longer than a bare yes or no and
+ * names something from the question.
+ */
+describe("the landing FAQ answers stand on their own", () => {
+  /** The first sentence, by the punctuation a reader sees. */
+  function opening(answer: string): string {
+    return answer.split(/(?<=[.!?])\s/)[0]!
+  }
+
+  it.each(supportedLocales)(
+    "never opens with a bare yes or no (%s)",
+    (locale) => {
+      const bare = getSiteCopy(locale)
+        .faq.items.map((item) => opening(item.answer))
+        .filter((first) => /^(s[íi]|yes|no|todos|all of them)[.!]?$/i.test(first))
+
+      expect(bare).toEqual([])
+    }
+  )
+
+  it.each(supportedLocales)(
+    "opens with a sentence long enough to mean something (%s)",
+    (locale) => {
+      for (const item of getSiteCopy(locale).faq.items) {
+        const first = opening(item.answer)
+
+        /**
+         * Five words, not more. "EnergyCurve works with every genre." is
+         * exactly five and is a complete answer; the shapes this is aimed at —
+         * "Yes.", "For the whole set.", "Yes, it does." — are four or fewer.
+         * A higher bar would reject good writing for being short, which is the
+         * opposite of what SEO-E21 asks for.
+         */
+        expect(
+          first.split(/\s+/).length,
+          `${item.question} opens with: ${first}`
+        ).toBeGreaterThan(4)
+      }
+    }
+  )
+
+  /**
+   * The count is asserted because the plan says eleven and there are more. The
+   * number moved while nobody was looking, which is exactly the kind of drift a
+   * rewrite is asked to respect and can silently undo.
+   */
+  it("still has every question it had", () => {
+    expect(getSiteCopy("es").faq.items).toHaveLength(13)
+    expect(getSiteCopy("en").faq.items).toHaveLength(13)
+  })
+})

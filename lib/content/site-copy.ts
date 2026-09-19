@@ -606,8 +606,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿El score de 1 a 10 es por tema o de todo el set?",
         },
         a: {
-          en: "For the whole set. Mixed In Key’s familiar 1–10 rates each individual track’s energy; ours rates how well the set is put together — its energy flow, its arc, the size of the jumps between tracks. A set full of 9-energy bangers can still score 4 out of 10, because playing nine peaks in a row isn’t a journey. Per-track energy is shown separately, next to each track.",
-          es: "De todo el set. El 1 a 10 conocido de Mixed In Key califica la energía de cada tema por separado; el nuestro califica qué tan bien está armado el set: su flujo de energía, su arco, el tamaño de los saltos entre temas. Un set lleno de bombas de energía 9 puede sacar 4 de 10, porque tocar nueve picos seguidos no es un viaje. La energía por tema se muestra aparte, al lado de cada uno.",
+          en: "The 1–10 score rates the whole set, not each track on its own. Mixed In Key’s familiar 1–10 measures each track’s energy; ours rates how well the set is put together — its energy flow, its arc, the size of the jumps between tracks. A set full of 9-energy bangers can still score 4 out of 10, because playing nine peaks in a row isn’t a journey. Per-track energy is shown separately, next to each track.",
+          es: "El score de 1 a 10 califica el set completo, no cada tema por separado. El 1 a 10 conocido de Mixed In Key mide la energía de cada tema; el nuestro califica qué tan bien está armado el set: su flujo de energía, su arco, el tamaño de los saltos entre temas. Un set lleno de bombas de energía 9 puede sacar 4 de 10, porque tocar nueve picos seguidos no es un viaje. La energía por tema se muestra aparte, al lado de cada uno.",
         },
       },
       {
@@ -626,8 +626,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿Tengo que subir mi música?",
         },
         a: {
-          en: "No. When you pick audio files, EnergyCurve reads their tags in your browser and only the resulting text data (artist, title, BPM, key, energy) is sent to the server. The audio itself never leaves your computer.",
-          es: "No. Cuando elegís archivos de audio, EnergyCurve lee sus tags en tu navegador y sólo se envían al servidor los datos de texto resultantes (artista, título, BPM, tonalidad, energía). El audio nunca sale de tu computadora.",
+          en: "No, you don’t have to upload your music. When you pick audio files, EnergyCurve reads their tags in your browser and only the resulting text data (artist, title, BPM, key, energy) is sent to the server. The audio itself never leaves your computer.",
+          es: "No, no tenés que subir tu música. Cuando elegís archivos de audio, EnergyCurve lee sus tags en tu navegador y sólo se envían al servidor los datos de texto resultantes (artista, título, BPM, tonalidad, energía). El audio nunca sale de tu computadora.",
         },
       },
       {
@@ -636,8 +636,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿Y si mis temas no tienen tags de BPM ni de tonalidad?",
         },
         a: {
-          en: "EnergyCurve degrades gracefully: it uses your manual value first, then the tag, then a genre-anchored estimate from BPM, and finally a position-based estimate. Every value shows which source it came from, so you always know what’s measured and what’s inferred. You can also type any value in by hand.",
-          es: "EnergyCurve degrada con elegancia: usa primero tu valor manual, después el tag, después una estimación por BPM anclada al género y por último una estimación por posición. Cada valor muestra de qué fuente viene, así siempre sabés qué está medido y qué inferido. También podés escribir cualquier valor a mano.",
+          en: "EnergyCurve still analyzes the set, falling back through four sources in order: your own manual value first, then the tag, then a genre-anchored estimate from BPM, and finally an estimate from the track’s position. Every value shows which source it came from, so you always know what’s measured and what’s inferred. You can also type any value in by hand.",
+          es: "EnergyCurve igual analiza el set, y recurre a cuatro fuentes en orden: primero tu valor manual, después el tag, después una estimación por BPM anclada al género y por último una estimación por la posición del tema. Cada valor muestra de qué fuente viene, así siempre sabés qué está medido y qué inferido. También podés escribir cualquier valor a mano.",
         },
       },
       {
@@ -666,8 +666,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿EnergyCurve reemplaza a Rekordbox o a Mixed In Key?",
         },
         a: {
-          en: "No, it sits between them. Mixed In Key tells you what each track is; Rekordbox stores and plays them. EnergyCurve is the only one that analyzes the set as a whole — its narrative arc — and tells you what to change. It works alongside whatever you already use.",
-          es: "No, se ubica en el medio. Mixed In Key te dice qué es cada tema; Rekordbox los guarda y los reproduce. EnergyCurve es el único que analiza el set como un todo — su arco narrativo — y te dice qué cambiar. Funciona junto a lo que ya uses.",
+          en: "No — EnergyCurve doesn’t replace Rekordbox or Mixed In Key, it sits between them. Mixed In Key tells you what each track is; Rekordbox stores and plays them. EnergyCurve is the only one that analyzes the set as a whole — its narrative arc — and tells you what to change. It works alongside whatever you already use.",
+          es: "No: EnergyCurve no reemplaza a Rekordbox ni a Mixed In Key, se ubica entre los dos. Mixed In Key te dice qué es cada tema; Rekordbox los guarda y los reproduce. EnergyCurve es el único que analiza el set como un todo — su arco narrativo — y te dice qué cambiar. Funciona junto a lo que ya uses.",
         },
       },
       {
@@ -676,8 +676,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿Con qué géneros funciona?",
         },
         a: {
-          en: "All of them. Genre sets the expected BPM and energy band — techno, house, drum & bass, and more are built in — and you can create your own genre and set context (opening, main time, closing) if the presets don’t match what you play.",
-          es: "Con todos. El género define la banda esperada de BPM y energía — techno, house, drum & bass y más vienen incluidos — y podés crear tu propio género y contexto de set (apertura, main time, cierre) si los presets no coinciden con lo que tocás.",
+          en: "EnergyCurve works with every genre. Genre sets the expected BPM and energy band — techno, house, drum & bass, and more are built in — and you can create your own genre and set context (opening, main time, closing) if the presets don’t match what you play.",
+          es: "EnergyCurve funciona con todos los géneros. El género define la banda esperada de BPM y energía — techno, house, drum & bass y más vienen incluidos — y podés crear tu propio género y contexto de set (apertura, main time, cierre) si los presets no coinciden con lo que tocás.",
         },
       },
       {
@@ -686,8 +686,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿Puedo usar EnergyCurve en la cabina sin internet?",
         },
         a: {
-          en: "Yes. Gig Mode (PRO+) is a performance view built for the booth: big tracklist, the energy curve, and your per-track notes. Install EnergyCurve as an app, open the set before you leave, and it keeps working with no signal.",
-          es: "Sí. Gig Mode (PRO+) es una vista de performance pensada para la cabina: tracklist grande, la curva de energía y tus notas por tema. Instalá EnergyCurve como app, abrí el set antes de salir, y sigue funcionando sin señal.",
+          en: "Yes, EnergyCurve works in the booth with no internet. Gig Mode (PRO+) is a performance view built for it: big tracklist, the energy curve, and your per-track notes. Install EnergyCurve as an app, open the set before you leave, and it keeps working with no signal.",
+          es: "Sí, EnergyCurve funciona en la cabina sin internet. El Gig Mode (PRO+) es una vista de performance pensada para eso: tracklist grande, la curva de energía y tus notas por tema. Instalá EnergyCurve como app, abrí el set antes de salir, y sigue funcionando sin señal.",
         },
       },
       {
@@ -696,8 +696,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿EnergyCurve me avisa si voy a repetir temas en una residencia?",
         },
         a: {
-          en: "Yes. Residency mode (PRO+) compares your new order against the sets you marked as played at that same venue and flags the tracks you'd be repeating. It needs a venue on the playlist and at least one earlier set marked as played there.",
-          es: "Sí. El modo residencia (PRO+) compara tu orden nuevo contra los sets que marcaste como tocados en ese mismo club y señala los temas que estarías repitiendo. Necesita que la playlist tenga un club asignado y al menos un set anterior marcado como tocado ahí.",
+          en: "Yes, EnergyCurve flags the tracks you would be repeating at a residency. Residency mode (PRO+) compares your new order against the sets you marked as played at that same venue and flags the tracks you'd be repeating. It needs a venue on the playlist and at least one earlier set marked as played there.",
+          es: "Sí, EnergyCurve te avisa si vas a repetir temas en una residencia. El modo residencia (PRO+) compara tu orden nuevo contra los sets que marcaste como tocados en ese mismo club y señala los temas que estarías repitiendo. Necesita que la playlist tenga un club asignado y al menos un set anterior marcado como tocado ahí.",
         },
       },
       {
@@ -706,8 +706,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿Puedo comparar lo que planifiqué con lo que toqué de verdad?",
         },
         a: {
-          en: "Yes. After the gig, mark what you actually played and in what order, and EnergyCurve (PRO) puts the planned curve next to the real one. That's the point of the loop: the next set starts from what the floor actually got, not from memory.",
-          es: "Sí. Después de la fecha, marcá qué tocaste de verdad y en qué orden, y EnergyCurve (PRO) pone la curva planificada al lado de la real. Ése es el sentido del loop: el próximo set arranca de lo que la pista recibió de verdad, no de la memoria.",
+          en: "Yes, you can compare the set you planned against the one you played. After the gig, mark what you actually played and in what order, and EnergyCurve (PRO) puts the planned curve next to the real one. That's the point of the loop: the next set starts from what the floor actually got, not from memory.",
+          es: "Sí, podés comparar el set que planificaste con el que realmente tocaste. Después de la fecha, marcá qué tocaste y en qué orden, y EnergyCurve (PRO) pone la curva planificada al lado de la real. Ése es el sentido del loop: el próximo set arranca de lo que la pista recibió de verdad, no de la memoria.",
         },
       },
       {
@@ -726,8 +726,8 @@ const siteCopy: SiteCopySchema = {
           es: "¿Mi compañero de B2B también necesita PRO+ para ver un set que le comparto?",
         },
         a: {
-          en: "No. Only the person sharing needs PRO+. Whoever you share with opens the set and leaves suggestions on any plan, including the free one — they don't even need an account when you send the invite, since the set appears for them the moment they sign up with that address. Requiring both sides to pay would make the feature only work between two subscribers, which isn't much of a feature.",
-          es: "No. Sólo necesita PRO+ quien comparte. La persona con la que compartís abre el set y deja sugerencias con cualquier plan, incluido el gratuito — de hecho no necesita ni tener cuenta cuando le mandás la invitación, porque el set le aparece en el momento en que se registra con esa dirección. Pedir que paguen los dos haría que la función sólo sirva entre dos suscriptores, que no es mucha función.",
+          en: "No, your B2B partner does not need PRO+ to open a set you share with them. Only the person sharing needs PRO+. Whoever you share with opens the set and leaves suggestions on any plan, including the free one — they don't even need an account when you send the invite, since the set appears for them the moment they sign up with that address. Requiring both sides to pay would make the feature only work between two subscribers, which isn't much of a feature.",
+          es: "No, tu compañero de B2B no necesita PRO+ para abrir un set que le compartas. Sólo necesita PRO+ quien comparte. La persona con la que compartís abre el set y deja sugerencias con cualquier plan, incluido el gratuito — de hecho no necesita ni tener cuenta cuando le mandás la invitación, porque el set le aparece en el momento en que se registra con esa dirección. Pedir que paguen los dos haría que la función sólo sirva entre dos suscriptores, que no es mucha función.",
         },
       },
     ],

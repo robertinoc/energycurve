@@ -1,10 +1,11 @@
 import Link from "next/link"
 
 import { BlogShell } from "@/components/marketing/blog-shell"
-import { BLOG_COPY, formatPostDate } from "@/lib/content/blog-copy"
+import { BlogTagFilter } from "@/components/marketing/blog-tag-filter"
+import { BLOG_COPY } from "@/lib/content/blog-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
-import type { BlogPost } from "@/lib/blog/posts"
+import { normalizeTag, tagsInUse, type BlogPost } from "@/lib/blog/posts"
 
 /**
  * The article list for one language.
@@ -43,26 +44,22 @@ export function BlogIndex({
           </Link>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {posts.map((post) => (
-            <li key={post.slug}>
-              <Link
-                href={localizedPath(`/blog/${post.slug}`, post.locale)}
-                className="block rounded-2xl border border-white/8 bg-white/[0.02] p-5 transition hover:border-white/16 hover:bg-white/[0.04]"
-              >
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/50">
-                  {formatPostDate(post.publishedAt!, locale)}
-                </p>
-                <h2 className="mt-1.5 font-heading text-lg font-semibold leading-snug text-white">
-                  {post.title}
-                </h2>
-                <p className="mt-1.5 text-sm leading-6 text-white/60">
-                  {post.description}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        /* The cards are built here, on the server, and handed to the filter as
+           data. The client component decides what to hide; it never decides
+           what exists. */
+        <BlogTagFilter
+          locale={locale}
+          tags={tagsInUse(posts)}
+          posts={posts.map((post) => ({
+            slug: post.slug,
+            href: localizedPath(`/blog/${post.slug}`, post.locale),
+            title: post.title,
+            description: post.description,
+            publishedAt: post.publishedAt!,
+            tags: post.tags.map(normalizeTag),
+            tagLabels: post.tags,
+          }))}
+        />
       )}
     </BlogShell>
   )

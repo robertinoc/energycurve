@@ -5,6 +5,7 @@ slug: ordenar-un-set-desde-una-lista-de-texto
 locale: es
 targetQuery: "ordenar set de DJ sin Rekordbox"
 publishedAt: 2026-08-20
+tags: orden del set, importar, sin librería
 ---
 
 Casi todo lo que se escribe sobre preparar sets asume que tenés la librería cargada en

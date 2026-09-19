@@ -404,15 +404,17 @@ When preparing a set it is worth knowing where the breakdowns fall in the tracks
     slug: { es: "build-up", en: "build-up" },
     title: { es: "Build-up", en: "Build-up" },
     short: {
-      es: "El tramo que sube la tensión hasta el drop, típicamente después de un breakdown.",
-      en: "The stretch that raises tension up to the drop, typically after a breakdown.",
+      es: "El pasaje que sube tensión de forma dirigida hasta resolver en un drop o en un cambio.",
+      en: "The passage that builds tension on purpose until it resolves into a drop or a change.",
     },
     description: {
-      es: "Qué es el build-up de un tema, con qué recursos se construye la tensión y por qué su largo cambia cuánto se siente el drop que viene justo después.",
-      en: "What a track's build-up is, which devices raise its tension, and why its length changes how big the drop that comes right after it will feel.",
+      es: "Qué es un build-up, en qué se diferencia de una intro larga y por qué su duración cambia cuánto se siente el drop que viene justo después de él.",
+      en: "What a build-up is, how it differs from a long intro, and why its length changes how big the drop that comes right after it is going to feel.",
     },
     body: {
       es: `El build-up es el tramo que va apretando hasta el [drop](/es/glosario/drop). Suele empezar donde termina el [breakdown](/es/glosario/breakdown) y se construye con recursos bastante reconocibles: un redoble que se acelera, un filtro que abre, un sonido que sube de tono, capas que se van sumando.
+
+Lo que lo define no es durar, es ir hacia algún lado. Una intro larga también son treinta o cuarenta segundos antes de que el tema arranque en serio, y no es un build-up: la intro puede ser plana, existe para darte tiempo de mezclar y no promete nada. En un build-up la energía crece de forma dirigida y **resuelve** — en un drop o en un cambio. Si no resuelve, era otra cosa.
 
 Su trabajo es prometer. Todo build-up le dice a la pista que algo va a pasar, y la calidad del drop depende tanto de esa promesa como del drop en sí. Por eso el largo importa: uno corto no alcanza a generar expectativa, y uno demasiado largo la agota — a los treinta segundos de redoble la gente dejó de esperar y se puso a mirar el techo.
 
@@ -420,6 +422,8 @@ Para preparar un set, el build-up es el lugar donde se decide si una subida de e
 
 Es, junto con el breakdown, la razón por la que un número de energía por tema es una simplificación útil pero incompleta: dos temas pueden puntuar igual y tener estructuras internas que hacen que uno funcione donde el otro no.`,
       en: `The build-up is the stretch that tightens up to the [drop](/glossary/drop). It usually starts where the [breakdown](/glossary/breakdown) ends and is made of fairly recognisable devices: a roll that accelerates, a filter opening, a sound rising in pitch, layers stacking up.
+
+What defines it is not length, it is direction. A long intro is also thirty or forty seconds before the track properly starts, and it is not a build-up: an intro can be flat, it exists to give you time to mix, and it promises nothing. In a build-up the energy rises on purpose and **resolves** — into a drop or into a change. If it never resolves, it was something else.
 
 Its job is to promise. Every build-up tells the floor that something is about to happen, and the quality of the drop depends as much on that promise as on the drop itself. Which is why length matters: too short and there is no expectation to speak of, too long and it exhausts itself — thirty seconds into a snare roll the room has stopped waiting and started looking at the ceiling.
 

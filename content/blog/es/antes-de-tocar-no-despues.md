@@ -5,6 +5,7 @@ slug: antes-de-tocar-no-despues
 locale: es
 targetQuery: "analizar la energía de un set de DJ"
 publishedAt: 2026-08-20
+tags: curva de energía, preparar el set, análisis
 ---
 
 Hay herramientas que te muestran la curva de energía de tu set y te dan una lectura

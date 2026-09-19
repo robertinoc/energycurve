@@ -5,6 +5,7 @@ slug: tus-temas-no-tienen-bpm-ni-tonalidad
 locale: es
 targetQuery: "temas sin BPM ni tonalidad"
 publishedAt: 2026-08-20
+tags: BPM, tonalidad, importar, sin librería
 ---
 
 Todas las guías sobre mezcla armónica y curvas de energía empiezan igual: "tomá tu

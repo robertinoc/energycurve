@@ -1,0 +1,57 @@
+{
+  "//": "SEO-E29. Budgets for the four pages a stranger is most likely to land on. Every number below is explained in docs/qa/lighthouse-budgets.md, including the one that is NOT the plan's target and why.",
+  "ci": {
+    "collect": {
+      "startServerCommand": "npx next start --port 3012",
+      "startServerReadyPattern": "Ready in|started server on|Local:",
+      "startServerReadyTimeout": 90000,
+      "url": [
+        "http://127.0.0.1:3012/",
+        "http://127.0.0.1:3012/es",
+        "http://127.0.0.1:3012/pricing",
+        "http://127.0.0.1:3012/es/blog/antes-de-tocar-no-despues"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        },
+        "onlyCategories": ["performance", "accessibility", "seo", "best-practices"]
+      }
+    },
+    "assert": {
+      "assertions": {
+        "cumulative-layout-shift": [
+          "error",
+          { "maxNumericValue": 0.1, "aggregationMethod": "median" }
+        ],
+        "total-blocking-time": [
+          "error",
+          { "maxNumericValue": 200, "aggregationMethod": "median" }
+        ],
+        "categories:accessibility": [
+          "error",
+          { "minScore": 1, "aggregationMethod": "median" }
+        ],
+        "categories:seo": ["error", { "minScore": 1, "aggregationMethod": "median" }],
+        "largest-contentful-paint": [
+          "error",
+          { "maxNumericValue": 7000, "aggregationMethod": "median" }
+        ],
+        "categories:performance": [
+          "warn",
+          { "minScore": 0.9, "aggregationMethod": "median" }
+        ]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    }
+  }
+}

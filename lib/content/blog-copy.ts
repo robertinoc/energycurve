@@ -7,9 +7,17 @@ import type { SiteLocale } from "@/lib/content/site-copy"
 
 export const BLOG_COPY = {
   heading: { en: "Blog", es: "Blog" },
+  /**
+   * What the blog covers and who it is for, in the server-rendered HTML.
+   *
+   * Says who as well as what since SEO-E16: an index that only lists topics
+   * leaves a reader — and an answer engine — to guess whether the writing is for
+   * someone opening their first set or someone running a label. Naming the
+   * warm-up DJ is the positioning the plan asks the whole site to hold.
+   */
   intro: {
-    en: "Reading a set before you play it: ordering, energy jumps, and what to do when your tracks carry no BPM or key.",
-    es: "Leer un set antes de tocarlo: orden, saltos de energía, y qué hacer cuando tus temas no traen BPM ni tonalidad.",
+    en: "For DJs planning a set before they play it — especially warm-up and opening sets. Ordering, energy jumps, and what to do when your tracks carry no BPM or key.",
+    es: "Para DJs que preparan un set antes de tocarlo, sobre todo en warm-up y apertura. Orden, saltos de energía, y qué hacer cuando tus temas no traen BPM ni tonalidad.",
   },
   /**
    * Shown on the English index, which has no articles yet.
@@ -44,6 +52,27 @@ export const BLOG_COPY = {
   ctaBody: {
     en: "Paste a tracklist or import from Rekordbox, Traktor or M3U8, and see the curve before you play.",
     es: "Pegá una lista de temas o importá de Rekordbox, Traktor o M3U8, y mirá la curva antes de tocar.",
+  },
+  /**
+   * The reference page, offered where it is actually needed.
+   *
+   * Every article names an export format at some point, and the question that
+   * follows one — "will it read mine?" — has a page that answers it. Sending a
+   * reader to sign up before they know whether their files import is the wrong
+   * order of operations, so this sits beside the signup rather than after it.
+   */
+  ctaFormats: {
+    en: "Which playlist formats we read →",
+    es: "Qué formatos de playlist leemos →",
+  },
+  /** The heading above the tag filter on the index. */
+  filterLabel: { en: "Filter by topic", es: "Filtrar por tema" },
+  filterAll: { en: "Every topic", es: "Todos los temas" },
+  /** Counts the list under the filter, so a narrowed list says how narrow. */
+  filterCount: { en: "articles", es: "artículos" },
+  filterEmpty: {
+    en: "No article carries that tag yet.",
+    es: "Todavía no hay ningún artículo con ese tema.",
   },
   /** Reading time is not shown: a five-minute estimate on a four-minute read is noise. */
   publishedOn: { en: "Published", es: "Publicado el" },
