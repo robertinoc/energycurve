@@ -482,7 +482,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">95</strong>
+      <strong id="tally-total">103</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -890,7 +890,7 @@
       meta: "3 × 60 min · Energy Model v3",
       why: "El modelo v3 predice energía desde cinco features y no tiene etiquetas reales contra las cuales calibrarse. Vos se las das. El arnés ya está cargado con los 60 tracks de <code>_POOL</code>.",
       tests: [
-        { code: "A8.1", title: "Fijar las tres anclas", sub: "Antes de puntuar nada más", steps: ["Cargá <code>_POOL</code> en el arnés", "Escuchá y elegí: el más tranquilo, el pico más grande, y uno genuinamente ambiguo", "Fijalos en 2, 5 y 9"], expect: "Tres anclas puestas. De oído, sin mirar el BPM.", ifNot: "Si elegís por BPM metés el baseline en la escala por la puerta de atrás y después no se puede saber si v3 empata porque no sirve o porque etiquetaste con BPM." },
+        { code: "A8.1", title: "Fijar las tres anclas", sub: "Antes de puntuar nada más", steps: ["Cargá <code>_POOL</code> en el arnés", "Escuchá los 60 y elegí tres temas, uno por ancla", "El <strong>más tranquilo</strong> de todos → fijalo en <strong>2</strong>", "Uno que suene claramente <strong>medio</strong>, ni tranquilo ni intenso → <strong>5</strong>", "El <strong>pico más grande</strong> → <strong>9</strong>"], expect: "Tres anclas puestas, cada una con su número. De oído, sin mirar el BPM.", ifNot: "Si elegís por BPM metés el baseline en la escala por la puerta de atrás y después no se puede saber si v3 empata porque no sirve o porque etiquetaste con BPM. Y ojo con los números: son 2, 5 y 9 y no 1, 5 y 10 para dejar lugar arriba y abajo — si más adelante aparece algo más tranquilo que tu ancla baja, o más intenso que la alta, todavía tenés dónde ponerlo sin recalibrar lo ya puntuado." },
         { code: "A8.2", title: "Puntuar los 60", sub: "De a 15, exportando cada tanda", steps: ["Puntuá 15, copiá el JSON, pegalo en un archivo fechado", "Repetí hasta 60", "Mirá la línea ámbar del contador: te dice qué nota falta"], expect: "Unos 55-60 usables. El mínimo útil es 40; abajo de 18 el código se niega a ajustar.", ifNot: "Si a los 40 sigue diciendo que falta un 2 y un 3, el corpus está cargado al extremo alto y hay que ir a buscar tracks tranquilos a propósito." },
         { code: "A8.3", title: "Medir tu propia consistencia", sub: "Segunda sentada — es el techo real del modelo", steps: ["Elegí 5 tracks ya puntuados que NO sean anclas", "<strong>Borrales la nota</strong> con la opción vacía del select", "Puntualos a ciegas", "Comparalos contra el JSON exportado de la primera sentada"], expect: "Reproducirte dentro de ±1.", ifNot: "Si no te reproducís, un modelo con error 1.0 ya está en el piso de ruido y ninguna feature nueva lo mejora. El export es el único registro de la primera lectura: re-puntuar sobrescribe." }
       ]
@@ -1073,6 +1073,62 @@
           steps: ["Leé <code>/es/glosario/build-up</code> entera", "Fijate si después de leerla podés explicar la diferencia con una intro larga", "Comparala con <code>/es/glosario/breakdown</code> y <code>/es/glosario/drop</code>, que la enlazan"],
           expect: "Queda claro que lo que define al build-up es que la energía va dirigida a algún lado y resuelve, no que dure mucho.",
           ifNot: "Ésa era exactamente la confusión que la entrada tenía que despejar y no despejaba. Si sigue sin quedar claro, anotá con qué frase te trabaste."
+        }
+      ]
+    },
+    {
+      code: "SEO4",
+      title: "El LCP, los CTAs y los dos artículos corregidos",
+      meta: "~35 min · necesita el deploy · una prueba es una decisión tuya",
+      why: "El lote 4 tiene un resultado incómodo y vale leerlo antes de probar: <strong>el diagnóstico del LCP que traía el repo era incorrecto</strong>. No era <code>SectionReveal</code>: el elemento que Lighthouse mide es el párrafo del banner de cookies, y la prueba más barata estaba a mano — <code>/pricing</code> no usa <code>SectionReveal</code> y tenía el mismo LCP. Medido aparte: con banner 2856 ms, sin banner 1104 ms. Así que el umbral de 7 s <strong>no se bajó</strong> y lo que falta es una decisión de copy, no de código. Todo en <code>docs/qa/lighthouse-budgets.md</code>. El resto del lote son los CTAs de contenido, la entidad de la organización y los dos artículos que contradecían la tabla armónica desde el #237.",
+      tests: [
+        {
+          code: "SEO4.1", title: "La primera pantalla sin JavaScript", sub: "Lo que el arreglo de SectionReveal sí arregla",
+          steps: ["Abrí <code>/</code> en el navegador con JavaScript deshabilitado (DevTools → Settings → Debugger → Disable JavaScript)", "Mirá si el hero se ve entero: logo, la frase de la capa, las tres tarjetas", "Repetí en <code>/es</code>", "Volvé a habilitar JS y recargá"],
+          expect: "El hero se ve completo y nítido sin JavaScript. Antes de este lote quedaba invisible — estaba en el HTML pero dentro de un <code>opacity: 0</code> hasta que React atachaba.",
+          ifNot: "Si algo de la primera pantalla sigue en blanco sin JS, quedó un <code>SectionReveal</code> sin <code>eager</code> arriba del pliegue. Anotá qué bloque."
+        },
+        {
+          code: "SEO4.2", title: "El revelado de abajo del pliegue sigue andando", sub: "Que el arreglo no haya matado la animación",
+          steps: ["Con JS habilitado, abrí <code>/</code> arriba de todo", "Bajá despacio y mirá cómo entran las secciones (features, cómo funciona, loop, story…)", "Repetí con <code>prefers-reduced-motion: reduce</code> activado en el sistema"],
+          expect: "Las secciones de abajo siguen apareciendo con su fade-up al entrar. Sólo el hero cambió: ahora nace visible porque ya lo estás mirando. Con reduce motion no hay animación, igual que antes.",
+          ifNot: "Si el revelado desapareció en todo el resto de la página, el <code>eager</code> se aplicó de más. Si ahora aparecen todas de golpe al cargar, también."
+        },
+        {
+          code: "SEO4.3", title: "Lighthouse mobile y el elemento LCP", sub: "Mirá el elemento, no sólo el número",
+          steps: ["Lighthouse mobile sobre <code>/</code> en producción", "Abrí «Largest Contentful Paint element» y leé <strong>qué elemento</strong> es", "Repetí después de aceptar o rechazar las cookies y recargar", "Anotá los dos LCP"],
+          expect: "Con el banner a la vista, el elemento LCP es su párrafo. Después de responder, el banner no aparece y el LCP baja mucho.",
+          ifNot: "Si el elemento LCP es otro, cambió algo desde el 19/09 y el diagnóstico hay que rehacerlo — mirando el campo, no infiriéndolo. Es exactamente el error que este lote corrigió."
+        },
+        {
+          code: "SEO4.4", title: "Acortar el párrafo del banner: tu decisión", sub: "Lo único que falta para llegar a 2,5 s",
+          steps: ["Leé el párrafo actual del banner completo", "Decidí si se puede decir lo mismo en menos de la mitad del texto, sin perder las tres promesas (no graba la pantalla, no guarda la IP, no ve tu música)", "Si sí: escribí la versión corta y pasámela", "Si no: decilo y el umbral de LCP se queda en 7 s"],
+          expect: "Una decisión escrita, en cualquiera de los dos sentidos.",
+          ifNot: "No es una tarea de performance disfrazada: el texto es una declaración de privacidad deliberada y acortarlo cambia qué le prometemos a alguien en el primer segundo. Por eso no se tocó sin vos. El link a la política de cookies ya está ahí abajo."
+        },
+        {
+          code: "SEO4.5", title: "Los CTAs de contenido y el evento", sub: "SEO-E28, la mitad que sí es código",
+          steps: ["Abrí <code>/es/energy-tags</code> y bajá hasta el final: tiene que haber un bloque con borde que ofrece la herramienta gratis", "Repetí en <code>/es/import-formats</code>", "Aceptá las cookies, tocá el CTA y mirá en PostHog que llegue <code>content_cta_click</code>", "Abrí sus propiedades"],
+          expect: "El evento llega con <code>page</code>, <code>locale</code> y <code>variant</code>, y con nada más — ni títulos de temas ni nombres de archivo.",
+          ifNot: "Si no llega, confirmá primero que aceptaste las cookies: el evento pasa por el mismo gate de consentimiento que todo lo demás, y no disparar sin permiso es lo correcto, no un bug."
+        },
+        {
+          code: "SEO4.6", title: "El embudo en PostHog", sub: "La mitad que es tuya",
+          steps: ["En PostHog, marcá como key events: <code>content_cta_click</code>, <code>signup</code> y <code>analysis_completed</code>", "Armá el embudo con esos tres pasos, en ese orden", "Mirá si dibuja algo"],
+          expect: "El embudo «orgánico → primer análisis» se puede dibujar con los tres.",
+          ifNot: "Ojo con los nombres: el plan los llama <code>signup_completed</code> y <code>first_analysis</code>, pero el repo ya emitía <code>signup</code> y <code>analysis_completed</code> desde antes y se dejaron así a propósito — duplicarlos habría puesto dos eventos con el mismo significado. PostHog cuenta la primera ocurrencia por persona, así que <code>analysis_completed</code> <em>es</em> el paso de primer análisis."
+        },
+        {
+          code: "SEO4.7", title: "La entidad en el Rich Results Test", sub: "SEO-E22, la mitad de código",
+          steps: ["Pegá <code>/</code> en el Rich Results Test de Google", "Mirá el nodo <code>Organization</code>", "Confirmá <code>alternateName</code> y <code>sameAs</code>", "Abrí el link de <code>sameAs</code> y fijate que sea nuestro perfil"],
+          expect: "<code>alternateName: \"EnergyCurve DJ\"</code> y un <code>sameAs</code> con el Instagram. Sin errores.",
+          ifNot: "El Instagram existe pero está vacío (0 posts al 19/09). Un perfil vacío en <code>sameAs</code> es válido y flojo: lo que lo vuelve útil es publicar algo. Los demás perfiles del plan — Product Hunt, AlternativeTo, Crunchbase, Wikidata — no existen y darlos de alta es tuyo."
+        },
+        {
+          code: "SEO4.8", title: "Los dos artículos corregidos, leídos por un DJ", sub: "La deuda que venía desde el #237",
+          steps: ["Leé el párrafo armónico de <code>cuanto-es-mucho-salto-de-energia</code>", "Y el punto 3 de <code>esta-bien-el-orden-de-mi-set</code>", "Seguí el link a la rueda Camelot desde los dos", "Fijate si lo que dicen ahora coincide con lo que la rueda te muestra"],
+          expect: "Ninguno de los dos repite la regla angosta como si fuera la verdad: los dos dicen que deja mezclas afuera y mandan a la rueda, que lee de la tabla de transiciones. Y «rueda Camelot» sigue enlazada al glosario, además del link a la herramienta.",
+          ifNot: "Si alguno todavía afirma «la misma, la relativa o una quinta» como regla completa, quedó sin corregir. Y si el link al glosario desapareció, es el bug que casi se mete en este lote: poner «rueda Camelot» adentro del link a la herramienta se come el enlace al glosario."
         }
       ]
     }
