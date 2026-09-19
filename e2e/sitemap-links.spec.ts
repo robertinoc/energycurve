@@ -33,10 +33,7 @@ function internalHrefs(html: string, origin: string): string[] {
   ]
 }
 
-async function sitemapPaths(
-  request: APIRequestContext,
-  baseURL: string
-): Promise<string[]> {
+async function sitemapPaths(request: APIRequestContext): Promise<string[]> {
   const response = await request.get("/sitemap.xml")
   expect(response.status(), "the sitemap itself").toBe(200)
 
@@ -53,8 +50,8 @@ test.describe("the sitemap and what it links to", () => {
   // One browser project is enough: this is HTTP, not rendering.
   test.skip(({ browserName }) => browserName !== "chromium", "HTTP only")
 
-  test("every URL in the sitemap answers 200", async ({ request, baseURL }) => {
-    const paths = await sitemapPaths(request, baseURL!)
+  test("every URL in the sitemap answers 200", async ({ request }) => {
+    const paths = await sitemapPaths(request)
     const broken: { path: string; status: number }[] = []
 
     for (const path of paths) {
@@ -72,7 +69,7 @@ test.describe("the sitemap and what it links to", () => {
     baseURL,
   }) => {
     const origin = baseURL!.replace(/\/$/, "")
-    const paths = await sitemapPaths(request, origin)
+    const paths = await sitemapPaths(request)
 
     const seen = new Map<string, number>()
     const broken: { from: string; href: string; status: number }[] = []
@@ -102,9 +99,8 @@ test.describe("the sitemap and what it links to", () => {
 
   test("the draft guide is reachable by URL but absent from the sitemap", async ({
     request,
-    baseURL,
   }) => {
-    const paths = await sitemapPaths(request, baseURL!)
+    const paths = await sitemapPaths(request)
 
     for (const draft of ["/guide/components", "/es/guia/componentes"]) {
       expect(paths, `${draft} must not be listed`).not.toContain(draft)
