@@ -491,7 +491,7 @@
 
   <div class="gate">
     <span class="tag">Cuello&nbsp;de&nbsp;botella</span>
-    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy salió: el 19/09 se confirmó que producción tiene <strong>el lote 2 adentro</strong> — <code>/llms.txt</code> responde 200 y el sitemap trae 73 <code>x-default</code>, que es lo que agregó ese lote. Se dedujo de lo servido, sin entrar a Vercel. Así que las sesiones SEO, TOOL, CONT y <strong>SEO2</strong> arrancan. La <strong>SEO3</strong> es la excepción: mide el lote 3, que está en rama y todavía no se deployó.</p>
+    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy salió: el 19/09 se confirmó que producción tiene <strong>el lote 3 adentro</strong> — <code>/es/blog</code> sirve el nodo <code>Blog</code> de JSON-LD, que agregó ese lote, y la home todavía no dice «EnergyCurve DJ», que agrega el lote 4. Se dedujo de lo servido, sin entrar a Vercel. Así que las sesiones SEO, TOOL, CONT, <strong>SEO2</strong> y <strong>SEO3</strong> arrancan. La <strong>SEO4</strong> es la excepción: mide el lote 4, que está en rama y todavía no se deployó.</p>
   </div>
 
   <main id="sessions"></main>
@@ -1051,10 +1051,10 @@
           ifNot: "Un test ya impide el «Sí.» pelado y exige más de cuatro palabras. Lo que el test no puede juzgar es si la oración <em>responde</em>. Si alguna suena a relleno, anotá cuál y reescribila en <code>site-copy.ts</code>."
         },
         {
-          code: "SEO3.5", title: "El LCP de 5,5 segundos", sub: "El hallazgo abierto de este lote",
-          steps: ["Corré Lighthouse mobile sobre <code>/</code> en producción", "Anotá LCP, y al lado FCP y Speed Index", "Abrí el detalle «Largest Contentful Paint element» y mirá qué elemento es", "Repetí con <code>prefers-reduced-motion: reduce</code> activado en el sistema"],
-          expect: "Confirmar lo medido en local: la página pinta en ~1,2 s y el LCP cae recién con la hidratación, cerca de 5,5 s. Con <em>reduce motion</em> debería mejorar, porque las secciones nacen visibles.",
-          ifNot: "Si con reduce motion el LCP baja mucho, eso confirma que la causa es <code>SectionReveal</code> y define el arreglo: que el bloque de la primera pantalla no dependa del revelado. Está documentado en <code>docs/qa/lighthouse-budgets.md</code> y es una tarea aparte, con capturas antes y después."
+          code: "SEO3.5", title: "El LCP de 5,5 segundos", sub: "Resuelto en el lote 4 — y la causa era otra",
+          steps: ["<strong>Esta prueba quedó obsoleta: la reemplaza <code>SEO4.3</code>.</strong>", "Se deja anotada porque el error vale más que la prueba"],
+          expect: "Nada que probar acá. El lote 4 midió el elemento y no era <code>SectionReveal</code>: es el párrafo del banner de cookies. Con banner 2856 ms, sin banner 1104 ms.",
+          ifNot: "La hipótesis de esta prueba —«si con reduce motion baja, la causa es el revelado»— era razonable y estaba mal. La refutación costaba un campo del reporte (<code>largest-contentful-paint-element</code>) y una observación: <code>/pricing</code> no usa <code>SectionReveal</code> y tenía el mismo LCP. Ver <code>docs/qa/lighthouse-budgets.md</code>."
         },
         {
           code: "SEO3.6", title: "Los presupuestos de Lighthouse en un PR de verdad", sub: "Que el guardián agarre algo que no sea una prueba",
