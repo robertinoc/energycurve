@@ -24,6 +24,7 @@ export type SmartOrderFallbackReason =
   | "not_authorized"
   | "rate_limited"
   | "bad_request"
+  | "unfunded"
   | "model_unavailable"
   | "upstream_down"
   | "timeout"
@@ -40,6 +41,7 @@ export function isFallbackReason(
     value === "not_authorized" ||
     value === "rate_limited" ||
     value === "bad_request" ||
+    value === "unfunded" ||
     value === "model_unavailable" ||
     value === "upstream_down" ||
     value === "timeout" ||
