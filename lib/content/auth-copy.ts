@@ -309,3 +309,52 @@ export function getAuthAlertCopy({
     description: formatTemplate(copy.description[locale], { min: minLength }),
   }
 }
+
+/**
+ * The login and signup page itself.
+ *
+ * Every string on that page used to be an English literal in the JSX, even
+ * though `locale` was already a prop and already drove the alerts and the
+ * password field. A Spanish visitor therefore got a page that spoke Spanish
+ * in its error messages and English everywhere else — including the button
+ * they had to press. That is the first screen anyone sees, and the one where
+ * looking half-finished costs the most.
+ *
+ * Both modes live in one object, keyed by `login` / `signup` where they
+ * differ, because the two are the same page with a flag and splitting them
+ * is how they drift apart.
+ */
+export const AUTH_PAGE_COPY = {
+  logoCaption: {
+    en: "Build sets that move the floor.",
+    es: "Armá sets que muevan la pista.",
+  },
+  login: {
+    title: { en: "Welcome back to EnergyCurve", es: "Bienvenido de vuelta a EnergyCurve" },
+    lead: { en: "Log in to pick up your sets. New here? ", es: "Iniciá sesión y seguí con tus sets. ¿Sos nuevo? " },
+    leadLink: { en: "Create an account", es: "Creá una cuenta" },
+    submit: { en: "Login", es: "Iniciar sesión" },
+    footer: { en: "Need an account?", es: "¿Necesitás una cuenta?" },
+    footerLink: { en: "Create your account", es: "Creá tu cuenta" },
+  },
+  signup: {
+    title: { en: "Welcome to EnergyCurve", es: "Bienvenido a EnergyCurve" },
+    lead: {
+      en: "New here? Create your account below. Already in the mix? ",
+      es: "¿Primera vez? Creá tu cuenta acá abajo. ¿Ya estás en la mezcla? ",
+    },
+    leadLink: { en: "Log in", es: "Iniciá sesión" },
+    submit: { en: "Create your account", es: "Creá tu cuenta" },
+    footer: { en: "Already have an account?", es: "¿Ya tenés una cuenta?" },
+    footerLink: { en: "Login", es: "Iniciar sesión" },
+  },
+  google: { en: "Continue with Google", es: "Continuar con Google" },
+  emailPasswordDivider: { en: "Email and password", es: "Email y contraseña" },
+  emailLabel: { en: "Email", es: "Email" },
+  passwordLabel: { en: "Password", es: "Contraseña" },
+  forgotPassword: { en: "Forgot password?", es: "¿Olvidaste tu contraseña?" },
+  passwordPlaceholder: { en: "Enter your password", es: "Ingresá tu contraseña" },
+  newPasswordPlaceholder: { en: "Create a strong password", es: "Creá una contraseña fuerte" },
+  confirmPasswordLabel: { en: "Confirm password", es: "Confirmá la contraseña" },
+  confirmPasswordPlaceholder: { en: "Repeat your password", es: "Repetí tu contraseña" },
+} as const

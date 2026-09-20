@@ -1,7 +1,12 @@
+import { readFileSync } from "node:fs"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
+
 import { describe, expect, it } from "vitest"
 
 import {
   AUTH_ALERT_COPY,
+  AUTH_PAGE_COPY,
   PASSWORD_FIELD_COPY,
   getAuthAlertCopy,
 } from "@/lib/content/auth-copy"
@@ -38,6 +43,7 @@ function allLeaves() {
   const leaves: Array<{ path: string; label: Record<string, string> }> = []
   collectLeaves(AUTH_ALERT_COPY, "AUTH_ALERT_COPY", leaves)
   collectLeaves(PASSWORD_FIELD_COPY, "PASSWORD_FIELD_COPY", leaves)
+  collectLeaves(AUTH_PAGE_COPY, "AUTH_PAGE_COPY", leaves)
   return leaves
 }
 
@@ -74,6 +80,53 @@ describe("auth copy", () => {
         )
       }
     }
+  })
+
+  /**
+   * The login button read "Login" in Spanish too, because it was an English
+   * literal in the JSX — on a page that already had `locale` as a prop and was
+   * already using it for the alerts and the password field. So a Spanish
+   * visitor got errors in Spanish and the button they had to press in English.
+   *
+   * Scanning the source rather than rendering: what broke here was not the
+   * output for one locale, it was that a string existed somewhere the locale
+   * could not reach. A render test only catches the strings you thought to
+   * assert on; this catches the next one somebody adds.
+   */
+  it("leaves no user-facing literal in the auth page", () => {
+    const source = readFileSync(
+      join(
+        dirname(fileURLToPath(import.meta.url)),
+        "..",
+        "components/auth/password-auth-page.tsx"
+      ),
+      "utf8"
+    )
+
+    // Props whose values are machine-facing: routes, form wiring, Tailwind,
+    // SVG geometry. Everything a reader sees has to come from the copy module,
+    // so anything left quoted after these are removed is a finding.
+    const TECHNICAL_PROP =
+      /\b(?:className|href|name|id|type|autoComplete|htmlFor|viewBox|fill|d|tone|size|kind|variant|xmlns|role|clipRule|fillRule|stroke|strokeWidth|strokeLinecap|strokeLinejoin)="[^"]*"/g
+
+    const scannable = source
+      .replace(TECHNICAL_PROP, "")
+      .replace(/^\s*(?:import|interface|type)\b.*$/gm, "")
+
+    // A user-facing string is capitalized, or has a space in it. A machine one
+    // ("email", "current-password", "you@example.com") is neither.
+    const literals = [...scannable.matchAll(/"([^"\n]{2,})"/g)]
+      .map((match) => match[1])
+      .filter((value) => /^[A-Z]/.test(value) || value.includes(" "))
+      .filter((value) => value !== "you@example.com")
+
+    // Bare JSX text: >Some words</  — the closing `</` is what tells a real
+    // text node apart from a type signature like `=> Promise<void>`.
+    const textNodes = [...scannable.matchAll(/>\s*([A-Za-z][A-Za-z'’?!,. ]{3,})\s*<\//g)]
+      .map((match) => match[1].trim())
+
+    expect(literals, "hard-coded strings").toEqual([])
+    expect(textNodes, "hard-coded text nodes").toEqual([])
   })
 
   it("offers the passphrase escape hatch on every password rejection", () => {

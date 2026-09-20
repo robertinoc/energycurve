@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { PASSWORD_MIN_LENGTH } from "@/lib/auth/password-policy"
-import { getAuthAlertCopy } from "@/lib/content/auth-copy"
+import { AUTH_PAGE_COPY, getAuthAlertCopy } from "@/lib/content/auth-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
 interface PasswordAuthPageProps {
@@ -46,9 +46,10 @@ export function PasswordAuthPage({
     loggedOut,
     resetSuccess,
   })
-  const title = isSignup
-    ? "Welcome to EnergyCurve"
-    : "Welcome back to EnergyCurve"
+  // One branch, taken once: every string below reads off `modeCopy`, so the
+  // two modes cannot drift apart the way two parallel ternaries would.
+  const copy = AUTH_PAGE_COPY
+  const modeCopy = isSignup ? copy.signup : copy.login
   const googleHref = `/auth/social/google?mode=${mode}&returnTo=${encodeURIComponent(returnTo)}`
   // Google sign-in is gated behind a flag: the WorkOS Google connection must
   // be configured in the target environment first, otherwise the authorize
@@ -74,26 +75,20 @@ export function PasswordAuthPage({
             tone="light"
             size="lg"
             kind="horizontal"
-            caption="Build sets that move the floor."
+            caption={copy.logoCaption[locale]}
           />
 
           <div className="space-y-3">
             <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              {title}
+              {modeCopy.title[locale]}
             </h1>
             <p className="max-w-xl text-base leading-7 text-white/68 sm:text-lg">
-              {isSignup ? (
-                <>
-                  New here? Create your account below. Already in the mix?{" "}
-                </>
-              ) : (
-                <>Log in to pick up your sets. New here? </>
-              )}
+              {modeCopy.lead[locale]}
               <Link
                 href={crossLinkHref}
                 className="text-white underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
               >
-                {isSignup ? "Log in" : "Create an account"}
+                {modeCopy.leadLink[locale]}
               </Link>
               .
             </p>
@@ -122,12 +117,12 @@ export function PasswordAuthPage({
                   className="flex h-11 items-center justify-center gap-3 rounded-2xl border border-white/12 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] hover:shadow-[0_14px_34px_rgba(0,0,0,0.24),0_0_24px_rgba(34,211,238,0.08)]"
                 >
                   <GoogleMark />
-                  Continue with Google
+                  {copy.google[locale]}
                 </a>
 
                 <div className="flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-white/32">
                   <Separator className="flex-1 bg-white/10" />
-                  <span>Email and password</span>
+                  <span>{copy.emailPasswordDivider[locale]}</span>
                   <Separator className="flex-1 bg-white/10" />
                 </div>
               </>
@@ -135,7 +130,7 @@ export function PasswordAuthPage({
 
             <div className="space-y-2">
               <Label htmlFor={`${mode}-email`} className="text-white/82">
-                Email
+                {copy.emailLabel[locale]}
               </Label>
               <Input
                 id={`${mode}-email`}
@@ -152,8 +147,8 @@ export function PasswordAuthPage({
               <PasswordPolicyField
                 id="signup-password"
                 name="password"
-                label="Password"
-                placeholder="Create a strong password"
+                label={copy.passwordLabel[locale]}
+                placeholder={copy.newPasswordPlaceholder[locale]}
                 locale={locale}
                 minLength={passwordMinLength}
               />
@@ -161,13 +156,13 @@ export function PasswordAuthPage({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="login-password" className="text-white/82">
-                    Password
+                    {copy.passwordLabel[locale]}
                   </Label>
                   <Link
                     href="/forgot-password"
                     className="text-xs text-white/48 underline-offset-4 transition hover:text-white hover:underline"
                   >
-                    Forgot password?
+                    {copy.forgotPassword[locale]}
                   </Link>
                 </div>
                 <Input
@@ -177,7 +172,7 @@ export function PasswordAuthPage({
                   required
                   autoComplete="current-password"
                   className="h-11 px-3.5"
-                  placeholder="Enter your password"
+                  placeholder={copy.passwordPlaceholder[locale]}
                 />
               </div>
             )}
@@ -185,7 +180,7 @@ export function PasswordAuthPage({
             {isSignup ? (
               <div className="space-y-2">
                 <Label htmlFor="signup-confirm-password" className="text-white/82">
-                  Confirm password
+                  {copy.confirmPasswordLabel[locale]}
                 </Label>
                 <Input
                   id="signup-confirm-password"
@@ -194,7 +189,7 @@ export function PasswordAuthPage({
                   required
                   autoComplete="new-password"
                   className="h-11 px-3.5"
-                  placeholder="Repeat your password"
+                  placeholder={copy.confirmPasswordPlaceholder[locale]}
                 />
               </div>
             ) : null}
@@ -204,14 +199,12 @@ export function PasswordAuthPage({
               size="lg"
               className="w-full justify-between ec-gradient-bg text-white shadow-[0_8px_24px_rgba(120,60,220,0.35)]"
             >
-              {isSignup ? "Create your account" : "Login"}
+              {modeCopy.submit[locale]}
               <ArrowRight className="size-4" />
             </Button>
 
             <div className="text-sm text-white/58">
-              {isSignup
-                ? "Already have an account?"
-                : "Need an account?"}{" "}
+              {modeCopy.footer[locale]}{" "}
               <Link
                 href={
                   isSignup
@@ -220,7 +213,7 @@ export function PasswordAuthPage({
                 }
                 className="text-white underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
               >
-                {isSignup ? "Login" : "Create your account"}
+                {modeCopy.footerLink[locale]}
               </Link>
             </div>
           </form>

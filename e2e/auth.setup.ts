@@ -52,10 +52,11 @@ async function signIn(page: Page, email: string, password: string) {
   await page.locator("#login-password").fill(password)
 
   // The form's submit, not its label. This matched `/log in|iniciar/i` on the
-  // first attempt and found nothing: the button reads "Login", one word, and
-  // is hard-coded rather than localized. Guessing at copy makes the harness
-  // break when someone rewords a button, which is not a thing the harness
-  // should have an opinion about.
+  // first attempt and found nothing, because the button read "Login" — one
+  // word, and hard-coded in English even for a Spanish visitor. That has since
+  // been localized, which is exactly why the selector stays structural: the
+  // label now changes with the reader's locale, and a harness that matched on
+  // it would pass or fail depending on a cookie.
   await page.locator('form button[type="submit"]').click()
 
   // Waiting for the URL rather than for a selector: any dashboard element could
