@@ -35,6 +35,7 @@ que resolver **antes** de escribir el arreglo.
 | H-9 | Sin crédito en la cuenta de Anthropic | Operación | **Robertino** | Pendiente |
 | H-10 | Un problema de facturación se muestra como request mal formado | Bug | — | ✅ PR #246 · validar |
 | — | El botón de login dice «Login» en español | Bug de copy | — | ✅ PR #249 · validar |
+| H-13 | El JSON-LD del artículo no emite `keywords`; el del índice sí | Bug menor | Claude | Pendiente |
 
 ---
 
@@ -176,6 +177,17 @@ Ejemplo real: `...-with-energycurve.app.csv`. Pedido:
 algún sistema lea `.app` como la extensión.
 
 Afecta a los cinco formatos de export, no sólo al CSV.
+
+## H-13 · El artículo no emite `keywords` en su JSON-LD; el índice sí
+
+Salió de SEO3.3 el 20/09, con `curl` contra producción. Es de una línea.
+
+`buildBlogIndexStructuredData` (`lib/blog/structured-data.ts:80`) agrega
+`keywords` a cada `BlogPosting` del índice cuando el post tiene tags. La página
+del artículo usa `buildArticleStructuredData` (`:119`), que no lo hace. Los
+tags están en el frontmatter de los cinco posts, así que el dato existe y se
+omite justo en la página donde más lo lee un motor. Ningún test lo exige: al
+agregarlo, agregar también la aserción.
 
 ## H-9 · Sin crédito en la cuenta de Anthropic
 
