@@ -7,6 +7,8 @@ import {
   defaultExportFormat,
   exportFilename,
   serializePlaylist,
+  EXPORT_FORMAT_META,
+  type ExportFormat,
   type ExportPlaylist,
   type ExportTrack,
 } from "@/lib/playlists/export"
@@ -91,20 +93,42 @@ describe("format selection", () => {
 
   it("builds a slugified filename per format", () => {
     expect(exportFilename("rekordbox", "Warehouse Set")).toBe(
-      "warehouse-set-optimized-with-energycurve.app.xml"
+      "warehouse-set-optimized-with-energycurve-app.xml"
     )
     expect(exportFilename("traktor", "Warehouse Set")).toBe(
-      "warehouse-set-optimized-with-energycurve.app.nml"
+      "warehouse-set-optimized-with-energycurve-app.nml"
     )
     expect(exportFilename("m3u8", "Warehouse Set")).toBe(
-      "warehouse-set-optimized-with-energycurve.app.m3u8"
+      "warehouse-set-optimized-with-energycurve-app.m3u8"
     )
     expect(exportFilename("csv", "Late — Night!!")).toBe(
-      "late-night-optimized-with-energycurve.app.csv"
+      "late-night-optimized-with-energycurve-app.csv"
     )
     expect(exportFilename("txt", "   ")).toBe(
-      "playlist-optimized-with-energycurve.app.txt"
+      "playlist-optimized-with-energycurve-app.txt"
     )
+  })
+
+  /**
+   * H-8. The badge used to carry the domain's real dot, so every export landed
+   * as "…energycurve.app.csv". Whatever reads the last dot copes; whatever
+   * reads the first, or treats ".app" as the extension, does not — and it
+   * fails silently, by handing the set to the wrong program.
+   *
+   * Asserted as a structural rule rather than only as five literal strings,
+   * because the string assertions above would happily be updated alongside a
+   * badge that reintroduced a dot. This one cannot be satisfied that way.
+   */
+  it("leaves exactly one dot in the filename, at the real extension", () => {
+    // Derived from the metadata table, so a sixth format is covered the day
+    // it is added rather than the day someone remembers this test.
+    for (const format of Object.keys(EXPORT_FORMAT_META) as ExportFormat[]) {
+      const filename = exportFilename(format, "Warehouse Set")
+      const extension = EXPORT_FORMAT_META[format].extension
+
+      expect(filename.split(".").length - 1, filename).toBe(1)
+      expect(filename.endsWith(`.${extension}`), filename).toBe(true)
+    }
   })
 })
 

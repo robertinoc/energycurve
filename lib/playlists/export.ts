@@ -164,9 +164,16 @@ function slugify(value: string): string {
 }
 
 // Badge appended to every exported file so a DJ can tell, at a glance in their
-// downloads, that this playlist was reordered by us. The real extension always
-// stays last, so "…energycurve.app.xml" still opens as an .xml.
-const EXPORT_BADGE = "optimized-with-energycurve.app"
+// downloads, that this playlist was reordered by us.
+//
+// The domain is written with a hyphen, not its real dot. It used to be
+// "energycurve.app", on the reasoning that the true extension stays last so
+// "…energycurve.app.xml" still opens as an .xml. That holds for anything that
+// reads the *last* dot — but plenty of things take the first, or take ".app"
+// as the extension and the rest as the name, and the failure is silent: the
+// DJ's file manager hands the set to the wrong program, or a CDJ skips it.
+// Nothing is worth that when a hyphen reads identically to a human.
+const EXPORT_BADGE = "optimized-with-energycurve-app"
 
 export function exportFilename(format: ExportFormat, playlistName: string): string {
   return `${slugify(playlistName)}-${EXPORT_BADGE}.${EXPORT_FORMAT_META[format].extension}`
