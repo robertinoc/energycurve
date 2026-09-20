@@ -26,6 +26,14 @@ export function classifyFailure(error: unknown): SmartOrderFallbackReason {
     return "timeout"
   }
 
+  // Before the status-shaped branches: an unfunded account is the same problem
+  // whatever status it arrives under, and reading it as "your key is wrong"
+  // would send the reader to the same wrong place as reading it as "our code is
+  // wrong" did.
+  if (error instanceof Anthropic.APIError && isUnfunded(error)) {
+    return "unfunded"
+  }
+
   if (
     error instanceof Anthropic.AuthenticationError ||
     error instanceof Anthropic.PermissionDeniedError
@@ -58,4 +66,46 @@ export function classifyFailure(error: unknown): SmartOrderFallbackReason {
   }
 
   return "error"
+}
+
+/**
+ * Was this "the account has no money" rather than "the request was wrong"?
+ *
+ * This distinction cost seventy-six days. Anthropic answers an exhausted credit
+ * balance with a **400**, and a 400 was read as `bad_request` — so the banner
+ * told every DJ *"we asked the AI service for something it wouldn't accept —
+ * that one's on us"*. The product blamed its own code, loudly and wrongly, and
+ * nobody went to look at the invoice while smart ordering silently ran on the
+ * heuristic.
+ *
+ * ## Why two signals, and which one is the real one
+ *
+ * `error.type` is the API's own category, and the SDK types it as a union that
+ * includes `billing_error` (see `resources/shared.d.ts`). **That is the signal
+ * to trust**: it is structured, it is versioned with the SDK, and it survives
+ * any rewording of the sentence.
+ *
+ * The message check exists because it is what we actually observed on
+ * 12/09/2026 — the credit-balance refusal arrived as `invalid_request_error`,
+ * not as `billing_error`. So the typed category is either newer than that
+ * response or reserved for something else, and relying on it alone would keep
+ * shipping the bug we are here to fix.
+ *
+ * The substring is deliberately the shortest phrase that identifies the
+ * condition rather than the whole sentence. "Please go to Plans & Billing to
+ * upgrade or purchase credits" is marketing copy and will be rewritten;
+ * "credit balance" is the name of the thing and cannot be dropped without the
+ * message ceasing to say what it says.
+ *
+ * If Anthropic starts sending `billing_error`, the first branch takes over and
+ * the second becomes dead weight that costs nothing. That asymmetry is the
+ * point: a stale structured check is harmless, a missing one is another
+ * seventy-six days.
+ */
+function isUnfunded(error: InstanceType<typeof Anthropic.APIError>): boolean {
+  if (error.type === "billing_error") {
+    return true
+  }
+
+  return /credit balance/i.test(error.message ?? "")
 }

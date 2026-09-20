@@ -678,6 +678,18 @@ export const ANALYSIS_UI = {
     en: "We asked the AI service for something it wouldn't accept — that one's on us.",
     es: "Le pedimos al servicio de IA algo que no aceptó — esa es nuestra.",
   },
+  /**
+   * Deliberately says nothing about why. The DJ cannot act on our invoice, and
+   * a banner that named it would put an operational embarrassment in front of
+   * someone who came here to order a set. What they *do* need is the part that
+   * changes their next thirty seconds: it is not their playlist, and hitting
+   * the button again will not help. The specifics live in the logs, where the
+   * only person who can act on them is reading.
+   */
+  smartFallbackUnfunded: {
+    en: "AI ordering is unavailable right now — that one's on our side, and retrying won't change it.",
+    es: "El orden con IA no está disponible ahora mismo — esa es de nuestro lado, y reintentar no lo cambia.",
+  },
   smartFallbackModelUnavailable: {
     en: "The AI model we ask for isn't available on our account — we need to sort that out.",
     es: "El modelo de IA que pedimos no está disponible en nuestra cuenta — eso lo tenemos que resolver nosotros.",

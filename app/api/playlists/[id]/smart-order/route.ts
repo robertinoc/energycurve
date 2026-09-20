@@ -577,6 +577,20 @@ export async function POST(
             playlistId: playlist.id,
             budgetMs: CLAUDE_TIMEOUT_MS,
           })
+        } else if (reason === "unfunded") {
+          // Its own event name, not a `reason` field on the shared one. The
+          // banner deliberately tells the DJ nothing about this, so the log is
+          // the *only* place it surfaces — and it has to be greppable and
+          // alertable on its own, because unlike everything else in this chain
+          // it will not stop until somebody pays an invoice. Every smart order
+          // is silently running on the heuristic for as long as it is true.
+          logError("smart_order.claude_unfunded", error, {
+            profileId: profile.id,
+            playlistId: playlist.id,
+            status: error instanceof Anthropic.APIError ? error.status : null,
+            apiErrorType:
+              error instanceof Anthropic.APIError ? error.type : null,
+          })
         } else {
           logError("smart_order.claude_failed", error, {
             profileId: profile.id,
