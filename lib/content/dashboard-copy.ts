@@ -1502,11 +1502,29 @@ export const DASHBOARD_COPY = {
 
     checkoutSuccess: {
       title: { en: "You're in — welcome to {plan}", es: "Listo — bienvenido a {plan}" },
-      // Names the billing entity at the exact moment the charge appears, which is
-      // when an unrecognised name on a statement turns into a dispute.
+      /**
+       * Says nothing about whether money moved, because this banner does not
+       * know. It used to open with "Your payment went through" — which a 100%
+       * coupon turned into the product telling someone a false fact about
+       * their own money, on both plans, at the one moment they are paying
+       * closest attention to it. That is the kind of sentence people screenshot
+       * and quote back at you.
+       *
+       * The amount is genuinely unavailable here: `BillingSnapshot` does not
+       * carry it, the success URL is a bare `?checkout=success` with no session
+       * id, and the plan's list price is the *wrong* number precisely in the
+       * coupon case. Reaching the real figure means a Stripe read or a new
+       * persisted field — billing work, deliberately out of scope for a copy
+       * fix. See the PR for what a true zero-amount variant would cost.
+       *
+       * "Any charge" is the phrasing that survives both cases and is also more
+       * useful than the old one: it still names the billing entity before an
+       * unrecognised statement line becomes a dispute, and it covers every
+       * future renewal rather than only this moment.
+       */
       body: {
-        en: "Your payment went through. Receipts come from StageLink LLC, the company that operates EnergyCurve.",
-        es: "Tu pago se procesó. Los comprobantes llegan de StageLink LLC, la empresa que opera EnergyCurve.",
+        en: "You're all set. Any charge appears on your statement as StageLink LLC, the company that operates EnergyCurve.",
+        es: "Ya está todo listo. Cualquier cobro aparece en tu resumen como StageLink LLC, la empresa que opera EnergyCurve.",
       },
       dismiss: { en: "Dismiss", es: "Cerrar" },
     },
