@@ -4,9 +4,18 @@ Cola de trabajo salida de la **primera ronda de pruebas manuales** (12/09 y
 20/09/2026), corrida contra producción con el
 [Banco de Pruebas](https://claude.ai/artifact/38iHNaBGmXVDtW5GfQCdsG).
 
-**Nada de esto está implementado.** El acuerdo de la ronda fue relevar, no
-tocar: las pruebas encuentran, y qué se arregla se decide después. Este archivo
-existe para que esa decisión no dependa de la memoria de nadie.
+El acuerdo de la ronda fue relevar, no tocar: las pruebas encuentran, y qué se
+arregla se decide después. Este archivo existe para que esa decisión no dependa
+de la memoria de nadie.
+
+**Actualizado el 20/09.** Cuatro se implementaron y están en `main` —
+H-4 ([#247](https://github.com/robertinoc/energycurve/pull/247)),
+H-8 ([#248](https://github.com/robertinoc/energycurve/pull/248)),
+H-10 ([#246](https://github.com/robertinoc/energycurve/pull/246)) y el botón de
+login en español ([#249](https://github.com/robertinoc/energycurve/pull/249)).
+Que estén mergeados no los da por buenos: cada uno deja su prueba en **Validar
+fix** en el Banco hasta que alguien la corra otra vez contra el deploy. Y H-5
+resultó ser un diagnóstico equivocado — ver su ficha.
 
 Cada hallazgo tiene severidad, dónde vive, y —donde importa— la trampa que hay
 que resolver **antes** de escribir el arreglo.
@@ -18,41 +27,65 @@ que resolver **antes** de escribir el arreglo.
 | H-1 | El plan debería ser un tag del usuario | Producto | Claude | Pendiente |
 | H-2 | El bloque de primera vez ocupa demasiado | Producto | Claude | Pendiente |
 | H-3 | ~~El logout no cerraba sesión~~ | Bug | — | ✅ PR #222 |
-| H-4 | «Your payment went through» con importe $0 | Bug de copy | Claude | Pendiente |
-| H-5 | El nombre de Google se descarta | **Bug** | Claude | Pendiente |
+| H-4 | «Your payment went through» con importe $0 | Bug de copy | — | ✅ PR #247 · validar |
+| H-5 | ~~El nombre de Google se descarta~~ | **Mal diagnosticado** | Claude | Re-diagnosticar |
 | H-6 | «Account» debería ser «⚙️ Settings» | Producto | Robertino decide | Pendiente |
 | H-7 | El contacto no debería vivir en la cuenta | Producto | Robertino decide | Pendiente |
-| H-8 | El export termina en `.app.csv` | Producto | Claude | Pendiente |
+| H-8 | El export termina en `.app.csv` | Producto | — | ✅ PR #248 · validar |
 | H-9 | Sin crédito en la cuenta de Anthropic | Operación | **Robertino** | Pendiente |
-| H-10 | Un problema de facturación se muestra como request mal formado | Bug | Claude | Pendiente |
+| H-10 | Un problema de facturación se muestra como request mal formado | Bug | — | ✅ PR #246 · validar |
+| — | El botón de login dice «Login» en español | Bug de copy | — | ✅ PR #249 · validar |
 
 ---
 
-## H-5 · El nombre de Google se descarta
+## H-5 · El nombre de Google se descarta — **DIAGNÓSTICO EQUIVOCADO**
 
-**Severidad alta.** Es el único de la lista que afecta a casi todos los
-usuarios reales de producción, porque casi todos entraron con Google.
+**No implementar lo que decía esta ficha.** El síntoma que se anotó el 20/09 es
+real —la página de cuenta muestra `—` en el campo Nombre— pero la causa que se
+le atribuyó no lo es, y el arreglo que se derivaba de ella no habría cambiado
+nada.
 
-La página de cuenta muestra `—` en el campo Nombre aunque Google sí manda el
-nombre: el panel de WorkOS lo tiene («PAMEM SEX», «Mis Rutas de Viajes», «Nexus
-Lab Agency»).
+Lo que decía: que `syncProfileFromWorkOSUser` recibe `firstName` y `lastName` y
+los tira, porque el `upsert` de `services/profile-service.ts` escribe sólo
+`workos_user_id` y `email`. Eso último es cierto. **Lo que no es cierto es que
+importe para el síntoma**: la página no lee el nombre del perfil de Supabase.
+Lo arma en el momento, de WorkOS:
 
-El dato llega al servicio y se tira ahí:
+```ts
+// app/(en)/dashboard/account/page.tsx:71
+const displayName =
+  [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || "—"
+```
 
-- `app/(en)/dashboard/account/page.tsx:58-63` llama a
-  `syncProfileFromWorkOSUser` **pasándole** `firstName` y `lastName`.
-- `services/profile-service.ts` hace un `upsert` que escribe **sólo**
-  `workos_user_id` y `email`.
+O sea que si WorkOS tuviera el nombre, la página lo mostraría, escriba lo que
+escriba el `upsert`. Que muestre `—` significa que `user.firstName` y
+`user.lastName` vienen **nulos** para esas cuentas. Lo que se vio en el panel de
+WorkOS («PAMEM SEX», «Mis Rutas de Viajes») puede ser el nombre crudo del perfil
+de OAuth, que no es lo mismo que esos dos campos.
 
-Arrastra tres cosas más: el saludo del dashboard, la precarga del formulario de
-contacto (`page.tsx:135` pasa `undefined` cuando el nombre es `—`), y cualquier
-otro lugar que muestre el nombre.
+**Qué falta antes de tocar código:** mirar, para una de esas cuentas, qué trae
+exactamente `withAuth()` en `user.firstName` / `user.lastName`. Si vienen nulos,
+el arreglo está del lado de WorkOS o del mapeo del perfil de Google, no en el
+servicio de Supabase.
 
-**Antes de escribirlo:** decidir qué pasa cuando el usuario ya editó su nombre
-a mano. Un sync que pisa en cada carga le borraría la edición en el próximo
-login; probablemente sólo deba escribir cuando la columna está vacía.
+Lo único que la ficha vieja acertó y conviene no perder: la precarga del
+formulario de contacto (`page.tsx:135` pasa `undefined` cuando el nombre es
+`—`) y el saludo del dashboard arrastran el mismo dato, así que se arreglan
+juntos cuando se arregle la causa de verdad.
+
+**Cómo se coló:** el error fue leer el servicio y no la página. Se afirmó una
+cadena causal que nunca se comprobó de punta a punta. Es el cuarto instrumento
+defectuoso de esta auditoría, y el primero que fue un razonamiento y no un test.
 
 ## H-10 · Un problema de facturación se reporta como request mal formado
+
+**IMPLEMENTADO — PR #246.** `classifyFailure` reconoce ahora el saldo agotado
+(`type === "billing_error"`, o el mensaje que dice «credit balance») y devuelve
+un motivo propio, `unfunded`. Hacia el usuario el copy nuevo es
+*«AI ordering is unavailable right now — that one's on our side, and retrying
+won't change it»*: dice que es nuestro sin contarle nuestra facturación, y le
+ahorra el reintento. **Falta validarlo contra el deploy** — y hoy se puede,
+justamente porque todavía no hay crédito. Queda en `Validar fix` sobre J.4.
 
 **Severidad alta**, y es el hallazgo más instructivo de la ronda: es la razón
 de que H-9 durara semanas sin que nadie lo mirara.
@@ -75,6 +108,15 @@ disponible ahora mismo» alcanza— pero del lado nuestro tiene que gritar.
 heurístico. Eso ya está bien y no hay que tocarlo.
 
 ## H-4 · «Your payment went through» con importe cero
+
+**IMPLEMENTADO — PR #247.** La frase falsa salió. El copy nuevo no afirma
+ningún importe: dice que la cuenta quedó lista y que, si hay cobro, aparece en
+el resumen como StageLink LLC. La variante «importe cero» de verdad no se hizo,
+y el comentario del archivo explica por qué: el importe real no está disponible
+en ese punto —`BillingSnapshot` no lo trae, la URL de éxito es un `?checkout=success`
+pelado, y el precio de lista miente justo en el caso del cupón— así que
+conseguirlo sería trabajo de billing, que esta ronda tiene prohibido tocar.
+**Falta validarlo** con un checkout nuevo: queda en `Validar fix` sobre A1.2.
 
 Tras suscribirse con un cupón del 100%, la app muestra *«You're in — welcome to
 PRO / Your payment went through.»* No pasó ningún pago: fueron $0,00.
@@ -124,6 +166,11 @@ exista el espacio de Discord de EnergyCurve, que hoy no existe.
 
 ## H-8 · El nombre del archivo exportado termina en `.app.csv`
 
+**IMPLEMENTADO — PR #248.** `EXPORT_BADGE` pasó a
+`optimized-with-energycurve-app`, así que el punto de más ya no está, en los
+cinco formatos. **Falta validarlo** exportando de verdad: queda en `Validar fix`
+sobre J.3.
+
 Ejemplo real: `...-with-energycurve.app.csv`. Pedido:
 `...energycurve-app.csv`. Un punto antes de la extensión real invita a que
 algún sistema lea `.app` como la extensión.
@@ -156,7 +203,7 @@ escritos:
 
 | Qué | Dónde se vio |
 |---|---|
-| El botón de login dice **«Login» también en español** — está hardcodeado, no sale del copy | `components/auth/password-auth-page.tsx` |
+| ~~El botón de login dice **«Login» también en español**~~ — **arreglado, PR #249**: sale de `modeCopy.submit[locale]`. Falta validarlo en la pantalla en español | `components/auth/password-auth-page.tsx:202` |
 | Las desconexiones normales del navegador se loguean como `level: "error"` · `request.unhandled` · «The destination stream closed early» | Logs del E2E. En producción, cualquiera que cierre una pestaña mientras carga el dashboard escribe una línea de error |
 | Error de hidratación en `/signup` | Consola del navegador en dev |
 | En dev, Resend rechaza con **403** todo mail que no vaya a `robertinoc@gmail.com` — falta dominio verificado | Log de `email.send_failed` durante A1 |

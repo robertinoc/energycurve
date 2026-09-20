@@ -38,6 +38,8 @@
     --rose-soft: rgba(194, 59, 59, 0.10);
     --slate: #6B7180;
     --slate-soft: rgba(107, 113, 128, 0.10);
+    --teal: #0B6E8A;
+    --teal-soft: rgba(11, 110, 138, 0.11);
     --shadow: 0 1px 2px rgba(16, 18, 27, 0.05);
   }
 
@@ -66,6 +68,8 @@
       --rose-soft: rgba(248, 113, 113, 0.13);
       --slate: #7C8499;
       --slate-soft: rgba(124, 132, 153, 0.13);
+      --teal: #38BDF8;
+      --teal-soft: rgba(56, 189, 248, 0.13);
       --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
   }
@@ -90,6 +94,8 @@
     --rose-soft: rgba(248, 113, 113, 0.13);
     --slate: #7C8499;
     --slate-soft: rgba(124, 132, 153, 0.13);
+    --teal: #38BDF8;
+    --teal-soft: rgba(56, 189, 248, 0.13);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   }
 
@@ -198,6 +204,7 @@
   .n.s-fail { color: var(--rose); }
   .n.s-blocked { color: var(--amber); }
   .n.s-running { color: var(--violet); }
+  .n.s-validar { color: var(--teal); }
   .n.s-pending, .n.s-na { color: var(--text-faint); }
 
   /* ---------- gate notice ---------- */
@@ -290,6 +297,7 @@
   .row[data-status="fail"] { border-left-color: var(--rose); }
   .row[data-status="blocked"] { border-left-color: var(--amber); }
   .row[data-status="running"] { border-left-color: var(--violet); }
+  .row[data-status="validar"] { border-left-color: var(--teal); }
   .row[data-status="na"] { border-left-color: var(--border); }
 
   .row-head {
@@ -345,6 +353,7 @@
   .pill.s-fail { background: var(--rose-soft); color: var(--rose); }
   .pill.s-blocked { background: var(--amber-soft); color: var(--amber); }
   .pill.s-running { background: var(--violet-soft); color: var(--violet); }
+  .pill.s-validar { background: var(--teal-soft); color: var(--teal); }
 
   .row-body {
     padding: 2px 14px 15px 14px;
@@ -422,6 +431,7 @@
   .seg[data-v="fail"][aria-pressed="true"] { background: var(--rose); }
   .seg[data-v="blocked"][aria-pressed="true"] { background: var(--amber); color: #1a1204; }
   .seg[data-v="running"][aria-pressed="true"] { background: var(--violet); }
+  .seg[data-v="validar"][aria-pressed="true"] { background: var(--teal); }
   .seg[data-v="pending"][aria-pressed="true"] { background: var(--slate); }
 
   textarea {
@@ -482,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">110</strong>
+      <strong id="tally-total">115</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -492,6 +502,7 @@
   <div class="gate">
     <span class="tag">Cuello&nbsp;de&nbsp;botella</span>
     <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy avanzó: el 19/09 se confirmó con <code>curl</code> que producción tiene <strong>el lote 4 adentro</strong> — la home sirve <code>alternateName: "EnergyCurve DJ"</code> y el <code>sameAs</code> de Instagram, que agregó ese lote. Se dedujo de lo servido, sin entrar a Vercel; Vercel no expone un build id, así que el commit exacto queda sin confirmar. Así que las sesiones SEO, TOOL, CONT, <strong>SEO2</strong>, <strong>SEO3</strong> y <strong>SEO4</strong> arrancan. La <strong>SEO5</strong> es la excepción parcial: dos de sus siete pruebas miden el lote 5, que está en rama y todavía no se deployó; las otras cinco son lectura y se pueden hacer ya.</p>
+    <p style="margin:9px 0 0"><strong>Lo nuevo del 20/09:</strong> la primera tanda de hallazgos ya está implementada y mergeada — PR #246 (H-10), #247 (H-4), #248 (H-8) y #249 (el botón de login en español). Las pruebas que los destaparon quedaron en <strong>Validar fix</strong>: se probaron, salió un defecto, el defecto se arregló, y la fila no vuelve a ser «Pasa» hasta que alguien la corra otra vez contra el deploy que lleva el arreglo. La cola completa está en <code>docs/qa/output-test-tanda-01.md</code>.</p>
   </div>
 
   <main id="sessions"></main>
@@ -511,7 +522,12 @@
     { v: "running", label: "En curso" },
     { v: "pass", label: "Pasa" },
     { v: "fail", label: "Falla" },
-    { v: "blocked", label: "Bloqueada" }
+    { v: "blocked", label: "Bloqueada" },
+    // Something was tested, a defect came out of it, and the fix shipped. The
+    // row is not a pass again until someone re-runs it against the deploy that
+    // carries the fix — this status is what keeps that re-run from being lost
+    // between "already tested" and "done".
+    { v: "validar", label: "Validar fix" }
   ];
 
   var SESSIONS = [
@@ -548,6 +564,7 @@
       ]
     },
     {
+      code: "N",
       title: "El menú Recursos, después de agruparlo",
       meta: "~10 min · sin cuenta · los dos idiomas",
       why: "El desplegable pasó de cinco items sueltos a un panel de cuatro grupos, y sumó las tres herramientas gratis que no se alcanzaban desde ningún menú. Lo automático cubre accesibilidad e hidratación; acá queda lo que una máquina no juzga: si se lee, si entra en pantalla, y si el copy dice algo.",
@@ -1245,7 +1262,7 @@
   }
 
   function renderTally() {
-    var counts = { pending: 0, running: 0, pass: 0, fail: 0, blocked: 0 };
+    var counts = { pending: 0, running: 0, pass: 0, fail: 0, blocked: 0, validar: 0 };
     allTests().forEach(function (t) {
       var s = statusOf(t.code);
       if (counts[s] === undefined) counts[s] = 0;
