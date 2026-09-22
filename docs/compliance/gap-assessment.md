@@ -141,6 +141,7 @@ solo lado es un reloj que se pasa en silencio.
 | R6 | Probar una restauración de backup | Art. 32 | 1 tarde |
 | R7 | Decidir: borrado self-serve | Art. 17 | decisión + ~1 día de build |
 | R8 | Decidir: link público opt-in | Art. 25 | decisión |
+| R9 | **Decidir: política de cuentas inactivas.** Hueco encontrado el 22/09/2026 cruzando el plan de privacidad de StageLink, que tiene el ítem y el de EnergyCurve no. Hoy una cuenta que nadie tocó en tres años conserva su mail, sus sets, sus locales y sus franjas indefinidamente, y la finalidad que justificaba guardarlos dejó de existir en un punto que nadie definió. Las tres salidas están en `stagelink-crossread-2026-09.md` §H-3; la recomendada es avisar a los 24 meses y borrar a los 30 días, que ahora **reusa el borrado con gracia** en vez de necesitar maquinaria nueva | 5(1)(e) | decisión + ~2 h |
 
 ### Estado real de las migraciones, medido y no asumido
 

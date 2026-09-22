@@ -46,6 +46,7 @@ un data room castiga más a un documento que promete de más que a uno que falta
 | `compliance/dsar-procedure.md` | Plazos y verificación de identidad | — |
 | `compliance/governance.md` | Arts. 35 y 37, razonados | — |
 | `compliance/gap-assessment.md` | Matriz de cumplimiento y plan | No es una opinión legal |
+| `compliance/stagelink-crossread-2026-09.md` | Los 70 ítems del plan de privacidad de StageLink, uno por uno, contra el estado de EnergyCurve | **Compara contra su plan, no contra su código**: un ítem ✅ allá puede estar en cualquier estado |
 | `compliance/security-measures.md` | Art. 32, con test de existencia de la evidencia | **La restauración de backups nunca se ejecutó** · *llega con el PR #212* |
 
 ## 4. Técnico

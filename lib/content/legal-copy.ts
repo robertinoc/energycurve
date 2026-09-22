@@ -129,6 +129,12 @@ const en: Record<LegalDocId, LegalDoc> = {
         ],
       },
       {
+        heading: "Children",
+        body: [
+          "EnergyCurve is for people aged 18 or over, and we do not knowingly collect data from anyone younger. We do not ask for a date of birth, because collecting one from everybody to screen a case we have no reason to expect would mean holding a new piece of personal data about every user. If you believe a minor has an account here, write to us and we will delete it and the data with it.",
+        ],
+      },
+      {
         heading: "Contact",
         body: [`Questions about privacy? Reach us at ${CONTACT_EMAIL}.`],
       },
@@ -157,6 +163,7 @@ const en: Record<LegalDocId, LegalDoc> = {
         heading: "Your account",
         body: [
           "You're responsible for keeping your login secure and for activity under your account. Give accurate information when you sign up.",
+          "EnergyCurve is for people aged 18 or over. It is a professional tool, a subscription is a contract, and we do not knowingly create accounts for anyone younger. If you believe a minor has an account here, write to us and we will delete it.",
         ],
       },
       {
@@ -347,6 +354,12 @@ const es: Record<LegalDocId, LegalDoc> = {
         ],
       },
       {
+        heading: "Menores",
+        body: [
+          "EnergyCurve es para personas de 18 años o más, y no recopilamos datos a sabiendas de nadie menor. No pedimos fecha de nacimiento, porque pedírsela a todo el mundo para filtrar un caso que no tenemos motivo para esperar significaría guardar un dato personal nuevo de cada usuario. Si creés que un menor tiene una cuenta acá, escribinos y la borramos junto con sus datos.",
+        ],
+      },
+      {
         heading: "Contacto",
         body: [`¿Dudas sobre privacidad? Escribinos a ${CONTACT_EMAIL}.`],
       },
@@ -375,6 +388,7 @@ const es: Record<LegalDocId, LegalDoc> = {
         heading: "Tu cuenta",
         body: [
           "Sos responsable de mantener tu acceso seguro y de la actividad en tu cuenta. Ingresá información veraz al registrarte.",
+          "EnergyCurve es para personas de 18 años o más. Es una herramienta profesional, una suscripción es un contrato, y no creamos cuentas a sabiendas para nadie menor. Si creés que un menor tiene una cuenta acá, escribinos y la borramos.",
         ],
       },
       {
