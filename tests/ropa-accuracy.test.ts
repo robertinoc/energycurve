@@ -25,8 +25,21 @@ const ROPA = readFileSync(
 
 const MIGRATIONS = join(process.cwd(), "supabase/migrations")
 
-/** Tables whose rows belong to an identifiable person. */
-const PERSONAL_TABLES = ["profiles", "playlists", "tracks"] as const
+/**
+ * Tables whose rows belong to an identifiable person.
+ *
+ * `privacy_requests` joined the list with migration 0030 rather than being left
+ * out of it, and it is the one that most needed to be here: `details` is free
+ * text written by somebody asking about their own data, which makes it the least
+ * predictable personal data in the schema. A column added to this table without
+ * a line in the RoPA is exactly the drift this test exists for.
+ */
+const PERSONAL_TABLES = [
+  "profiles",
+  "playlists",
+  "tracks",
+  "privacy_requests",
+] as const
 
 /**
  * Columns that exist on those tables but hold no personal data — structural
@@ -43,9 +56,20 @@ const NOT_PERSONAL_DATA = new Set([
   "id",
   "user_id",
   "playlist_id",
+  "profile_id",
   "position",
   "created_at",
   "updated_at",
+  // `privacy_requests` bookkeeping. `kind`, `status`, `due_at` and
+  // `resolved_at` describe the REQUEST rather than the person, and
+  // `resolution_note` is written by us. `details` and `requester_email` are
+  // deliberately NOT here — they are the personal half, and they are what the
+  // retention sweep clears.
+  "kind",
+  "status",
+  "due_at",
+  "resolved_at",
+  "resolution_note",
   "custom_context_id",
   "custom_genre_id",
   "target_template_id",

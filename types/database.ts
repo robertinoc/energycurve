@@ -130,6 +130,58 @@ export interface Database {
         }
         Relationships: []
       }
+      // Migration 0030. The queue for the rights that are not a button.
+      //
+      // `profile_id` IS a foreign key here, with a cascade — the opposite of
+      // `admin_audit_log` above, and for the opposite reason: that table records
+      // something done *to* a person and must outlive them, this one serves a
+      // person and is moot once they are gone.
+      privacy_requests: {
+        Row: {
+          id: string
+          profile_id: string
+          kind: string
+          details: string | null
+          requester_email: string | null
+          status: string
+          due_at: string
+          resolved_at: string | null
+          resolution_note: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          kind: string
+          details?: string | null
+          requester_email?: string | null
+          status?: string
+          due_at: string
+          resolved_at?: string | null
+          resolution_note?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          kind?: string
+          details?: string | null
+          requester_email?: string | null
+          status?: string
+          due_at?: string
+          resolved_at?: string | null
+          resolution_note?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "privacy_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_events: {
         Row: {
           id: string

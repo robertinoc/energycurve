@@ -43,18 +43,18 @@ Estado: ✅ cumple · ⚠️ parcial · ❌ brecha · ⬜ depende de una acción
 | 5(1)(b) | Limitación de finalidad | ✅ | Finalidad por tratamiento en el RoPA |
 | 5(1)(c) | Minimización | ⚠️ | Dos hallazgos: blobs de `analyses` (resuelto), `plan_cancellation_feedback` (decisión pendiente) |
 | 5(1)(d) | Exactitud | ❌ | **No hay rectificación self-serve.** Ni nombre ni mail se pueden editar |
-| 5(1)(e) | Limitación de conservación | ⬜ | **Cuatro** ventanas implementadas y **ninguna corre**: falta `CRON_SECRET`. La cuarta (`rate_limit_buckets`, 1 día, migración 0029) es housekeeping y no lleva obligación detrás — las otras tres sí |
+| 5(1)(e) | Limitación de conservación | ⬜ | **Cinco** ventanas implementadas y **ninguna corre**: falta `CRON_SECRET`. Una (`rate_limit_buckets`, 1 día, migración 0029) es housekeeping y no lleva obligación detrás — las otras cuatro sí. La quinta es `privacy_requests.details` (365 días **desde la resolución**, migración 0030) |
 | 5(1)(f) | Integridad y confidencialidad | ✅ | Art. 32, abajo |
 | 5(2) | Responsabilidad proactiva | ✅ | Este dossier, y con tests que lo verifican |
 | 6 | Base legal | ✅ | Declarada al usuario, por tratamiento: contrato, obligación legal, interés legítimo y consentimiento |
 | 7 | Consentimiento | ✅ | Opt-in, revocable con un clic, DNT respetado. PR #182 |
 | 12–14 | Información al titular | ✅ | Base legal, plazos y derecho a reclamar, en los dos idiomas |
 | 15 | Acceso | ✅ | `/api/account/export` |
-| 16 | Rectificación | ⚠️ | Nombre self-serve en `/dashboard/account`. El email sigue por mail: cambia la identidad de login y descarta los sets compartidos |
+| 16 | Rectificación | ⚠️ | Nombre self-serve en `/dashboard/account`. El email va por **pedido registrado con plazo** (`privacy_requests`, migración 0030) en vez de por mail suelto: cambia la identidad de login y descarta los sets compartidos por dirección, así que no es un botón de guardar. Sigue en ⚠️ y no en ✅ **a propósito**: hay canal y plazo, no ejecución automática |
 | 17 | Supresión | ❌ | **Solo como acción de admin.** Un usuario tiene que mandar un mail |
-| 18 | Limitación | ❌ | No implementado |
+| 18 | Limitación | ⚠️ | Canal ejercible con plazo registrado y visible para las dos partes (`/dashboard/account` → cola en el panel). No hay ejecución automática, y para este producto eso es correcto: limitar el tratamiento es una decisión sobre **qué** parar, no una operación mecánica |
 | 20 | Portabilidad | ✅ | JSON estructurado, legible por máquina |
-| 21 | Oposición | ⚠️ | Cubierto para analytics, y ahora la revocación **llega al tercero** (`opt_out_capturing` + `reset`), no solo a nuestros call sites. Sin mecanismo general |
+| 21 | Oposición | ⚠️ | Cubierto para analytics con un clic, y la revocación **llega al tercero** (`opt_out_capturing` + `reset`), no solo a nuestros call sites. Para todo lo demás hay ahora un canal registrado con plazo. Sigue en ⚠️: un pedido con fecha límite no es lo mismo que un interruptor |
 | 24/25 | Responsabilidad y privacidad desde el diseño | ⚠️ | `privacy-by-design.md`; el link público sigue activo por defecto |
 | 28 | Encargados | ⬜ | Inventario y página publicados; **DPAs sin firmar** |
 | 30 | Registro de actividades | ✅ | `ropa.md`, verificado por test |
@@ -93,6 +93,28 @@ El orden de arreglo importa y no es el que sugiere la numeración:
    Suspender el tratamiento sin borrar se puede resolver con la suspensión que
    ya existe, pero hoy es una acción de admin, no un derecho ejercible.
 
+**Cerrado el 22/09/2026 para los puntos 1 (la mitad del email), 2 y 4**, y de
+una forma que conviene justificar porque no es la que la lista suponía: no se
+hicieron self-serve. Los tres pasaron a ser un **pedido registrado con plazo**
+(`privacy_requests`, migración 0030) que se ve en `/dashboard/account` con su
+fecha y en el panel ordenado por lo que vence antes.
+
+La razón es que ninguno de los tres es mecánico. Limitar el tratamiento es una
+decisión sobre qué parar; oponerse es una ponderación; y cambiar el email mueve
+la identidad de login **y** descarta los sets compartidos con vos, porque
+`set_collaborators` está keyeado por dirección — y si esos sets tienen que
+seguir a la persona o quedarse con la dirección vieja es una pregunta de
+producto con dos respuestas defendibles. Contestarla dentro de un botón de
+guardar la contestaría para todos, en silencio, en el primer uso.
+
+Lo que les faltaba no era un interruptor: era **un registro y un plazo**. El
+procedimiento de DSAR ya había establecido que "mandá un mail" es válido bajo el
+Art. 12 con una condición —que alguien conteste dentro del mes— y había dicho la
+parte incómoda: el reloj arranca cuando llega el mail, no cuando se lee. Lo que
+cambia ahora es que **incumplirlo es visible mientras todavía hay tiempo**, y
+que la fecha la ve también la persona que hizo el pedido. Un reloj que ve un
+solo lado es un reloj que se pasa en silencio.
+
 ---
 
 ## 4. Plan de remediación
@@ -101,7 +123,8 @@ El orden de arreglo importa y no es el que sugiere la numeración:
 
 | # | Qué | Cierra |
 |---|---|---|
-| A1 | Rectificación de nombre y mail en `/dashboard/account` | Art. 16 |
+| A1 | Rectificación de nombre en `/dashboard/account` | Art. 16 (la mitad) |
+| A5 | Canal registrado con plazo para email, oposición y limitación | Arts. 16, 18, 21 |
 | A2 | Procedimiento de DSAR: verificación de identidad y plazos | Arts. 12, 15–22 |
 | A3 | Base legal y plazos de retención en la política, y sacar el "placeholder" | Arts. 5(1)(a), 6, 13 |
 | A4 | Derecho a reclamar ante una autoridad de control, en la política | Art. 77 |
@@ -110,8 +133,8 @@ El orden de arreglo importa y no es el que sugiere la numeración:
 
 | # | Qué | Cierra | Costo |
 |---|---|---|---|
-| R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **cuatro ventanas escritas y ninguna corriendo** | 2 min |
-| R2 | **0027 y 0028 SIN aplicar en dev** (verificado 12/09/2026) · 0029 sí | auditoría y retención de análisis | 5 min |
+| R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **cinco ventanas escritas y ninguna corriendo** | 2 min |
+| R2 | **0027, 0028 y 0029 aplicadas** (verificado 22/09/2026 consultando el esquema) · **falta la 0030** | la cola de derechos | 5 min |
 | R3 | Confirmar región de Supabase | 5(1)(a) — hoy la política puede estar diciendo algo falso | 2 min |
 | R4 | Aceptar los DPAs | Art. 28 | 1 hora |
 | R5 | Acceso de emergencia delegado | Art. 32 — bus factor 1 | 1 tarde |
@@ -152,16 +175,24 @@ curl -s -o /dev/null -w "%{http_code}\n" \
 `GET /rest/v1/` deja de incluir `curve`.
 
 **R1 es el de mejor relación de todos los proyectos**: dos minutos de trabajo
-que convierten cuatro políticas de retención escritas en cuatro que
-efectivamente corren.
+que convierten cinco políticas de retención escritas en cinco que efectivamente
+corren.
 
-Las cuatro ventanas, y cómo llegaron a ser cuatro: `billing_events.payload`
-(90 días), `admin_audit_log.target_email` (365), los blobs de `analyses` (365) y
+Las cinco ventanas: `billing_events.payload` (90 días),
+`admin_audit_log.target_email` (365), los blobs de `analyses` (365),
 `rate_limit_buckets` (1 día, agregada con el limitador distribuido en el PR
-#206). Las tres primeras tienen una obligación detrás; la cuarta es
-housekeeping. La cuarta apareció acá porque `tests/compliance-claims.test.ts` se
-puso en rojo cuando llegó — que es exactamente para lo que está ese test: la
-matriz decía "tres" y el código ya decía cuatro.
+#206) y `privacy_requests.details` + `requester_email` (365 días, migración
+0030). Cuatro tienen una obligación detrás; la de los buckets es housekeeping.
+
+La quinta tiene una particularidad que vale escribir: **su ventana arranca en la
+resolución, no en la llegada.** Un pedido todavía abierto a los 400 días es un
+incumplimiento, y borrar lo que la persona escribió destruiría el registro de
+qué pidió mientras el incumplimiento sigue vivo.
+
+Las dos últimas aparecieron acá porque `tests/compliance-claims.test.ts` se puso
+en rojo cuando llegaron — que es exactamente para lo que está ese test: la
+matriz decía "tres" y el código ya decía cuatro, y después decía "cuatro" y el
+código decía cinco.
 
 ---
 

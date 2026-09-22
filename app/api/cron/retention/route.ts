@@ -5,6 +5,7 @@ import {
   sweepAnalysisBlobs,
   sweepAuditLogEmails,
   sweepBillingPayloads,
+  sweepPrivacyRequestDetails,
   sweepRateLimitBuckets,
 } from "@/services/retention-service"
 
@@ -82,12 +83,24 @@ export async function GET(request: Request) {
       logError("retention.rate_limit_sweep_failed", error)
     }
 
+    // Same isolation once more, for migration 0030. This one clears what a
+    // person wrote in a rights request once it has been settled for a year —
+    // an obligation, so it must not be the sweep that masks another one.
+    let privacyRequestDetailsCleared: number | null = null
+
+    try {
+      privacyRequestDetailsCleared = await sweepPrivacyRequestDetails()
+    } catch (error) {
+      logError("retention.privacy_request_sweep_failed", error)
+    }
+
     return NextResponse.json({
       ok: true,
       ...result,
       auditEmailsCleared,
       analysisBlobsCleared,
       rateLimitBucketsCleared,
+      privacyRequestDetailsCleared,
     })
   } catch (error) {
     logError("retention.sweep_failed", error)

@@ -15,14 +15,40 @@ Ninguna de esas dos condiciones estaba asegurada, y ninguna es código.
 |---|---|---|---|
 | Acceso y portabilidad | 15, 20 | **Self-serve**: `/dashboard/account` → "Download my data" | inmediato |
 | Rectificación del nombre | 16 | **Self-serve**: `/dashboard/account` | inmediato |
-| Rectificación del email | 16 | Por mail. Cambia el usuario de login y las asociaciones de sets compartidos | 30 días |
+| Rectificación del email | 16 | **Pedido registrado**: `/dashboard/account`. Cambia el usuario de login y las asociaciones de sets compartidos | 30 días |
 | Supresión | 17 | Por mail → acción de admin en `/backstage` | 30 días |
-| Limitación | 18 | Por mail → suspensión de la cuenta | 30 días |
+| Limitación | 18 | **Pedido registrado**: `/dashboard/account` | 30 días |
 | Oposición a analytics | 21 | **Self-serve**: banner y `/cookie-policy` | inmediato |
-| Oposición (general) | 21 | Por mail | 30 días |
+| Oposición (general) | 21 | **Pedido registrado**: `/dashboard/account` | 30 días |
 
 Los tres self-serve son los únicos que no dependen de que una persona esté
 disponible. Para los otros cuatro, el plazo corre igual.
+
+### Lo que cambió el 22/09/2026, y lo que no
+
+Tres de los que decían "por mail" ahora son un **pedido registrado**
+(`privacy_requests`, migración 0030): entra desde la cuenta, queda con su plazo
+guardado en la fila, se ve en `/dashboard/account` con la fecha, y aparece en el
+panel ordenado por lo que vence antes.
+
+**Lo que no cambió: sigue contestando una persona, y el plazo es el mismo.**
+Nada se ejecuta solo. Esto no es automatización de derechos — es el registro que
+les faltaba, y existe por una frase de la §2 de este mismo documento: el reloj
+arranca cuando llega el pedido, no cuando se lee. Con un operador, eso convierte
+una casilla de mail en una superficie de cumplimiento, y una casilla de mail no
+ordena por vencimiento ni dice qué está vencido.
+
+Dos consecuencias que valen más que la tabla:
+
+- **La fecha la ve también quien pidió.** Un reloj que ve un solo lado es un
+  reloj que se pasa en silencio, y es la mitad del problema que "mandá un mail"
+  nunca resolvió.
+- **La verificación de identidad sale gratis y hay que no arruinarla.** El
+  pedido llega desde una sesión autenticada, o sea desde la cuenta. Por la regla
+  de la §3, eso ya está verificado: pedir un documento para confirmar lo que el
+  propio canal confirma es recolectar datos nuevos para proteger datos viejos.
+  El mail de aviso lo dice explícitamente, porque es la instrucción que más
+  fácil se olvida a las nueve de la mañana.
 
 ---
 
@@ -101,14 +127,24 @@ en toda la aplicación, no solo de ver el dashboard.
 
 ## 5. Qué registrar
 
-En `docs/security/incidents/` — misma carpeta que los incidentes, porque un
-DSAR mal manejado deriva en uno.
+**Los pedidos que entran por `/dashboard/account` se registran solos** en
+`privacy_requests`, con fecha de recepción, derecho ejercido, plazo, estado y —
+al cerrarlos— fecha y nota de resolución. Cerrarlo desde el panel además escribe
+una fila en `admin_audit_log`. No hay nada que anotar a mano.
 
-Por cada pedido: fecha de recepción, derecho ejercido, cómo se verificó la
-identidad, qué se hizo, fecha de respuesta. **Sin copiar el contenido del
-pedido ni datos del titular**: el registro existe para demostrar cumplimiento
-(Art. 5(2)), y un registro de DSAR que acumula datos personales se convierte en
-el tratamiento que hay que justificar.
+**Los que llegan por mail siguen siendo a mano**, en `docs/security/incidents/`
+— misma carpeta que los incidentes, porque un DSAR mal manejado deriva en uno.
+Por cada uno: fecha de recepción, derecho ejercido, cómo se verificó la
+identidad, qué se hizo, fecha de respuesta.
+
+En los dos casos vale la misma regla, y la tabla la respeta de una forma que
+conviene explicar porque a primera vista parece contradecirla: **el registro no
+acumula datos personales indefinidamente.** `privacy_requests` sí guarda lo que
+la persona escribió, porque sin eso no se puede atender el pedido — pero
+`sweepPrivacyRequestDetails` lo borra a los 365 días **de la resolución**, y lo
+que queda es el derecho ejercido, las fechas y el resultado. Eso es lo que
+demuestra cumplimiento (Art. 5(2)) sin convertir el registro en el tratamiento
+que hay que justificar.
 
 ---
 
@@ -116,7 +152,8 @@ el tratamiento que hay que justificar.
 
 | Qué | Por qué importa | De quién |
 |---|---|---|
-| Segundo contacto en `hello@energycurve.app` | El plazo corre aunque no haya nadie | Robertino |
+| Segundo contacto en `hello@energycurve.app` | El plazo corre aunque no haya nadie. **La cola nueva lo hace visible, no lo resuelve**: un vencimiento en rojo en un panel que nadie abre es lo mismo que un mail sin leer | Robertino |
+| Aplicar la migración `0030` | Hasta que corra, el formulario de la página de cuenta falla al guardar y muestra el mensaje que apunta a `hello@` — que es el fallo correcto, y también significa que la cola está vacía por el motivo equivocado | Robertino |
 | Borrado self-serve | Hoy la supresión depende de una persona disponible | decisión de producto |
 | Borrado de la persona en PostHog al borrar la cuenta | Queda fuera de `deleteUserEverywhere` | pendiente |
 | Validación end-to-end del borrado | Nunca se corrió contra una cuenta real | bloqueado en las cuentas de prueba |
