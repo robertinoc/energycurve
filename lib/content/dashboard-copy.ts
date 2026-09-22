@@ -1102,6 +1102,81 @@ export const DASHBOARD_COPY = {
       en: "Your audio files are not in it because they never leave your device — only what your tags say about them does.",
       es: "Tus archivos de audio no están porque nunca salen de tu dispositivo — solo viaja lo que dicen sus tags.",
     },
+
+    // The rights that are not a button (Arts. 16 for the email, 18 and 21).
+    // Worded to send people away from the form when what they want is one
+    // click: filing a request to turn off analytics and then waiting a month
+    // for it would be a worse outcome than not offering the form at all.
+    rightsHeading: { en: "Other requests about your data", es: "Otros pedidos sobre tus datos" },
+    rightsBody: {
+      en: "Some things aren't a switch. Ask here and it goes on the record with a deadline — we answer within 30 days, and you'll see the request and its due date on this page until we do.",
+      es: "Hay cosas que no son un interruptor. Pedilas acá y quedan registradas con un plazo — contestamos dentro de 30 días, y vas a ver el pedido y su fecha límite en esta página hasta que lo hagamos.",
+    },
+    rightsAlreadySelfServe: {
+      en: "Two of these you can do yourself, right now, and neither needs a request: change your name in the field above, and turn analytics off on the Cookie Policy page. Both take effect immediately.",
+      es: "Dos de estas cosas las podés hacer vos, ahora, y ninguna necesita un pedido: cambiar tu nombre en el campo de arriba, y apagar la analítica en la página de Política de Cookies. Las dos tienen efecto inmediato.",
+    },
+    rightsKindLabel: { en: "What do you need?", es: "¿Qué necesitás?" },
+    rightsKindRectifyEmail: {
+      en: "Change the email on my account",
+      es: "Cambiar el email de mi cuenta",
+    },
+    rightsKindObject: {
+      en: "Object to a use of my data",
+      es: "Oponerme a un uso de mis datos",
+    },
+    rightsKindRestrict: {
+      en: "Restrict how my data is used",
+      es: "Limitar el uso de mis datos",
+    },
+    rightsKindOther: { en: "Something else", es: "Otra cosa" },
+    // Each option says what it actually means here, because "restriction of
+    // processing" is a phrase from a regulation and not from anyone's life.
+    rightsKindHintRectifyEmail: {
+      en: "Your email is also your login, and sets shared with you are matched by address — so changing it is a couple of steps on our side rather than a save button. Tell us the new address and we'll confirm before switching anything.",
+      es: "Tu email también es tu usuario, y los sets compartidos con vos se asocian por dirección — así que cambiarlo son un par de pasos de nuestro lado y no un botón de guardar. Decinos la dirección nueva y te confirmamos antes de cambiar nada.",
+    },
+    rightsKindHintObject: {
+      en: "For a use you don't agree with. Analytics is already a switch on the Cookie Policy page; this is for anything else.",
+      es: "Para un uso con el que no estás de acuerdo. La analítica ya es un interruptor en la página de Política de Cookies; esto es para cualquier otra cosa.",
+    },
+    rightsKindHintRestrict: {
+      en: "We keep your data but stop using it while something is being sorted out — for example if you think something we hold about you is wrong and we're checking.",
+      es: "Guardamos tus datos pero dejamos de usarlos mientras se resuelve algo — por ejemplo si creés que algo que tenemos sobre vos está mal y lo estamos verificando.",
+    },
+    rightsDetailsLabel: { en: "Anything we should know", es: "Algo que tengamos que saber" },
+    rightsDetailsHint: {
+      en: "Optional, and short is fine. You don't need to explain yourself or cite anything.",
+      es: "Opcional, y breve está bien. No hace falta que te justifiques ni que cites nada.",
+    },
+    rightsSubmit: { en: "File the request", es: "Registrar el pedido" },
+    rightsSubmitting: { en: "Filing…", es: "Registrando…" },
+    rightsFiled: {
+      en: "Filed. We'll answer at your account address within 30 days.",
+      es: "Registrado. Te contestamos a la dirección de tu cuenta dentro de 30 días.",
+    },
+    rightsInvalid: {
+      en: "Pick what you need, and keep any note under 2,000 characters.",
+      es: "Elegí qué necesitás, y dejá la nota en menos de 2.000 caracteres.",
+    },
+    rightsFailed: {
+      en: "We couldn't file that. Try again in a moment, or write to us — either way the deadline is the same.",
+      es: "No pudimos registrarlo. Probá de nuevo en un momento, o escribinos — de cualquier forma el plazo es el mismo.",
+    },
+    rightsTooMany: {
+      en: "You already have open requests waiting on us. We'll answer those first — reply to our email if there's more to add.",
+      es: "Ya tenés pedidos abiertos esperando respuesta nuestra. Vamos a contestar esos primero — si hay algo más que agregar, respondé nuestro mail.",
+    },
+    rightsOpenHeading: { en: "Waiting on us", es: "Esperando respuesta nuestra" },
+    // The deadline is shown to the person who filed the request, not just kept
+    // on our side. A clock only we can see is a clock we can quietly miss.
+    rightsDueOn: { en: "Answer due {date}", es: "Respuesta antes del {date}" },
+    rightsResolvedOn: { en: "Answered {date}", es: "Contestado el {date}" },
+    rightsRefusedOn: { en: "Declined {date}", es: "Rechazado el {date}" },
+    rightsFallback: {
+      en: "You can also write to hello@energycurve.app. The 30-day deadline is the same either way — filing it here just means neither of us has to remember.",
+      es: "También podés escribir a hello@energycurve.app. El plazo de 30 días es el mismo de las dos formas — registrarlo acá sólo significa que ninguno de los dos tiene que acordarse.",
+    },
   },
 
   deleteButton: {

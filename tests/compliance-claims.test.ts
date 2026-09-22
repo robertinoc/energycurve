@@ -50,9 +50,37 @@ describe("Art. 16 — rectification", () => {
 
     // The half that is still open, and pinned so it cannot close silently:
     // changing the email moves the login identity and drops every set shared
-    // with you, because `set_collaborators` is keyed by address. If an email
-    // field ever appears here, the matrix has to say so in the same change.
+    // with you, because `set_collaborators` is keyed by address. If a field
+    // that takes a new address ever appears here, the matrix has to say so in
+    // the same change.
     expect(action).not.toMatch(/updateEmail|newEmail/)
+  })
+})
+
+describe("Arts. 16, 18 and 21 — the rights that are a request, not a switch", () => {
+  it("has a channel that records the request and its deadline", () => {
+    // Added 22/09/2026. Three rows moved at once, and none of them to ✅ — the
+    // distinction the matrix has to keep is between a right you can exercise
+    // and one that is merely reachable. A request with a date on it is the
+    // second, and calling it the first is the overclaim this test prevents.
+    const action = source("app/(en)/dashboard/account/actions.ts")
+    const service = source("services/privacy-request-service.ts")
+
+    expect(action).toMatch(/filePrivacyRequestAction/)
+    expect(service).toMatch(/createPrivacyRequest/)
+
+    // Thirty calendar days, Art. 12(3), stored on the row rather than derived —
+    // so a change to the window cannot retroactively shorten a promise already
+    // made to somebody waiting.
+    expect(service).toMatch(/PRIVACY_REQUEST_DEADLINE_DAYS = 30/)
+  })
+
+  it("does not claim more than a channel", () => {
+    // Fails when a row goes green. The reminder is the point: if any of these
+    // three ever becomes self-serve, the row moves in the same change that made
+    // it so, and this assertion is what stops the matrix from lagging.
+    expect(MATRIX).toMatch(/\| 18 \| Limitación \| ⚠️/)
+    expect(MATRIX).toMatch(/\| 21 \| Oposición \| ⚠️/)
   })
 })
 
@@ -136,17 +164,18 @@ describe("Art. 5(1)(e) — retention is written and not running", () => {
     const retention = source("services/retention-service.ts")
 
     // One constant per window. A sweep landing without a line in the matrix is
-    // exactly the drift this file exists to catch — and it already caught one:
+    // exactly the drift this file exists to catch — and it has now caught two:
     // the shared rate limiter (PR #206, migration 0029) brought a fourth while
-    // the matrix still said three. A fifth has to update both places again.
+    // the matrix still said three, and the rights queue (migration 0030)
+    // brought a fifth while it still said four. A sixth has to move both again.
     //
     // The match is loose on purpose: "cuatro ventanas" and "cuatro (4) ventanas"
     // are the same claim, and a checker that fails on the phrasing of a sentence
     // it agrees with gets deleted.
     const windows = [...retention.matchAll(/export const (\w+_RETENTION_DAYS)/g)]
 
-    expect(windows).toHaveLength(4)
-    expect(MATRIX).toMatch(/cuatro.{0,20}ventanas/i)
+    expect(windows).toHaveLength(5)
+    expect(MATRIX).toMatch(/cinco.{0,20}ventanas/i)
   })
 
   it("still depends on a secret that is checked before anything is deleted", () => {

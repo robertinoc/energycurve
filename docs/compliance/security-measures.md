@@ -155,12 +155,15 @@ lo que un data room pregunta —"¿cómo cumplen X?"— sin releer el dossier en
 |---|---|
 | **Art. 5(1)(f)** Integridad y confidencialidad | Todo §2 |
 | **Art. 5(1)(c)** Minimización | Sin IP en analytics; sin autocapture; blobs de análisis con ventana; `plan_cancellation_feedback` reportado |
-| **Art. 5(1)(e)** Limitación de conservación | Las cuatro ventanas de `retention-service.ts` ⬜ ninguna corre |
+| **Art. 5(1)(e)** Limitación de conservación | Las cinco ventanas de `retention-service.ts` ⬜ ninguna corre |
 | **Art. 5(2)** Responsabilidad proactiva | Este dossier, más los tests que verifican sus afirmaciones |
 | **Art. 7(3)** Retiro del consentimiento | `analytics-runtime.ts`: el retiro llega al tercero, no solo a nuestros call sites |
 | **Art. 15/20** Acceso y portabilidad | `services/data-export-service.ts` |
-| **Art. 16** Rectificación | `app/(en)/dashboard/account/actions.ts` (nombre) |
+| **Art. 16** Rectificación | `app/(en)/dashboard/account/actions.ts` (nombre, self-serve) + `services/privacy-request-service.ts` (email, pedido con plazo) |
 | **Art. 17** Supresión | `deleteUserEverywhere` ⚠️ solo como acción de admin |
+| **Art. 18** Limitación | `services/privacy-request-service.ts` ⚠️ canal con plazo registrado, sin ejecución automática |
+| **Art. 21** Oposición | Banner de consentimiento (analytics, un clic) + `services/privacy-request-service.ts` para el resto |
+| **Art. 12(3)** Plazo de respuesta | `PRIVACY_REQUEST_DEADLINE_DAYS`, almacenado en la fila y visible para las dos partes |
 | **Art. 25** Privacidad desde el diseño | `privacy-by-design.md` §5 ⚠️ el link público sigue activo por defecto |
 | **Art. 28** Encargados | `/subprocessors` + test ⬜ DPAs sin firmar |
 | **Art. 30** Registro de tratamientos | `ropa.md` + `tests/ropa-accuracy.test.ts` |

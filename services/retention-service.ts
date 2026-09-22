@@ -235,3 +235,62 @@ export async function sweepRateLimitBuckets(
 
   return cleared
 }
+
+/**
+ * How long a resolved rights request keeps what the person wrote.
+ *
+ * A year past resolution, and the two halves of the row are kept for opposite
+ * reasons — which is why this is a null and not a delete.
+ *
+ * What stays forever: the kind, the dates, the outcome and the resolution note.
+ * That is the proof the obligation was met, and it is the thing an authority
+ * asks for. Deleting the row would delete the evidence that the request was
+ * answered on time, which is worse for everyone including the person who filed
+ * it.
+ *
+ * What goes: `details` and `requester_email`. The first is free text written by
+ * somebody asking about their own data, so it is the least predictable personal
+ * data in the schema — a rights request tends to name venues, sets and reasons.
+ * The second is an address, and holding the address of a request that was
+ * settled a year ago serves nothing.
+ *
+ * The window starts at **resolution**, not at arrival, and that is the part
+ * worth stating: a request still open at 400 days is a compliance failure, and
+ * scrubbing its contents would destroy the record of what was asked while the
+ * failure is still live.
+ */
+export const PRIVACY_REQUEST_DETAIL_RETENTION_DAYS = 365
+
+/**
+ * Clears the personal part of rights requests resolved past the window.
+ *
+ * Returns how many rows were scrubbed.
+ */
+export async function sweepPrivacyRequestDetails(
+  { retentionDays = PRIVACY_REQUEST_DETAIL_RETENTION_DAYS } = {}
+): Promise<number> {
+  const supabase = getSupabaseAdminClient()
+
+  const { data, error } = await supabase
+    .from("privacy_requests")
+    .update({ details: null, requester_email: null })
+    .lt("resolved_at", cutoffIso(retentionDays))
+    // Only resolved rows, and only ones that still hold something. Without the
+    // second filter the sweep rewrites every already-scrubbed row on every run
+    // and reports them as newly cleared, which is the bug the analyses sweep
+    // documents above.
+    .not("resolved_at", "is", null)
+    .not("details", "is", null)
+    .select("id")
+
+  if (error) {
+    logWarn("retention.privacy_request_sweep_failed", { message: error.message })
+    throw new Error("Unable to clear aged privacy request details.")
+  }
+
+  const cleared = data?.length ?? 0
+
+  logInfo("retention.privacy_request_details_swept", { cleared, retentionDays })
+
+  return cleared
+}

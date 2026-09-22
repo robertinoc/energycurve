@@ -1,18 +1,25 @@
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
-import { Download, MessageSquare } from "lucide-react"
+import { Download, MessageSquare, ScrollText } from "lucide-react"
 
 import { NameForm } from "@/components/dashboard/name-form"
 import { PlanCard } from "@/components/dashboard/plan-card"
+import { PrivacyRequestForm } from "@/components/dashboard/privacy-request-form"
 import { LandingContactForm } from "@/components/marketing/landing-contact-form"
 import { buildReturnToHref } from "@/lib/auth/return-to"
 import { isBillingConfigured } from "@/lib/billing/config"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { getSiteCopy, type SiteLocale } from "@/lib/content/site-copy"
 import { KEY_NOTATIONS, type KeyNotation } from "@/lib/music/camelot"
+import { formatPlanDate } from "@/lib/product/plan-summary"
 import { getRequestLocale } from "@/lib/server-locale"
 import { getProfileBilling } from "@/services/billing-service"
+import {
+  listPrivacyRequestsForProfile,
+  type PrivacyRequest,
+  type PrivacyRequestKind,
+} from "@/services/privacy-request-service"
 import {
   getProfileKeyNotation,
   syncProfileFromWorkOSUser,
@@ -63,9 +70,10 @@ export default async function AccountPage() {
   })
 
   const locale = await getRequestLocale()
-  const [billing, keyNotation] = await Promise.all([
+  const [billing, keyNotation, privacyRequests] = await Promise.all([
     getProfileBilling(profile.id),
     getProfileKeyNotation(profile.id),
+    listPrivacyRequestsForProfile(profile.id),
   ])
 
   const displayName =
@@ -167,7 +175,100 @@ export default async function AccountPage() {
           {COPY.dataDownload[locale]}
         </a>
       </section>
+
+      {/*
+        The rights that are not a switch: the email (Art. 16), objection
+        (Art. 21) and restriction (Art. 18).
+
+        Here rather than in the privacy policy for the same reason the export
+        button is here — a right you have to read a legal document to discover
+        is a right most people never exercise. And the open requests render
+        ABOVE the form, with their deadline, because the deadline is the part
+        that was missing: a clock only we can see is a clock we can miss
+        quietly.
+      */}
+      <section className="rounded-[16px] border border-ec-border bg-[#0C0917] p-5">
+        <h2 className="flex items-center gap-2 font-heading text-base font-semibold text-white">
+          <ScrollText aria-hidden className="size-4 text-ec-violet" />
+          {COPY.rightsHeading[locale]}
+        </h2>
+        <p className="mt-1.5 text-[13px] leading-6 text-white/60">
+          {COPY.rightsBody[locale]}
+        </p>
+        <p className="mt-2 text-[12px] leading-5 text-white/45">
+          {COPY.rightsAlreadySelfServe[locale]}
+        </p>
+
+        {privacyRequests.length > 0 ? (
+          <div className="mt-5 space-y-2">
+            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ec-text-dim">
+              {COPY.rightsOpenHeading[locale]}
+            </h3>
+            <ul className="space-y-2">
+              {privacyRequests.map((request) => (
+                <li
+                  key={request.id}
+                  className="rounded-[11px] border border-ec-border bg-[#0A0714] px-3 py-2"
+                >
+                  <p className="text-[13px] text-white/88">
+                    {REQUEST_KIND_LABELS[request.kind][locale]}
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-white/45">
+                    {requestStatusLine(request, locale)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        <PrivacyRequestForm locale={locale} />
+
+        <p className="mt-4 text-[12px] leading-5 text-white/40">
+          {COPY.rightsFallback[locale]}
+        </p>
+      </section>
     </div>
+  )
+}
+
+const REQUEST_KIND_LABELS: Record<
+  PrivacyRequestKind,
+  Record<SiteLocale, string>
+> = {
+  rectify_email: COPY.rightsKindRectifyEmail,
+  object: COPY.rightsKindObject,
+  restrict: COPY.rightsKindRestrict,
+  other: COPY.rightsKindOther,
+}
+
+/**
+ * One line per request, and which date it shows depends on the outcome.
+ *
+ * An open request shows the deadline; a settled one shows when it was settled.
+ * A refusal says "declined" rather than borrowing the word for a granted one —
+ * Art. 12(4) makes a refusal a real answer that has to arrive inside the same
+ * month, and describing it as anything else would misreport what happened.
+ */
+function requestStatusLine(
+  request: PrivacyRequest,
+  locale: SiteLocale
+): string {
+  if (request.status === "open") {
+    return COPY.rightsDueOn[locale].replace(
+      "{date}",
+      formatPlanDate(new Date(request.dueAt), locale)
+    )
+  }
+
+  const template =
+    request.status === "refused"
+      ? COPY.rightsRefusedOn[locale]
+      : COPY.rightsResolvedOn[locale]
+
+  return template.replace(
+    "{date}",
+    formatPlanDate(new Date(request.resolvedAt ?? request.createdAt), locale)
   )
 }
 

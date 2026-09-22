@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import { getRecentAdminActions } from "@/services/admin-audit-service"
+import { listOpenPrivacyRequests } from "@/services/privacy-request-service"
 import {
   getBackstageUsersSnapshot,
   getRecentAnalyses,
@@ -8,6 +9,7 @@ import {
 
 import { ActivityFeed } from "./ActivityFeed"
 import { Bento, BentoLabel } from "./BackstagePrimitives"
+import { PrivacyRequestQueue } from "./PrivacyRequestQueue"
 import { UsersTable } from "./UsersTable"
 
 export const metadata: Metadata = {
@@ -26,11 +28,13 @@ const KPI_LABELS: Array<{
 ]
 
 export default async function BackstageUsersPage() {
-  const [{ users, kpis }, recentAnalyses, adminActions] = await Promise.all([
-    getBackstageUsersSnapshot(),
-    getRecentAnalyses(),
-    getRecentAdminActions(),
-  ])
+  const [{ users, kpis }, recentAnalyses, adminActions, privacyRequests] =
+    await Promise.all([
+      getBackstageUsersSnapshot(),
+      getRecentAnalyses(),
+      getRecentAdminActions(),
+      listOpenPrivacyRequests(),
+    ])
 
   return (
     <div className="space-y-8">
@@ -56,11 +60,16 @@ export default async function BackstageUsersPage() {
         <div className="min-w-0 xl:col-span-2">
           <UsersTable users={users} />
         </div>
-        <ActivityFeed
-          users={users}
-          recentAnalyses={recentAnalyses}
-          adminActions={adminActions}
-        />
+        <div className="min-w-0 space-y-6">
+          {/* Above the activity feed on purpose: the feed is a record of what
+              happened, and this is a list of what is owed with a date on it. */}
+          <PrivacyRequestQueue requests={privacyRequests} />
+          <ActivityFeed
+            users={users}
+            recentAnalyses={recentAnalyses}
+            adminActions={adminActions}
+          />
+        </div>
       </div>
     </div>
   )

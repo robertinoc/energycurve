@@ -110,6 +110,8 @@ revocación por set sin tabla nueva y sin romper nada en el camino.
 | `billing_events.payload` | 90 días, **y sin edad si la cuenta se borró** | ✅ PR #183 |
 | `admin_audit_log.target_email` | 365 días | ✅ PR #190 |
 | `analyses` — blobs | 365 días | ✅ acá |
+| `rate_limit_buckets` | 1 día | ✅ PR #206 · housekeeping, sin obligación detrás |
+| `privacy_requests.details` + `requester_email` | 365 días **desde la resolución** | ✅ migración 0030 |
 | `playlist_versions` | **ninguna, a propósito** | ver abajo |
 | `tracks`, `playlists` | ninguna: es el contenido del usuario | por diseño |
 
@@ -123,9 +125,16 @@ política de retención sería usar privacidad como excusa para romper un produc
 La limitación de conservación aplica a lo que tratamos *nosotros* para *nuestras*
 finalidades; el contenido que el usuario creó se va cuando él se va.
 
+Una de las cinco tiene la ventana anclada distinto y vale notarlo:
+`privacy_requests.details` cuenta **desde la resolución y no desde la llegada.**
+Un pedido de derechos todavía abierto a los 400 días es un incumplimiento, y
+borrar lo que la persona escribió destruiría el registro de qué pidió mientras el
+incumplimiento sigue vivo. Las otras cuatro cuentan desde que el dato se
+escribió, que es lo normal.
+
 ⚠️ **Nada de esto corre todavía.** `CRON_SECRET` no está seteado en Vercel, así
 que la ruta responde 503 — que es lo correcto (un endpoint que borra datos y
-falla abierto es peor que uno que no corre nunca), pero significa que las tres
+falla abierto es peor que uno que no corre nunca), pero significa que las cinco
 ventanas de arriba son por ahora política escrita, no efecto observable.
 
 ---

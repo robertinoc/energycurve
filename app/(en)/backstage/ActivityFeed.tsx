@@ -50,6 +50,10 @@ const ACTION_LABELS: Record<string, string> = {
   "user.suspended": "suspended",
   "user.unsuspended": "unsuspended",
   "user.deleted": "deleted",
+  // These two name a request rather than a person, so the line above them shows
+  // "(address removed)" — the audit row deliberately carries no email for them.
+  "privacy_request.answered": "answered a data-rights request",
+  "privacy_request.refused": "refused a data-rights request",
 }
 
 export function ActivityFeed({

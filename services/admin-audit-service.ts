@@ -20,13 +20,25 @@ export type AdminAuditAction =
   | "user.suspended"
   | "user.unsuspended"
   | "user.deleted"
+  // Closing a data-rights request. Not irreversible the way the three above
+  // are, but it is the act that discharges a legal obligation with a deadline,
+  // which is the other thing this table is for.
+  | "privacy_request.answered"
+  | "privacy_request.refused"
 
 export interface AdminAuditEntry {
   actorEmail: string
   action: AdminAuditAction
   targetProfileId: string
-  /** The target's address at the time of the action. Cleared by the retention sweep. */
-  targetEmail: string
+  /**
+   * The target's address at the time of the action, so the row reads without a
+   * join that may no longer resolve. Cleared by the retention sweep.
+   *
+   * Optional, because not every action has one worth keeping: closing a
+   * data-rights request names the request, and putting the address of somebody
+   * exercising a data right into a second table would add a copy for no gain.
+   */
+  targetEmail?: string
   /** Small, non-personal, action-specific context. */
   detail?: Record<string, string | number | boolean | null>
 }
@@ -53,7 +65,7 @@ export async function recordAdminAction(entry: AdminAuditEntry): Promise<boolean
       actor_email: entry.actorEmail,
       action: entry.action,
       target_profile_id: entry.targetProfileId,
-      target_email: entry.targetEmail,
+      target_email: entry.targetEmail ?? null,
       detail: entry.detail ?? null,
     })
 

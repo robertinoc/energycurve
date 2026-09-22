@@ -138,6 +138,17 @@ información profesional que un competidor podría querer.
 | **Datos** | **Ninguno sale del dispositivo** |
 | **Nota** | El audio se analiza en el navegador con Web Audio y solo viaja el JSON resultante. Es la decisión de arquitectura con mejor consecuencia de privacidad del producto, y hay que defenderla en cada feature nueva. Ya se declinó explícitamente el análisis batch en servidor |
 
+### T12 · Pedidos sobre derechos de los datos
+
+| | |
+|---|---|
+| **Datos** | `privacy_requests`: `profile_id`, `kind`, `details` (**texto libre escrito por el titular**), `requester_email`, `status`, `due_at`, `resolved_at`, `resolution_note` |
+| **Dónde** | Tabla `privacy_requests` (migración 0030) · una copia del contenido en el buzón de soporte vía Resend · el panel de backstage lo lee |
+| **Base legal** | Obligación legal — Arts. 12 y 15–22. Atender un pedido de derechos no es opcional, y tampoco lo es poder demostrar que se atendió |
+| **Retención** | `details` y `requester_email`: **365 días desde la resolución**, no desde la llegada (`sweepPrivacyRequestDetails`). El resto de la fila se queda: es la prueba de que la obligación se cumplió en plazo |
+| **Nota** | Es el dato personal **menos predecible del esquema**, porque es texto libre de alguien preguntando por sus propios datos: un pedido así tiende a nombrar locales, sets y motivos. Por eso el log registra la longitud y el tipo, nunca el contenido — es exactamente la forma que tenía el hallazgo S-03 |
+| **Nota 2** | La ventana arranca en la resolución a propósito. Un pedido abierto a los 400 días es un incumplimiento, y borrar lo que la persona escribió destruiría el registro de qué pidió mientras el incumplimiento sigue vivo |
+
 ---
 
 ## Encargados
