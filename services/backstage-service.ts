@@ -12,6 +12,7 @@ import { logError, logInfo, logWarn } from "@/lib/observability/logger"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { recordAdminAction } from "@/services/admin-audit-service"
 import { sweepBillingPayloads } from "@/services/retention-service"
+import { cancelSubscriptionNow } from "@/services/subscription-cancel-service"
 import type { Profile } from "@/types/domain"
 
 export interface BackstageUsersSnapshot {
@@ -180,6 +181,18 @@ export async function setUserSuspension(
  * were removed, the person could still log in and the profile sync would
  * quietly recreate it. A WorkOS user that is already gone (404) is fine;
  * any other WorkOS failure aborts before touching the database.
+ *
+ * **Stripe, added 22/09/2026, and it was missing.** This function deleted the
+ * WorkOS user and the profile row, and the profile row is where
+ * `stripe_subscription_id` lives — so an active subscription kept renewing
+ * against a customer with no account, and the person could not reach the billing
+ * portal to stop it because they could no longer log in. It has been true of the
+ * admin delete button since it shipped; self-serve deletion is what made it
+ * matter, because it turns a rare admin action into something any subscriber can
+ * do to themselves.
+ *
+ * The cancellation runs **before** the profile is deleted, and the ordering is
+ * the whole point: after the delete, nothing knows the subscription id.
  */
 export async function deleteUserEverywhere(
   profileId: string,
@@ -208,6 +221,14 @@ export async function deleteUserEverywhere(
       })
       throw new Error("Unable to delete the user in WorkOS.")
     }
+  }
+
+  // Before the profile row goes, because the row is the only place the
+  // subscription id exists. Best effort: a Stripe outage must not block an
+  // erasure request, and a failure here logs `billing.orphaned_subscription`,
+  // which is the one thing in this path only a human can clean up.
+  if (profile.stripe_subscription_id) {
+    await cancelSubscriptionNow(profile.stripe_subscription_id)
   }
 
   const supabase = getSupabaseAdminClient()

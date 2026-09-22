@@ -1177,6 +1177,91 @@ export const DASHBOARD_COPY = {
       en: "You can also write to hello@energycurve.app. The 30-day deadline is the same either way — filing it here just means neither of us has to remember.",
       es: "También podés escribir a hello@energycurve.app. El plazo de 30 días es el mismo de las dos formas — registrarlo acá sólo significa que ninguno de los dos tiene que acordarse.",
     },
+
+    // Erasure (Art. 17), self-serve, with thirty days of grace.
+    //
+    // The copy's job here is narrower than usual: tell somebody exactly what
+    // they are about to lose, BEFORE they can confirm it. Everything below is
+    // written to be read by a person who has already decided — so it does not
+    // argue, and it does not hide the two things they might not have thought of
+    // (the subscription, and that the audio files were never ours to delete).
+    deleteHeading: { en: "Delete your account", es: "Borrar tu cuenta" },
+    deleteBody: {
+      en: "This deletes your account and everything in it: your sets, their tracks, your saved orders, your analyses and versions, your own shapes and labels, and the collaborations you started.",
+      es: "Esto borra tu cuenta y todo lo que tiene adentro: tus sets, sus temas, los órdenes que guardaste, tus análisis y versiones, tus formas y etiquetas propias, y las colaboraciones que abriste.",
+    },
+    deleteGrace: {
+      en: "It happens 30 days from when you ask, not immediately — and you can undo it from this page at any point in those 30 days. Your account keeps working normally in the meantime.",
+      es: "Pasa 30 días después de que lo pidas, no en el momento — y lo podés deshacer desde esta página en cualquier momento de esos 30 días. Mientras tanto tu cuenta funciona normal.",
+    },
+    // Said before they confirm, because it is the thing most likely to be a
+    // surprise afterwards — and a surprise about money afterwards is a
+    // chargeback.
+    deletePlanWarning: {
+      en: "Your subscription stops renewing as soon as you ask, and your plan stays active until {date}. There is no refund for the unused part. If all you want is to stop paying, use Manage billing above instead — that keeps your account and your sets.",
+      es: "Tu suscripción deja de renovarse en cuanto lo pedís, y tu plan sigue activo hasta el {date}. No hay reembolso por la parte no usada. Si lo único que querés es dejar de pagar, usá Gestionar facturación más arriba — eso te deja la cuenta y los sets.",
+    },
+    deleteExportFirst: {
+      en: "Download your data first if you want to keep it. Once the 30 days are up there is nothing left to download.",
+      es: "Descargá tus datos primero si los querés conservar. Pasados los 30 días no queda nada que descargar.",
+    },
+    // The one thing this deletion does not do, said here rather than left to be
+    // inferred: it is also the product's best privacy property.
+    deleteAudioNote: {
+      en: "Your audio files are untouched — they were never on our servers. What goes is what your tags said about them.",
+      es: "Tus archivos de audio quedan intactos — nunca estuvieron en nuestros servidores. Lo que se va es lo que decían sus tags.",
+    },
+    deleteConfirmLabel: {
+      en: "Type your email address to confirm",
+      es: "Escribí tu dirección de email para confirmar",
+    },
+    deleteConfirmHint: {
+      en: "Typed out, not a checkbox. The friction is on purpose — this is the only thing on this page you cannot get back after 30 days.",
+      es: "Escrito, no un tilde. La fricción es a propósito — es lo único de esta página que no se recupera pasados los 30 días.",
+    },
+    deleteSubmit: { en: "Schedule deletion", es: "Programar el borrado" },
+    deleteSubmitting: { en: "Scheduling…", es: "Programando…" },
+    deleteMismatch: {
+      en: "That is not the email on this account, so nothing was scheduled.",
+      es: "Ese no es el email de esta cuenta, así que no se programó nada.",
+    },
+    deleteFailed: {
+      en: "We couldn't schedule that. Nothing was deleted. Try again, or write to us.",
+      es: "No pudimos programarlo. No se borró nada. Probá de nuevo, o escribinos.",
+    },
+    deleteRateLimited: {
+      en: "Too many attempts. Try again in a while — nothing was deleted.",
+      es: "Demasiados intentos. Probá más tarde — no se borró nada.",
+    },
+    deleteScheduled: {
+      en: "Scheduled. Your account and everything in it will be deleted on {date}. We sent a confirmation to your email — if this wasn't you, come back here and undo it.",
+      es: "Programado. Tu cuenta y todo lo que tiene se van a borrar el {date}. Te mandamos una confirmación por mail — si no fuiste vos, volvé acá y deshacelo.",
+    },
+    deletePendingHeading: {
+      en: "Deletion scheduled",
+      es: "Borrado programado",
+    },
+    deletePendingBody: {
+      en: "Your account will be deleted on {date}. Until then everything works normally and you can still download your data.",
+      es: "Tu cuenta se va a borrar el {date}. Hasta entonces todo funciona normal y todavía podés descargar tus datos.",
+    },
+    deleteCancel: { en: "Keep my account", es: "Quedarme con mi cuenta" },
+    deleteCancelling: { en: "Cancelling…", es: "Cancelando…" },
+    deleteCancelled: {
+      en: "Cancelled. Nothing was deleted, and your subscription goes back to renewing as before.",
+      es: "Cancelado. No se borró nada, y tu suscripción vuelve a renovarse como antes.",
+    },
+    deleteCancelFailed: {
+      en: "We couldn't cancel it. Try again, or write to us — your account is not deleted yet either way.",
+      es: "No pudimos cancelarlo. Probá de nuevo, o escribinos — de cualquier forma tu cuenta todavía no está borrada.",
+    },
+    // Shown when the deletion was scheduled but stopping the renewal failed.
+    // Better to say it than to let somebody discover a charge they thought they
+    // had stopped.
+    deleteSubscriptionWarning: {
+      en: "One thing went wrong: we could not stop your subscription from renewing. Open Manage billing and cancel it there, or write to us and we will.",
+      es: "Una cosa falló: no pudimos detener la renovación de tu suscripción. Abrí Gestionar facturación y cancelala ahí, o escribinos y lo hacemos nosotros.",
+    },
   },
 
   deleteButton: {

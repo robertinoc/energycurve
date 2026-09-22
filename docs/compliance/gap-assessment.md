@@ -51,7 +51,7 @@ Estado: ✅ cumple · ⚠️ parcial · ❌ brecha · ⬜ depende de una acción
 | 12–14 | Información al titular | ✅ | Base legal, plazos y derecho a reclamar, en los dos idiomas |
 | 15 | Acceso | ✅ | `/api/account/export` |
 | 16 | Rectificación | ⚠️ | Nombre self-serve en `/dashboard/account`. El email va por **pedido registrado con plazo** (`privacy_requests`, migración 0030) en vez de por mail suelto: cambia la identidad de login y descarta los sets compartidos por dirección, así que no es un botón de guardar. Sigue en ⚠️ y no en ✅ **a propósito**: hay canal y plazo, no ejecución automática |
-| 17 | Supresión | ❌ | **Solo como acción de admin.** Un usuario tiene que mandar un mail |
+| 17 | Supresión | ⚠️ | **Self-serve desde el 22/09/2026**: `/dashboard/account`, con confirmación escrita y 30 días de gracia reversibles. ⚠️ y no ✅ porque **la ejecución corre en el cron diario**, que responde 503 sin `CRON_SECRET` — y no está seteado. Un control escrito y no corriendo no puntúa como control, por la regla de puntuación de la propia auditoría |
 | 18 | Limitación | ⚠️ | Canal ejercible con plazo registrado y visible para las dos partes (`/dashboard/account` → cola en el panel). No hay ejecución automática, y para este producto eso es correcto: limitar el tratamiento es una decisión sobre **qué** parar, no una operación mecánica |
 | 20 | Portabilidad | ✅ | JSON estructurado, legible por máquina |
 | 21 | Oposición | ⚠️ | Cubierto para analytics con un clic, y la revocación **llega al tercero** (`opt_out_capturing` + `reset`), no solo a nuestros call sites. Para todo lo demás hay ahora un canal registrado con plazo. Sigue en ⚠️: un pedido con fecha límite no es lo mismo que un interruptor |
@@ -89,6 +89,34 @@ El orden de arreglo importa y no es el que sugiere la numeración:
    toca WorkOS y Stripe, y necesita confirmación fuerte. `deleteUserEverywhere`
    ya hace el trabajo pesado y está probado; lo que falta es la superficie de
    usuario y la decisión de producto sobre qué pasa con una suscripción activa.
+
+**Hecho el 22/09/2026**, con las tres decisiones tomadas así:
+
+- **Fricción: escribir el email de la cuenta.** No un tilde. Un tilde frena un
+  clic accidental y nada más, y esto es lo único de la página que no vuelve. Lo
+  que explícitamente **no** frena es una sesión robada —quien tiene la sesión lee
+  la dirección en la misma página— y para eso está el mail de aviso, que va a la
+  dirección de la cuenta y dice qué hacer.
+- **Gracia: 30 días, reversibles, y la cuenta sigue funcionando.** No es una
+  suspensión. Quien acaba de pedir el borrado es justamente quien más necesita
+  poder descargar sus datos antes, así que bloquearlo sería contestar un pedido
+  de supresión sacándole la portabilidad. Y como la cuenta sigue viva, cancelar
+  es "entrá y apretá cancelar": **no hay que agregar un token en una URL**, que
+  es el patrón que la auditoría de seguridad venía encontrando.
+- **Suscripción: deja de renovarse al pedirlo**, el plan corre hasta el período
+  ya pagado, sin reembolso, y todo vuelve atrás si se retira el pedido. Con la
+  fecha exacta dicha **antes** de confirmar, porque una sorpresa sobre plata
+  después es un chargeback.
+
+**Y en el camino apareció un bug que ya existía:** `deleteUserEverywhere`
+**nunca tocaba Stripe.** Borraba el usuario de WorkOS y la fila de `profiles` —
+que es el único lugar donde vive `stripe_subscription_id` — así que una
+suscripción activa seguía renovándose contra un cliente sin cuenta, y la persona
+no podía entrar al portal a cancelarla porque ya no podía loguearse. Era cierto
+del botón de admin desde que se lanzó; el borrado self-serve es lo que lo volvió
+importante, porque convierte una acción rara de admin en algo que cualquier
+suscriptor puede hacerse a sí mismo. Corregido, y la cancelación corre **antes**
+del borrado de la fila, que es donde tiene que estar.
 4. **Limitación (Art. 18)** es la de menor demanda real en un producto así.
    Suspender el tratamiento sin borrar se puede resolver con la suspensión que
    ya existe, pero hoy es una acción de admin, no un derecho ejercible.
@@ -133,13 +161,13 @@ solo lado es un reloj que se pasa en silencio.
 
 | # | Qué | Cierra | Costo |
 |---|---|---|---|
-| R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **cinco ventanas escritas y ninguna corriendo** | 2 min |
-| R2 | **0027, 0028 y 0029 aplicadas** (verificado 22/09/2026 consultando el esquema) · **falta la 0030** | la cola de derechos | 5 min |
+| R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **cinco ventanas escritas y ninguna corriendo** · y desde el 22/09 también el **Art. 17**: es lo único que separa un borrado pedido de un borrado hecho | 2 min |
+| ~~R2~~ | ~~Migraciones sin aplicar~~ | **Las cinco aplicadas el 22/09/2026 — `0027`, `0028`, `0029`, `0030` y `0031`, en los dos proyectos.** Verificado consultando el esquema y no la documentación, que decía que faltaban dos que ya estaban |
 | R3 | Confirmar región de Supabase | 5(1)(a) — hoy la política puede estar diciendo algo falso | 2 min |
 | R4 | Aceptar los DPAs | Art. 28 | 1 hora |
 | R5 | Acceso de emergencia delegado | Art. 32 — bus factor 1 | 1 tarde |
 | R6 | Probar una restauración de backup | Art. 32 | 1 tarde |
-| R7 | Decidir: borrado self-serve | Art. 17 | decisión + ~1 día de build |
+| ~~R7~~ | ~~Decidir: borrado self-serve~~ | Art. 17 | **Decidido y construido el 22/09/2026.** Lo que queda de esta fila es `CRON_SECRET` (R1): sin eso el pedido se registra y **nada lo ejecuta**, que es el peor de los tres estados posibles porque a la persona se le dio una fecha. El panel muestra los pedidos vencidos en rojo justamente para que eso no sea invisible |
 | R8 | Decidir: link público opt-in | Art. 25 | decisión |
 | R9 | **Decidir: política de cuentas inactivas.** Hueco encontrado el 22/09/2026 cruzando el plan de privacidad de StageLink, que tiene el ítem y el de EnergyCurve no. Hoy una cuenta que nadie tocó en tres años conserva su mail, sus sets, sus locales y sus franjas indefinidamente, y la finalidad que justificaba guardarlos dejó de existir en un punto que nadie definió. Las tres salidas están en `stagelink-crossread-2026-09.md` §H-3; la recomendada es avisar a los 24 meses y borrar a los 30 días, que ahora **reusa el borrado con gracia** en vez de necesitar maquinaria nueva | 5(1)(e) | decisión + ~2 h |
 

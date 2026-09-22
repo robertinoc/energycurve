@@ -51,6 +51,9 @@ export interface Database {
           preferred_locale: string | null
           key_notation: string | null
           suspended_at: string | null
+          // Migration 0031. NULL = active. A timestamp means the grace period
+          // is running; it does NOT mean the account is locked.
+          deletion_requested_at: string | null
           plan: string
           plan_status: string | null
           plan_current_period_end: string | null
@@ -68,6 +71,7 @@ export interface Database {
           preferred_locale?: string | null
           key_notation?: string | null
           suspended_at?: string | null
+          deletion_requested_at?: string | null
           plan?: string
           plan_status?: string | null
           plan_current_period_end?: string | null
@@ -85,6 +89,7 @@ export interface Database {
           preferred_locale?: string | null
           key_notation?: string | null
           suspended_at?: string | null
+          deletion_requested_at?: string | null
           plan?: string
           plan_status?: string | null
           plan_current_period_end?: string | null

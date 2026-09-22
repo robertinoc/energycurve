@@ -9,8 +9,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
  */
 
 const sweepBillingPayloads = vi.fn(async () => ({ agedOut: 4, orphaned: 1 }))
+const sweepDeletedAccounts = vi.fn<
+  () => Promise<{ deleted: number; failed: number }>
+>()
 
 vi.mock("@/services/retention-service", () => ({ sweepBillingPayloads }))
+
+/**
+ * Mocked rather than left to load, and the reason is a real dependency and not
+ * a test artefact: since 22/09/2026 this route also executes account deletions,
+ * which means deleting a WorkOS user, which pulls the authkit SDK into the
+ * module graph. That is inherent to erasure — the WorkOS user is half of what
+ * has to go — so the mock is the right answer rather than a shim.
+ */
+vi.mock("@/services/account-deletion-service", () => ({ sweepDeletedAccounts }))
 vi.mock("@/lib/observability/logger", () => ({
   logError: vi.fn(),
   logInfo: vi.fn(),
@@ -32,6 +44,14 @@ function call(authorization?: string) {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.stubEnv("CRON_SECRET", SECRET)
+
+  // Implementations, not just call history. `clearAllMocks` resets the calls and
+  // leaves the implementation, so the `mockRejectedValue` set by the failure
+  // test below used to leak into every describe declared after it — which is
+  // how a new block added on 22/09 got a 500 it had not asked for. Restating
+  // the happy path here makes the order of the file stop mattering.
+  sweepBillingPayloads.mockResolvedValue({ agedOut: 4, orphaned: 1 })
+  sweepDeletedAccounts.mockResolvedValue({ deleted: 0, failed: 0 })
 })
 
 describe("who is allowed to trigger it", () => {
@@ -85,5 +105,41 @@ describe("when the sweep fails", () => {
 
     expect(response.status).toBe(500)
     expect(body).not.toContain("permission denied")
+  })
+})
+
+describe("the account-deletion sweep", () => {
+  it("runs, and reports what it did", async () => {
+    sweepDeletedAccounts.mockResolvedValue({ deleted: 2, failed: 0 })
+
+    const response = await call(`Bearer ${SECRET}`)
+    const body = (await response.json()) as Record<string, unknown>
+
+    expect(response.status).toBe(200)
+    expect(body.accountsDeleted).toBe(2)
+    expect(body.accountDeletionsFailed).toBe(0)
+  })
+
+  it("never runs for an unauthorized caller", async () => {
+    // The one sweep here that deletes whole accounts rather than clearing a
+    // column, so it is the one where the header check matters most.
+    await call("Bearer not-the-secret")
+
+    expect(sweepDeletedAccounts).not.toHaveBeenCalled()
+  })
+
+  it("does not take the rest of the sweep down when it fails", async () => {
+    // Its own try, like every sweep in this route. Three retention windows that
+    // did run must not be reported as a failed sweep because a fourth thing —
+    // one that needs migration 0031 — could not.
+    sweepDeletedAccounts.mockRejectedValue(new Error("WorkOS is down"))
+
+    const response = await call(`Bearer ${SECRET}`)
+    const body = (await response.json()) as Record<string, unknown>
+
+    expect(response.status).toBe(200)
+    expect(body.ok).toBe(true)
+    expect(body.accountsDeleted).toBeNull()
+    expect(sweepBillingPayloads).toHaveBeenCalled()
   })
 })
