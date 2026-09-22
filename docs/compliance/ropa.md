@@ -32,12 +32,13 @@ información profesional que un competidor podría querer.
 | | |
 |---|---|
 | **Datos** | Dirección de mail, nombre, credenciales. Y preferencias de interfaz: `preferred_locale` (idioma) y `key_notation` (en qué notación leer las tonalidades) |
-| **Dónde** | WorkOS (identidad y contraseña). Nosotros guardamos `profiles.email`, `profiles.workos_user_id`, `profiles.preferred_locale`, `profiles.key_notation` y `profiles.suspended_at` |
+| **Dónde** | WorkOS (identidad y contraseña). Nosotros guardamos `profiles.email`, `profiles.workos_user_id`, `profiles.preferred_locale`, `profiles.key_notation`, `profiles.suspended_at` y `profiles.deletion_requested_at` |
 | **Finalidad** | Dar acceso a la cuenta |
 | **Base legal** | Ejecución de un contrato (Art. 6.1.b) |
 | **Encargado** | WorkOS, EE.UU. |
 | **Retención** | Mientras la cuenta exista |
-| **Borrado** | `deleteUserEverywhere` borra el usuario de WorkOS y la fila de `profiles`, que cascadea al resto |
+| **Borrado** | `deleteUserEverywhere` borra el usuario de WorkOS y la fila de `profiles`, que cascadea al resto. Desde el 22/09/2026 lo puede disparar el titular desde `/dashboard/account` — ver abajo |
+| **`deletion_requested_at`** | Migración 0031. Cuándo el titular pidió el borrado. NULL = no pidió nada. La cuenta **sigue funcionando** durante los 30 días de gracia: quien acaba de pedir el borrado es justamente quien más necesita poder exportar sus datos antes, y bloquearlo sería contestar un pedido de supresión sacándole la portabilidad. Se va con la fila cuando el barrido corre |
 
 ### T2 · Playlists y tracks
 

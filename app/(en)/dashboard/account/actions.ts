@@ -12,6 +12,12 @@ import type { SiteLocale } from "@/lib/content/site-copy"
 import { logError, logWarn } from "@/lib/observability/logger"
 import { consumeRateLimit } from "@/services/rate-limit-service"
 import { getRequestLocale } from "@/lib/server-locale"
+import { formatPlanDate } from "@/lib/product/plan-summary"
+import { sendDeletionScheduledEmail } from "@/services/account-deletion-email-service"
+import {
+  cancelAccountDeletion,
+  requestAccountDeletion,
+} from "@/services/account-deletion-service"
 import { notifyPrivacyRequest } from "@/services/privacy-request-email-service"
 import {
   countOpenPrivacyRequests,
@@ -256,4 +262,160 @@ export async function filePrivacyRequestAction(
   revalidatePath("/dashboard/account")
 
   return { ok: true, message: COPY.rightsFiled[locale] }
+}
+
+/**
+ * Erasure, Art. 17, self-serve, with thirty days of grace.
+ *
+ * The last of the four reds in the gap assessment, and the only one where the
+ * fix is genuinely a button. It was open because the ask needed a decision
+ * rather than code: `deleteUserEverywhere` already did the heavy lifting and was
+ * already tested; what was missing was a user-facing surface and an answer to
+ * "how much friction, what grace, and what happens to a live subscription".
+ *
+ * The answers, all three visible in the copy before anyone can confirm:
+ *
+ * - **Friction: type the account email.** Not a checkbox. A checkbox stops a
+ *   misclick and nothing else, and this is the one irreversible thing on the
+ *   page. It does not defend against a hijacked session — whoever has the
+ *   session can read the address off the page — which is what the notification
+ *   email is for.
+ * - **Grace: thirty days, fully reversible, account keeps working.** Somebody
+ *   who just asked to be deleted is exactly who most needs to download their
+ *   data first, so locking them out would answer an erasure request by removing
+ *   portability. And because the account still works, cancelling needs no signed
+ *   token in a URL — which is the pattern the security audit kept finding.
+ * - **Subscription: stops renewing now, plan runs to the period already paid
+ *   for, no refund, and it all goes back if the request is withdrawn.** Said
+ *   with the exact date before confirming, because a surprise about money
+ *   afterwards is a chargeback.
+ */
+
+/**
+ * Two an hour, which is the tightest limit on this page.
+ *
+ * Not because scheduling is expensive, but because the typed-email check makes
+ * this endpoint an oracle otherwise: unlimited attempts against a known session
+ * is not a threat, but unlimited attempts is never the shape you want in front
+ * of a destructive action.
+ */
+const DELETE_RATE_LIMIT = { limit: 2, windowMs: 60 * 60 * 1000 }
+
+export async function requestAccountDeletionAction(
+  _previous: AccountActionState,
+  formData: FormData
+): Promise<AccountActionState> {
+  const { user } = await withAuth()
+
+  if (!user) {
+    redirect(buildReturnToHref("/login", "/dashboard/account"))
+  }
+
+  const profile = await syncProfileFromWorkOSUser({
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName ?? null,
+    lastName: user.lastName ?? null,
+  })
+
+  if (isSuspended(profile)) {
+    redirect("/account-suspended")
+  }
+
+  const locale: SiteLocale = await getRequestLocale()
+
+  const { allowed } = await consumeRateLimit({
+    key: `account-delete:${profile.id}`,
+    limit: DELETE_RATE_LIMIT.limit,
+    windowMs: DELETE_RATE_LIMIT.windowMs,
+  })
+
+  if (!allowed) {
+    logWarn("account_deletion.rate_limited", { profileId: profile.id })
+
+    return { ok: false, message: COPY.deleteRateLimited[locale] }
+  }
+
+  // Case-insensitive and trimmed, because an address is not case-sensitive in
+  // the part that matters and a trailing space from a paste is not a different
+  // intent. Compared against the session's email, not against a form field.
+  const typed = (formData.get("confirmEmail")?.toString() ?? "").trim()
+
+  if (typed.toLowerCase() !== user.email.toLowerCase()) {
+    logWarn("account_deletion.confirmation_mismatch", { profileId: profile.id })
+
+    return { ok: false, message: COPY.deleteMismatch[locale] }
+  }
+
+  const result = await requestAccountDeletion(profile.id)
+
+  if (!result) {
+    return { ok: false, message: COPY.deleteFailed[locale] }
+  }
+
+  // After the schedule, not before: a mail announcing a deletion that then
+  // failed to schedule would be the worse of the two possible wrong orders.
+  await sendDeletionScheduledEmail({
+    to: user.email,
+    scheduledFor: result.scheduledFor,
+    preferredLocale: profile.preferred_locale,
+  })
+
+  revalidatePath("/dashboard/account")
+
+  const scheduled = COPY.deleteScheduled[locale].replace(
+    "{date}",
+    formatPlanDate(new Date(result.scheduledFor), locale)
+  )
+
+  // Reported as `ok` even when the subscription part failed, because the thing
+  // the person asked for did happen. Hiding the billing failure behind a generic
+  // error would leave them believing the deletion failed too.
+  return {
+    ok: true,
+    message: result.subscriptionNeedsAttention
+      ? `${scheduled} ${COPY.deleteSubscriptionWarning[locale]}`
+      : scheduled,
+  }
+}
+
+/** Withdraws a scheduled deletion. No confirmation: it is the safe direction. */
+export async function cancelAccountDeletionAction(
+  _previous: AccountActionState,
+  _formData: FormData
+): Promise<AccountActionState> {
+  // `useActionState` fixes this signature at (previousState, formData). This is
+  // the one action on the page that takes no input at all — withdrawing a
+  // deletion needs nothing typed and nothing confirmed — so both parameters are
+  // named and deliberately unused.
+  void _previous
+  void _formData
+
+  const { user } = await withAuth()
+
+  if (!user) {
+    redirect(buildReturnToHref("/login", "/dashboard/account"))
+  }
+
+  const profile = await syncProfileFromWorkOSUser({
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName ?? null,
+    lastName: user.lastName ?? null,
+  })
+
+  // No suspension gate here, and that is deliberate rather than an oversight:
+  // keeping your account is not a write anyone needs protecting from, and a
+  // suspended account whose deletion is pending should still be able to stop
+  // the clock.
+  const locale: SiteLocale = await getRequestLocale()
+  const cancelled = await cancelAccountDeletion(profile.id)
+
+  if (!cancelled) {
+    return { ok: false, message: COPY.deleteCancelFailed[locale] }
+  }
+
+  revalidatePath("/dashboard/account")
+
+  return { ok: true, message: COPY.deleteCancelled[locale] }
 }

@@ -85,17 +85,56 @@ describe("Arts. 16, 18 and 21 — the rights that are a request, not a switch", 
 })
 
 describe("Art. 17 — erasure", () => {
-  it("is still admin-only", () => {
-    expect(MATRIX).toMatch(/\| 17 \| Supresión \| ❌/)
+  /**
+   * This canary used to check that `app/api/account/delete/route.ts` did not
+   * exist, and it **passed while the gap closed**: self-serve deletion landed
+   * on 22/09/2026 as a server action, which is what every other write on the
+   * account page is, so the file it was watching was never created.
+   *
+   * That is the third time a check in this repo has measured the wrong thing —
+   * `workflow-integrity` read a word out of its own comment, the first version
+   * of the test below grepped a file instead of the document the file renders —
+   * and the shape is identical every time: **the check watched an artefact
+   * instead of the behaviour.** A path is an artefact. What matters is whether a
+   * user can reach erasure, so that is what it asks now.
+   */
+  it("is self-serve, and is not claimed as finished while the sweep cannot run", () => {
+    // ⚠️ and not ✅, on purpose. The request works; the execution runs from the
+    // daily cron, which answers 503 without CRON_SECRET — and that is unset. By
+    // the audit's own scoring rule, a control that is written and not running
+    // does not count as a control.
+    expect(MATRIX).toMatch(/\| 17 \| Supresión \| ⚠️/)
 
-    // `deleteUserEverywhere` exists and is tested — what is missing is a user
-    // -facing way to reach it. If a self-serve route appears, the matrix is
-    // stale from that commit.
-    const selfServe = existsSync(
-      join(process.cwd(), "app/api/account/delete/route.ts")
-    )
+    const action = source("app/(en)/dashboard/account/actions.ts")
+    const service = source("services/account-deletion-service.ts")
 
-    expect(selfServe).toBe(false)
+    expect(action).toMatch(/requestAccountDeletionAction/)
+    expect(action).toMatch(/cancelAccountDeletionAction/)
+
+    // Thirty days of grace, matching the Art. 12(3) deadline so that the outer
+    // bound of "we will act" and the inner bound of "you can change your mind"
+    // are the same date.
+    expect(service).toMatch(/ACCOUNT_DELETION_GRACE_DAYS = 30/)
+
+    // The grace period is a promise made to the user in the copy, so the sweep
+    // has to be the thing that honours it rather than something that deletes on
+    // sight.
+    expect(service).toMatch(/sweepDeletedAccounts/)
+  })
+
+  it("cancels the subscription before the profile row is deleted", () => {
+    // The ordering IS the correctness: the profile row is the only place
+    // `stripe_subscription_id` exists, so cancelling after the delete cannot
+    // work at all. `tests/backstage-admin-actions.test.ts` asserts the ordering
+    // against observed database state; this one only checks the call is there,
+    // so that removing it shows up here too.
+    const backstage = source("services/backstage-service.ts")
+    const deleteIndex = backstage.indexOf('.from("profiles").delete()')
+    const cancelIndex = backstage.indexOf("cancelSubscriptionNow(")
+
+    expect(cancelIndex).toBeGreaterThan(-1)
+    expect(deleteIndex).toBeGreaterThan(-1)
+    expect(cancelIndex).toBeLessThan(deleteIndex)
   })
 })
 

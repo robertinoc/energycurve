@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { logError } from "@/lib/observability/logger"
+import { sweepDeletedAccounts } from "@/services/account-deletion-service"
 import {
   sweepAnalysisBlobs,
   sweepAuditLogEmails,
@@ -94,6 +95,26 @@ export async function GET(request: Request) {
       logError("retention.privacy_request_sweep_failed", error)
     }
 
+    // Last, and in its own try like the rest — but this one is different in
+    // kind, and worth not blurring: the four above drop columns, this one
+    // deletes accounts. It runs last so that a failure in it cannot be mistaken
+    // for a failure of the retention work, and so the retention work has
+    // already happened for accounts that are about to go.
+    //
+    // Migration 0031. An environment with the code and not the column reports
+    // null here rather than failing the whole sweep.
+    let accountsDeleted: number | null = null
+    let accountDeletionsFailed: number | null = null
+
+    try {
+      const sweep = await sweepDeletedAccounts()
+
+      accountsDeleted = sweep.deleted
+      accountDeletionsFailed = sweep.failed
+    } catch (error) {
+      logError("retention.account_deletion_sweep_failed", error)
+    }
+
     return NextResponse.json({
       ok: true,
       ...result,
@@ -101,6 +122,8 @@ export async function GET(request: Request) {
       analysisBlobsCleared,
       rateLimitBucketsCleared,
       privacyRequestDetailsCleared,
+      accountsDeleted,
+      accountDeletionsFailed,
     })
   } catch (error) {
     logError("retention.sweep_failed", error)

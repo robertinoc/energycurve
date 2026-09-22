@@ -16,7 +16,7 @@ Ninguna de esas dos condiciones estaba asegurada, y ninguna es código.
 | Acceso y portabilidad | 15, 20 | **Self-serve**: `/dashboard/account` → "Download my data" | inmediato |
 | Rectificación del nombre | 16 | **Self-serve**: `/dashboard/account` | inmediato |
 | Rectificación del email | 16 | **Pedido registrado**: `/dashboard/account`. Cambia el usuario de login y las asociaciones de sets compartidos | 30 días |
-| Supresión | 17 | Por mail → acción de admin en `/backstage` | 30 días |
+| Supresión | 17 | **Self-serve**: `/dashboard/account`, con confirmación escrita. Se ejecuta a los 30 días y es reversible durante todos ellos | 30 días |
 | Limitación | 18 | **Pedido registrado**: `/dashboard/account` | 30 días |
 | Oposición a analytics | 21 | **Self-serve**: banner y `/cookie-policy` | inmediato |
 | Oposición (general) | 21 | **Pedido registrado**: `/dashboard/account` | 30 días |
@@ -24,7 +24,30 @@ Ninguna de esas dos condiciones estaba asegurada, y ninguna es código.
 Los tres self-serve son los únicos que no dependen de que una persona esté
 disponible. Para los otros cuatro, el plazo corre igual.
 
-### Lo que cambió el 22/09/2026, y lo que no
+### El borrado, que ahora sí es un botón
+
+Y conviene decir qué hace y qué no, porque es el único de los siete que ejecuta
+algo sin que intervenga una persona:
+
+- **Se ejecuta a los 30 días**, no en el momento, y es reversible durante todos
+  ellos desde la misma página. La gracia está declarada en la política de
+  privacidad, porque una política que dice "borramos tus datos" sobre un proceso
+  que tarda un mes está diciendo algo distinto de lo que pasa.
+- **La cuenta sigue funcionando** durante la gracia, y eso no es tibieza: quien
+  acaba de pedir el borrado es justamente quien más necesita exportar sus datos
+  antes. Contestar un pedido de supresión sacándole la portabilidad sería
+  contestarlo con un problema nuevo.
+- **Cancela la suscripción**: deja de renovarse al pedirlo, el plan corre hasta
+  el período ya pagado, y vuelve atrás si se retira el pedido. Y al ejecutarse,
+  la suscripción se cancela del todo — antes de borrar la fila, porque la fila es
+  el único lugar donde vive el id de la suscripción.
+- **Lo que sigue sin borrar**, dicho acá para que no se lea como total: la
+  persona en PostHog (queda fuera de `deleteUserEverywhere`, sigue pendiente),
+  las filas de `billing_events` sin payload (garantía de idempotencia de Stripe),
+  y el registro de Stripe, que se conserva por obligación fiscal. Un borrado
+  descrito como total que no lo es es peor que uno descrito con precisión.
+
+### Lo que cambió el 22/09/2026 en los otros tres, y lo que no
 
 Tres de los que decían "por mail" ahora son un **pedido registrado**
 (`privacy_requests`, migración 0030): entra desde la cuenta, queda con su plazo
@@ -154,6 +177,6 @@ que hay que justificar.
 |---|---|---|
 | Segundo contacto en `hello@energycurve.app` | El plazo corre aunque no haya nadie. **La cola nueva lo hace visible, no lo resuelve**: un vencimiento en rojo en un panel que nadie abre es lo mismo que un mail sin leer | Robertino |
 | Aplicar la migración `0030` | Hasta que corra, el formulario de la página de cuenta falla al guardar y muestra el mensaje que apunta a `hello@` — que es el fallo correcto, y también significa que la cola está vacía por el motivo equivocado | Robertino |
-| Borrado self-serve | Hoy la supresión depende de una persona disponible | decisión de producto |
+| ~~Borrado self-serve~~ | **Hecho el 22/09/2026.** Lo que queda es `CRON_SECRET`: el pedido se registra y nada lo ejecuta, y a la persona se le dio una fecha. El panel muestra los vencidos en rojo | Robertino |
 | Borrado de la persona en PostHog al borrar la cuenta | Queda fuera de `deleteUserEverywhere` | pendiente |
 | Validación end-to-end del borrado | Nunca se corrió contra una cuenta real | bloqueado en las cuentas de prueba |

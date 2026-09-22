@@ -160,7 +160,7 @@ lo que un data room pregunta —"¿cómo cumplen X?"— sin releer el dossier en
 | **Art. 7(3)** Retiro del consentimiento | `analytics-runtime.ts`: el retiro llega al tercero, no solo a nuestros call sites |
 | **Art. 15/20** Acceso y portabilidad | `services/data-export-service.ts` |
 | **Art. 16** Rectificación | `app/(en)/dashboard/account/actions.ts` (nombre, self-serve) + `services/privacy-request-service.ts` (email, pedido con plazo) |
-| **Art. 17** Supresión | `deleteUserEverywhere` ⚠️ solo como acción de admin |
+| **Art. 17** Supresión | `services/account-deletion-service.ts` self-serve con 30 días de gracia ⚠️ la ejecución depende de `CRON_SECRET`, que no está seteado |
 | **Art. 18** Limitación | `services/privacy-request-service.ts` ⚠️ canal con plazo registrado, sin ejecución automática |
 | **Art. 21** Oposición | Banner de consentimiento (analytics, un clic) + `services/privacy-request-service.ts` para el resto |
 | **Art. 12(3)** Plazo de respuesta | `PRIVACY_REQUEST_DEADLINE_DAYS`, almacenado en la fila y visible para las dos partes |

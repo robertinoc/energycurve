@@ -48,6 +48,12 @@ interface AdminAction {
 const recordAdminAction = vi.fn(async (action: AdminAction) => void action)
 const sweepBillingPayloads = vi.fn(async () => ({ scrubbed: 0 }))
 
+/** Stripe cancellations, with the database state observed at call time. */
+let stripeCancels: Array<{
+  subscriptionId: string
+  profileRowsAtCallTime: number
+}>
+
 vi.mock("@/lib/supabase/server", () => ({
   getSupabaseAdminClient: () => fake,
 }))
@@ -78,6 +84,20 @@ vi.mock("@/services/retention-service", () => ({
   sweepBillingPayloads: () => sweepBillingPayloads(),
 }))
 
+vi.mock("@/services/subscription-cancel-service", () => ({
+  cancelSubscriptionNow: async (subscriptionId: string) => {
+    // Same technique as the WorkOS mock above, and for the same reason: the
+    // claim worth testing is that the profile row — the only place the
+    // subscription id exists — was still there when Stripe was called.
+    stripeCancels.push({
+      subscriptionId,
+      profileRowsAtCallTime: (fake.tables.profiles ?? []).length,
+    })
+
+    return true
+  },
+}))
+
 vi.mock("@/lib/observability/logger", () => ({
   logError: vi.fn(),
   logInfo: vi.fn(),
@@ -96,12 +116,14 @@ function seedProfiles(): Tables {
         email: "dj@example.com",
         workos_user_id: "workos-target",
         suspended_at: null,
+        stripe_subscription_id: "sub_target",
       },
       {
         id: "profile-bystander",
         email: "someone-else@example.com",
         workos_user_id: "workos-bystander",
         suspended_at: null,
+        stripe_subscription_id: null,
       },
     ],
   }
@@ -114,6 +136,7 @@ function profile(id: string) {
 beforeEach(() => {
   fake = createFakeSupabase(seedProfiles())
   workosDeletes = []
+  stripeCancels = []
   workosDeleteBehaviour = () => {}
   recordAdminAction.mockClear()
   sweepBillingPayloads.mockClear()
@@ -270,5 +293,35 @@ describe("looking up a profile for a route handler", () => {
     await expect(
       service.getBackstageProfileEmail("profile-missing")
     ).resolves.toBeNull()
+  })
+})
+
+describe("the subscription, which this function used to leave running", () => {
+  /**
+   * Added 22/09/2026, after finding that `deleteUserEverywhere` never touched
+   * Stripe. It deleted the WorkOS user and the profile row — and the profile row
+   * is the only place `stripe_subscription_id` lives — so an active subscription
+   * kept renewing against a customer with no account, who could not reach the
+   * billing portal to stop it because they could no longer log in.
+   *
+   * It was true of the admin delete button since it shipped. Self-serve deletion
+   * is what made it matter, because it turns a rare admin action into something
+   * any subscriber can do to themselves.
+   */
+  it("is cancelled while the profile row still exists", async () => {
+    await service.deleteUserEverywhere("profile-target", ACTOR)
+
+    expect(stripeCancels).toHaveLength(1)
+    expect(stripeCancels[0].subscriptionId).toBe("sub_target")
+    // Two rows: the target and the bystander. If the cancellation ran after the
+    // delete this would be 1, and in the real code it would never have found
+    // the id at all.
+    expect(stripeCancels[0].profileRowsAtCallTime).toBe(2)
+  })
+
+  it("is left alone for an account that never had one", async () => {
+    await service.deleteUserEverywhere("profile-bystander", ACTOR)
+
+    expect(stripeCancels).toHaveLength(0)
   })
 })

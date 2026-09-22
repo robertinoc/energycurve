@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { Download, MessageSquare, ScrollText } from "lucide-react"
 
+import { DeleteAccount } from "@/components/dashboard/delete-account"
 import { NameForm } from "@/components/dashboard/name-form"
 import { PlanCard } from "@/components/dashboard/plan-card"
 import { PrivacyRequestForm } from "@/components/dashboard/privacy-request-form"
@@ -14,6 +15,7 @@ import { getSiteCopy, type SiteLocale } from "@/lib/content/site-copy"
 import { KEY_NOTATIONS, type KeyNotation } from "@/lib/music/camelot"
 import { formatPlanDate } from "@/lib/product/plan-summary"
 import { getRequestLocale } from "@/lib/server-locale"
+import { getPendingDeletion } from "@/services/account-deletion-service"
 import { getProfileBilling } from "@/services/billing-service"
 import {
   listPrivacyRequestsForProfile,
@@ -70,11 +72,13 @@ export default async function AccountPage() {
   })
 
   const locale = await getRequestLocale()
-  const [billing, keyNotation, privacyRequests] = await Promise.all([
-    getProfileBilling(profile.id),
-    getProfileKeyNotation(profile.id),
-    listPrivacyRequestsForProfile(profile.id),
-  ])
+  const [billing, keyNotation, privacyRequests, pendingDeletion] =
+    await Promise.all([
+      getProfileBilling(profile.id),
+      getProfileKeyNotation(profile.id),
+      listPrivacyRequestsForProfile(profile.id),
+      getPendingDeletion(profile.id),
+    ])
 
   const displayName =
     [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || "—"
@@ -228,6 +232,30 @@ export default async function AccountPage() {
           {COPY.rightsFallback[locale]}
         </p>
       </section>
+
+      {/*
+        Erasure (Art. 17), last on the page and the only thing on it wearing a
+        warning colour. Below the export on purpose: somebody scrolling to
+        delete their account passes "Download my data" on the way.
+      */}
+      <DeleteAccount
+        locale={locale}
+        email={user.email}
+        planEndsAt={
+          // Only when there is a paid period left to lose. A free account does
+          // not need a paragraph about refunds, and `currentPeriodEnd` is set
+          // for cancelled plans too — so the plan has to still be one we would
+          // charge for.
+          billing.currentPeriodEnd && billing.plan !== "free"
+            ? formatPlanDate(billing.currentPeriodEnd, locale)
+            : null
+        }
+        pendingUntil={
+          pendingDeletion
+            ? formatPlanDate(new Date(pendingDeletion.scheduledFor), locale)
+            : null
+        }
+      />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { listPendingDeletions } from "@/services/account-deletion-service"
 import { getRecentAdminActions } from "@/services/admin-audit-service"
 import { listOpenPrivacyRequests } from "@/services/privacy-request-service"
 import {
@@ -9,6 +10,7 @@ import {
 
 import { ActivityFeed } from "./ActivityFeed"
 import { Bento, BentoLabel } from "./BackstagePrimitives"
+import { PendingDeletions } from "./PendingDeletions"
 import { PrivacyRequestQueue } from "./PrivacyRequestQueue"
 import { UsersTable } from "./UsersTable"
 
@@ -28,13 +30,19 @@ const KPI_LABELS: Array<{
 ]
 
 export default async function BackstageUsersPage() {
-  const [{ users, kpis }, recentAnalyses, adminActions, privacyRequests] =
-    await Promise.all([
-      getBackstageUsersSnapshot(),
-      getRecentAnalyses(),
-      getRecentAdminActions(),
-      listOpenPrivacyRequests(),
-    ])
+  const [
+    { users, kpis },
+    recentAnalyses,
+    adminActions,
+    privacyRequests,
+    pendingDeletions,
+  ] = await Promise.all([
+    getBackstageUsersSnapshot(),
+    getRecentAnalyses(),
+    getRecentAdminActions(),
+    listOpenPrivacyRequests(),
+    listPendingDeletions(),
+  ])
 
   return (
     <div className="space-y-8">
@@ -64,6 +72,7 @@ export default async function BackstageUsersPage() {
           {/* Above the activity feed on purpose: the feed is a record of what
               happened, and this is a list of what is owed with a date on it. */}
           <PrivacyRequestQueue requests={privacyRequests} />
+          <PendingDeletions deletions={pendingDeletions} />
           <ActivityFeed
             users={users}
             recentAnalyses={recentAnalyses}
