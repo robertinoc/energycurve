@@ -93,8 +93,8 @@ compartidos.** Bus factor 1.
 
 ## "¿Qué está roto o pendiente?"
 
-Producto y UX, contra el producto corriendo: [`f1-product-ux-2026-09.md`](f1-product-ux-2026-09.md) ·
 Riesgos técnicos: [`technical-risks.md`](technical-risks.md) ·
+Producto y UX, contra el producto corriendo: [`f1-product-ux-2026-09.md`](f1-product-ux-2026-09.md) ·
 Gaps residuales: `f4-consolidation-2026-09.md` §4 — *llega con el PR #216* ·
 Lo que nunca se probó: [`evidence-index.md`](evidence-index.md) §5
 
