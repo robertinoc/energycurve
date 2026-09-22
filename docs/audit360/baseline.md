@@ -73,9 +73,25 @@ habrían reportado como funcionando.
 
 | Métrica | Valor |
 |---|---|
-| Capabilities `shipped` | 28 |
-| Capabilities `planned` | 7 |
+| Capabilities `shipped` | 24 |
+| Capabilities `planned` | 2 |
 | Idiomas soportados | 2 (EN / ES) |
+
+> **Las dos filas de capabilities decían 28 y 7, y se corrigieron el 22/09/2026.**
+> El registro (`lib/product/capabilities.ts`) tiene 26 entradas: 24 `shipped` y
+> 2 `planned`. Contado de dos formas independientes —importando `CAPABILITIES` y
+> contando las claves del objeto, y parseando el archivo balanceando llaves— y
+> las dos dan lo mismo.
+>
+> **No es que el registro haya cambiado:** su último commit es del 11/09, antes
+> de que se tomara esta línea base, así que el número estuvo mal desde el
+> principio. De dónde salió 28/7 no se pudo reconstruir.
+>
+> Lo encontró la fase F1 de esta misma auditoría, y lo que conviene retener es
+> por qué nadie lo había encontrado: la §3 de abajo dice *"sin esto, la tabla de
+> arriba es una captura que nadie puede volver a tomar"*, y **no daba comando
+> para estas dos filas**. Eran las dos únicas filas no comprobables de la tabla,
+> y son las dos que salieron mal. Ahora tienen comando.
 
 ### Auditoría
 
@@ -96,6 +112,11 @@ npm ci
 npx vitest run --coverage          # tests y cobertura
 npx playwright test --list         # conteo de E2E
 find app lib services components types \( -name "*.ts" -o -name "*.tsx" \) | wc -l
+
+# Capabilities por estado. Agregado el 22/09/2026, porque su ausencia es la
+# razón por la que las dos filas de producto estuvieron mal cuatro meses.
+grep -c 'status: "shipped"' lib/product/capabilities.ts
+grep -c 'status: "planned"' lib/product/capabilities.ts
 ```
 
 ---

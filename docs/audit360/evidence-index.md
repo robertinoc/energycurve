@@ -33,6 +33,8 @@ un data room castiga más a un documento que promete de más que a uno que falta
 | `security/incident-response.md` + `security/breach-notification-template.md` | Arts. 33 y 34 | **Nunca se ensayaron** |
 | `security/sbom/energycurve-sbom.cdx.json` | CycloneDX reproducible | — |
 
+| `audit360/f1-product-ux-2026-09.md` | Recorrido del producto corriendo: 33 rutas, el flujo de valor sin cuenta, 4 estados de error, y las afirmaciones de UX medidas en un navegador | **Todo sin sesión**: nada detrás del login se recorrió. Y no mide fricción — un defecto no es fricción |
+
 ## 3. Privacidad (Proyecto 3)
 
 | Documento | Contesta | No contesta |

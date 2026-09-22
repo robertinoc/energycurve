@@ -99,4 +99,48 @@ describe("the baseline is reproducible", () => {
     // conclusion someone wants. The load-bearing half is the first rule.
     expect(BASELINE).toMatch(/no puntúa como control/i)
   })
+
+  /**
+   * The capability counts, checked against the registry they describe.
+   *
+   * Added 22/09/2026 by the F1 audit, which found the baseline claiming 28
+   * `shipped` and 7 `planned` against a registry that has had 24 and 2 since
+   * before the baseline was written. The number was wrong from the day it was
+   * typed.
+   *
+   * Why nobody caught it is the part worth encoding: the baseline's own §3 says
+   * that without a reproduction command the table is a screenshot nobody can
+   * retake, and gave commands for the tests, the coverage, the E2E count and the
+   * source files — and **none for these two rows**. They were the only two
+   * unverifiable rows in the table and they were the two that were wrong.
+   *
+   * So this asserts the numbers rather than the command. A command in a document
+   * is an invitation to check; a test is the check.
+   */
+  it("counts capabilities the way the registry does", async () => {
+    const { CAPABILITIES } = await import("@/lib/product/capabilities")
+    const statuses = Object.values(
+      CAPABILITIES as Record<string, { status: string }>
+    ).map((capability) => capability.status)
+
+    const shipped = statuses.filter((status) => status === "shipped").length
+    const planned = statuses.filter((status) => status === "planned").length
+
+    // Not vacuous: the registry has to have entries of both kinds for the two
+    // assertions below to be about anything.
+    expect(shipped).toBeGreaterThan(0)
+    expect(planned).toBeGreaterThan(0)
+
+    const row = (label: string) =>
+      new RegExp(`\\| Capabilities \`${label}\` \\|[^|]*?\\b(\\d+)\\b`).exec(
+        BASELINE
+      )?.[1]
+
+    expect(row("shipped"), "baseline.md disagrees with the registry").toBe(
+      String(shipped)
+    )
+    expect(row("planned"), "baseline.md disagrees with the registry").toBe(
+      String(planned)
+    )
+  })
 })
