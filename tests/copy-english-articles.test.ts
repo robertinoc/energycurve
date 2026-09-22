@@ -39,6 +39,39 @@ import { describe, expect, it } from "vitest"
 const SILENT_H = ["hour", "honest", "honor", "honour", "heir"]
 
 /**
+ * Initialisms spelled out letter by letter, whose FIRST LETTER NAME begins with
+ * a vowel sound: f is "ef", h is "aitch", l is "el", m is "em", n is "en", r is
+ * "ar", s is "es", x is "ex". These take "an" despite starting with a written
+ * consonant — "an mp3", "an XML export", "an NML file".
+ *
+ * Found by this check's own first false positive: it flagged "an mp3" in
+ * `dj-tracks-with-no-bpm-or-key.md`, which is correct English. And it could only
+ * surface once the English articles and this scanner were on the same branch —
+ * each side was green alone.
+ *
+ * A list rather than a rule, for the same reason as `CONSONANT_VOWEL` below: a
+ * phonetic rule in a regex is a bigger lie than a list. `flac` is deliberately
+ * absent — it is pronounced as a word, so it takes "a".
+ */
+const LETTER_NAME_VOWEL = [
+  "mp3",
+  "mp4",
+  "m4a",
+  "m3u",
+  "m3u8",
+  "nml",
+  "xml",
+  "hmac",
+  "html",
+  "svg",
+  "sql",
+  "ssl",
+  "rss",
+  "ls",
+  "faq",
+]
+
+/**
  * Words that begin with a written vowel and a spoken consonant. These take "a".
  *
  * A list rather than a phonetic rule, because a phonetic rule in a regex is a
@@ -56,7 +89,10 @@ const CONSONANT_VOWEL = [
 ]
 
 /** `h` is IN this class. See the note above — leaving it out was the bug. */
-const AN_BEFORE_CONSONANT = /\ban\s+([bcdfghjklmnpqrstvwxyz][a-z]+)/g
+// Digits are inside the class, not just letters: without them `an mp3`
+// captured as `mp`, so the `mp3` exception below could never match it —
+// the exception list and the capture have to speak about the same token.
+const AN_BEFORE_CONSONANT = /\ban\s+([bcdfghjklmnpqrstvwxyz][a-z0-9]+)/g
 const A_BEFORE_VOWEL = /\ba\s+([aeiou][a-z]+)/g
 
 function copyFiles(dir: string): string[] {
@@ -101,7 +137,12 @@ function offences(text: string): string[] {
   const found: string[] = []
 
   for (const match of text.matchAll(AN_BEFORE_CONSONANT)) {
-    if (!SILENT_H.some((word) => match[1].startsWith(word))) {
+    const word = match[1].toLowerCase()
+    const allowed =
+      SILENT_H.some((exception) => word.startsWith(exception)) ||
+      LETTER_NAME_VOWEL.some((exception) => word.startsWith(exception))
+
+    if (!allowed) {
       found.push(match[0])
     }
   }
@@ -139,6 +180,12 @@ describe("the English copy", () => {
     // And the exceptions still work, or the fix above would just be noise.
     expect(offences("an hour of an honest set")).toEqual([])
     expect(offences("a unique user of a one-off")).toEqual([])
+    // Initialisms whose letter name starts with a vowel sound. "an mp3" was
+    // this check's own first false positive.
+    expect(offences("an mp3, an XML export and an NML file")).toEqual([])
+    // And the letter-name list must not swallow a real mistake that merely
+    // starts with the same letter.
+    expect(offences("an mixdown")).toEqual(["an mixdown"])
   })
 
   it.each(copyFiles(COPY_ROOT).map((file) => [file.replace(process.cwd() + "/", ""), file]))(
