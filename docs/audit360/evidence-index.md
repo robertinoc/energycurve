@@ -36,6 +36,8 @@ un data room castiga más a un documento que promete de más que a uno que falta
 | `runbooks/secret-rotation.md` | Las 13 credenciales, su radio de explosión, y las 3 cuya rotación el usuario ve | **Ninguna se rotó nunca**: la columna de tiempos está vacía a propósito |
 | `runbooks/backup-restore.md` | El procedimiento, las 3 trampas del ejercicio, y de dónde salen el RTO y el RPO | **No se ejecutó.** La tabla de resultados tiene los siete huecos sin llenar |
 
+| `audit360/f1-product-ux-2026-09.md` | Recorrido del producto corriendo: 33 rutas, el flujo de valor sin cuenta, 4 estados de error, y las afirmaciones de UX medidas en un navegador | **Todo sin sesión**: nada detrás del login se recorrió. Y no mide fricción — un defecto no es fricción |
+
 ## 3. Privacidad (Proyecto 3)
 
 | Documento | Contesta | No contesta |

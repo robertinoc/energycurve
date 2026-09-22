@@ -102,6 +102,7 @@ una tarde cada una, con los pasos y la tabla de resultados esperando números.
 
 Cierre de los hallazgos de seguridad, uno por uno: [`../security/remediation-register.md`](../security/remediation-register.md) ·
 Riesgos técnicos: [`technical-risks.md`](technical-risks.md) ·
+Producto y UX, contra el producto corriendo: [`f1-product-ux-2026-09.md`](f1-product-ux-2026-09.md) ·
 Gaps residuales: `f4-consolidation-2026-09.md` §4 — *llega con el PR #216* ·
 Lo que nunca se probó: [`evidence-index.md`](evidence-index.md) §5
 

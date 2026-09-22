@@ -249,7 +249,7 @@ export const TOOL_COPY = {
       },
       paragraphs: [
         {
-          en: "A warm-up is a ramp that never arrives. It ends higher than it started and lower than where the next DJ needs to begin, and the discipline of it is refusing the peak you are perfectly capable of playing. A warm-up that peaks is the single most reliable way to make an headliner's job harder, and it shows up on the chart instantly: a bump in the middle where the line should still be climbing.",
+          en: "A warm-up is a ramp that never arrives. It ends higher than it started and lower than where the next DJ needs to begin, and the discipline of it is refusing the peak you are perfectly capable of playing. A warm-up that peaks is the single most reliable way to make a headliner's job harder, and it shows up on the chart instantly: a bump in the middle where the line should still be climbing.",
           es: "Un warm-up es una rampa que nunca llega. Termina más alto de donde arrancó y más abajo de donde el DJ que sigue necesita empezar, y su disciplina es negarse al pico que perfectamente podrías tocar. Un warm-up que hace pico es la forma más confiable de complicarle la vida al que cierra, y en el gráfico se ve al toque: una joroba en el medio donde la línea todavía debería estar subiendo.",
         },
         {
