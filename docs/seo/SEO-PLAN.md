@@ -98,10 +98,44 @@ Task ID `SEO-E##`. Effort: S ≤ 2h · M ≤ 1 day · L ≤ 3 days. Tags: `[code
 | ID | Task | Tag | Effort | Acceptance |
 |---|---|---|---|---|
 | SEO-E12 | **Blog model upgrade** (`lib/blog/posts.ts`): add optional frontmatter `updatedAt`, `author` (name + url), `translationOf` (slug in the other locale), `tags`, `image`. Keep the strict parser; extend `tests/blog.test.ts`. Emit hreflang between translated pairs (`alternates.languages`) only when `translationOf` resolves. | code | M | Tests green; a translated pair shows hreflang both ways |
-| SEO-E13 | **English cornerstone set (6 posts, 1,000–1,400 words each)**, one per week, mapped to baseline gaps: (1) *What is a DJ set energy curve (and why it matters more than BPM)*, (2) *How to order a DJ set by energy: the warm-up DJ's guide*, (3) *How much energy jump is too much between tracks?*, (4) *Analyze your set before you play it, not after*, (5) *Your tracks have no BPM or key — here's how to still plan the set*, (6) *Rekordbox / Serato / Traktor: where each tool stores energy tags* (links `/energy-tags`). Rules: definition in first 60 words, native `<details>` FAQ (3 Q) → `FAQPage`, ≥3 internal links (`/energy-tags`, `/import-formats`, `/pricing`, sibling), **no accuracy claims**, "DJ" in title. | content | L | 6 EN posts live; `/blog` no longer an empty state |
-| SEO-E14 | **Translate the 5 ES posts to EN** and set `translationOf` both ways; **expand each ES post to ≥900 words** with an FAQ and internal links (keep voseo and vocabulary rules). | content | L | 5 pairs with hreflang; ES posts ≥900 words |
+| SEO-E13 ⚠️ | **English cornerstone set — 3 de los 6 ya existen, ver la nota debajo de la tabla.** (6 posts, 1,000–1,400 words each), one per week, mapped to baseline gaps: (1) *What is a DJ set energy curve (and why it matters more than BPM)*, (2) *How to order a DJ set by energy: the warm-up DJ's guide*, (3) *How much energy jump is too much between tracks?*, (4) *Analyze your set before you play it, not after*, (5) *Your tracks have no BPM or key — here's how to still plan the set*, (6) *Rekordbox / Serato / Traktor: where each tool stores energy tags* (links `/energy-tags`). Rules: definition in first 60 words, native `<details>` FAQ (3 Q) → `FAQPage`, ≥3 internal links (`/energy-tags`, `/import-formats`, `/pricing`, sibling), **no accuracy claims**, "DJ" in title. | content | L | 6 EN posts live; `/blog` no longer an empty state |
+| SEO-E14 ✅ | **HECHO 22/09/2026 — PR del lote 5.** 5 traducciones al inglés con `translationOf` en los dos sentidos, los 5 pares con hreflang en la metadata **y en el sitemap**, y los 10 artículos por encima de las 900 palabras. `en:/blog` salió de `NOINDEX_PAGES` y el route de inglés recuperó su `generateStaticParams` — las dos cosas las pidió un test que estaba esperando este momento. **Translate the 5 ES posts to EN** and set `translationOf` both ways; **expand each ES post to ≥900 words** with an FAQ and internal links (keep voseo and vocabulary rules). | content | L | 5 pairs with hreflang; ES posts ≥900 words |
 | SEO-E15 | **Related posts + in-article links**: `blog-article.tsx` renders 3 related posts (same locale, by tags) and a contextual CTA to `/import-formats` ("Import your playlist") using `next/link` (not absolute URLs). | code | M | Every post has ≥4 internal links out, ≥2 in |
 | SEO-E16 | Blog index (`/blog`, `/es/blog`): add tag filters, short intro paragraph (what the blog covers, for whom), `Blog` JSON-LD with `blogPost` list. | code | S | Indexable intro copy; schema valid |
+
+> ### SEO-E13 y SEO-E14 se solapan en tres artículos
+>
+> Detectado el 22/09/2026 al escribir E14. Tres de los seis títulos de E13 son
+> los mismos artículos que E14 traduce:
+>
+> | Título de E13 | Ya existe como |
+> |---|---|
+> | *How much energy jump is too much between tracks?* | `how-much-energy-jump-is-too-much-dj` |
+> | *Analyze your set before you play it, not after* | `analyse-your-dj-set-before-you-play-it` |
+> | *Your tracks have no BPM or key* | `dj-tracks-with-no-bpm-or-key` |
+>
+> Escribir las dos listas completas produciría **seis páginas en inglés
+> compitiendo entre sí por las mismas consultas**, que es lo contrario del
+> objetivo: dos artículos nuestros peleando por un resultado es una forma de
+> perderlo los dos. Así que E13 baja de 6 a 3 artículos nuevos, y los tres que
+> quedan son los que no se solapan con nada:
+>
+> 1. *What is a DJ set energy curve (and why it matters more than BPM)* — la
+>    consulta definicional, y la única de las seis que el glosario no cubre.
+> 2. *How to order a DJ set by energy: the warm-up DJ's guide* — se solapa
+>    **parcialmente** con `is-my-dj-set-in-the-right-order`, y el ángulo que lo
+>    salva es el horario: uno evalúa un orden cualquiera, el otro es el set de
+>    apertura, que es el posicionamiento que el plan le pide a todo el sitio.
+> 3. *Rekordbox / Serato / Traktor: where each tool stores energy tags* — enlaza
+>    `/energy-tags`, que hoy tiene un solo enlace entrante desde contenido.
+>
+> **Lo que queda abierto del criterio de aceptación de E13**, y no se hizo a
+> propósito: el FAQ en `<details>` nativo con su `FAQPage`. El parser de markdown
+> del blog no soporta HTML —lo lee como texto, y hay un test que lo fija— así que
+> hacerlo es extender el parser, el renderer y el builder de schema. Los diez
+> artículos usan en su lugar `### Pregunta` con la respuesta directa en la primera
+> oración, que es de dónde sale el valor para AEO; lo que falta es la
+> presentación colapsable y el schema por artículo.
 
 ### Phase 3 — AEO: schema everywhere a question is answered (weeks of 19 Oct – 9 Nov)
 | ID | Task | Tag | Effort | Acceptance |

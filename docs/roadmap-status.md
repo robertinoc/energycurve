@@ -246,7 +246,19 @@ Energy Model v3, FREE/PRO/PRO+ plans at $9.99/$19.99).
   partnerships remain**, and that is an email and a months-long lead time rather
   than a build.
 
-## Content, SEO & AEO — closed 12 Aug 2026
+## Content, SEO & AEO — closed 12 Aug 2026, reopened 15 Sep 2026
+
+> **The plan this work now follows is [`docs/seo/SEO-PLAN.md`](seo/SEO-PLAN.md)**
+> (phases 0–5, task ids `SEO-E##`). Everything below this line is the August
+> round and is closed; the plan is the live document.
+>
+> This pointer is here because its absence was the **only red item** in the
+> production verification of 19 Sep: `AGENTS.md` named the plan and this file did
+> not, so anyone opening the roadmap to find out where SEO stood read a section
+> that declares itself closed and never mentions the plan that reopened it. It
+> was a one-line fix and it was deliberately left undone, because the task that
+> found it was to verify rather than to repair — see
+> [`docs/seo/verificacion-produccion-2026-09.md`](seo/verificacion-produccion-2026-09.md).
 
 Shipped in PRs #82 and #83:
 
@@ -263,6 +275,9 @@ Shipped in PRs #82 and #83:
 - AEO: 8-question FAQ in native `<details>` so answers ship in the HTML even
   collapsed. Baseline measured in `seo-aeo-baseline-2026-08.md` — 0 of 10
   target queries, domain not yet indexed. Re-measure ~Sep 2026.
+  **Superseded**: the baseline's Spanish-first conclusion held until 22 Sep 2026,
+  when `SEO-E14` shipped the five English translations. `/blog` in English was
+  `noindex` for as long as it had nothing to list, and is not any more.
 - `/pricing` published: FREE / PRO $9.99 / PRO+ $19.99, PRO marked recommended,
   roadmap capabilities rendered as "Soon" rather than check marks.
 

@@ -5,6 +5,11 @@ import { describe, expect, it } from "vitest"
 
 import sitemap from "@/app/sitemap"
 import {
+  allPublishedPosts,
+  postAlternates,
+  postUpdatedAt,
+} from "@/lib/blog/posts"
+import {
   indexableLocales,
   isIndexable,
   LOCALIZED_PATHS,
@@ -100,29 +105,26 @@ describe("hreflang and canonicals", () => {
     }
   })
 
-  it("drops the English alternate from a page that is noindex in English", () => {
-    // /blog in English is a near-empty page pointing at the Spanish articles.
-    // Naming it as the English version of /es/blog would advertise a page we
-    // have asked Google to ignore, so the Spanish index stands alone — and
-    // x-default falls to it, because it is the only blog index left to serve.
+  it("offers both blog indexes now that both have articles", () => {
+    // Until 22/09/2026 this asserted the opposite: `/blog` in English was a
+    // near-empty page pointing at the Spanish articles, so naming it as the
+    // English version of `/es/blog` would have advertised a page we had asked
+    // Google to ignore. Five English articles removed the reason, and
+    // `NOINDEX_PAGES` is empty.
     expect(buildAlternates("/blog", "es").languages).toEqual({
+      en: "/blog",
       es: "/es/blog",
-      "x-default": "/es/blog",
+      "x-default": "/blog",
     })
   })
 
-  it("marks the English blog index noindex, and nothing else", () => {
-    expect(marketingMetadata("/blog", "en").robots).toEqual({
-      index: false,
-      follow: true,
-    })
-
+  it("marks nothing noindex, and says so rather than leaving it implicit", () => {
+    // The mechanism is still there and still typed over `LocalizedPath`; what
+    // changed is that no page needs it. Asserting the empty state explicitly is
+    // what turns "we removed the entry" into "no page is being held back",
+    // which is the claim a reader of the sitemap cares about.
     for (const path of LOCALIZED_PATHS) {
       for (const locale of ["en", "es"] as const) {
-        if (path === "/blog" && locale === "en") {
-          continue
-        }
-
         expect(
           marketingMetadata(path, locale).robots,
           `${locale}:${path}`
@@ -283,11 +285,13 @@ describe("sitemap", () => {
     }
   })
 
-  it("leaves the noindex English blog index out entirely", () => {
-    // The inverse of the assertion above, spelled out because it is the whole
-    // point of the noindex list: a sitemap that lists a page we have asked
-    // Google not to index is asking and un-asking in the same file.
-    expect(entries.some((entry) => entry.url === `${SITE_URL}/blog`)).toBe(false)
+  it("lists both blog indexes, now that both have articles", () => {
+    // The inverse of the assertion that used to be here, and the reason the
+    // noindex list existed at all: a sitemap that lists a page we have asked
+    // Google not to index is asking and un-asking in the same file. With the
+    // list empty, the English index has to be in — and its absence would now be
+    // the bug.
+    expect(entries.some((entry) => entry.url === `${SITE_URL}/blog`)).toBe(true)
     expect(entries.some((entry) => entry.url === `${SITE_URL}/es/blog`)).toBe(true)
   })
 
@@ -330,21 +334,63 @@ describe("sitemap", () => {
   it("dates each article from its own revision, never the build", () => {
     // A build timestamp here would tell a crawler that every article changed on
     // every deploy, which is how `lastmod` stops being believed.
-    const today = new Date().toISOString().slice(0, 10)
+    //
+    // This used to assert `!== today`, using "not today" as a proxy for "not the
+    // build timestamp". The proxy is wrong on exactly one day — the day you
+    // publish — and it broke on 22/09/2026 when five English articles went up
+    // with today's date, which is the most legitimate `lastmod` a page can have.
+    //
+    // A fourth instrument in this repo measuring a stand-in instead of the
+    // thing. The claim is "this date comes from the article's own frontmatter",
+    // so that is what it compares against, and it now also catches a date that
+    // is merely *stale* rather than only one that is too fresh.
+    const byUrl = new Map(
+      allPublishedPosts().map((post) => [
+        `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}`,
+        postUpdatedAt(post),
+      ])
+    )
+
+    expect(articleEntries.length).toBe(byUrl.size)
 
     for (const entry of articleEntries) {
-      const lastModified = new Date(entry.lastModified!).toISOString().slice(0, 10)
-      expect(lastModified, entry.url).not.toBe(today)
+      const expected = byUrl.get(entry.url)
+
+      expect(expected, `${entry.url} is not an article we published`).toBeDefined()
+      expect(
+        new Date(entry.lastModified!).toISOString().slice(0, 10),
+        entry.url
+      ).toBe(expected)
     }
   })
 
-  it("gives an article no alternates at all", () => {
-    // The inversion of the rule above, and the reason the split exists: an article
-    // has no translation, and advertising one would point a crawler at a 404.
+  it("gives each article the same reciprocal alternates its page declares", () => {
+    // This asserted the opposite until 22/09/2026: an article had no
+    // translation, so advertising one would have pointed a crawler at a 404.
+    // SEO-E14 made all five articles pairs, and the block belongs in the
+    // sitemap as well as in the page's metadata.
+    //
+    // Compared against `postAlternates` rather than rebuilt here, because two
+    // derivations of the same claim is how the sitemap and the page end up
+    // disagreeing — and a crawler that sees them disagree trusts neither.
     expect(articleEntries.length).toBeGreaterThan(0)
 
+    const expected = new Map(
+      allPublishedPosts().map((post) => [
+        `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}`,
+        Object.fromEntries(
+          Object.entries(postAlternates(post)).map(([key, path]) => [
+            key,
+            `${SITE_URL}${path}`,
+          ])
+        ),
+      ])
+    )
+
     for (const entry of articleEntries) {
-      expect(entry.alternates?.languages, entry.url).toBeUndefined()
+      expect(entry.alternates?.languages, entry.url).toEqual(
+        expected.get(entry.url)
+      )
     }
   })
 

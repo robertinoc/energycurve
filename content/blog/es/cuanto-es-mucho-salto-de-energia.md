@@ -3,10 +3,18 @@ title: "¿Cuánto es mucho salto de energía entre dos temas?"
 description: "Las reglas del tipo 'no pases del 8% de BPM' sirven poco cuando el problema no es el tempo. Cómo mirar los saltos de energía de tu propia lista."
 slug: cuanto-es-mucho-salto-de-energia
 locale: es
+translationOf: how-much-energy-jump-is-too-much-dj
 targetQuery: "salto de energía entre tracks DJ"
 publishedAt: 2026-08-20
+updatedAt: 2026-09-22
 tags: curva de energía, transiciones, BPM
 ---
+
+En una escala de energía del 1 al 10, un salto de más de **dos puntos hacia arriba**
+se escucha y de más de tres se siente como un corte. Hacia abajo el margen es más
+chico todavía, porque bajar la pista es fácil y volver a subirla no. El tempo tiene su
+propio límite —pasado el 6-8% se empieza a oír el pitch— pero el tempo casi nunca es
+el salto que arruinó la transición.
 
 La regla que más se repite es "no cambies más de 6 u 8% de BPM entre dos temas". Es
 una regla útil y también es incompleta, porque el salto que arruina una transición
@@ -35,6 +43,21 @@ rueda Camelot, que trabaja con una tabla de transiciones bastante más ancha que
 esa regla: [abrila con tu tonalidad](/es/herramientas/rueda-camelot) y fijate qué
 ofrece de verdad.
 
+## Qué se siente con cada tamaño de salto
+
+| Salto de energía | En la pista | Cuándo está bien |
+|---|---|---|
+| 0 a ±1 | No pasa nada, y está bien para una o dos transiciones | Dentro de una meseta que estás sosteniendo a propósito |
+| +2 | Una subida que la gente siente sin levantar la vista | El caballito de batalla. La mayoría de una subida son éstos |
+| +3 o más | Un cambio de marcha; se dan vuelta las cabezas | Una o dos veces por set, y sólo con un tema que lo pueda sostener |
+| −2 | Aire para respirar | Después de un pico, cuando el tema que sigue usa el espacio |
+| −3 o más | La pista se ralea | Casi nunca a mitad de set; así se entrega mal un warm-up |
+
+La fila que se ignora es la primera. **Demasiadas transiciones planas seguidas también
+es un defecto** — un set que nunca se mueve más de un punto no es contenido, es un set
+que no va a ningún lado, y cuesta mucho más notarlo que un sacudón porque nunca suena
+nada mal.
+
 ## Por qué las reglas generales no alcanzan
 
 El problema de "no pases del 8%" es que es una regla sobre transiciones en abstracto,
@@ -54,11 +77,36 @@ lo que salte más de dos puntos de energía o más del 8% de BPM.
 Vas a terminar con dos o tres filas marcadas. Esas son las que hay que mirar. Casi
 siempre se arreglan moviendo un solo tema.
 
+### ¿La regla del 8% de BPM se sostiene?
+
+Como techo, más o menos. Lo que esconde es que el mismo 8% se nota mucho más en una
+voz que en un tema de batería, porque el corrimiento de pitch cae sobre algo cuya
+afinación tu oído conoce. Si el tema que sale tiene una voz reconocible, tratá el 4%
+como el límite práctico y usá el rango completo en los instrumentales.
+
+### ¿Una bajada grande puede estar bien?
+
+Sí, y es uno de los movimientos más fuertes que hay — pero sólo cuando lo que sigue se
+la gana. Un −3 hacia un tema que reconstruye en los dos minutos siguientes se lee como
+deliberado. El mismo −3 hacia algo que también se queda en 5 se lee como un error, y
+la pista lo trata como tal.
+
+### ¿Y si mis temas no tienen ningún valor de energía?
+
+Entonces se los ponés vos, y tus propios números son el mejor dato disponible. Si no,
+la energía se puede estimar del BPM y de propiedades del audio, pero es una estimación
+— mirá [qué hacer si tus tags están vacíos](/es/blog/tus-temas-no-tienen-bpm-ni-tonalidad)
+para saber qué se recupera y cuánto confiar en cada fuente.
+
 ## Lo que automatizamos
 
 EnergyCurve hace ese cálculo por vos y marca los saltos en la curva, con el
 movimiento concreto para cada uno: "mandá el tema 7 a la posición 3" y cuánto sube el
 score si lo hacés. También te avisa lo contrario, que se ve menos: demasiadas
 transiciones planas seguidas, que es un set que no va a ningún lado.
+
+Si no estás seguro de que tu software escriba un valor de energía,
+[tags de energía](/es/energy-tags) explica cómo lo guarda cada uno de Rekordbox,
+Serato y Traktor.
 
 [Ver los saltos de tu set](https://energycurve.app/es)
