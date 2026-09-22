@@ -135,17 +135,41 @@ lo vio. Es una decisión que se toma una vez y se vive dos años.
 Mi recomendación es agregarlo: todo lo que tenés está en Vercel sobre HTTPS, y
 Resend usa registros DNS, no HTTP. Pero es tuya.
 
-### S-06 · El limitador de tasa vive en memoria del proceso
-**Severidad: media. NO CORREGIDO — requiere infraestructura.**
+### S-06 · El limitador de tasa vivía en memoria del proceso
+**Severidad: media. CORREGIDO.**
 
-`lib/rate-limit.ts` guarda los buckets en un `Map` a nivel de módulo. En Vercel
+`lib/rate-limit.ts` guardaba los buckets en un `Map` a nivel de módulo. En Vercel
 eso significa que el límite es **por instancia** y se reinicia en cada arranque en
-frío. Los límites que importan: reset de contraseña 5/15min (anti-enumeración y
+frío. Los límites que importaban: reset de contraseña 5/15min (anti-enumeración y
 anti-bombardeo de mails), contacto 5/10min, y el ordenamiento con IA 6/5min, que
-es el que cuesta plata por llamada.
+es el que cuesta plata por llamada. **El límite que anunciábamos no era el que
+aplicaba.**
 
-En la práctica los límites son orientativos. Resolverlo necesita almacenamiento
-compartido (Upstash o Vercel KV).
+Resuelto con estado compartido en Postgres: `services/rate-limit-service.ts` y la
+migración `0029_rate_limit_buckets.sql`. La parte pura —alineación de ventana y
+forma del resultado— se queda en `lib/rate-limit.ts`, donde se testea sin base.
+
+Dos cosas del arreglo que conviene tener escritas:
+
+- **Las ventanas se alinean a la época.** La ventana vieja arrancaba cuando una
+  instancia veía la primera request, así que dos instancias calculaban dos
+  expiraciones distintas para la misma clave y ninguna podía ser la autoridad —
+  esa ventana no es compartible ni en principio. Ahora todas flooran el reloj
+  igual y caen en el mismo bucket sin coordinarse.
+- **El compromiso queda dicho y no descubierto después:** una ráfaga a caballo de
+  un borde puede alcanzar 2× el límite entre dos ventanas adyacentes. Es el mismo
+  compromiso que ya hacía la versión en memoria, y está bien para límites de "no
+  martilles esto". No estaría bien para una cuota de facturación, y por eso las
+  cuotas mensuales viven en `feature_usage` con período de calendario.
+
+**Depende de que la migración `0029` esté aplicada.** Ver S-16.
+
+> Este hallazgo estuvo reportado acá como *"NO CORREGIDO — requiere
+> infraestructura"* después de haberse corregido. Lo encontró el registro de
+> remediación del 21/09/2026 al citar la evidencia de cada fila, y está anotado
+> en su sección 4 en vez de arreglado en silencio: es la sexta vez que esta
+> auditoría encuentra prosa afirmando algo falso, y la clase de error fue la
+> misma las seis veces.
 
 ### S-07 · Los links públicos de curva no se pueden revocar ni expiran
 **Severidad: baja. NO CORREGIDO — decisión de producto.**

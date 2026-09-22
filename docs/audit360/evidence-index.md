@@ -31,7 +31,10 @@ un data room castiga más a un documento que promete de más que a uno que falta
 | `security/rbac-matrix.md` | Privilegios por superficie × 3 niveles | Trae su propia sección de lo NO verificado: todo está probado a nivel handler con sesión simulada |
 | `security/alerting.md` | Qué vigilar, con umbrales | Dice que **no hay alertas corriendo** |
 | `security/incident-response.md` + `security/breach-notification-template.md` | Arts. 33 y 34 | **Nunca se ensayaron** |
+| `security/remediation-register.md` | Antes/después/evidencia de los 18 hallazgos, y la priorización por consecuencia × probabilidad | **No es un informe de pentest**, y lo dice arriba: no hubo pentest ni verificación con cuentas reales |
 | `security/sbom/energycurve-sbom.cdx.json` | CycloneDX reproducible | — |
+| `runbooks/secret-rotation.md` | Las 13 credenciales, su radio de explosión, y las 3 cuya rotación el usuario ve | **Ninguna se rotó nunca**: la columna de tiempos está vacía a propósito |
+| `runbooks/backup-restore.md` | El procedimiento, las 3 trampas del ejercicio, y de dónde salen el RTO y el RPO | **No se ejecutó.** La tabla de resultados tiene los siete huecos sin llenar |
 
 ## 3. Privacidad (Proyecto 3)
 

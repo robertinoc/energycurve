@@ -83,7 +83,7 @@ Acá es donde el documento deja de poder decir que sí. Ver §3.
 | Backups automáticos de Supabase | Existen por plan. **Sin verificar cuáles, con qué frecuencia ni cuánto se retienen** |
 | Point-in-time recovery | **Sin confirmar si está habilitado** |
 | Restauración probada | **Nunca se hizo** |
-| Runbook de restauración | **No existe** |
+| Runbook de restauración | **Existe desde el 21/09/2026** — `docs/runbooks/backup-restore.md`, con la tabla de resultados sin llenar |
 | RTO / RPO definidos | **No existen** |
 
 Un backup que nunca se restauró es una hipótesis, no un control. Es honesto
@@ -91,7 +91,17 @@ decirlo así en vez de escribir "backups: sí" en una fila verde, porque esa fil
 es exactamente la que un comprador prueba en due diligence.
 
 **Lo desbloquea Robertino** y cuesta una tarde: restaurar a un proyecto
-descartable, contar cuánto tardó, y escribir el runbook con ese número.
+descartable y contar cuánto tardó. El runbook ya no hay que escribirlo —
+`docs/runbooks/backup-restore.md` tiene los pasos, las tres trampas del ejercicio
+y la tabla de resultados esperando los números. **Las otras cuatro filas siguen
+en rojo hasta que esos números existan**, y la más importante de leer del panel
+antes de empezar es si PITR está habilitado: esa sola fila mueve el RPO de
+"hasta 24 horas" a "minutos".
+
+La rotación de credenciales, que era el otro hueco de procedimiento de esta
+sección, tiene runbook desde la misma fecha: `docs/runbooks/secret-rotation.md`.
+Las trece credenciales con su radio de explosión, cuál admite solapamiento —sólo
+Stripe, hasta 7 días— y las tres cuya rotación el usuario ve.
 
 ---
 
