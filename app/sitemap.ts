@@ -5,7 +5,11 @@ import {
   LOCALIZED_PATHS,
   localizedPath,
 } from "@/lib/content/locale-routing"
-import { allPublishedPosts, postUpdatedAt } from "@/lib/blog/posts"
+import {
+  allPublishedPosts,
+  postAlternates,
+  postUpdatedAt,
+} from "@/lib/blog/posts"
 import {
   glossaryTermPath,
   guidePath,
@@ -97,11 +101,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // two that describe the pre-#231 harmonic rule are already known to need it —
   // and `yearly` on a page we intend to edit this quarter asks a crawler to come
   // back after the change it is meant to notice.
+  //
+  // Since 22/09/2026 the articles carry `alternates` too, and that is new rather
+  // than an omission corrected: before SEO-E14 every article existed in exactly
+  // one language, so the only honest block was one naming that language — and
+  // the sitemap left it out while the article's own metadata said it. Now that
+  // all five are pairs, the reciprocal block belongs in both places.
+  //
+  // Built from `postAlternates`, which is the same function the page's metadata
+  // uses. Two derivations of the same claim is how the sitemap and the page end
+  // up disagreeing, and a crawler that sees them disagree trusts neither.
   const articles: MetadataRoute.Sitemap = allPublishedPosts().map((post) => ({
     url: `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}`,
     lastModified: new Date(postUpdatedAt(post)),
     changeFrequency: "monthly",
     priority: 0.6,
+    alternates: {
+      languages: alternateLanguages(
+        Object.fromEntries(
+          Object.entries(postAlternates(post)).map(([key, path]) => [
+            key,
+            `${SITE_URL}${path}`,
+          ])
+        )
+      ),
+    },
   }))
 
   // Only the languages a page is actually offered in. `/blog` is `noindex` in

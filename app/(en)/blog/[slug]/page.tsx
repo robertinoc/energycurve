@@ -21,20 +21,23 @@ import {
 const LOCALE = "en" as const
 
 /**
- * No `generateStaticParams` here, unlike the Spanish route — and the asymmetry is
- * temporary, not a preference.
+ * Every published article, so each one is a static page rather than a render.
  *
- * There are no English articles yet, so it would return an empty array, and Next
- * reads that as "prerender this route's shell" rather than "there is nothing to
- * prerender". The shell is static, and a statically prerendered 404 that reaches
- * a not-found which reads the request fails with "page changed from static to
- * dynamic" — a 500 where a 404 belongs. With no params to prerender, rendering on
- * demand costs nothing and the 404 works.
+ * This was deliberately absent until 22/09/2026, and the reason is worth keeping
+ * because it will apply again to the next empty locale: with no English articles
+ * this returned an empty array, and Next reads that as "prerender this route's
+ * shell" rather than "there is nothing to prerender". A statically prerendered
+ * 404 that reaches a not-found which reads the request fails with "page changed
+ * from static to dynamic" — a 500 where a 404 belongs.
  *
- * `tests/blog.test.ts` fails the moment `content/blog/en/` has an article and
- * says to put this back, because at that point the array is non-empty, the shell
- * is a real page, and prerendering is what you want.
+ * `tests/blog.test.ts` is what carried the news that the condition had changed.
+ * It asserted the absence while `content/blog/en/` was empty and flipped to
+ * demanding the export the moment an article landed, with the fix in its own
+ * failure message.
  */
+export function generateStaticParams() {
+  return listPosts(LOCALE).map((post) => ({ slug: post.slug }))
+}
 
 /**
  * Self-canonical, and an `hreflang` set naming exactly one language: this one.

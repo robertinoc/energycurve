@@ -274,28 +274,45 @@ test.describe("blog", () => {
     await expect(page.locator(".ec-prose")).not.toContainText("**")
   })
 
-  test("an article claims no translation it doesn't have", async ({ page }) => {
+  test("an article declares the translation it does have, in the served HTML", async ({
+    page,
+  }) => {
     await page.goto("/es/blog/esta-bien-el-orden-de-mi-set")
 
-    // Self-canonical, and an hreflang set naming exactly one language: itself.
+    // Self-canonical, and an hreflang set naming both languages plus x-default.
     //
-    // This used to assert zero hreflang tags, on the reasoning that advertising
-    // an English twin would point a crawler at a 404. The first half of that is
-    // still true and is what the count of one protects. The second half threw out
-    // something safe to say: one entry tells a crawler the set is closed, where
-    // no entries only tells it nothing was declared.
+    // This assertion has now been rewritten twice by the same rule, which is
+    // worth recording because the rule is what matters and the count is not.
+    // It first asserted **zero** hreflang tags, on the reasoning that
+    // advertising an English twin would point a crawler at a 404 — true then,
+    // and it threw out the half that was safe to say. It then asserted **one**,
+    // naming Spanish alone. SEO-E14 shipped the English translations on
+    // 22/09/2026, and now the honest count is three.
+    //
+    // The rule that survived all three versions: **declare exactly what
+    // resolves.** `resolveTranslation` is what decides, so a `translationOf`
+    // set on one side only still produces nothing rather than a broken link.
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
       /\/es\/blog\/esta-bien-el-orden-de-mi-set$/
     )
 
     const alternates = page.locator("link[rel=\"alternate\"][hreflang]")
-    await expect(alternates).toHaveCount(1)
-    await expect(alternates).toHaveAttribute("hreflang", "es")
-    await expect(alternates).toHaveAttribute(
-      "href",
-      /\/es\/blog\/esta-bien-el-orden-de-mi-set$/
-    )
+    await expect(alternates).toHaveCount(3)
+
+    await expect(
+      page.locator('link[rel="alternate"][hreflang="es"]')
+    ).toHaveAttribute("href", /\/es\/blog\/esta-bien-el-orden-de-mi-set$/)
+
+    await expect(
+      page.locator('link[rel="alternate"][hreflang="en"]')
+    ).toHaveAttribute("href", /\/blog\/is-my-dj-set-in-the-right-order$/)
+
+    // English is the site's default everywhere else on this site; a pair keeps
+    // it so, which is why x-default is the English URL and not this page.
+    await expect(
+      page.locator('link[rel="alternate"][hreflang="x-default"]')
+    ).toHaveAttribute("href", /\/blog\/is-my-dj-set-in-the-right-order$/)
   })
 
   test("a Spanish article's 404 is in Spanish", async ({ page }) => {
@@ -309,13 +326,36 @@ test.describe("blog", () => {
     )
   })
 
-  test("the English index says where the writing is", async ({ page }) => {
+  test("the English index lists the English articles", async ({ page }) => {
     await page.goto("/blog")
 
-    // No English articles yet, and the empty state names the reason rather than
-    // promising a "coming soon".
-    await expect(page.locator("main")).toContainText(/in Spanish for now/i)
-    await expect(page.locator('a[href="/es/blog"]')).toBeVisible()
+    // This asserted the empty state — "the articles are in Spanish for now" —
+    // until SEO-E14 made that false. The index is now a real index, and the
+    // assertion that replaces it is the one that would have caught a locale
+    // dropped somewhere in the pipeline: the articles reach the served HTML.
+    await expect(page.locator("main")).not.toContainText(/in Spanish for now/i);
+
+    await expect(page.locator("main")).toContainText(
+      /Is my DJ set in the right order/i
+    )
+    await expect(page.locator("main")).toContainText(
+      /Analyse your DJ set before you play it/i
+    )
+
+    // And it is indexable again: it was noindex for exactly as long as it had
+    // nothing to list.
+    //
+    // The content, not the tag's absence. The root layout emits
+    // `index, follow` on every page — omitting the key in `marketingMetadata`
+    // is what lets that through, which the comment there explains — so a page
+    // that is no longer held back has the tag and says `index`. My first
+    // version asserted the tag was gone, which is the same mistake five other
+    // checks in this repo have made: measuring the artefact instead of the
+    // behaviour.
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      /^index, follow/
+    )
   })
 
   test("the sitemap lists the articles", async ({ request }) => {

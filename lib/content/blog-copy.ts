@@ -20,16 +20,22 @@ export const BLOG_COPY = {
     es: "Para DJs que preparan un set antes de tocarlo, sobre todo en warm-up y apertura. Orden, saltos de energía, y qué hacer cuando tus temas no traen BPM ni tonalidad.",
   },
   /**
-   * Shown on the English index, which has no articles yet.
+   * The empty state, which since 22/09/2026 no locale reaches.
    *
-   * Says where the writing is instead of pretending the section is coming soon.
-   * The Spanish-first order was a measured decision — the AEO baseline found the
-   * Spanish queries undefended and the English ones held by four products — so
-   * the honest empty state names it.
+   * It said "the articles are in Spanish for now", which was true and measured —
+   * the AEO baseline found the Spanish queries undefended and the English ones
+   * held by four products — and stopped being true the moment SEO-E14 shipped
+   * the five English translations.
+   *
+   * Kept rather than deleted, and rewritten to say nothing about which language
+   * is ahead. The branch is unreachable while both directories have articles,
+   * and a copy string that asserts a fact about the corpus is exactly the kind
+   * of claim that goes stale unnoticed — this version cannot, because it makes
+   * no claim.
    */
   emptyEn: {
-    en: "The articles are in Spanish for now. That's deliberate: those are the searches nobody has answered yet.",
-    es: "Los artículos están en español por ahora.",
+    en: "Nothing here yet. The other language may have more — the articles are written where the questions are being asked.",
+    es: "Todavía no hay nada acá. Puede que el otro idioma tenga más — los artículos se escriben donde se hacen las preguntas.",
   },
   readSpanish: { en: "Read them in Spanish", es: "Leerlos en español" },
   backToIndex: { en: "All articles", es: "Todos los artículos" },

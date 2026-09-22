@@ -249,7 +249,7 @@ describe("article descriptions fit a search result", () => {
 })
 
 describe("the English blog route is shaped for the content it has", () => {
-  it("renders on demand while there are no English articles", async () => {
+  it("prerenders the English articles once there are any, and not before", async () => {
     /**
      * `app/(en)/blog/[slug]/page.tsx` deliberately has no `generateStaticParams`
      * while `content/blog/en/` is empty: it would return `[]`, which Next reads
@@ -308,7 +308,12 @@ describe("article structured data", () => {
     )
     const { serializeStructuredData } = await import("@/lib/seo")
 
-    const post = getPost("es", slug)!
+    // The locale used to be hardcoded to "es", which was correct while every
+    // article was Spanish and became a null dereference on the day five English
+    // ones landed. Looked up in both rather than parameterised at every call
+    // site: a slug is unique across the corpus, and a helper that needs the
+    // locale passed in is a helper every new test can get wrong.
+    const post = getPost("es", slug) ?? getPost("en", slug)!
     const serialized = serializeStructuredData(
       buildArticleStructuredData(post, postUpdatedAt(post))
     )
@@ -331,13 +336,18 @@ describe("article structured data", () => {
   })
 
   it("fills every field a rich result needs", async () => {
+    const { postUpdatedAt: postUpdatedAtOf } = await import("@/lib/blog/posts")
     const { post, graph } = await graphFor("esta-bien-el-orden-de-mi-set")
     const [article] = graph
 
     expect(article.headline).toBe(post.title)
     expect(article.description).toBe(post.description)
     expect(article.datePublished).toBe(post.publishedAt)
-    expect(article.dateModified).toBe(post.publishedAt)
+    // `postUpdatedAt`, not `publishedAt`: this article has been revised — SEO-E14
+    // expanded all five — and asserting the publication date here would have
+    // made the test demand that `dateModified` ignore a revision that really
+    // happened.
+    expect(article.dateModified).toBe(postUpdatedAtOf(post))
     expect(article.inLanguage).toBe("es")
     expect(article.author).toMatchObject({ "@type": "Person", name: "ROBERTINOC" })
     expect(article.image).toContain("/opengraph-image")
@@ -646,13 +656,54 @@ describe("the real articles under the new model", () => {
   })
 
   /**
-   * No pair exists yet — the English articles are SEO-E13/E14 and unwritten —
-   * so every article must declare itself and nothing else. This is the
-   * assertion that fails the day somebody sets `translationOf` on one side only.
+   * Every article is now half of a pair — SEO-E14 shipped the five English
+   * translations on 22/09/2026 — so each one must declare **both** sides and an
+   * `x-default`, in both directions.
+   *
+   * This test used to assert the opposite: that an article declared itself and
+   * nothing else, because no pair existed. Its failing is what carried the news
+   * that the pairs had landed, which is the direction these assertions are
+   * written to point.
+   *
+   * What it still catches is the failure the model was built around: a
+   * `translationOf` set on one side only produces **nothing** rather than a
+   * broken link, so a one-sided declaration shows up here as a missing
+   * language rather than as a 404 a crawler finds later.
    */
-  it("declares no translation it cannot back up", () => {
-    for (const post of listPosts("es")) {
-      expect(postAlternates(post)).toEqual({ es: `/es/blog/${post.slug}` })
+  it("declares both sides of every pair, in both directions", () => {
+    const es = listPosts("es")
+    const en = listPosts("en")
+
+    expect(es.length).toBeGreaterThan(0)
+    expect(en.length).toBe(es.length)
+
+    for (const post of es) {
+      const alternates = postAlternates(post)
+
+      expect(alternates.es, post.slug).toBe(`/es/blog/${post.slug}`)
+      expect(alternates.en, post.slug).toMatch(/^\/blog\//)
+      // English is the site's default everywhere else, so a pair's x-default is
+      // the English URL — not the article's own.
+      expect(alternates["x-default"], post.slug).toBe(alternates.en)
+    }
+
+    for (const post of en) {
+      const alternates = postAlternates(post)
+
+      expect(alternates.en, post.slug).toBe(`/blog/${post.slug}`)
+      expect(alternates.es, post.slug).toMatch(/^\/es\/blog\//)
+      expect(alternates["x-default"], post.slug).toBe(`/blog/${post.slug}`)
+    }
+  })
+
+  it("gives the English articles tags, an author and a parsed body too", () => {
+    const posts = listPosts("en")
+    expect(posts.length).toBeGreaterThan(0)
+
+    for (const post of posts) {
+      expect(post.tags.length, `${post.slug} has no tags`).toBeGreaterThan(0)
+      expect(post.author).toEqual(DEFAULT_AUTHOR)
+      expect(post.blocks.length).toBeGreaterThan(0)
     }
   })
 })

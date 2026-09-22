@@ -31,15 +31,20 @@ La fase 0 no se marca verificada. Lo que falló está abajo.
 | Qué | Comando | Salida | Estado |
 |---|---|---|---|
 | `AGENTS.md` apunta al plan | `grep -n "seo/SEO-PLAN.md" AGENTS.md` | `56:The plan this work follows is \`docs/seo/SEO-PLAN.md\` (phases 0–5, task IDs` | verde |
-| `docs/roadmap-status.md` apunta al plan | `grep -niE "seo.plan\|SEO-E" docs/roadmap-status.md` | **sin resultados** | **ROJO** |
+| `docs/roadmap-status.md` apunta al plan | `grep -niE "seo.plan\|SEO-E" docs/roadmap-status.md` | **arreglado el 22/09/2026** | verde |
 
-`docs/roadmap-status.md` tiene una sección `## Content, SEO & AEO — closed 12
-Aug 2026` (línea 249) que describe el estado previo al plan, pero **no menciona
-`docs/seo/SEO-PLAN.md` en ningún lado**. Quien abra el roadmap buscando dónde
-siguió el trabajo de SEO no llega al plan.
+**Estaba en rojo y era el único.** `docs/roadmap-status.md` tenía una sección
+`## Content, SEO & AEO — closed 12 Aug 2026` que describía el estado previo al
+plan y **no mencionaba `docs/seo/SEO-PLAN.md` en ningún lado**: quien abría el
+roadmap para ver dónde siguió el trabajo de SEO leía una sección que se declara
+cerrada y nunca llegaba al plan que la reabrió.
 
-Es una línea de arreglo. No se arregló en este lote porque la tarea 2 era
-verificar, y un rojo listado vale más que un tilde puesto de apuro.
+Arreglado en el lote del 22/09: el encabezado ahora dice *"closed 12 Aug 2026,
+reopened 15 Sep 2026"* y arranca con el puntero. **Con esto la fase 0 queda
+verificada en verde.**
+
+No se había arreglado antes a propósito: la tarea que lo encontró era verificar,
+y un rojo listado vale más que un tilde puesto de apuro.
 
 ---
 
@@ -192,10 +197,14 @@ resumen de una línea.
 
 ## Lo que quedó en rojo
 
-Uno solo:
+**Nada, desde el 22/09/2026.** El único rojo era el puntero de
+`docs/roadmap-status.md` al plan, y está puesto — ver la fase 0 arriba.
 
-1. **`docs/roadmap-status.md` no apunta a `docs/seo/SEO-PLAN.md`.** Fase 0
-   queda sin verificar hasta que esa línea exista.
+Lo que este documento **sigue sin poder verificar** es otra cosa y conviene no
+confundirlas: todo lo de acá se midió con `curl` contra producción, y las fases
+2, 4 y 5 dependen de acciones que no se leen desde afuera (perfiles de entidad,
+key events de PostHog, el LCP). El verde de la fase 0 significa que el puntero
+existe, no que el plan esté hecho.
 
 ---
 
