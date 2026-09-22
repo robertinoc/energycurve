@@ -162,7 +162,7 @@ solo lado es un reloj que se pasa en silencio.
 | # | Qué | Cierra | Costo |
 |---|---|---|---|
 | R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **cinco ventanas escritas y ninguna corriendo** · y desde el 22/09 también el **Art. 17**: es lo único que separa un borrado pedido de un borrado hecho | 2 min |
-| R2 | **0027 y 0028 SIN aplicar en dev** (verificado 12/09/2026) · 0029 sí · **0030 y 0031 nuevas** | auditoría, retención de análisis, la cola de derechos, y el borrado self-serve | 5 min |
+| ~~R2~~ | ~~Migraciones sin aplicar~~ | **Las cinco aplicadas el 22/09/2026 — `0027`, `0028`, `0029`, `0030` y `0031`, en los dos proyectos.** Verificado consultando el esquema y no la documentación, que decía que faltaban dos que ya estaban |
 | R3 | Confirmar región de Supabase | 5(1)(a) — hoy la política puede estar diciendo algo falso | 2 min |
 | R4 | Aceptar los DPAs | Art. 28 | 1 hora |
 | R5 | Acceso de emergencia delegado | Art. 32 — bus factor 1 | 1 tarde |
