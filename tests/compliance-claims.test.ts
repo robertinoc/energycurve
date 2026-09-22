@@ -121,6 +121,30 @@ describe("Art. 5(1)(a), 6 and 13 — what the policy actually tells the reader",
     expect(es).toMatch(/autoridad de protección de datos/i)
   })
 
+  it("states a minimum age, in both documents and both languages (Art. 8)", () => {
+    // The gap the StageLink cross-read found: its privacy plan has a "define a
+    // minimum age" task and EnergyCurve's had none, so neither document said
+    // anything. 18 rather than 16, which is Robertino's call: the product is a
+    // professional tool and a subscription is a contract.
+    //
+    // Asserted in BOTH documents on purpose. The Terms make the age a condition
+    // of use; the policy says what it means for data. One without the other is
+    // a rule with no data consequence, or a data claim with no rule behind it.
+    for (const locale of ["en", "es"] as const) {
+      const terms = getLegalCopy(locale, "terms")
+      const termsText = terms.sections
+        .flatMap((section) => section.body)
+        .join("\n")
+
+      expect(termsText, `terms ${locale}`).toMatch(/\b18\b/)
+    }
+
+    expect(policy("en")).toMatch(/aged 18 or over/i)
+    expect(policy("en")).toMatch(/do not knowingly collect/i)
+    expect(policy("es")).toMatch(/18 años o más/i)
+    expect(policy("es")).toMatch(/no recopilamos datos a sabiendas/i)
+  })
+
   it("does not claim a Supabase region nobody has confirmed", () => {
     // R3 on the remediation plan. The old copy stated "EU region" as fact in a
     // document people are entitled to rely on, and it can only be read off a
