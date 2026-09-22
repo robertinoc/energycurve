@@ -83,6 +83,38 @@ describe("every variable the code reads is documented", () => {
   })
 })
 
+describe("and no variable is declared twice", () => {
+  /**
+   * The fix that re-added the three drifted variables added them in a new block
+   * without noticing that two of them already had one, so `.env.example` shipped
+   * `GETSONGBPM_API_KEY`, `CONTACT_INBOX_EMAIL` and
+   * `STRIPE_PORTAL_CONFIGURATION_ID` twice — each time with a *different*
+   * explanation above it.
+   *
+   * The test above could not see it: presence was satisfied, twice over. And the
+   * damage is not the wasted lines, it is that a reader gets two accounts of the
+   * same knob and no way to tell which one is current. In a copied file the last
+   * one silently wins.
+   */
+  it("declares each variable exactly once", () => {
+    const counts = new Map<string, number>()
+
+    for (const match of example.matchAll(/^([A-Z][A-Z0-9_]*)=/gm)) {
+      counts.set(match[1], (counts.get(match[1]) ?? 0) + 1)
+    }
+
+    const duplicated = [...counts]
+      .filter(([, count]) => count > 1)
+      .map(([name, count]) => `${name} (×${count})`)
+      .sort()
+
+    expect(
+      duplicated,
+      "declared more than once — two explanations of one knob, and the last wins"
+    ).toEqual([])
+  })
+})
+
 describe("and the file explains itself", () => {
   it("says what each optional integration does when unset", () => {
     // A variable listed with no explanation is a variable someone sets wrong.

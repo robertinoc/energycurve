@@ -78,7 +78,11 @@ por el que nos enteramos de un problema sigue siendo que un usuario lo reporte.
 
 ## 5 · Si se filtra un secreto
 
-No hay un documento dedicado, así que queda acá el orden correcto:
+El procedimiento completo está en
+[`secret-rotation.md`](secret-rotation.md): las trece credenciales con su radio
+de explosión, cuál admite solapamiento (**sólo Stripe, hasta 7 días**) y las tres
+cuya rotación el usuario ve. Lo que sigue es el orden, que es lo que hay que
+tener en la cabeza antes de abrir esa página:
 
 1. **Rotar primero en el proveedor**, no en Vercel. Mientras la clave vieja
    siga siendo válida, cambiarla en Vercel sólo deja de usarla — no la desactiva.
@@ -87,6 +91,12 @@ No hay un documento dedicado, así que queda acá el orden correcto:
    para las de servidor.
 4. Anotar el incidente en `../security/incidents/` aunque no haya habido acceso
    indebido. Una clave expuesta es un incidente de seguridad, se haya usado o no.
+
+Y una que no es obvia hasta que pasa: **si la que se filtró es
+`CURVE_SHARE_SECRET`, rotarla rompe todos los links de curva que los DJs ya
+repartieron, de una forma que ellos no pueden distinguir de haber borrado el
+set.** Se rota igual, y se avisa. La §3 de `secret-rotation.md` explica por qué
+no hay ninguna señal que distinga las dos cosas.
 
 La clave más sensible es `SUPABASE_SERVICE_ROLE_KEY`: **RLS corre con cero
 políticas**, así que esa clave no es "acceso privilegiado", es acceso total sin
@@ -111,6 +121,9 @@ y ninguna corriendo, por una variable de entorno de dos minutos.
 | Qué datos personales se tratan y dónde | `../compliance/ropa.md` |
 | Qué encargados hay y en qué país | `../compliance/ropa.md` → *Encargados* |
 | Estado de seguridad y hallazgos | `../security/findings-2026-09.md` |
+| Qué se arregló de cada hallazgo, y con qué se prueba | `../security/remediation-register.md` |
+| Rotar una credencial | [`secret-rotation.md`](secret-rotation.md) |
+| Restaurar la base desde un backup | [`backup-restore.md`](backup-restore.md) |
 | Deuda técnica, observabilidad, mantenibilidad | `../audit/technical-audit-2026-09.md` |
 | Capas, acoplamiento y puntos únicos de falla | `../audit/architecture-review-2026-09.md` |
 | Por qué el producto es así | `../decisions.md` y `../product-strategy-v2.md` |
@@ -126,4 +139,11 @@ Dicho para que nadie lo descubra en el peor momento:
   proveedor, que es donde tienen que estar.
 - **La restauración de un backup nunca se probó.** Supabase los hace; que se
   puedan restaurar es una suposición hasta que alguien lo intente. Es una tarea
-  abierta en el proyecto de Seguridad (F5).
+  abierta en el proyecto de Seguridad (F5), y desde el 21/09/2026 tiene el
+  procedimiento escrito en [`backup-restore.md`](backup-restore.md) — con la
+  tabla de resultados sin llenar, que es el estado honesto.
+- **Ninguna credencial se rotó nunca.** [`secret-rotation.md`](secret-rotation.md)
+  tiene los pasos, y su columna de tiempos está vacía porque no hay ninguno
+  medido. El ensayo más barato para llenarla está propuesto ahí: rotar
+  `GETSONGBPM_API_KEY` sin que haya pasado nada, que es la de menor radio de
+  explosión de las trece.

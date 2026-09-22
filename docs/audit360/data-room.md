@@ -86,13 +86,21 @@ distribución, no con operar un SaaS.
 Operación: [`../runbooks/operations.md`](../runbooks/operations.md) ·
 Despliegue y rollback: [`../runbooks/deploy-and-rollback.md`](../runbooks/deploy-and-rollback.md) ·
 Incidentes: [`../security/incident-response.md`](../security/incident-response.md) ·
+Rotar una credencial: [`../runbooks/secret-rotation.md`](../runbooks/secret-rotation.md) ·
+Restaurar la base: [`../runbooks/backup-restore.md`](../runbooks/backup-restore.md) ·
 Traspaso simulado: [`../audit/f5-operability-2026-09.md`](../audit/f5-operability-2026-09.md)
 
 **La documentación de continuidad existe y fue probada. Los accesos no están
 compartidos.** Bus factor 1.
 
+Los dos runbooks nuevos son **procedimiento, no evidencia**, y la diferencia está
+escrita en los dos: ninguna credencial se rotó nunca y ninguna restauración se
+ejecutó. Lo que cambia es que las dos tareas pasaron de abiertas a acotadas —
+una tarde cada una, con los pasos y la tabla de resultados esperando números.
+
 ## "¿Qué está roto o pendiente?"
 
+Cierre de los hallazgos de seguridad, uno por uno: [`../security/remediation-register.md`](../security/remediation-register.md) ·
 Riesgos técnicos: [`technical-risks.md`](technical-risks.md) ·
 Gaps residuales: `f4-consolidation-2026-09.md` §4 — *llega con el PR #216* ·
 Lo que nunca se probó: [`evidence-index.md`](evidence-index.md) §5
