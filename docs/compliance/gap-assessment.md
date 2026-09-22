@@ -134,7 +134,7 @@ solo lado es un reloj que se pasa en silencio.
 | # | Qué | Cierra | Costo |
 |---|---|---|---|
 | R1 | `CRON_SECRET` en Vercel | 5(1)(e) — **cinco ventanas escritas y ninguna corriendo** | 2 min |
-| R2 | **0027 y 0028 SIN aplicar en dev** (verificado 12/09/2026) · 0029 sí · **0030 nueva** | auditoría, retención de análisis, y la cola de derechos | 5 min |
+| R2 | **0027, 0028 y 0029 aplicadas** (verificado 22/09/2026 consultando el esquema) · **falta la 0030** | la cola de derechos | 5 min |
 | R3 | Confirmar región de Supabase | 5(1)(a) — hoy la política puede estar diciendo algo falso | 2 min |
 | R4 | Aceptar los DPAs | Art. 28 | 1 hora |
 | R5 | Acceso de emergencia delegado | Art. 32 — bus factor 1 | 1 tarde |
