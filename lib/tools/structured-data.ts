@@ -3,7 +3,7 @@ import { TOOL_COPY, TOOLS_HUB_COPY } from "@/lib/content/tools-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import { pageMetadata } from "@/lib/content/page-metadata"
 import type { SiteLocale } from "@/lib/content/site-copy"
-import { buildOrganization, SITE_URL } from "@/lib/seo"
+import { SITE_URL, buildFaqPage, buildOrganization } from "@/lib/seo"
 
 /**
  * Structured data for the free tools.
@@ -86,17 +86,14 @@ export function buildEnergyCurveToolStructuredData(locale: SiteLocale) {
         ],
       },
       {
-        "@type": "FAQPage",
-        "@id": `${url}#faq`,
-        inLanguage: locale,
-        mainEntity: TOOL_COPY.faq.map((entry) => ({
-          "@type": "Question",
-          name: entry.question[locale],
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: entry.answer[locale],
-          },
-        })),
+        ...buildFaqPage({
+          id: url,
+          inLanguage: locale,
+          entries: TOOL_COPY.faq.map((entry) => ({
+            question: entry.question[locale],
+            answer: entry.answer[locale],
+          })),
+        }),
       },
       {
         "@type": "BreadcrumbList",

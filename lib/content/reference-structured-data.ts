@@ -7,7 +7,7 @@ import {
   pageMetadata,
 } from "@/lib/content/page-metadata"
 import type { SiteLocale } from "@/lib/content/site-copy"
-import { buildOrganization, SITE_URL, SOCIAL_IMAGE_URL } from "@/lib/seo"
+import { SITE_URL, SOCIAL_IMAGE_URL, buildFaqPage, buildOrganization } from "@/lib/seo"
 
 /**
  * schema.org for the two reference pages — `/energy-tags` and
@@ -72,17 +72,14 @@ export function buildReferenceStructuredData(
         },
       },
       {
-        "@type": "FAQPage",
-        "@id": `${url}#faq`,
-        inLanguage: locale,
-        mainEntity: FAQS[path].map((item) => ({
-          "@type": "Question",
-          name: item.question[locale],
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: item.answer[locale],
-          },
-        })),
+        ...buildFaqPage({
+          id: url,
+          inLanguage: locale,
+          entries: FAQS[path].map((item) => ({
+            question: item.question[locale],
+            answer: item.answer[locale],
+          })),
+        }),
       },
       {
         "@type": "BreadcrumbList",

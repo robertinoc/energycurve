@@ -360,6 +360,48 @@ export function buildOrganization(locale: SiteLocale = "en") {
 }
 
 /** The social card URL, for consumers outside this module. */
+/**
+ * One `FAQPage` node, for every page on the site that has an FAQ.
+ *
+ * There were five of these, written out by hand in `lib/seo.ts`,
+ * `lib/tools/`, `lib/content/structured-data.ts`,
+ * `lib/content/reference-structured-data.ts` and
+ * `lib/content/install-structured-data.ts`. They were identical apart from
+ * whether they remembered `inLanguage` — three did, two didn't, and nothing
+ * said which was right. Five copies of a shape is five places for the next
+ * schema.org correction to be applied four times.
+ *
+ * The rule `AGENTS.md` sets is unchanged and is the reason this takes entries
+ * rather than a page: **the questions come from the array the page renders**,
+ * so a question that is not on the page cannot reach the markup. This function
+ * receives them; it never goes and looks for them.
+ */
+export function buildFaqPage({
+  id,
+  entries,
+  inLanguage,
+}: {
+  /** The page URL. `#faq` is appended here so every page spells it the same. */
+  id: string
+  entries: readonly { question: string; answer: string }[]
+  /** Omitted on the landing and the guides, which is how they shipped. */
+  inLanguage?: SiteLocale
+}) {
+  return {
+    "@type": "FAQPage",
+    "@id": `${id}#faq`,
+    ...(inLanguage ? { inLanguage } : {}),
+    mainEntity: entries.map((entry) => ({
+      "@type": "Question",
+      name: entry.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: entry.answer,
+      },
+    })),
+  }
+}
+
 export const SOCIAL_IMAGE_URL = `${SITE_URL}/opengraph-image`
 
 /**
@@ -398,18 +440,10 @@ export function buildLandingStructuredData({
     offers: PLAN_OFFERS,
   }
 
-  const faq = {
-    "@type": "FAQPage",
-    "@id": `${SITE_URL}/#faq`,
-    mainEntity: copy.faq.items.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  }
+  const faq = buildFaqPage({
+    id: `${SITE_URL}/`,
+    entries: copy.faq.items,
+  })
 
   return {
     "@context": "https://schema.org",

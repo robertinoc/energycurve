@@ -194,19 +194,157 @@ describe("migrations are safe to apply by hand", () => {
   })
 })
 
-describe("what this cannot tell you", () => {
-  it("says nothing about whether a migration was applied", () => {
-    // Written as a test so the limitation is read rather than assumed. There is
-    // no migrations table, no runner, and no record of what any environment
-    // has. On 2026-09-11 migration 0021 was verified absent from dev — the
-    // spectral features it adds were simply not being persisted, and nothing
-    // failed loudly.
-    //
-    // Closing that gap needs a live check, which is the "Bootstrap reproducible
-    // de la base de datos de dev" task, not this file.
-    const hasRunner =
-      readdirSync(join(process.cwd(), "supabase")).includes("config.toml")
+describe("every migration can be checked against a live database", () => {
+  /**
+   * The property that keeps `scripts/migration-status.mjs` able to answer.
+   *
+   * There is no migrations table, so the script infers applied-ness from the
+   * schema: it reads each file for what it creates and asks the database
+   * whether those things are there. A migration that creates nothing
+   * detectable — a pure backfill, a changed default — cannot be probed, and the
+   * script reports it `unknown`.
+   *
+   * `unknown` is the dangerous verdict. It is the one a reader rounds up to
+   * "fine", which is exactly the reflex that let 0018, 0019 and 0021 sit
+   * unapplied. Four migrations were unprobeable when the script was first
+   * written and each one taught it a new probe (enum types, enum values, an RLS
+   * backfill, a dropped not-null). All 31 are answerable now, and this test is
+   * what stops the 32nd quietly giving that up.
+   *
+   * If it fails on a migration you are adding: that is the review conversation,
+   * not a test to relax. Either the migration can carry something checkable, or
+   * `deriveProbes` needs to learn the construct — the way it learned the other
+   * four.
+   */
+  it("creates something the status script can look for", async () => {
+    const { deriveProbes } = await import("../scripts/migration-status.mjs")
 
-    expect(hasRunner).toBe(false)
+    const unprobeable = migrations
+      .filter((migration) => {
+        const probes = deriveProbes(migration.sql)
+
+        return (
+          probes.tables.length === 0 &&
+          probes.columns.length === 0 &&
+          probes.indexes.length === 0 &&
+          probes.types.length === 0 &&
+          probes.enumValues.length === 0 &&
+          probes.rlsEnabled.length === 0 &&
+          probes.nullable.length === 0
+        )
+      })
+      .map((migration) => migration.file)
+
+    expect(
+      unprobeable,
+      "these would report `unknown`, which reads as `fine` — see scripts/migration-status.mjs"
+    ).toEqual([])
+  })
+
+  it("reads the constructs this repo actually uses", async () => {
+    // Guards the extractor itself rather than its output. A regex that silently
+    // stops matching turns every migration into `unknown` at once, and the
+    // suite above would still pass if the *reason* were that nothing parses.
+    const { deriveProbes } = await import("../scripts/migration-status.mjs")
+
+    const byFile = (name: string) =>
+      deriveProbes(migrations.find((m) => m.file.startsWith(name))!.sql)
+
+    // A column added across two source lines — the shape that made a
+    // single-line pattern find nothing while looking like it worked.
+    expect(byFile("0018").columns).toEqual([
+      { table: "profiles", column: "preferred_locale" },
+    ])
+    expect(byFile("0021").columns).toEqual([
+      { table: "tracks", column: "audio_features" },
+    ])
+    expect(byFile("0019").tables).toContain("curve_templates")
+    expect(byFile("0002").types).toContain("playlist_context")
+    expect(byFile("0005").enumValues).toContainEqual({
+      type: "playlist_genre",
+      value: "trance",
+    })
+    expect(byFile("0020").rlsEnabled).toContain("billing_events")
+    expect(byFile("0028").nullable).toContainEqual({
+      table: "analyses",
+      column: "curve",
+    })
+  })
+
+  it("has the CLI config the runner needs", () => {
+    // This assertion used to read `expect(hasRunner).toBe(false)` and was
+    // correct: there was no config, no seed and no runner, and it was written
+    // as a test so the gap would be read rather than assumed. It is inverted
+    // rather than deleted so the history stays legible — the absence was the
+    // finding, and the presence is the fix.
+    const files = readdirSync(join(process.cwd(), "supabase"))
+
+    expect(files).toContain("config.toml")
+    expect(files).toContain("seed.sql")
+  })
+})
+
+describe("the seed is safe to hand to anyone", () => {
+  /**
+   * Comments stripped before anything is counted.
+   *
+   * This file already learned the lesson once — `tablesCreatedIn` strips them
+   * because migrations discuss `drop table` in prose — and the first version of
+   * these three tests forgot it and failed on its own documentation: the header
+   * says "every insert" and contains an apostrophe, so the insert count was one
+   * too high and the email scan matched a sentence between two apostrophes.
+   */
+  const seed = readFileSync(join(process.cwd(), "supabase", "seed.sql"), "utf8")
+    .replace(/^\s*--.*$/gm, "")
+
+  it("can be run twice", () => {
+    // It gets pasted by hand, like the migrations, so someone will paste it
+    // twice. Every insert has to say what happens then.
+    const inserts = (seed.match(/insert\s+into/gi) ?? []).length
+    const guards = (seed.match(/on\s+conflict/gi) ?? []).length
+
+    expect(inserts).toBeGreaterThan(0)
+    expect(guards, "every insert needs an on-conflict clause").toBe(inserts)
+  })
+
+  it("invents its people instead of borrowing them", () => {
+    // `example.com` is reserved by RFC 2606 and cannot route anywhere. A real
+    // address in a fixture is a real inbox that eventually receives something.
+    const emails = [...seed.matchAll(/'([^']*@[^']*)'/g)].map((m) => m[1])
+
+    expect(emails.length).toBeGreaterThan(0)
+    for (const email of emails) {
+      expect(email, email).toMatch(/@example\.com$/)
+    }
+  })
+
+  it("covers the case the product is most likely to get wrong", () => {
+    // Not decoration. The rule that separates this product from a chart library
+    // is that it says which part of a curve is data and which part is a guess,
+    // and a seed with only fully-tagged tracks can never exercise it.
+    //
+    // Asserted on the shape of the insert, not on the presence of `null, null`
+    // somewhere in the file. The first version checked for two adjacent nulls
+    // and stayed green when the fully-untagged track was given tags, because a
+    // *partially* tagged row a hundred lines away still had two — it was
+    // matching the file, not the claim.
+    const trackInserts = [
+      ...seed.matchAll(/insert\s+into\s+public\.tracks\s*([\s\S]*?)\bvalues\b/gi),
+    ].map((match) => match[1])
+
+    expect(trackInserts.length).toBeGreaterThan(1)
+
+    // One whole playlist whose tracks carry no tag columns at all.
+    expect(
+      trackInserts.some((columns) => !/\bbpm\b/.test(columns)),
+      "no fully untagged playlist: the curve-is-a-guess path is unseeded"
+    ).toBe(true)
+
+    // And, separately, a row inside a tagged insert that is missing them —
+    // the mixture, which is what a real import looks like.
+    expect(
+      /'Nothing Known',\s*null,\s*null,\s*null/.test(seed),
+      "no partially tagged row: the mixed case is unseeded"
+    ).toBe(true)
   })
 })

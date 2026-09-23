@@ -181,9 +181,31 @@ export const TOOL_COPY = {
       en: "See how to fix it — free",
       es: "Ver cómo arreglarlo — gratis",
     },
+    /**
+     * Future tense, and the tense is the whole point.
+     *
+     * This used to read "This set is kept in your browser" / "Este set queda
+     * guardado", present, under a CTA. Measured in the browser after a
+     * successful analysis: `localStorage`, `sessionStorage`, cookies and
+     * IndexedDB were all empty, and reloading lost the set. So the sentence was
+     * describing something that had not happened.
+     *
+     * The persistence is real — `lib/tools/stash.ts` writes, and
+     * `energy-curve-tool.tsx` calls it from `goToSignup`, which is to say *on
+     * the click*. The old wording was therefore true of the flow it is attached
+     * to (analyse → click → sign up) and false of the reading its tense invites
+     * ("I'll close this and come back later").
+     *
+     * **The fix is the copy, not the code** (audit F1-03). Moving the write to
+     * the end of the analysis would put a DJ's tracklist into `localStorage`
+     * without them asking for it, and a DJ's crate is professional
+     * information. The current behaviour is the more respectful of the two, so
+     * the sentence now promises rather than reports — and says the part that
+     * was being given away for free: nothing is stored until you act.
+     */
     lockedKept: {
-      en: "This set is kept in your browser, so you won't have to load it again.",
-      es: "Este set queda guardado en tu navegador, así no lo tenés que cargar de nuevo.",
+      en: "Nothing is saved until you click — then we keep this set in your browser, so you won't have to load it again.",
+      es: "No se guarda nada hasta que hagas clic — ahí sí dejamos este set en tu navegador, así no lo tenés que cargar de nuevo.",
     },
 
     errorUnsupported: {
