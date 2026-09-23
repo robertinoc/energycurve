@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import { TOOL_COPY } from "@/lib/content/tools-copy"
+
 import {
   analyzeForTool,
   MIN_TOOL_TRACKS,
@@ -191,5 +193,55 @@ describe("choosing a playlist inside a library export", () => {
 
     // Default is unchanged: the first playlist, exactly as before.
     expect(parseImport(twoPlaylists).playlistName).toBe("Synthetic Set")
+  })
+})
+
+describe("the note under the signup CTA", () => {
+  /**
+   * Audit F1-03. The note read "This set is kept in your browser" — present
+   * tense — while nothing was written until the CTA was clicked. Measured:
+   * `localStorage`, `sessionStorage`, cookies and IndexedDB all empty after a
+   * successful analysis.
+   *
+   * The write happens in `goToSignup`, so the promise is real; only its tense
+   * was wrong. The correct fix was the copy, because moving the write earlier
+   * would store a DJ's tracklist without being asked, and the crate is
+   * professional information.
+   *
+   * Pinned in both locales because the finding was raised against the Spanish
+   * page and a canary that only reads English would leave it there.
+   */
+  it("promises rather than reports", () => {
+    const note = TOOL_COPY.ui.lockedKept
+
+    // Bound to the subject, not to the verb. A first version banned "is saved"
+    // outright and failed on the replacement copy, which opens "Nothing is
+    // saved until you click" — the negation of the very claim being removed.
+    // A canary that cannot tell an assertion from its denial would have been
+    // argued with and then deleted.
+    expect(note.en).not.toMatch(/\bthis set is (kept|saved|stored)\b/i)
+    expect(note.es).not.toMatch(/\beste set (queda|está) guardado\b/i)
+
+    // And the positive half, which is what the fix actually is: the sentence
+    // has to name the action that makes it true.
+    expect(note.en).toMatch(/\b(until|when|then)\b/i)
+    expect(note.es).toMatch(/\b(hasta|cuando|ahí)\b/i)
+  })
+
+  it("still says where the set would go", () => {
+    // The reason the sentence exists: the alternative to "in your browser" is a
+    // reader assuming it goes to a server, which is the opposite of true.
+    const note = TOOL_COPY.ui.lockedKept
+
+    expect(note.en).toMatch(/browser/i)
+    expect(note.es).toMatch(/navegador/i)
+  })
+
+  it("keeps the voseo the rest of the Spanish site uses", () => {
+    // Decision 29. Half-switching register is worse than either choice, and
+    // this sentence sits next to copy that already voseás.
+    expect(TOOL_COPY.ui.lockedKept.es).not.toMatch(
+      /\btienes\b|\bhaces clic\b|\bpuedes\b/
+    )
   })
 })
