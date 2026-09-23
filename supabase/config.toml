@@ -1,0 +1,58 @@
+# Supabase CLI configuration.
+#
+# Until this file existed the CLI could not be pointed at this project at all,
+# so migrations were pasted into the SQL Editor by hand — which is how `0021`,
+# `0018` and `0019` each went unapplied without anything noticing.
+#
+# `project_id` is the local stack's container prefix, not the hosted project
+# ref. The hosted ref is not a secret, but it is also not needed here and this
+# repo does not carry environment identifiers it does not use.
+project_id = "energycurve"
+
+[api]
+enabled = true
+port = 54321
+# Only `public` is reachable through PostgREST, which is what the app assumes:
+# every table it uses lives there and is read through the service-role client in
+# `lib/supabase/server.ts`.
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+# Matches Supabase's hosted major. A local stack on a different major can
+# accept SQL that the hosted database rejects, which turns "it worked locally"
+# into a failed paste in the SQL Editor.
+major_version = 15
+
+[db.pooler]
+enabled = false
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = false
+
+[storage]
+enabled = false
+
+# Off deliberately, and this is the one setting here that is a rule rather than
+# a preference. Identities live in WorkOS (`AGENTS.md`: "Authentication must use
+# WorkOS AuthKit. Do not introduce Supabase Auth."). Leaving GoTrue enabled
+# locally would let someone build against `auth.users` and discover only in
+# review that nothing behind it exists in production.
+#
+# Note the one existing exception: `0014_feature_usage.sql` declares a policy
+# using `auth.uid()`, which can never match — no Supabase JWT ever reaches
+# Postgres (decision 22). It is dead but harmless, since RLS is bypassed by the
+# service-role client. Applying that migration to a plain Postgres fails outright
+# because the `auth` schema does not exist.
+[auth]
+enabled = false
+
+[analytics]
+enabled = false
