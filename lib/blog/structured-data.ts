@@ -1,8 +1,9 @@
+import { inlineToText } from "@/lib/blog/markdown"
 import type { BlogPost } from "@/lib/blog/posts"
 import { articleImageUrl } from "@/lib/blog/social-card"
 import { BLOG_COPY } from "@/lib/content/blog-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
-import { buildOrganization, SITE_URL } from "@/lib/seo"
+import { SITE_URL, buildFaqPage, buildOrganization } from "@/lib/seo"
 
 /**
  * The author, as a `Person` rather than the `Organization`: the articles are
@@ -116,8 +117,31 @@ export function buildBlogIndexStructuredData(
  * `dateModified` comes from `postUpdatedAt`, so an article that has never been
  * revised reports its publication date rather than today's build.
  */
+/**
+ * The article's questions, straight off the blocks the page renders.
+ *
+ * Not from a second list in the frontmatter, which was the obvious shape and
+ * the wrong one: the whole property the rest of this site holds — and that
+ * `AGENTS.md` states as a rule — is that a question which is not on the page
+ * cannot reach the markup. A frontmatter list would be a second copy, and a
+ * second copy is a thing that stops matching quietly.
+ *
+ * The answer is flattened from the same inline nodes the reader sees, so an
+ * answer containing a link still yields the sentence the reader reads.
+ */
+export function articleFaqEntries(post: BlogPost) {
+  return post.blocks
+    .filter((block) => block.kind === "faq")
+    .flatMap((block) => block.entries)
+    .map((entry) => ({
+      question: entry.question,
+      answer: inlineToText(entry.answer),
+    }))
+}
+
 export function buildArticleStructuredData(post: BlogPost, updatedAt: string) {
   const url = `${SITE_URL}${localizedPath(`/blog/${post.slug}`, post.locale)}`
+  const faqEntries = articleFaqEntries(post)
 
   return {
     "@context": "https://schema.org",
@@ -168,6 +192,19 @@ export function buildArticleStructuredData(post: BlogPost, updatedAt: string) {
           },
         ],
       },
+      // Emitted only when the article actually has questions. An empty
+      // `FAQPage` is a claim that the page answers nothing, which is worse than
+      // saying nothing at all — the same reason the blog index emits no `Blog`
+      // node when there are no posts.
+      ...(faqEntries.length > 0
+        ? [
+            buildFaqPage({
+              id: url,
+              inLanguage: post.locale,
+              entries: faqEntries,
+            }),
+          ]
+        : []),
     ],
   }
 }

@@ -328,11 +328,42 @@ describe("article structured data", () => {
 
     for (const post of allPublishedPosts()) {
       const { graph } = await graphFor(post.slug)
-      expect(
-        graph.map((node: { "@type": string }) => node["@type"]),
-        post.slug
-      ).toEqual(["BlogPosting", "BreadcrumbList"])
+      const types = graph.map((node: { "@type": string }) => node["@type"])
+
+      // The two every article has. Written as a containment check rather than
+      // an exact list since SEO-E13: an article with an FAQ block also emits an
+      // `FAQPage`, and the exact-match version would have made adding one look
+      // like a regression in the two nodes it is not about. The FAQPage's own
+      // presence rule — exactly when the article has questions — is asserted
+      // separately, so nothing is lost by loosening this one.
+      expect(types.slice(0, 2), post.slug).toEqual([
+        "BlogPosting",
+        "BreadcrumbList",
+      ])
+      expect(types.length, post.slug).toBeLessThanOrEqual(3)
     }
+  })
+
+  it("publishes an FAQPage exactly when the article has questions", async () => {
+    const { allPublishedPosts } = await import("@/lib/blog/posts")
+
+    let withFaq = 0
+
+    for (const post of allPublishedPosts()) {
+      const { graph } = await graphFor(post.slug)
+      const types = graph.map((node: { "@type": string }) => node["@type"])
+      const hasBlock = post.blocks.some((block) => block.kind === "faq")
+
+      if (hasBlock) {
+        withFaq += 1
+      }
+
+      expect(types.includes("FAQPage"), post.slug).toBe(hasBlock)
+    }
+
+    // Guards the guard: if every article lost its FAQ block, the assertion
+    // above would pass on all of them by agreeing that none should have one.
+    expect(withFaq, "no article has an FAQ block").toBeGreaterThan(0)
   })
 
   it("fills every field a rich result needs", async () => {
@@ -577,10 +608,20 @@ describe("translated pairs", () => {
     })
 
     it("falls back to the article alone when the pair does not resolve", () => {
+      // A one-sided `translationOf` yields the article by itself — the property
+      // the whole model exists for, since a declared alternate that 404s is
+      // worse than none.
+      //
+      // `x-default` is in the fallback since SEO-E13: the site's rule is that
+      // every page declares one, and this branch was the only place that did
+      // not. It went unseen because there was no unpaired article until the
+      // three English cornerstone ones landed, at which point the page and the
+      // sitemap started emitting different maps for the same URL.
       const lonely = post("orden-del-set", "es", "set-order")
 
       expect(alternatesFor(lonely, [post("set-order", "en", null)])).toEqual({
         es: "/es/blog/orden-del-set",
+        "x-default": "/es/blog/orden-del-set",
       })
     })
   })
@@ -675,24 +716,62 @@ describe("the real articles under the new model", () => {
     const en = listPosts("en")
 
     expect(es.length).toBeGreaterThan(0)
-    expect(en.length).toBe(es.length)
+    expect(en.length).toBeGreaterThan(0)
 
-    for (const post of es) {
+    // Paired only. This used to assert `en.length === es.length`, which was a
+    // true description of the corpus on the day SEO-E14 shipped five
+    // translations and stopped being one the moment SEO-E13 added three
+    // English-only articles — a state the SEO plan asks for explicitly, since
+    // those three have no Spanish counterpart yet.
+    //
+    // The count was never the property worth protecting. **This** is: a
+    // `translationOf` set on one side only produces nothing rather than a
+    // broken link, so a one-sided declaration has to show up here as a missing
+    // language rather than as a 404 a crawler finds weeks later. Asserting it
+    // per-pair catches that; asserting the totals match only catches it by
+    // coincidence, and forbids an unpaired article as a side effect.
+    const paired = [...es, ...en].filter((post) => post.translationOf !== null)
+
+    expect(paired.length).toBeGreaterThan(0)
+
+    for (const post of paired) {
       const alternates = postAlternates(post)
+      const own = post.locale === "es" ? `/es/blog/${post.slug}` : `/blog/${post.slug}`
 
-      expect(alternates.es, post.slug).toBe(`/es/blog/${post.slug}`)
+      expect(alternates[post.locale], post.slug).toBe(own)
+      // Both sides present: this is the assertion a one-sided declaration
+      // fails, because `resolveTranslation` refuses to emit a language whose
+      // article is not actually published.
+      expect(alternates.es, post.slug).toMatch(/^\/es\/blog\//)
       expect(alternates.en, post.slug).toMatch(/^\/blog\//)
       // English is the site's default everywhere else, so a pair's x-default is
       // the English URL — not the article's own.
       expect(alternates["x-default"], post.slug).toBe(alternates.en)
     }
+  })
 
-    for (const post of en) {
+  it("emits no hreflang pair for an article that has no translation", () => {
+    // The other half, and the reason the count assertion could go: an unpaired
+    // article must declare *itself* and nothing else. A declared translation
+    // that 404s is worse than no declaration — a crawler that follows it learns
+    // the site lies about its own structure, and the penalty lands on the page
+    // that made the claim.
+    const unpaired = listPosts("en").filter((post) => post.translationOf === null)
+
+    expect(unpaired.length).toBeGreaterThan(0)
+
+    for (const post of unpaired) {
       const alternates = postAlternates(post)
 
-      expect(alternates.en, post.slug).toBe(`/blog/${post.slug}`)
-      expect(alternates.es, post.slug).toMatch(/^\/es\/blog\//)
-      expect(alternates["x-default"], post.slug).toBe(`/blog/${post.slug}`)
+      // Self-referencing, plus the `x-default` every page on the site declares.
+      // It says "this page is in en, and that is the whole set" rather than
+      // declaring a pair that does not exist — and it agrees with what the
+      // sitemap emits for the same URL, which `tests/locale-routing.test.ts`
+      // checks from the other side.
+      expect(alternates, post.slug).toEqual({
+        en: `/blog/${post.slug}`,
+        "x-default": `/blog/${post.slug}`,
+      })
     }
   })
 
@@ -704,6 +783,257 @@ describe("the real articles under the new model", () => {
       expect(post.tags.length, `${post.slug} has no tags`).toBeGreaterThan(0)
       expect(post.author).toEqual(DEFAULT_AUTHOR)
       expect(post.blocks.length).toBeGreaterThan(0)
+    }
+  })
+})
+
+describe("the FAQ block", () => {
+  /**
+   * SEO-E13. The parser had five block kinds and none of them could express a
+   * question, so an article that wanted an FAQ had to fake one with headings —
+   * which renders, and produces no `FAQPage` at all.
+   *
+   * It is a fenced block with an info string rather than a new delimiter: a
+   * fence already means "what is between these is not markdown", which is what
+   * an FAQ needs, and it cannot collide with anything an article might
+   * legitimately write.
+   */
+  it("parses questions and answers", () => {
+    const blocks = parseMarkdown(
+      [
+        "```faq",
+        "Q: Does the tool upload my file?",
+        "A: No. The file is read in your browser.",
+        "",
+        "Q: What does it read?",
+        "A: Rekordbox XML, Traktor NML, M3U8 and CSV.",
+        "```",
+      ].join("\n")
+    )
+
+    expect(kinds(blocks)).toEqual(["faq"])
+    const faq = blocks[0]
+    expect(faq.kind).toBe("faq")
+    if (faq.kind !== "faq") return
+
+    expect(faq.entries).toHaveLength(2)
+    expect(faq.entries[0].question).toBe("Does the tool upload my file?")
+    expect(textOf(faq.entries[0].answer)).toBe(
+      "No. The file is read in your browser."
+    )
+  })
+
+  it("joins a hard-wrapped answer into one sentence", () => {
+    // Source lines are wrapped at ~80 characters throughout `content/blog`, so
+    // this is the normal case rather than the exotic one. Treating each line as
+    // its own thing is the bug that once split every bullet in the corpus into
+    // a list item plus a stray paragraph.
+    const blocks = parseMarkdown(
+      [
+        "```faq",
+        "Q: Why does the curve look flat?",
+        "A: Because every track in the set carries the same energy tag,",
+        "so there is nothing for the curve to describe.",
+        "```",
+      ].join("\n")
+    )
+
+    if (blocks[0].kind !== "faq") throw new Error("expected a faq block")
+    expect(textOf(blocks[0].entries[0].answer)).toBe(
+      "Because every track in the set carries the same energy tag, so there is nothing for the curve to describe."
+    )
+  })
+
+  it("keeps links inside an answer", () => {
+    // The reason answers are inline nodes and not a string: an FAQ is one of
+    // the few places an internal link is genuinely useful.
+    const blocks = parseMarkdown(
+      ["```faq", "Q: Where do I start?", "A: With the [tool](/tools).", "```"].join(
+        "\n"
+      )
+    )
+
+    if (blocks[0].kind !== "faq") throw new Error("expected a faq block")
+    const link = blocks[0].entries[0].answer.find((node) => node.kind === "link")
+    expect(link).toMatchObject({ href: "/tools", text: "tool" })
+  })
+
+  it("refuses a question with no answer", () => {
+    // The parser's whole stance: refuse rather than guess. A dropped question
+    // is dropped from the structured data too, and nobody re-reads published
+    // markup.
+    expect(() =>
+      parseMarkdown(["```faq", "Q: Left hanging?", "```"].join("\n"))
+    ).toThrow(UnsupportedMarkdownError)
+  })
+
+  it("refuses an answer with no question", () => {
+    expect(() =>
+      parseMarkdown(["```faq", "A: Out of nowhere.", "```"].join("\n"))
+    ).toThrow(UnsupportedMarkdownError)
+  })
+
+  it("refuses a line that is neither", () => {
+    expect(() =>
+      parseMarkdown(
+        ["```faq", "Just a sentence with no marker.", "```"].join("\n")
+      )
+    ).toThrow(UnsupportedMarkdownError)
+  })
+
+  it("refuses an empty block", () => {
+    expect(() => parseMarkdown(["```faq", "```"].join("\n"))).toThrow(
+      UnsupportedMarkdownError
+    )
+  })
+
+  it("leaves an ordinary code fence alone", () => {
+    // The info string picks the block; a fence without one still has to be
+    // code, or every existing article breaks.
+    const blocks = parseMarkdown(["```", "not: an faq", "```"].join("\n"))
+
+    expect(kinds(blocks)).toEqual(["code"])
+  })
+})
+
+describe("an article's FAQPage", () => {
+  it("is built from the questions the page renders, and nothing else", async () => {
+    const { articleFaqEntries } = await import("@/lib/blog/structured-data")
+
+    const post = {
+      blocks: parseMarkdown(
+        [
+          "Some prose first.",
+          "",
+          "```faq",
+          "Q: One?",
+          "A: Yes, and see [the tool](/tools).",
+          "```",
+        ].join("\n")
+      ),
+    } as BlogPost
+
+    // The answer reaches the schema as the sentence the reader reads, link text
+    // included — `acceptedAnswer.text` is a string, and deriving it from the
+    // same nodes is what stops the two from disagreeing.
+    expect(articleFaqEntries(post)).toEqual([
+      { question: "One?", answer: "Yes, and see the tool." },
+    ])
+  })
+
+  it("emits no FAQPage for an article without questions", async () => {
+    // An empty `FAQPage` claims the page answers nothing, which is a worse
+    // statement than making none — same reason the index emits no `Blog` node
+    // when there are no posts.
+    const { getPost, postUpdatedAt } = await import("@/lib/blog/posts")
+    const { buildArticleStructuredData } = await import(
+      "@/lib/blog/structured-data"
+    )
+
+    const post = getPost("en", "is-my-dj-set-in-the-right-order")!
+    const graph = buildArticleStructuredData(post, postUpdatedAt(post))[
+      "@graph"
+    ] as { "@type": string }[]
+
+    if (post.blocks.some((block) => block.kind === "faq")) {
+      expect(graph.map((node) => node["@type"])).toContain("FAQPage")
+    } else {
+      expect(graph.map((node) => node["@type"])).not.toContain("FAQPage")
+    }
+  })
+})
+
+describe("the cornerstone articles meet the SEO-E13 rules", () => {
+  /**
+   * The acceptance criteria from `docs/seo/SEO-PLAN.md`: a definition inside the
+   * first 60 words, a three-question FAQ, at least three internal links, and
+   * "DJ" in the title.
+   *
+   * Scoped to articles that carry an FAQ block rather than to a hardcoded list
+   * of slugs. That set *is* the cornerstone set today, and a list of filenames
+   * in a test is a thing that stops matching the corpus quietly — the same
+   * argument as deriving migration probes from the SQL. It also means the bar
+   * applies to the next article that adopts the block, which is the right
+   * default.
+   *
+   * Deliberately not asserted over every English article: the ten from
+   * SEO-E14 predate these rules, and `analyse-your-dj-set-before-you-play-it`
+   * carries two internal links rather than three. Making this suite green by
+   * lowering the bar to what the weakest article already does would be
+   * measuring the corpus instead of the rule.
+   */
+  function cornerstones() {
+    return listPosts("en").filter((post) =>
+      post.blocks.some((block) => block.kind === "faq")
+    )
+  }
+
+  it("found the cornerstone articles, so the checks aren't vacuous", () => {
+    expect(cornerstones().length).toBeGreaterThanOrEqual(3)
+  })
+
+  it("puts DJ in the title", () => {
+    for (const post of cornerstones()) {
+      expect(post.title, post.slug).toMatch(/\bDJ\b/)
+    }
+  })
+
+  it("answers three questions", () => {
+    for (const post of cornerstones()) {
+      const entries = post.blocks
+        .filter((block) => block.kind === "faq")
+        .flatMap((block) => block.entries)
+
+      expect(entries.length, post.slug).toBe(3)
+
+      for (const entry of entries) {
+        expect(entry.question, post.slug).toMatch(/\?$/)
+        expect(textOf(entry.answer).length, entry.question).toBeGreaterThan(40)
+      }
+    }
+  })
+
+  it("links at least three other pages of the site", () => {
+    for (const post of cornerstones()) {
+      const internal = new Set<string>()
+
+      const walk = (nodes: InlineNode[]) => {
+        for (const node of nodes) {
+          if (node.kind === "link" && node.href.startsWith("/")) {
+            internal.add(node.href)
+          }
+        }
+      }
+
+      for (const block of post.blocks) {
+        if (block.kind === "faq") {
+          for (const entry of block.entries) walk(entry.answer)
+        } else if (block.kind === "list") {
+          for (const item of block.items) walk(item)
+        } else if (block.kind !== "code" && block.kind !== "table") {
+          walk(block.inline)
+        }
+      }
+
+      expect(internal.size, `${post.slug}: ${[...internal].join(", ")}`)
+        .toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it("defines its subject in the first sixty words", () => {
+    // The AEO rule the whole set is written against: an answer engine quoting
+    // the page should find the definition at the top, not in the third section.
+    for (const post of cornerstones()) {
+      const opening = post.blocks
+        .filter((block) => block.kind === "paragraph")
+        .slice(0, 2)
+        .map((block) => textOf(block.inline))
+        .join(" ")
+        .split(/\s+/)
+        .slice(0, 60)
+        .join(" ")
+
+      expect(opening, post.slug).toMatch(/\b(is|are|means)\b/)
     }
   })
 })

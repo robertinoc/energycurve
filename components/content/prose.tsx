@@ -125,6 +125,35 @@ export function Block({ block }: { block: BlogBlock }) {
           </tbody>
         </table>
       )
+    case "faq":
+      /**
+       * Native `<details>`, matching `components/content/blocks.tsx` and for the
+       * same reason: every answer ships inside the HTML while collapsed, so a
+       * crawler and a reader without JavaScript both get the whole answer.
+       * `AGENTS.md` names this explicitly — don't replace it with a JS-only
+       * accordion.
+       *
+       * The classes are deliberately the same as the guides' FAQ rather than
+       * new ones. Two FAQs on the same site that look different are two
+       * components someone will later have to reconcile.
+       */
+      return (
+        <div className="my-6 flex flex-col gap-2 not-prose">
+          {block.entries.map((entry, index) => (
+            <details
+              key={index}
+              className="group rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-3 sm:px-5"
+            >
+              <summary className="cursor-pointer list-none font-heading text-sm font-semibold text-white marker:hidden">
+                {entry.question}
+              </summary>
+              <p className="mt-2 text-sm leading-6 text-white/64">
+                <Inline nodes={entry.answer} />
+              </p>
+            </details>
+          ))}
+        </div>
+      )
     default:
       return (
         <p>

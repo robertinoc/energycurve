@@ -47,12 +47,33 @@ export type InlineNode =
    */
   | { kind: "term"; text: string; id: string; href: string; short: string }
 
+/**
+ * One question and its answer.
+ *
+ * The question is plain text and the answer is inline nodes, which is not an
+ * oversight. The answer is prose a reader reads and can carry a link — an FAQ
+ * is one of the few places an internal link is genuinely useful rather than
+ * decorative. The question becomes a `<summary>` and the `name` of a
+ * schema.org `Question`, both of which take text; a link inside a summary is
+ * awkward to operate with a keyboard and has nowhere to go in the markup.
+ */
+export interface FaqPair {
+  question: string
+  answer: InlineNode[]
+}
+
 export type BlogBlock =
   | { kind: "heading"; level: 2 | 3 | 4; inline: InlineNode[] }
   | { kind: "paragraph"; inline: InlineNode[] }
   | { kind: "list"; ordered: boolean; items: InlineNode[][] }
   | { kind: "code"; lines: string[] }
   | { kind: "table"; header: InlineNode[][]; rows: InlineNode[][][] }
+  /**
+   * Native `<details>` questions. The article's `FAQPage` is derived from these
+   * and from nothing else, so a question that is not on the page cannot reach
+   * the markup — the property the rest of the site already holds.
+   */
+  | { kind: "faq"; entries: FaqPair[] }
 
 export class UnsupportedMarkdownError extends Error {
   constructor(what: string, lineNumber: number) {
@@ -121,6 +142,110 @@ export function parseInline(text: string, lineNumber = 0): InlineNode[] {
   return nodes
 }
 
+/**
+ * Inline nodes as plain text.
+ *
+ * `acceptedAnswer.text` is a string, and the answer on the page may contain a
+ * link or bold. Deriving the string from the same nodes the page renders is
+ * what keeps the two from disagreeing — the alternative is a second copy of
+ * the answer written for the markup, which is the exact arrangement every other
+ * FAQ on this site was built to avoid.
+ */
+export function inlineToText(nodes: InlineNode[]): string {
+  return nodes.map((node) => node.text).join("")
+}
+
+/**
+ * A `faq` fence into question/answer pairs.
+ *
+ * The format is `Q:` and `A:` lines, alternating, with blank lines between
+ * pairs and wrapped continuations indented or simply following on. It is
+ * strict on purpose, in the spirit of the rest of this file: a stray line that
+ * is neither a continuation nor a marker is refused rather than guessed at,
+ * because an FAQ that silently drops a question also silently drops it from
+ * the structured data, and nobody re-reads published markup.
+ */
+function parseFaq(lines: string[], lineNumber: number): BlogBlock {
+  const entries: FaqPair[] = []
+  let current: { question: string; answer: string[] } | null = null
+  let reading: "question" | "answer" | null = null
+
+  for (const [offset, raw] of lines.entries()) {
+    const line = raw.trim()
+    const at = lineNumber + offset + 1
+
+    if (line === "") {
+      reading = null
+      continue
+    }
+
+    const question = line.match(/^Q:\s*(.*)$/)
+    const answer = line.match(/^A:\s*(.*)$/)
+
+    if (question) {
+      if (current) {
+        if (current.answer.length === 0) {
+          throw new UnsupportedMarkdownError(
+            `question with no answer: ${current.question}`,
+            at
+          )
+        }
+        entries.push({
+          question: current.question,
+          answer: parseInline(current.answer.join(" "), at),
+        })
+      }
+
+      current = { question: question[1].trim(), answer: [] }
+      reading = "question"
+      continue
+    }
+
+    if (answer) {
+      if (!current) {
+        throw new UnsupportedMarkdownError("answer before any question", at)
+      }
+
+      current.answer.push(answer[1].trim())
+      reading = "answer"
+      continue
+    }
+
+    // A continuation of whichever half we are inside. Source lines are
+    // hard-wrapped, same as the rest of this file's constructs.
+    if (reading === "answer" && current) {
+      current.answer.push(line)
+      continue
+    }
+
+    if (reading === "question" && current) {
+      current.question = `${current.question} ${line}`
+      continue
+    }
+
+    throw new UnsupportedMarkdownError(`faq line without Q: or A: — ${line}`, at)
+  }
+
+  if (current) {
+    if (current.answer.length === 0) {
+      throw new UnsupportedMarkdownError(
+        `question with no answer: ${current.question}`,
+        lineNumber
+      )
+    }
+    entries.push({
+      question: current.question,
+      answer: parseInline(current.answer.join(" "), lineNumber),
+    })
+  }
+
+  if (entries.length === 0) {
+    throw new UnsupportedMarkdownError("empty faq block", lineNumber)
+  }
+
+  return { kind: "faq", entries }
+}
+
 function parseTable(rows: string[][], lineNumber: number): BlogBlock {
   // The |---|---| separator carries no content.
   const content = rows.filter(
@@ -185,7 +310,19 @@ export function parseMarkdown(markdown: string): BlogBlock[] {
         throw new UnsupportedMarkdownError("unterminated code fence", lineNumber)
       }
 
-      blocks.push({ kind: "code", lines: code })
+      // An info string picks the block. A fence already means "the content
+      // between these is not markdown", which is what an FAQ needs — its lines
+      // are a small format of their own, not prose — and reusing it means no
+      // new delimiter to collide with anything an article might legitimately
+      // write.
+      const info = trimmed.slice(3).trim().toLowerCase()
+
+      if (info === "faq") {
+        blocks.push(parseFaq(code, lineNumber))
+      } else {
+        blocks.push({ kind: "code", lines: code })
+      }
+
       index += 1
       continue
     }

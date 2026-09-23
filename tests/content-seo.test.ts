@@ -282,15 +282,21 @@ describe("the new content pages", () => {
     /**
      * The count is asserted because it is the one number that catches a whole
      * class of mistake at once — a locale dropped, an entry listed twice, a
-     * draft leaking in. 32 before the content branch, 78 after it, and **84
-     * since 22/09/2026**, which is the arithmetic below.
+     * draft leaking in. 32 before the content branch, 78 after it, 84 since
+     * SEO-E14 on 22/09/2026, and **87 since SEO-E13**, which is the arithmetic
+     * below.
      *
-     * Six new URLs from SEO-E14, and they are worth naming separately because
-     * they came from two different causes: five are the English translations,
-     * and the sixth is `/blog` in English, which had been held out of the
-     * sitemap by `NOINDEX_PAGES` for as long as it had no articles to list.
+     * The six from SEO-E14 came from two different causes: five were the
+     * English translations, and the sixth was `/blog` in English, which had
+     * been held out of the sitemap by `NOINDEX_PAGES` for as long as it had no
+     * articles to list.
+     *
+     * The three from SEO-E13 are English-only cornerstone articles with no
+     * Spanish counterpart, so they add one URL each rather than two. That
+     * asymmetry is the point of counting English and Spanish separately below:
+     * a total alone would not show which side moved.
      */
-    it("grew from 78 to 84 URLs, and the arithmetic says why", () => {
+    it("grew from 84 to 87 URLs, and the arithmetic says why", () => {
       const glossaryUrls = GLOSSARY_TERMS.length * supportedLocales.length
       const indexes = 2 * supportedLocales.length
       const guides = publishedGuides().length * supportedLocales.length
@@ -301,11 +307,11 @@ describe("the new content pages", () => {
       // typed in here would have to be edited by every article, and the whole
       // point of asserting a total is that it is the one number nobody edits
       // casually.
-      expect(allPublishedPosts()).toHaveLength(10)
-      expect(allPublishedPosts().filter((post) => post.locale === "en")).toHaveLength(5)
+      expect(allPublishedPosts()).toHaveLength(13)
+      expect(allPublishedPosts().filter((post) => post.locale === "en")).toHaveLength(8)
       expect(allPublishedPosts().filter((post) => post.locale === "es")).toHaveLength(5)
 
-      expect(urls).toHaveLength(84)
+      expect(urls).toHaveLength(87)
     })
   })
 

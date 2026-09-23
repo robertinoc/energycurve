@@ -351,6 +351,15 @@ export function resolveTranslation(
  * A self-referencing `hreflang` on a lone article is deliberate and predates
  * this: it is the documented way to say "this page is in es, and that is the
  * whole set", where emitting nothing only says nothing was declared.
+ *
+ * The lone case carries `x-default` too, which it did not until SEO-E13. The
+ * site's rule, stated on `buildAlternates` and enforced on the sitemap since
+ * the locale split, is that **every** page declares a default; this branch was
+ * the one place that did not, and nobody saw it because until the three
+ * English-only cornerstone articles landed there had never been an unpaired
+ * article for it to apply to. The page and the sitemap were therefore emitting
+ * different maps for the same URL — exactly the disagreement
+ * `alternateLanguages` in `app/sitemap.ts` was written to end.
  */
 export function alternatesFor(
   post: BlogPost,
@@ -367,7 +376,7 @@ export function alternatesFor(
   const twin = resolveTranslation(post, candidates)
 
   if (!twin) {
-    return { [post.locale]: self }
+    return { [post.locale]: self, "x-default": self }
   }
 
   return {

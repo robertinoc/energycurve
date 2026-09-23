@@ -17,7 +17,7 @@ import {
 import { GLOSSARY_COPY, GUIDES_COPY } from "@/lib/content/content-copy"
 import { GLOSSARY_TERMS, type GlossaryTerm } from "@/lib/content/glossary/terms"
 import { localizedPath } from "@/lib/content/locale-routing"
-import { buildOrganization, SITE_URL, SOCIAL_IMAGE_URL } from "@/lib/seo"
+import { SITE_URL, SOCIAL_IMAGE_URL, buildFaqPage, buildOrganization } from "@/lib/seo"
 import type { Guide } from "@/lib/content/guides/guides"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
@@ -189,16 +189,13 @@ export function buildGuideStructuredData(guide: Guide, locale: SiteLocale) {
 
   if (faqEntries.length > 0) {
     graph.push({
-      "@type": "FAQPage",
-      "@id": `${url}#faq`,
-      mainEntity: faqEntries.map((entry) => ({
-        "@type": "Question",
-        name: entry.question[locale],
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: entry.answer[locale],
-        },
-      })),
+      ...buildFaqPage({
+        id: url,
+        entries: faqEntries.map((entry) => ({
+          question: entry.question[locale],
+          answer: entry.answer[locale],
+        })),
+      }),
     })
   }
 

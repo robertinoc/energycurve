@@ -84,6 +84,10 @@ const CONSONANT_VOWEL = [
   "usual",
   "utili",
   "unit",
+  // Added when the first article to use "a universal rule" tripped the scan.
+  // Same /juː/ as "user" and "unit"; the list simply had not met it yet, which
+  // is the expected way a list-not-a-rule grows.
+  "univers",
   "one",
   "euro",
 ]

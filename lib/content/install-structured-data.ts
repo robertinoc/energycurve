@@ -1,7 +1,7 @@
 import { localizedPath } from "@/lib/content/locale-routing"
 import { PAGE_LAST_MODIFIED, pageMetadata } from "@/lib/content/page-metadata"
 import { getSiteCopy, type SiteLocale } from "@/lib/content/site-copy"
-import { buildOrganization, SITE_URL } from "@/lib/seo"
+import { SITE_URL, buildFaqPage, buildOrganization } from "@/lib/seo"
 
 /**
  * schema.org for `/install` — SEO-E20.
@@ -66,17 +66,14 @@ export function buildInstallStructuredData(locale: SiteLocale) {
       howTo("android", copy.androidTitle, copy.androidSteps, locale, url),
       howTo("ios", copy.iosTitle, copy.iosSteps, locale, url),
       {
-        "@type": "FAQPage",
-        "@id": `${url}#faq`,
-        inLanguage: locale,
-        mainEntity: copy.faq.map((item) => ({
-          "@type": "Question",
-          name: item.question[locale],
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: item.answer[locale],
-          },
-        })),
+        ...buildFaqPage({
+          id: url,
+          inLanguage: locale,
+          entries: copy.faq.map((item) => ({
+            question: item.question[locale],
+            answer: item.answer[locale],
+          })),
+        }),
       },
       {
         "@type": "WebPage",
