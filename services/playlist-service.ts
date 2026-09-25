@@ -838,33 +838,58 @@ async function reorderAuthorized(
 
   const supabase = getSupabaseAdminClient()
 
-  // Phase 1: park every track at a unique temp position above the real range.
-  for (let index = 0; index < orderedTrackIds.length; index++) {
-    const { error } = await supabase
-      .from("tracks")
-      .update({ position: MOVE_TEMP_POSITION_OFFSET + index + 1 })
-      .eq("id", orderedTrackIds[index])
-      .eq("playlist_id", playlistId)
+  /**
+   * Two phases still, issued together within each.
+   *
+   * The phases are not an implementation detail to tidy away: `tracks` carries
+   * `unique (playlist_id, position)`, so parking every track 100,000 clear of
+   * the real range is what stops the new order colliding with the old one part
+   * way through. **Phase one must finish before phase two starts**, and
+   * collapsing them into a single `Promise.all` would look faster and violate
+   * the constraint.
+   *
+   * Inside a phase there is nothing to serialise. The positions written by one
+   * phase are distinct from each other and cannot collide with anything the
+   * other phase has touched, so the updates were only ever sequential because
+   * they were written with `await` inside a `for`. A hundred-track set took two
+   * hundred round trips end to end; it now takes two waits.
+   */
+  const applyPhase = async (
+    writes: { id: string; position: number }[],
+    event: "track.reorder_park_failed" | "track.reorder_assign_failed"
+  ) => {
+    const results = await Promise.all(
+      writes.map(({ id, position }) =>
+        supabase
+          .from("tracks")
+          .update({ position })
+          .eq("id", id)
+          .eq("playlist_id", playlistId)
+      )
+    )
 
-    if (error) {
-      logError("track.reorder_park_failed", error, { profileId, playlistId })
+    // Every write is awaited before any failure is raised, so a rejection
+    // cannot leave later writes in flight against a set somebody is about to
+    // be told failed to save.
+    const failure = results.find((result) => result.error)
+
+    if (failure?.error) {
+      logError(event, failure.error, { profileId, playlistId })
       throw new Error("Unable to save the new order.")
     }
   }
+
+  // Phase 1: park every track at a unique temp position above the real range.
+  await applyPhase(
+    orderedTrackIds.map((id, index) => ({
+      id,
+      position: MOVE_TEMP_POSITION_OFFSET + index + 1,
+    })),
+    "track.reorder_park_failed"
+  )
 
   // Phase 2: assign the final contiguous 1..n positions in the requested order.
-  for (const { id, position } of finalPositions(orderedTrackIds)) {
-    const { error } = await supabase
-      .from("tracks")
-      .update({ position })
-      .eq("id", id)
-      .eq("playlist_id", playlistId)
-
-    if (error) {
-      logError("track.reorder_assign_failed", error, { profileId, playlistId })
-      throw new Error("Unable to save the new order.")
-    }
-  }
+  await applyPhase(finalPositions(orderedTrackIds), "track.reorder_assign_failed")
 
   logInfo("tracks.reordered", {
     profileId,

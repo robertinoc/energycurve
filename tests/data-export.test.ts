@@ -170,3 +170,66 @@ describe("what it says about data it does not hold", () => {
     expect(Date.parse(data?.exportedAt ?? "")).not.toBeNaN()
   })
 })
+
+describe("an account bigger than one response", () => {
+  /**
+   * The compliance half of this endpoint, and the one a small fixture cannot
+   * see.
+   *
+   * Article 20 asks for the data, not for a sample of it. PostgREST caps a
+   * response at 1000 rows and says nothing about it — no error, no flag — so a
+   * query without `range()` hands back the first page and the export is
+   * delivered, with a filename and a date on it, claiming to be everything.
+   * The user has no way to notice: 1000 tracks looks like a lot of tracks.
+   *
+   * This did not fail before the fix because the *fake* returned everything.
+   * The ceiling now lives in `tests/helpers/supabase-fake.ts`, which is what
+   * makes this assertion mean anything at all.
+   */
+  const OVER = 1200
+
+  beforeEach(() => {
+    const playlist = { id: "big-set", user_id: MINE, name: "Big" }
+
+    fake = createFakeSupabase({
+      profiles: [{ id: MINE, email: "mine@example.com" }],
+      playlists: [playlist],
+      tracks: Array.from({ length: OVER }, (_, index) => ({
+        id: `t-${index}`,
+        playlist_id: "big-set",
+        position: index + 1,
+        name: `Track ${index}`,
+      })),
+      analyses: Array.from({ length: OVER }, (_, index) => ({
+        id: `a-${index}`,
+        user_id: MINE,
+        playlist_id: "big-set",
+      })),
+      playlist_versions: Array.from({ length: OVER }, (_, index) => ({
+        id: `v-${index}`,
+        playlist_id: "big-set",
+      })),
+      feature_usage: Array.from({ length: OVER }, (_, index) => ({
+        id: `u-${index}`,
+        profile_id: MINE,
+      })),
+    })
+  })
+
+  it("exports every track, not the first thousand", async () => {
+    const result = await buildAccountExport(MINE)
+
+    expect(result?.tracks).toHaveLength(OVER)
+  })
+
+  it("exports every analysis, version and usage row too", async () => {
+    // All nine queries in this file had the same omission, so fixing one and
+    // shipping is the likely mistake. One assertion per shape of query: through
+    // `in(playlistIds)` and through `eq(profileId)`.
+    const result = await buildAccountExport(MINE)
+
+    expect(result?.analyses, "analyses").toHaveLength(OVER)
+    expect(result?.versions, "playlist_versions").toHaveLength(OVER)
+    expect(result?.featureUsage, "feature_usage").toHaveLength(OVER)
+  })
+})
