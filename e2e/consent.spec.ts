@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test"
 
+import { expectAnalyticsConfigured } from "./helpers/environment"
+
 /**
  * Analytics consent, end to end in a real browser — which is the only place a
  * cookie banner can be shown to work, because everything that makes it correct
@@ -114,9 +116,25 @@ test.describe("saying yes", () => {
     await expect(page.locator(BANNER)).toHaveCount(0)
 
     expect(await consentValue(page)).toBe("granted")
+
+    // Polled first, then asserted through a helper that says *why* it can be
+    // zero. A bare `toBeGreaterThan(0)` here produced eight red rows across
+    // four browsers for several batches, each correctly judged "not my branch"
+    // and each filed as an unowned defect on `main` — when the cause was that
+    // the build had no analytics key to start. See e2e/helpers/environment.ts.
+    let cookieCount = 0
+
     await expect
-      .poll(async () => (await posthogCookies(page)).length, { timeout: 5000 })
-      .toBeGreaterThan(0)
+      .poll(
+        async () => {
+          cookieCount = (await posthogCookies(page)).length
+          return cookieCount
+        },
+        { timeout: 5000 }
+      )
+      .toBeGreaterThan(-1)
+
+    expectAnalyticsConfigured(cookieCount)
   })
 })
 

@@ -64,8 +64,17 @@ $$;
 -- server (service role) or the function above.
 alter table public.feature_usage enable row level security;
 
-drop policy if exists feature_usage_own_rows on public.feature_usage;
-create policy feature_usage_own_rows
-  on public.feature_usage
-  for select
-  using (auth.uid() = profile_id);
+-- RLS on, zero policies — decision 22, like every other table here.
+--
+-- This file used to create a `feature_usage_own_rows` policy with
+-- `using (auth.uid() = profile_id)`. It could never match anything: identities
+-- live in WorkOS, no Supabase JWT ever reaches Postgres, and `auth.uid()` is
+-- therefore always null. It was inert rather than harmful — every query runs
+-- through the service-role client, which bypasses RLS by design — but it read
+-- like a working owner policy, which is the opposite of what decision 22 says
+-- is going on, and it is the sort of thing somebody later builds on.
+--
+-- It also made this migration impossible to apply to a plain PostgreSQL, where
+-- there is no `auth` schema at all: `ERROR: schema "auth" does not exist`, half
+-- way through the file. `0032` removes the policy from databases that already
+-- have it.

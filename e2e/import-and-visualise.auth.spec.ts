@@ -8,6 +8,8 @@ import {
   syntheticPlaylist,
 } from "../tests/fixtures/playlists"
 import { accountFor, skipReason, type TestPlan } from "./helpers/accounts"
+import { registryFor } from "./helpers/cleanup"
+import { importPlaylist } from "./helpers/import-playlist"
 
 /**
  * F3 — bring a set in, see its curve.
@@ -32,6 +34,20 @@ import { accountFor, skipReason, type TestPlan } from "./helpers/accounts"
  * a red CI, and it never passes, because a green tick over a test that did not
  * run is the worst of the three.
  */
+
+/**
+ * Sequential within this file, against the config's `fullyParallel: true`.
+ *
+ * That setting carries the note "nothing here mutates shared state, so parallel
+ * is safe", which was true when every spec was a signed-out page read and
+ * stopped being true the moment the authenticated suites landed: all the tests
+ * in this file import playlists **into the same account**, so they are reading
+ * and writing one list. Run in parallel they raced each other — a locator that
+ * was unambiguous when it was asserted had a second match by the time it was
+ * used, and the failure surfaced as an intermittent strict-mode violation
+ * rather than as the contention it was.
+ */
+test.describe.configure({ mode: "default" })
 
 function requireAccount(projectName: string): TestPlan {
   const match = /^auth-(free|pro|proPlus)$/.exec(projectName)
@@ -64,35 +80,51 @@ const FORMATS = [
 ] as const
 
 /**
- * Imports one file and lands on whatever the app navigates to.
+ * What each project created, deleted after **every** test.
  *
- * Returns the URL rather than asserting inside, so a caller can say what it
- * expected — a helper that asserts is a helper whose failures all look the same.
+ * Per-test because the FREE plan allows three active playlists
+ * (`PLAN_LIMITS.free`) and this file imports more than three: cleaning up at
+ * the end meant the fourth import onwards was correctly refused by the product
+ * while the spec sat waiting for a navigation that was never coming.
+ *
+ * Per-plan because the same file runs once per `auth-*` project against a
+ * different account, and one shared registry would have PRO deleting FREE's
+ * sets. The plan is read from `test.info()` rather than threaded through every
+ * call, which keeps the signature of the import helpers about importing.
  */
+function registry() {
+  const plan = (/^auth-(free|pro|proPlus)$/.exec(test.info().project.name)?.[1] ??
+    "free") as TestPlan
+
+  return registryFor(plan, accountFor(plan)?.email ?? "none@example.com")
+}
+
+test.afterEach(async () => {
+  await registry().deleteAll()
+})
+
 async function importFile(
   page: Page,
   format: (typeof FORMATS)[number],
   tracks: ReturnType<typeof syntheticPlaylist>
 ): Promise<string> {
-  await page.goto("/dashboard/playlists")
-
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: format.file,
-    mimeType: format.mime,
-    buffer: Buffer.from(format.build(tracks), "utf8"),
-  })
-
-  // Context is required and defaults to `main`; genre defaults to auto-detect.
-  // Both are left at their defaults on purpose — this asserts the import path,
-  // and a spec that also drives two selects fails for two reasons at once.
-  await page.locator('button[type="submit"]').first().click()
-
-  await page.waitForURL(/\/dashboard\/playlists\//, { timeout: 30_000 })
-
-  return page.url()
+  return importPlaylist(
+    page,
+    {
+      name: format.file,
+      mimeType: format.mime,
+      contents: format.build(tracks),
+    },
+    registry()
+  )
 }
 
 test.describe("importing a set", () => {
+  // An import is an upload, a parse and a database write; an export adds a
+  // download. The 30s default belongs to tests that assert on a rendered page,
+  // and leaving it here produced timeouts that read like hangs.
+  test.setTimeout(90_000)
+
   for (const format of FORMATS) {
     test(`reads ${format.name} and shows the tracks`, async ({
       page,

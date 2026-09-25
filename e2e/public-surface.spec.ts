@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test"
 
+import {
+  isSetupRequiredScreen,
+  LOGIN_NOT_CONFIGURED,
+} from "./helpers/environment"
+
 /**
  * The pages a visitor sees before signing up, plus the wall that keeps them out of
  * the rest.
@@ -243,6 +248,15 @@ test.describe("the login wall", () => {
     // wording change while the link still works is a test that trains people to
     // ignore it.
     await page.goto("/login")
+
+    // The setup screen is checked first so a missing WorkOS configuration
+    // reports itself instead of arriving as "the sign-up link is not visible",
+    // which reads as a product defect and was filed as one for several batches.
+    expect(
+      await isSetupRequiredScreen(page),
+      LOGIN_NOT_CONFIGURED
+    ).toBe(false)
+
     await expect(
       page.locator('a[href^="/signup"]').first()
     ).toBeVisible()

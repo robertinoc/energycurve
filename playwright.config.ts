@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test"
 
 import {
   accountFor,
+  allAccountsConfigured,
   storageStatePath,
   type TestPlan,
 } from "./e2e/helpers/accounts"
@@ -57,8 +58,31 @@ const PORT = process.env.E2E_PORT ?? "3010"
 
 export default defineConfig({
   testDir: "./e2e",
-  // Nothing here mutates shared state, so parallel is safe and keeps CI short.
+  // Nothing in the *public* suite mutates shared state, so parallel is safe
+  // there and keeps CI short.
   fullyParallel: true,
+
+  /**
+   * One worker once the authenticated suites can actually run.
+   *
+   * The line above used to say "nothing here mutates shared state", full stop.
+   * That was true of a suite of signed-out page reads and stopped being true
+   * the moment the `auth-*` projects landed: all three import playlists, into
+   * three accounts, against one dev Supabase and one server. Run three-wide
+   * they contend, and on 25/09/2026 that showed up as six failures out of
+   * sixty-six — a different six each time, every one of them passing on its
+   * own. Serialised: 64 passed, 2 skipped, none failed.
+   *
+   * Conditioned on the credentials rather than set outright, because the cost
+   * and the benefit land in different places. On a machine with
+   * `.env.e2e.local` the authenticated projects run and the determinism is
+   * worth the wall clock. In CI there are no accounts, those projects skip, and
+   * paying single-worker for the public suite would buy nothing.
+   *
+   * `retries: 0` below is the reason this is a setting and not a shrug: with
+   * retries there would have been nothing to notice.
+   */
+  workers: allAccountsConfigured() ? 1 : undefined,
   // A test that only passes on a retry is a flaky test, and a flaky suite is worse
   // than a smaller one — it trains everyone to re-run instead of to look.
   retries: 0,

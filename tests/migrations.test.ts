@@ -161,6 +161,45 @@ describe("migrations are safe to apply by hand", () => {
     ).toEqual([])
   })
 
+  it("converts a column's type only when it is not already that type", () => {
+    // `0002` ran `alter column context type playlist_context using (… trim(context) …)`
+    // unguarded. The first run worked. The second failed with
+    // `function pg_catalog.btrim(playlist_context) does not exist`, because by
+    // then the column was the enum and `trim` has no overload for it.
+    //
+    // That is the worst shape a hand-applied migration can have: it punishes
+    // exactly the person who re-runs one to find out whether it had been run.
+    // And it is not hypothetical — Supabase shows the green `main PRODUCTION`
+    // badge on *both* projects, which has already caused one migration to be
+    // applied twice in dev.
+    const unguarded: string[] = []
+
+    for (const migration of migrations) {
+      const conversions =
+        migration.code.match(/alter\s+column\s+[a-z_]+\s+type\s/g) ?? []
+
+      if (conversions.length === 0) {
+        continue
+      }
+
+      // A do-block is how this repo guards things that have no
+      // `if not exists`. Requiring one per conversion rather than one per file
+      // so a second, unguarded conversion cannot hide behind the first.
+      const guards = migration.code.match(/do \$\$/g) ?? []
+
+      if (guards.length < conversions.length) {
+        unguarded.push(
+          `${migration.file} (${conversions.length} conversions, ${guards.length} do-blocks)`
+        )
+      }
+    }
+
+    expect(
+      unguarded,
+      "a type conversion must check the current type first; re-running it must not error"
+    ).toEqual([])
+  })
+
   it("never drops or truncates anything", () => {
     // A rollback reverts the code and not the schema (see
     // docs/runbooks/deploy-and-rollback.md). A migration that dropped a column
@@ -190,6 +229,49 @@ describe("migrations are safe to apply by hand", () => {
 
     if (sample) {
       expect(/\b(drop\s+table|drop\s+column)\b/.test(sample.code)).toBe(false)
+    }
+  })
+})
+
+describe("nothing in the schema pretends to be an access control it is not", () => {
+  it("declares no policy that depends on Supabase Auth", () => {
+    // Decision 22: identities live in WorkOS, no Supabase JWT reaches Postgres,
+    // and every query goes through the service-role client, which bypasses RLS
+    // by design. So a policy written against `auth.uid()` matches nothing, for
+    // anybody, ever.
+    //
+    // `0014` shipped one. It was inert, which is why nobody noticed — and it
+    // read like a working owner check, which is exactly the misreading this
+    // codebase cannot afford: the real boundary is `services/*`, and a schema
+    // that looks like it also enforces ownership is how a service function ends
+    // up written without its `profileId` filter.
+    //
+    // It also made that migration unappliable to a plain PostgreSQL, where
+    // there is no `auth` schema — it failed half way through the file.
+    const offenders = migrations
+      .filter((migration) => /\bauth\.[a-z_]+\s*\(/.test(migration.code))
+      .map((migration) => migration.file)
+
+    expect(
+      offenders,
+      "see decision 22 — auth.uid() is always null here, so a policy using it is dead code"
+    ).toEqual([])
+  })
+
+  it("reads a mention of auth.uid() in prose as prose", () => {
+    // The check above earns its comment stripper: `0014` and `0032` both
+    // *discuss* `auth.uid()` at length while doing nothing of the kind, and a
+    // check that flagged them would be argued with and then deleted.
+    const discusses = migrations.filter((migration) =>
+      /auth\.uid/.test(migration.sql)
+    )
+
+    expect(discusses.length).toBeGreaterThan(0)
+
+    for (const migration of discusses) {
+      expect(/\bauth\.[a-z_]+\s*\(/.test(migration.code), migration.file).toBe(
+        false
+      )
     }
   })
 })
@@ -230,7 +312,8 @@ describe("every migration can be checked against a live database", () => {
           probes.types.length === 0 &&
           probes.enumValues.length === 0 &&
           probes.rlsEnabled.length === 0 &&
-          probes.nullable.length === 0
+          probes.nullable.length === 0 &&
+          probes.policiesDropped.length === 0
         )
       })
       .map((migration) => migration.file)
@@ -268,6 +351,10 @@ describe("every migration can be checked against a live database", () => {
     expect(byFile("0028").nullable).toContainEqual({
       table: "analyses",
       column: "curve",
+    })
+    expect(byFile("0032").policiesDropped).toContainEqual({
+      policy: "feature_usage_own_rows",
+      table: "feature_usage",
     })
   })
 
