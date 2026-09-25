@@ -36,8 +36,11 @@ export function ConsentBanner() {
 
   // Same order the rest of the site resolves language in: the URL says it
   // outright on /es, otherwise fall back to what the visitor chose before.
-  // Resolved on the client because the root layout is deliberately static —
-  // reading the request there would opt every page out of prerendering.
+  // Resolved on the client because the remembered choice lives in storage and
+  // never reaches the server — the same reason the consent answer itself does.
+  // An earlier version of this comment blamed prerendering. That reason is
+  // stale: these routes are dynamic today. Decision 30 records the check, and
+  // the decision to leave this banner client-only does not rest on it.
   const stored = useSyncExternalStore(subscribeToStorage, readStoredSiteLocale, () => null)
   const locale: SiteLocale = pathname?.startsWith("/es") ? "es" : (stored ?? "en")
 

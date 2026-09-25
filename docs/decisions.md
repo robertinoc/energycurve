@@ -587,6 +587,72 @@ voseo. Confirmed by Robertino on 19 Sep 2026.
 - `content/blog/README.md` already states the rule for articles; this entry
   widens it to the whole site and records who decided it and when.
 
+## 30. The consent banner stays client-only, and the LCP stays where it is
+
+SEO-E32 proposed a third way for the LCP on `/` and `/es`: move consent from
+`localStorage` to a cookie so the server can read it, so the banner exists from
+the first byte, so its size stops mattering. Evaluated on 25 Sep 2026 and
+declined. `lib/privacy/consent.ts` and `components/privacy/consent-banner.tsx`
+are unchanged.
+
+**What was measured**
+
+`npx lhci autorun`, mobile emulation, production build on `next start --port
+3012`, three runs per route, medians. Two different numbers matter and they
+disagree, so both are recorded:
+
+| ruta | LCP reportado | FCP obs. | LCP obs. | elemento LCP |
+| --- | --- | --- | --- | --- |
+| `/` | 5189 ms | 147 ms | 208 ms | `p.mt-1` del banner |
+| `/es` | 5482 ms | 98 ms | 155 ms | `p.mt-1` del banner |
+| `/pricing` | 3678 ms | 97 ms | 97 ms | `header > p.mt-4` |
+| `/es/blog/antes-de-tocar-no-despues` | 3686 ms | 104 ms | 104 ms | `article > p` |
+
+The reported column is Lantern's projection: `throttlingMethod` is `simulate`,
+onto 150 ms RTT / 1.6 Mbps with a 4× CPU slowdown. The observed columns are what
+the run actually recorded. The premise of the task is true — the banner is the
+LCP element on `/` and `/es` and on no other route — and the cost of it arriving
+late is 61 ms and 57 ms observed.
+
+**Why it was declined**
+
+- **The budget is not in danger.** `lighthouserc.json` asserts
+  `largest-contentful-paint` at `maxNumericValue: 7000`. `/` sits at 5189 ms and
+  passes. Nothing is failing.
+- **LCP is measuring the wrong element.** `/pricing` and the blog article prove
+  that server-rendered text on this shell paints at FCP exactly. So the hero on
+  `/` already paints at FCP too; it simply is not the *largest* block. The thing
+  the metric is timing is a consent banner, which nobody is waiting for. Making
+  it paint sooner moves the number and changes nothing about what a visitor
+  waits for — which is the test this batch set.
+- **The cookie reverses a deliberate stance.** `lib/privacy/consent.ts:19` says
+  it outright: the choice is per browser, never needs to reach the server, and a
+  consent cookie riding on every request is "the small irony this file exists to
+  avoid". Paying that to move a passing metric is the wrong trade.
+- **The banner's language is client-held too.** `consent-banner.tsx:41` resolves
+  the locale from `readStoredSiteLocale` on any non-`/es` path. A cookie for
+  consent alone would still leave `/` server-rendering the banner in English and
+  swapping it to Spanish at hydration for anyone with a remembered preference —
+  a flash of the wrong language on a consent notice, which is worse than the
+  thing being fixed.
+
+**What was corrected anyway**
+
+The reason `consent-banner.tsx` gave for resolving locale on the client — "the
+root layout is deliberately static — reading the request there would opt every
+page out of prerendering" — is stale. Of 88 app routes in the current build,
+`/_global-error` is the only one prerendered to static HTML, and `/`, `/es` and
+`/pricing` are absent from `.next/prerender-manifest.json`. The comment now
+states the reason that actually holds. The decision does not rest on it.
+
+**Consequence**
+
+- `tests/consent.test.ts:265` already locks this: on the server, consent reads
+  as unset and nothing is rendered into the HTML. That test is the guard against
+  this being undone by accident rather than on purpose.
+- If the LCP on `/` is ever worth moving, the lever is the hero's own size and
+  the shell's render path, not the banner.
+
 ## Pending Technical Debt / Follow-ups
 
 - Add automated auth/integration tests once the preferred testing stack is chosen.
