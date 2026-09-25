@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 
-import { expectAnalyticsConfigured } from "./helpers/environment"
+import { ANALYTICS_NOT_CONFIGURED } from "./helpers/environment"
 
 /**
  * Analytics consent, end to end in a real browser — which is the only place a
@@ -117,24 +117,22 @@ test.describe("saying yes", () => {
 
     expect(await consentValue(page)).toBe("granted")
 
-    // Polled first, then asserted through a helper that says *why* it can be
-    // zero. A bare `toBeGreaterThan(0)` here produced eight red rows across
-    // four browsers for several batches, each correctly judged "not my branch"
-    // and each filed as an unowned defect on `main` — when the cause was that
-    // the build had no analytics key to start. See e2e/helpers/environment.ts.
-    let cookieCount = 0
-
+    // The wait is unchanged; only what it says on failure is new. A bare
+    // `toBeGreaterThan(0)` produced eight red rows across four browsers for
+    // several batches, each correctly judged "not my branch" and each filed as
+    // an unowned defect on `main` — when the cause was that the build had no
+    // analytics key to start with. See e2e/helpers/environment.ts.
+    //
+    // The first attempt at this moved the assertion out of the poll and left
+    // `toBeGreaterThan(-1)` behind, which is true on the first tick: the
+    // diagnostic arrived and the five-second wait it was wrapped around
+    // quietly stopped happening.
     await expect
-      .poll(
-        async () => {
-          cookieCount = (await posthogCookies(page)).length
-          return cookieCount
-        },
-        { timeout: 5000 }
-      )
-      .toBeGreaterThan(-1)
-
-    expectAnalyticsConfigured(cookieCount)
+      .poll(async () => (await posthogCookies(page)).length, {
+        timeout: 5000,
+        message: ANALYTICS_NOT_CONFIGURED,
+      })
+      .toBeGreaterThan(0)
   })
 })
 

@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
 
 /**
  * Why a test failed, when the answer is "this build was made without an
@@ -32,21 +32,18 @@ const FIX =
   "them only for `npx playwright test` is too late."
 
 /**
- * Asserts analytics could start at all, before asking whether consent let it.
+ * Why no PostHog cookie can appear, for the poll that waits for one.
  *
- * Called *after* the accept click, since that is when the absence becomes
- * visible; it turns "no cookies appeared" into "no cookies could ever have
- * appeared, and here is why".
+ * Passed as the poll's `message` rather than replacing the assertion: an
+ * earlier version of this pulled the check out of the poll and left it
+ * asserting something trivially true, which delivered the explanation and
+ * threw away the five-second wait it was explaining.
  */
-export function expectAnalyticsConfigured(cookieCount: number) {
-  expect(
-    cookieCount,
-    `No PostHog cookie appeared after accepting.\n\n` +
-      `If this build has no NEXT_PUBLIC_POSTHOG_KEY, analytics cannot start ` +
-      `whatever the visitor answers, and this assertion cannot pass — the ` +
-      `failure is the build's configuration, not the consent gate.\n\n${FIX}`
-  ).toBeGreaterThan(0)
-}
+export const ANALYTICS_NOT_CONFIGURED =
+  "No PostHog cookie appeared after accepting.\n\n" +
+  "If this build has no NEXT_PUBLIC_POSTHOG_KEY, analytics cannot start " +
+  "whatever the visitor answers, and this assertion cannot pass — the " +
+  `failure is the build's configuration, not the consent gate.\n\n${FIX}`
 
 /**
  * True when the page is the "WorkOS is not configured" screen rather than the

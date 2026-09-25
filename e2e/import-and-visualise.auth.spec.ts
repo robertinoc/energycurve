@@ -96,7 +96,7 @@ function registry() {
   const plan = (/^auth-(free|pro|proPlus)$/.exec(test.info().project.name)?.[1] ??
     "free") as TestPlan
 
-  return registryFor(plan, accountFor(plan)?.email ?? "none@example.com")
+  return registryFor(plan, accountFor(plan)?.email ?? null)
 }
 
 test.afterEach(async () => {

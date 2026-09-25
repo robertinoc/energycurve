@@ -73,8 +73,12 @@ export class CreatedPlaylists {
    * the run to have noticed. The ids are still collected because they make the
    * ordinary case exact; the timestamp is what makes it *complete*.
    */
-  constructor(email: string) {
+  /** False when this plan has no credentials, so its tests skipped. */
+  private readonly configured: boolean
+
+  constructor(email: string, configured: boolean) {
     this.email = email
+    this.configured = configured
   }
 
   /** Registers a playlist id, usually parsed out of the URL after an import. */
@@ -105,6 +109,18 @@ export class CreatedPlaylists {
    * cleaning up and tidying somebody else's desk.
    */
   async deleteAll() {
+    // Nothing was configured, so nothing ran, so there is nothing to delete.
+    //
+    // This guard is what keeps CI honest *and* fast. `afterEach` fires for a
+    // skipped test too, and CI supplies placeholder Supabase credentials — so
+    // without it every skipped authenticated test opened a client against
+    // `ci-placeholder.supabase.co` and waited on a request that could never
+    // resolve. Forty-five of those pushed a 10-minute E2E step past its
+    // 12-minute budget, and the job failed with no test having failed.
+    if (!this.configured) {
+      return
+    }
+
     const supabase = adminClient()
 
     const { data: profile } = await supabase
@@ -193,14 +209,17 @@ export async function playlistCount(profileEmail: string): Promise<number> {
  */
 const registries = new Map<string, CreatedPlaylists>()
 
-export function registryFor(plan: string, email: string): CreatedPlaylists {
+export function registryFor(
+  plan: string,
+  email: string | null
+): CreatedPlaylists {
   const existing = registries.get(plan)
 
   if (existing) {
     return existing
   }
 
-  const fresh = new CreatedPlaylists(email)
+  const fresh = new CreatedPlaylists(email ?? "none@example.com", email !== null)
 
   registries.set(plan, fresh)
 
