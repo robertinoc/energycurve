@@ -19,6 +19,11 @@ export interface MigrationProbes {
   rlsEnabled: string[]
   /** Columns this migration makes nullable. */
   nullable: { table: string; column: string }[]
+  /**
+   * Policies this migration removes. The one probe satisfied by an absence:
+   * applied when the policy is gone.
+   */
+  policiesDropped: { policy: string; table: string }[]
 }
 
 export interface Migration extends MigrationProbes {

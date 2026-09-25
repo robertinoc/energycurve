@@ -500,9 +500,21 @@
   <div class="tally" id="tally"></div>
 
   <div class="gate">
-    <span class="tag">Cuello&nbsp;de&nbsp;botella</span>
-    <p><strong>Nada está bloqueado.</strong> A1 está hecha (17/09): las tres cuentas existen y <code>.env.e2e.local</code> está escrito, así que las cinco de UX y los cuatro E2E se pueden correr en la máquina donde vive ese archivo. Y el deploy avanzó: el 19/09 se confirmó con <code>curl</code> que producción tiene <strong>el lote 4 adentro</strong> — la home sirve <code>alternateName: "EnergyCurve DJ"</code> y el <code>sameAs</code> de Instagram, que agregó ese lote. Se dedujo de lo servido, sin entrar a Vercel; Vercel no expone un build id, así que el commit exacto queda sin confirmar. Así que las sesiones SEO, TOOL, CONT, <strong>SEO2</strong>, <strong>SEO3</strong> y <strong>SEO4</strong> arrancan. La <strong>SEO5</strong> es la excepción parcial: dos de sus siete pruebas miden el lote 5, que está en rama y todavía no se deployó; las otras cinco son lectura y se pueden hacer ya.</p>
-    <p style="margin:9px 0 0"><strong>Lo nuevo del 20/09:</strong> la primera tanda de hallazgos ya está implementada y mergeada — PR #246 (H-10), #247 (H-4), #248 (H-8) y #249 (el botón de login en español). Las pruebas que los destaparon quedaron en <strong>Validar fix</strong>: se probaron, salió un defecto, el defecto se arregló, y la fila no vuelve a ser «Pasa» hasta que alguien la corra otra vez contra el deploy que lleva el arreglo. La cola completa está en <code>docs/qa/output-test-tanda-01.md</code>.</p>
+    <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
+    <p><strong>Una sola cosa bloquea, y son cinco minutos en el SQL Editor: a la base de dev le faltan migraciones.</strong> Confirmado el 25/09 sondeando el enum en sólo-lectura: <strong>7 de los 12 géneros que ofrece el producto no existen en dev</strong> — <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code> y <code>bounce</code>. Los agrega la <code>0005</code>. Si mañana elegís uno de esos —o dejás la detección automática y lo elige ella— la importación falla con «Something went wrong while saving» y no vas a saber por qué. Eso salió de un E2E que se caía; sin arreglarlo te come la mañana. Aplicá <code>0005</code> y de paso <code>0027</code> a <code>0032</code>, en orden de número. La sesión <strong>DB</strong> tiene los pasos.</p>
+    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E quedó en verde de punta a punta — <strong>750 pruebas, 739 pasan, 11 saltean a propósito, cero fallan</strong>, corrido el 25/09 con las cuentas puestas. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
+    <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
+    <ol style="margin:6px 0 0 18px;padding:0">
+      <li><strong>DB.1 a DB.4 — 25 min.</strong> Aplicá las migraciones y corré el seed. Desbloquea todo lo demás: sin esto, siete géneros rompen y cualquier prueba de importación miente.</li>
+      <li><strong>A1 — ya está hecha.</strong> Las tres cuentas existen y <code>.env.e2e.local</code> está escrito. No la repitas.</li>
+      <li><strong>E2E.1 — 10 min.</strong> Corré <code>npx playwright test</code> con el entorno cargado y confirmá el cero. Es tu línea de base del día: si algo falla acá, lo de abajo no se interpreta.</li>
+      <li><strong>J y J2 — 70 min.</strong> Lo de Jordi. Necesita tu oído y un NML real, y es lo que ninguna máquina puede contestar.</li>
+      <li><strong>UX — 60 min.</strong> Los cinco casos de borde que esperaban las cuentas. Ahora se pueden correr.</li>
+      <li><strong>TOOL y TOOL2 — 105 min.</strong> Las herramientas públicas con tu librería de verdad y el teléfono.</li>
+      <li><strong>CONT.4 y CONT.5 — 30 min.</strong> Las 21 definiciones leídas por un DJ, y el validador de Google. Las dos que deciden si el contenido sirve.</li>
+      <li><strong>El resto de SEO</strong> — cuando haya deploy. No dependen de vos hoy.</li>
+    </ol>
+    <p style="margin:9px 0 0">Las sesiones <strong>A4</strong> (backups) y <strong>A6</strong> (consolas) no entran en un día y no bloquean nada: agendalas aparte.</p>
   </div>
 
   <main id="sessions"></main>
@@ -1243,10 +1255,10 @@
       why: "Hasta este lote no había forma de saber qué migraciones estaban aplicadas en ningún entorno. Eso costó tres veces: la <code>0021</code> nunca corrió en dev —las features espectrales no se persistían y nadie se enteró— y en agosto pasó lo mismo con la <code>0018</code> y la <code>0019</code>, tragadas en la capa de servicio y visibles sólo como un botón que no confirmaba nunca. Ahora <code>scripts/migration-status.mjs</code> lo contesta con un comando. <strong>El script no aplica nada</strong>: es el semáforo, no el auto. Aplicar sigue siendo tuyo, con el comando delante.",
       tests: [
         {
-          code: "DB.1", title: "Correlo contra dev", sub: "La respuesta que nadie tuvo en tres meses",
-          steps: ["Supabase → Project Settings → Database → Connection string → URI, del proyecto de <strong>dev</strong>", "<code>MIGRATION_DB_URL='postgresql://…' npm run db:status</code>", "Leé la lista entera, no sólo el resumen del final"],
-          expect: "Una línea por migración: <code>applied</code>, <code>MISSING</code>, <code>PARTIAL</code> o <code>unknown</code>. Contra una base con 0001-0026 aplicadas devuelve exactamente «5 missing or partial, 0 unknown» y sale con código 1. Si dev está como creemos, las que faltan son 0027 a 0031.",
-          ifNot: "Si aparece algún <code>unknown</code>, decímelo con el nombre: significa que esa migración no crea nada que se pueda buscar, y hay un test que justamente impide que eso pase. Si aparece un <code>PARTIAL</code>, es una migración aplicada a medias — la mitad de sus objetos existe y la otra no."
+          code: "DB.1", title: "Aplicá la 0005 — es la que rompe cosas hoy", sub: "Siete géneros que el producto ofrece y la base rechaza",
+          steps: ["SQL Editor del proyecto de <strong>dev</strong>", "Pegá <code>supabase/migrations/0005_expand_genres.sql</code>", "Después, en orden: <code>0027</code>, <code>0028</code>, <code>0029</code>, <code>0030</code>, <code>0031</code>, <code>0032</code>", "Probá importar un set eligiendo el género <strong>Trance</strong>"],
+          expect: "La importación con Trance funciona. Antes fallaba con «Something went wrong while saving» y en el log del servidor decía <code>invalid input value for enum playlist_genre: \"trance\"</code>.",
+          ifNot: "Los siete géneros ausentes, confirmados el 25/09 en sólo-lectura contra dev: <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code>, <code>bounce</code>. Los otros cinco —house, techno, hard-techno, melodic-techno, progressive— vienen de la <code>0001</code> y siempre funcionaron, que es por qué nadie lo había visto."
         },
         {
           code: "DB.2", title: "Aplicá las que faltan, y volvé a correrlo", sub: "El semáforo tiene que cambiar de color",
@@ -1267,36 +1279,36 @@
           ifNot: "Si la segunda muestra un score como si nada, eso es un hallazgo — la regla del producto es decir qué parte es dato y qué parte es estimación. Corré el seed dos veces para confirmar que no duplica nada."
         },
         {
-          code: "DB.5", title: "La 0014 y el esquema <code>auth</code>", sub: "Un hallazgo de paso, tuyo para decidir",
-          steps: ["Abrí <code>supabase/migrations/0014_feature_usage.sql</code>", "Mirá la política del final: usa <code>auth.uid()</code>", "Leé la decisión 22 en <code>docs/decisions.md</code>"],
-          expect: "La política no puede coincidir nunca: las identidades viven en WorkOS y ningún JWT de Supabase llega a Postgres. Es inofensiva porque el service-role saltea RLS, pero es código muerto que además hace que la migración falle contra un Postgres común.",
-          ifNot: "No la toqué porque es schema y el lote no era eso. Decidí si se saca en una migración futura o se deja documentada."
+          code: "DB.5", title: "Las 32 aplican dos veces sin error", sub: "Arreglado el 25/09 — confirmalo si querés",
+          steps: ["Contra un Postgres descartable, aplicá las 32 en orden", "Aplicalas otra vez, las 32, sobre la misma base"],
+          expect: "Cero errores en las dos pasadas. Verificado el 25/09 contra un PostgreSQL 16 local. Antes fallaban dos cosas: la <code>0002</code> reventaba al re-correrla (<code>btrim(playlist_context) does not exist</code> — una vez que la columna es enum, <code>trim()</code> no tiene sobrecarga) y la <code>0014</code> no aplicaba a un Postgres común porque declaraba una política con <code>auth.uid()</code> y ahí no existe el esquema <code>auth</code>.",
+          ifNot: "La política era código muerto: las identidades viven en WorkOS, ningún JWT de Supabase llega a Postgres, así que <code>auth.uid()</code> siempre es null y no coincidía con nada (decisión 22). La <code>0032</code> la saca de las bases que ya la tienen. Hay un test que impide que vuelva cualquiera de las dos clases."
         }
       ]
     },
     {
       code: "E2E",
-      title: "Las tres suites autenticadas, el día que tengas las cuentas",
-      meta: "~20 min · necesita A1 terminado · escritura contra dev",
-      why: "El lote 6 sumó tres specs de Playwright detrás del login: onboarding, importar y visualizar, y exportar. <strong>Saltean en cualquier máquina sin <code>.env.e2e.local</code></strong>, con el motivo escrito en el reporte — no fallan, porque eso entrena a ignorar el rojo, y no pasan, porque un tilde verde sobre un test que no corrió es lo peor de los tres. Esta sesión es para el día que existan las cuentas.",
+      title: "Las tres suites autenticadas, ya corridas",
+      meta: "~15 min · las cuentas ya están · ahora son automáticas",
+      why: "Esta sesión cambió de naturaleza el 25/09. Las tres specs del lote 6 se corrieron por primera vez y <strong>no funcionaban</strong>: 43 de 66 fallaban. Cuatro causas, todas reales — el spec hacía clic en el primer botón <code>submit</code>, que es «Log out»; la limpieza al final del archivo hacía que el plan FREE llegara a su tope de 3 playlists y el producto rechazara el resto, correctamente; la página hace streaming y durante el swap conviven dos árboles del DOM, así que un <code>id</code> único resolvía a dos elementos; y los tres proyectos corrían en paralelo contra una sola base. Hoy quedan en <strong>64 pasan, 2 saltean, 0 fallan</strong>. Lo que te queda a vos es confirmarlo y mirar lo que un test no mira.",
       tests: [
         {
-          code: "E2E.1", title: "Corré la suite entera y leé los skips", sub: "Antes de las cuentas",
-          steps: ["<code>npx playwright test</code>", "Mirá el resumen final", "Buscá las líneas de los proyectos <code>auth-free</code>, <code>auth-pro</code>, <code>auth-proPlus</code>"],
-          expect: "Los tres proyectos autenticados saltean, y cada skip dice qué variable falta y en qué archivo ponerla. Los cuatro proyectos públicos corren normal.",
-          ifNot: "Si algún spec autenticado <strong>falla</strong> en vez de saltear, eso es un bug del harness: el contrato es que una cuenta ausente saltea."
+          code: "E2E.1", title: "La suite entera, como línea de base del día", sub: "Es el primer comando de la mañana",
+          steps: ["<code>cd ~/Documents/code/energycurve</code>", "<code>set -a; . .env.e2e.local; set +a</code>", "<code>npx playwright test</code>", "Leé sólo el resumen final"],
+          expect: "<strong>739 pasan, 11 saltean, 0 fallan</strong> sobre 750. Los 11 skips son a propósito: 9 son pruebas de sitemap que corren sólo en Chromium («HTTP only») y 2 son el test del plan free, que se saltea en PRO y PRO+.",
+          ifNot: "Si falla algo de import o export, lo más probable es que falten las migraciones: mirá primero DB.1. Si fallan las dos de consent y login, el build salió sin <code>.env.local</code> — corré desde el checkout principal, no desde un worktree. Los dos casos ahora te lo dicen en el mensaje del fallo."
         },
         {
-          code: "E2E.2", title: "Con las cuentas puestas, la suite de import", sub: "Los cuatro formatos, de verdad",
-          steps: ["Con <code>.env.e2e.local</code> escrito (A1.4)", "<code>npx playwright test e2e/import-and-visualise.auth.spec.ts</code>"],
-          expect: "Importa Rekordbox XML, Traktor NML, M3U8 y CSV, y en cada uno confirma que aparecen el primer y el último tema por nombre. Los fixtures se generan, no están en el repo.",
-          ifNot: "Van a quedar playlists de prueba en tu base de dev. Se borran a mano; el spec no limpia, a propósito — un test que borra es un test que puede borrar lo que no era suyo."
+          code: "E2E.2", title: "Que la base quede como estaba", sub: "La propiedad que las hace repetibles",
+          steps: ["Antes de correr, contá las playlists de dev", "Corré la suite entera", "Volvé a contar"],
+          expect: "El mismo número. Verificado el 25/09: 1 antes, 1 después, y la que queda es «Warehouse Opening Test», de julio. Las specs borran lo que crearon después de <strong>cada</strong> test, y borran por dueño y ventana de tiempo — no sólo por los ids que alcanzaron a registrar.",
+          ifNot: "Si quedan playlists «Synthetic Set», la limpieza no corrió. Importa más de lo que parece: dos huérfanas alcanzan para llenar el tope de 3 de la cuenta FREE y hacer fallar la corrida siguiente entera."
         },
         {
-          code: "E2E.3", title: "El export, y sobre todo el nombre del archivo", sub: "Donde estuvo el bug del PR #248",
-          steps: ["<code>npx playwright test e2e/playlist-export.auth.spec.ts</code>", "Si falla, abrí el nombre del archivo que reporta"],
-          expect: "Los cinco formatos bajan, con contenido y con el nombre exacto que devuelve <code>exportFilename</code> — y con <strong>un solo punto</strong>, el de la extensión real. También confirma que <code>CUE_V2</code> y <code>AUDIO_ID</code> sobreviven el viaje de ida y vuelta, que es el P0 del 07/09 mirado desde afuera.",
-          ifNot: "Si el nombre trae dos puntos volvió el bug de #248. Si falta <code>CUE_V2</code>, el export está reconstruyendo entradas en vez de devolver las del usuario, y eso le borra hotcues a alguien."
+          code: "E2E.3", title: "Lo que el E2E ahora cubre y vos ya no tenés que hacer a mano", sub: "Para que no repitas trabajo",
+          steps: ["Leé esta lista antes de planificar el día"],
+          expect: "Automático desde hoy: importar en los <strong>cuatro formatos</strong> (Rekordbox XML, Traktor NML, M3U8, CSV) y ver los temas; que se dibuje la curva; que el set siga ahí después de recargar; que la página de comparación abra; <strong>los cinco formatos de export</strong> con el nombre de archivo exacto y un solo punto; y que <code>CUE_V2</code> y <code>AUDIO_ID</code> sobrevivan el viaje de ida y vuelta — el P0 del 07/09 visto desde afuera.",
+          ifNot: "Lo que sigue siendo tuyo: si la curva <em>se ve</em> bien, si el orden que propone <em>suena</em> bien, y el export abierto en Rekordbox o Traktor de verdad. Un test confirma que el archivo tiene los cues; sólo Traktor dice qué hace Traktor al importarlo."
         }
       ]
     }

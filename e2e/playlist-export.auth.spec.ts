@@ -3,6 +3,8 @@ import { expect, test, type Page } from "@playwright/test"
 import { exportFilename, type ExportFormat } from "../lib/playlists/export"
 import { asTraktorNml, syntheticPlaylist } from "../tests/fixtures/playlists"
 import { accountFor, skipReason, type TestPlan } from "./helpers/accounts"
+import { registryFor } from "./helpers/cleanup"
+import { importPlaylist } from "./helpers/import-playlist"
 
 /**
  * F3 — getting the corrected order back out, in all five formats.
@@ -26,6 +28,20 @@ import { accountFor, skipReason, type TestPlan } from "./helpers/accounts"
  * reads means the assertion is about the round trip, and the *shape* rule — one
  * dot, at the real extension — is pinned separately in `tests/export.test.ts`.
  */
+
+/**
+ * Sequential within this file, against the config's `fullyParallel: true`.
+ *
+ * That setting carries the note "nothing here mutates shared state, so parallel
+ * is safe", which was true when every spec was a signed-out page read and
+ * stopped being true the moment the authenticated suites landed: all the tests
+ * in this file import playlists **into the same account**, so they are reading
+ * and writing one list. Run in parallel they raced each other — a locator that
+ * was unambiguous when it was asserted had a second match by the time it was
+ * used, and the failure surfaced as an intermittent strict-mode violation
+ * rather than as the contention it was.
+ */
+test.describe.configure({ mode: "default" })
 
 function requireAccount(projectName: string): TestPlan {
   const match = /^auth-(free|pro|proPlus)$/.exec(projectName)
@@ -54,23 +70,53 @@ const EXPORTS: {
   { format: "txt", label: /text file/i, signature: /\S/ },
 ]
 
-/** Imports one NML set and returns the playlist URL it lands on. */
+/**
+ * What each project created, deleted after **every** test.
+ *
+ * Per-test because the FREE plan allows three active playlists
+ * (`PLAN_LIMITS.free`) and this file imports more than three: cleaning up at
+ * the end meant the fourth import onwards was correctly refused by the product
+ * while the spec sat waiting for a navigation that was never coming.
+ *
+ * Per-plan because the same file runs once per `auth-*` project against a
+ * different account, and one shared registry would have PRO deleting FREE's
+ * sets. The plan is read from `test.info()` rather than threaded through every
+ * call, which keeps the signature of the import helpers about importing.
+ */
+function registry() {
+  const plan = (/^auth-(free|pro|proPlus)$/.exec(test.info().project.name)?.[1] ??
+    "free") as TestPlan
+
+  return registryFor(plan, accountFor(plan)?.email ?? null)
+}
+
+test.afterEach(async () => {
+  await registry().deleteAll()
+})
+
+/** Imports one NML set and returns the tracks it was built from. */
 async function importSet(page: Page, name: string) {
   const tracks = syntheticPlaylist({ length: 10 })
 
-  await page.goto("/dashboard/playlists")
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: `${name}.nml`,
-    mimeType: "text/xml",
-    buffer: Buffer.from(asTraktorNml(tracks), "utf8"),
-  })
-  await page.locator('button[type="submit"]').first().click()
-  await page.waitForURL(/\/dashboard\/playlists\//, { timeout: 30_000 })
+  await importPlaylist(
+    page,
+    {
+      name: `${name}.nml`,
+      mimeType: "text/xml",
+      contents: asTraktorNml(tracks),
+    },
+    registry()
+  )
 
   return tracks
 }
 
 test.describe("exporting a set", () => {
+  // An import is an upload, a parse and a database write; an export adds a
+  // download. The 30s default belongs to tests that assert on a rendered page,
+  // and leaving it here produced timeouts that read like hangs.
+  test.setTimeout(90_000)
+
   for (const item of EXPORTS) {
     test(`downloads ${item.format} with the right name and content`, async ({
       page,

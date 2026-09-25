@@ -142,7 +142,26 @@ export function deriveProbes(sql) {
     ].map((inner) => ({ table: match[1], column: inner[1] }))
   )
 
-  return { tables, columns, indexes, types, enumValues, rlsEnabled, nullable }
+  // The one probe that is satisfied by an **absence**. A migration whose whole
+  // job is to remove something creates nothing to look for, and reporting it
+  // `unknown` forever would reopen the gap this script exists to close — so the
+  // question it asks is simply inverted: applied when the policy is gone.
+  const policiesDropped = [
+    ...code.matchAll(
+      /drop\s+policy\s+(?:if\s+exists\s+)?([a-z_][a-z0-9_]*)\s+on\s+(?:public\.)?([a-z_][a-z0-9_]*)/g
+    ),
+  ].map((match) => ({ policy: match[1], table: match[2] }))
+
+  return {
+    tables,
+    columns,
+    indexes,
+    types,
+    enumValues,
+    rlsEnabled,
+    nullable,
+    policiesDropped,
+  }
 }
 
 /** The migration files, in the order they are meant to be applied. */
@@ -219,6 +238,14 @@ export function verdictFor(migration, schema) {
     ;(schema.nullable.has(key) ? present : missing).push(`nullable ${key}`)
   }
 
+  for (const { policy, table } of migration.policiesDropped) {
+    const key = `${table}.${policy}`
+    // Inverted: gone means done.
+    ;(schema.policies.has(key) ? missing : present).push(
+      `policy ${key} removed`
+    )
+  }
+
   if (present.length === 0 && missing.length === 0) {
     return { status: "unknown", present, missing }
   }
@@ -252,6 +279,9 @@ async function readSchema(client) {
        left join pg_enum e on e.enumtypid = t.oid
       where n.nspname = 'public'`
   )
+  const policies = await client.query(
+    `select tablename, policyname from pg_policies where schemaname = 'public'`
+  )
   const rls = await client.query(
     `select c.relname
        from pg_class c
@@ -277,6 +307,9 @@ async function readSchema(client) {
         .map((row) => `${row.typname}.${row.enumlabel}`)
     ),
     rlsEnabled: new Set(rls.rows.map((row) => row.relname)),
+    policies: new Set(
+      policies.rows.map((row) => `${row.tablename}.${row.policyname}`)
+    ),
   }
 }
 
