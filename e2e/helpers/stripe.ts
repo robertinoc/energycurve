@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process"
-import { existsSync, readFileSync } from "node:fs"
-import { dirname, join } from "node:path"
+
+import { readAppEnv } from "./env-file"
 
 /**
  * What the billing suite needs before it is allowed to charge anything, and the
@@ -25,26 +25,6 @@ import { dirname, join } from "node:path"
 
 const WEBHOOK_PATH = "/api/billing/webhook"
 
-function findRepoRoot(): string {
-  let dir = process.cwd()
-
-  for (let depth = 0; depth < 10; depth++) {
-    if (existsSync(join(dir, "package.json"))) {
-      return dir
-    }
-
-    const parent = dirname(dir)
-
-    if (parent === dir) {
-      break
-    }
-
-    dir = parent
-  }
-
-  return process.cwd()
-}
-
 /**
  * The secret key's *mode*, never its value.
  *
@@ -55,34 +35,13 @@ function findRepoRoot(): string {
  * rather than to cause.
  */
 export function stripeMode(): "test" | "live" | "absent" {
-  const fromEnv = process.env.STRIPE_SECRET_KEY?.trim()
-  const key = fromEnv || readKeyFromEnvFile()
+  const key = readAppEnv("STRIPE_SECRET_KEY")
 
   if (!key) {
     return "absent"
   }
 
   return key.startsWith("sk_live") ? "live" : key.startsWith("sk_test") ? "test" : "absent"
-}
-
-function readKeyFromEnvFile(): string {
-  const path = join(findRepoRoot(), ".env.local")
-
-  if (!existsSync(path)) {
-    return ""
-  }
-
-  for (const rawLine of readFileSync(path, "utf8").split("\n")) {
-    const line = rawLine.trim()
-
-    if (!line.startsWith("STRIPE_SECRET_KEY=")) {
-      continue
-    }
-
-    return line.slice("STRIPE_SECRET_KEY=".length).trim().replace(/^['"]|['"]$/g, "")
-  }
-
-  return ""
 }
 
 /**

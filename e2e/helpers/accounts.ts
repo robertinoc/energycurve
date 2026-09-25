@@ -1,5 +1,6 @@
-import { existsSync, readFileSync } from "node:fs"
-import { dirname, join } from "node:path"
+import { join } from "node:path"
+
+import { readEnvFile, repoRoot } from "./env-file"
 
 /**
  * The three test accounts the authenticated suite runs as, and the one rule
@@ -36,78 +37,8 @@ const ENV_KEYS: Record<TestPlan, { email: string; password: string }> = {
   proPlus: { email: "E2E_PROPLUS_EMAIL", password: "E2E_PROPLUS_PASSWORD" },
 }
 
-/**
- * Walks up from the working directory to the nearest `package.json`.
- *
- * Not `import.meta.url`, which is what this reached for first: Playwright
- * transpiles config and helpers to CommonJS, where it is a syntax error, and
- * the failure surfaces as "Cannot use 'import.meta' outside a module" while
- * loading the config — before any test, with no hint that a path helper caused
- * it. Walking up also survives being run from a subdirectory, which
- * `process.cwd()` alone does not.
- */
-function findRepoRoot(): string {
-  let dir = process.cwd()
-
-  for (let depth = 0; depth < 10; depth++) {
-    if (existsSync(join(dir, "package.json"))) {
-      return dir
-    }
-
-    const parent = dirname(dir)
-
-    if (parent === dir) {
-      break
-    }
-
-    dir = parent
-  }
-
-  return process.cwd()
-}
-
-const REPO_ROOT = findRepoRoot()
+const REPO_ROOT = repoRoot()
 const ENV_FILE = join(REPO_ROOT, ".env.e2e.local")
-
-/**
- * Minimal `KEY=value` reader. Handles the two things a person actually does to
- * one of these files — comments and quoted values — and nothing more.
- */
-function readEnvFile(path: string): Record<string, string> {
-  if (!existsSync(path)) {
-    return {}
-  }
-
-  const out: Record<string, string> = {}
-
-  for (const rawLine of readFileSync(path, "utf8").split("\n")) {
-    const line = rawLine.trim()
-
-    if (!line || line.startsWith("#")) {
-      continue
-    }
-
-    const eq = line.indexOf("=")
-
-    if (eq <= 0) {
-      continue
-    }
-
-    const key = line.slice(0, eq).trim()
-    let value = line.slice(eq + 1).trim()
-
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1)
-    }
-
-    out[key] = value
-  }
-
-  return out
-}
 
 // Read once: the file does not change mid-run, and re-reading it per test would
 // make a deleted file look like a mid-suite failure rather than a setup problem.
