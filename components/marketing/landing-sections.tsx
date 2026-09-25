@@ -27,7 +27,7 @@ import { SectionReveal } from "@/components/marketing/section-reveal"
 import { EnergyCurveHeroVisual } from "@/components/marketing/energy-curve-hero-visual"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ResolvedSiteCopy } from "@/lib/content/site-copy"
-import { localizedPath } from "@/lib/content/locale-routing"
+import { isEmptyIndex, localizedPath } from "@/lib/content/locale-routing"
 import { cn } from "@/lib/utils"
 
 export function HeroSection({
@@ -830,10 +830,19 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
                 href: localizedPath("/glossary", copy.locale),
                 label: copy.footer.glossary,
               },
-              {
-                href: localizedPath("/guide", copy.locale),
-                label: copy.footer.guides,
-              },
+              // Offered only while there is something to open. The guides
+              // index has listed nothing since #237, so the footer was sending
+              // readers to an empty page — and unlike the `noindex`, that is a
+              // person arriving, not a crawler. Same predicate as the
+              // indexability rule, so the link and the sitemap cannot disagree.
+              ...(isEmptyIndex("/guide")
+                ? []
+                : [
+                    {
+                      href: localizedPath("/guide", copy.locale),
+                      label: copy.footer.guides,
+                    },
+                  ]),
               // The two reference pages. Until now the only public pages that
               // linked to them were the free tool and a handful of glossary and
               // guide entries — everything else reached them through the

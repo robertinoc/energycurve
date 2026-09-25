@@ -82,7 +82,14 @@ describe("the new content pages", () => {
       })
     })
 
-    it("gives the guide index the same", () => {
+    it("keeps the guide index's copy ready, but declares no alternates while it is empty", () => {
+      // The description still has to be search-result shaped: the page comes
+      // back the day a guide ships, and copy that only gets checked then is
+      // copy nobody checks.
+      //
+      // What it must *not* do meanwhile is advertise itself. `publishedGuides()`
+      // is empty, so the index lists nothing — and an `hreflang` pointing at a
+      // page carrying `noindex` tells a crawler the site contradicts itself.
       const meta = marketingMetadata("/guide", locale)
       const { description } = pageMetadata("/guide", locale)
 
@@ -90,11 +97,10 @@ describe("the new content pages", () => {
       expect(description.length).toBeLessThanOrEqual(155)
 
       const alternates = alternatesOf(meta)
+
       expect(alternates.canonical).toBe(guideIndexPath(locale))
-      expect(alternates.languages).toMatchObject({
-        en: guideIndexPath("en"),
-        es: guideIndexPath("es"),
-      })
+      expect(alternates.languages).toBeUndefined()
+      expect(meta.robots).toMatchObject({ index: false })
     })
 
     it.each(GLOSSARY_TERMS.map((term) => [term.id, term] as const))(
@@ -229,10 +235,15 @@ describe("the new content pages", () => {
     const entries = sitemap()
     const urls = entries.map((entry) => entry.url)
 
-    it("lists both languages of every glossary entry and both indexes", () => {
+    it("lists both languages of every glossary entry, and neither of the empty guide index", () => {
       for (const locale of supportedLocales) {
         expect(urls).toContain(`${SITE_URL}${glossaryIndexPath(locale)}`)
-        expect(urls).toContain(`${SITE_URL}${guideIndexPath(locale)}`)
+
+        // The guide index used to be here. It lists nothing — the only entry in
+        // `GUIDES` is the component draft — so offering a crawler two URLs of
+        // empty page was thin content under our own name. It returns on its
+        // own; `tests/empty-index.test.ts` asserts that direction.
+        expect(urls).not.toContain(`${SITE_URL}${guideIndexPath(locale)}`)
 
         for (const term of GLOSSARY_TERMS) {
           expect(urls).toContain(`${SITE_URL}${glossaryTermPath(term, locale)}`)
@@ -283,8 +294,14 @@ describe("the new content pages", () => {
      * The count is asserted because it is the one number that catches a whole
      * class of mistake at once — a locale dropped, an entry listed twice, a
      * draft leaking in. 32 before the content branch, 78 after it, 84 since
-     * SEO-E14 on 22/09/2026, and **87 since SEO-E13**, which is the arithmetic
-     * below.
+     * SEO-E14 on 22/09/2026, 87 since SEO-E13, and **85 since 25/09/2026**,
+     * which is the arithmetic below.
+     *
+     * It went *down* by two, which is the unusual direction and the reason to
+     * read the line: the guide index stopped listing itself in both languages
+     * because it lists nothing. It is the first entry in this sitemap that is
+     * decided by content rather than by a table, so the number now moves on its
+     * own the day a guide ships.
      *
      * The six from SEO-E14 came from two different causes: five were the
      * English translations, and the sixth was `/blog` in English, which had
@@ -296,12 +313,17 @@ describe("the new content pages", () => {
      * asymmetry is the point of counting English and Spanish separately below:
      * a total alone would not show which side moved.
      */
-    it("grew from 84 to 87 URLs, and the arithmetic says why", () => {
+    it("is 85 URLs, and the arithmetic says why", () => {
       const glossaryUrls = GLOSSARY_TERMS.length * supportedLocales.length
-      const indexes = 2 * supportedLocales.length
+      // One index, not two: the glossary's. The guide index is absent while it
+      // has nothing to list, and `publishedGuides()` being empty is also why
+      // the third term below is zero — the same fact, counted once as a page
+      // and once as its contents.
+      const indexes = 1 * supportedLocales.length
       const guides = publishedGuides().length * supportedLocales.length
 
-      expect(glossaryUrls + indexes + guides).toBe(46)
+      expect(publishedGuides()).toHaveLength(0)
+      expect(glossaryUrls + indexes + guides).toBe(44)
 
       // The articles, counted from the corpus rather than hardcoded: a number
       // typed in here would have to be edited by every article, and the whole
@@ -311,7 +333,7 @@ describe("the new content pages", () => {
       expect(allPublishedPosts().filter((post) => post.locale === "en")).toHaveLength(8)
       expect(allPublishedPosts().filter((post) => post.locale === "es")).toHaveLength(5)
 
-      expect(urls).toHaveLength(87)
+      expect(urls).toHaveLength(85)
     })
   })
 
