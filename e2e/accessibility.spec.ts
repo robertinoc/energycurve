@@ -66,6 +66,11 @@ const PUBLIC_PAGES = [
   ["glossary entry (es)", "/es/glosario/curva-de-energia"],
   ["guide index (es)", "/es/guia"],
   ["draft guide (es)", "/es/guia/componentes"],
+  // The first real guide, in both languages (lote 11). One page per language
+  // rather than the index alone: the index existed before and was swept; the
+  // guide is where every content component renders at once, on a real page.
+  ["guide: energy curve", "/guide/energy-curve-in-a-dj-set"],
+  ["guide: energy curve (es)", "/es/guia/curva-de-energia-en-un-set-de-dj"],
   // The comparison pages. Two of the four rather than all eight: they share one
   // renderer and one registry, so a third adds coverage of the same code. These
   // two are the ones that differ — SetFlow's page is the only one with a

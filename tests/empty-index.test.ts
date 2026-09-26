@@ -4,74 +4,72 @@ import { supportedLocales } from "@/lib/content/site-copy"
 
 /**
  * An index page with nothing in it should not be indexed, and should not be
- * linked.
+ * linked — and the day it has something in it, it should come back on its own.
  *
- * `/guide` has listed nothing since PR #237 — the only entry in `GUIDES` is the
- * component draft, and drafts are excluded on purpose. So two URLs of empty
- * index sat in the sitemap and in the footer, under our own name.
+ * `/guide` listed nothing from PR #237 until 26/09/2026: the only entry in
+ * `GUIDES` was the component draft, and drafts are excluded on purpose. So two
+ * URLs of empty index sat in the sitemap and in the footer, under our own name,
+ * until lote 8 derived the rule from `publishedGuides()` instead of writing it
+ * into `NOINDEX_PAGES`.
  *
- * The rule is derived from `publishedGuides()` rather than written into
- * `NOINDEX_PAGES`, and these tests assert **both directions**. A list would
- * have been correct today and wrong on the day the first guide ships, in the
- * direction nothing catches: an empty page being visible is something you
- * notice, a finished page staying hidden is not.
+ * Lote 11 published the first real guide, and this file flipped exactly the
+ * way its own comment said it would: the real registry now describes the
+ * published state, and the *empty* direction is the one that has to be mocked.
+ * Nothing in the routing logic was touched to make the index return — which is
+ * the property lote 8 built, and the reason both directions stay asserted.
  */
 
-describe("while the guides index has nothing to list", () => {
-  it("is not offered to a search engine, in either language", async () => {
+describe("now that a guide is published", () => {
+  it("is offered to a search engine, in both languages", async () => {
     const { isIndexable } = await import("@/lib/content/locale-routing")
     const { publishedGuides } = await import("@/lib/content/guides/guides")
 
-    // The premise, asserted rather than assumed: if a guide ships and this line
-    // is not updated, the test below starts describing a different world.
-    expect(publishedGuides()).toHaveLength(0)
+    // The premise, asserted rather than assumed: if every guide is ever
+    // unpublished and this line is not updated, the tests below start
+    // describing a different world.
+    expect(publishedGuides().length).toBeGreaterThan(0)
 
     for (const locale of supportedLocales) {
-      expect(isIndexable("/guide", locale), locale).toBe(false)
+      expect(isIndexable("/guide", locale), locale).toBe(true)
     }
   })
 
-  it("is left out of the sitemap", async () => {
+  it("is in the sitemap, once per language", async () => {
     const { default: sitemap } = await import("@/app/sitemap")
     const urls = (await sitemap()).map((entry) => entry.url)
 
-    expect(urls.filter((url) => /\/(guide|guia)$/.test(url))).toEqual([])
+    expect(urls.filter((url) => /\/(guide|guia)$/.test(url))).toHaveLength(2)
   })
 
-  it("is not advertised as an hreflang alternate", async () => {
+  it("is advertised as an hreflang alternate in both languages", async () => {
     const { indexableLocales } = await import("@/lib/content/locale-routing")
 
-    expect(indexableLocales("/guide")).toEqual([])
+    expect(indexableLocales("/guide")).toEqual([...supportedLocales])
   })
 
-  it("is not linked from the footer", async () => {
+  it("is linked from the footer", async () => {
     const { isEmptyIndex } = await import("@/lib/content/locale-routing")
 
-    expect(isEmptyIndex("/guide")).toBe(true)
+    expect(isEmptyIndex("/guide")).toBe(false)
   })
 })
 
-describe("the day a guide is published", () => {
+describe("the day the last guide is unpublished", () => {
   /**
-   * The direction a hardcoded list cannot express.
+   * The direction a hardcoded list cannot express, now the other way round.
    *
-   * `publishedGuides` is mocked rather than a real guide being added, because
-   * the claim is about the *rule*, not about any particular guide: whatever
-   * ships first, the index has to come back on its own.
+   * `publishedGuides` is mocked rather than the real guide being withdrawn,
+   * because the claim is about the *rule*, not about any particular guide:
+   * whatever the reason the list goes empty, the index has to hide on its own.
    */
-  it("comes back on its own, in both languages and in the sitemap", async () => {
+  it("hides on its own, in both languages and from the sitemap", async () => {
     vi.resetModules()
     vi.doMock("@/lib/content/guides/guides", async () => {
       const actual = await vi.importActual<
         typeof import("@/lib/content/guides/guides")
       >("@/lib/content/guides/guides")
 
-      return {
-        ...actual,
-        publishedGuides: () => [
-          { ...actual.GUIDES[0], draft: false } as never,
-        ],
-      }
+      return { ...actual, publishedGuides: () => [] }
     })
 
     const { isIndexable, indexableLocales, isEmptyIndex } = await import(
@@ -79,16 +77,16 @@ describe("the day a guide is published", () => {
     )
 
     for (const locale of supportedLocales) {
-      expect(isIndexable("/guide", locale), locale).toBe(true)
+      expect(isIndexable("/guide", locale), locale).toBe(false)
     }
 
-    expect(indexableLocales("/guide")).toEqual([...supportedLocales])
-    expect(isEmptyIndex("/guide")).toBe(false)
+    expect(indexableLocales("/guide")).toEqual([])
+    expect(isEmptyIndex("/guide")).toBe(true)
 
     const { default: sitemap } = await import("@/app/sitemap")
     const urls = (await sitemap()).map((entry) => entry.url)
 
-    expect(urls.filter((url) => /\/(guide|guia)$/.test(url))).toHaveLength(2)
+    expect(urls.filter((url) => /\/(guide|guia)$/.test(url))).toEqual([])
 
     vi.doUnmock("@/lib/content/guides/guides")
     vi.resetModules()

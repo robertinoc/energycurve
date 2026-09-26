@@ -125,8 +125,124 @@ jobs:
         # the WARNING findings stay visible in the log without failing a build.
         run: npm run sast
 
+      # Three attempts, because `next/font/google` fails the whole build when
+      # fonts.googleapis.com does not answer — see docs/handoff-2026-09-17.md
+      # §9. It is transient and it was always possible; with six builds per run
+      # instead of one (verify plus five shards) it is six times as likely to be
+      # seen. The first sharded run hit it once, in verify, while the five
+      # shard builds of the same commit passed.
       - name: Production build
-        run: npm run build
+        run: |
+          for attempt in 1 2 3; do
+            npm run build && exit 0
+            echo "build attempt $attempt failed; retrying"
+            sleep 10
+          done
+          exit 1
+
+      # Lighthouse CI — SEO-E29.
+      #
+      # After the e2e suite because it is the slower signal and the less urgent
+      # one: a broken page should fail on an assertion about the page, not on a
+      # budget. Reuses the build above; LHCI starts its own `next start` on 3012
+      # so it cannot collide with the e2e server.
+      #
+      # What it actually guards, and what it does not: CLS, TBT, accessibility
+      # and SEO are asserted at the plan's own numbers and have real margin. LCP
+      # is asserted at a 7 s ceiling rather than the plan's 2.5 s target, because
+      # the target is not met today — the landing's reveal animation lands the
+      # LCP element after hydration. A gate that fails from its first commit is
+      # not a gate; it is a switch somebody turns off. The gap, the evidence and
+      # what fixing it would take are in docs/qa/lighthouse-budgets.md.
+      - name: Lighthouse budgets
+        timeout-minutes: 10
+        run: npm run lhci
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 14
+
+  # The E2E suite, as five shards that run at the same time.
+  #
+  # One `playwright test` used to run every project inside `verify`, under a
+  # 12-minute step timeout, and by lote 10 it took 655 s of the 720 — 91 %. At
+  # the rate the suite grows that stops finishing, and a suite that does not
+  # finish is a suite somebody turns off.
+  #
+  # The split is by measured time, not by file count (sum of test durations
+  # from the lote-10 runs: firefox 145 s, webkit 136 s, mobile-safari 136 s,
+  # chromium 110 s, the three auth projects 252 s plus setup). Each public
+  # browser is a shard; the authenticated projects are ONE shard because they
+  # mutate the dev database and must stay serialised (`workers: 1`). In CI that
+  # shard has no credentials and skips in seconds — it is here so the run
+  # reports the skip instead of forgetting the projects exist.
+  #
+  # Every shard builds for itself: thirty-odd seconds, against shipping a
+  # `.next` directory between jobs. The blob reports are merged by `e2e` below
+  # into one summary, so the number everyone reads is still one number.
+  # `scripts/e2e-sharded.mjs` is the same split, run locally.
+  e2e-shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: chromium
+            projects: --project chromium
+          - shard: firefox
+            projects: --project firefox
+          - shard: webkit
+            projects: --project webkit
+          - shard: mobile-safari
+            projects: --project mobile-safari
+          - shard: auth
+            projects: --project auth-free --project auth-pro --project auth-proPlus
+    env:
+      # Placeholders only: routes are force-dynamic, so nothing connects to
+      # these services at build time. They exist so config readers that
+      # check for presence behave like a configured environment.
+      WORKOS_CLIENT_ID: client_ci_placeholder
+      WORKOS_API_KEY: sk_test_ci_placeholder
+      WORKOS_COOKIE_PASSWORD: ci_placeholder_cookie_password_32chars!
+      NEXT_PUBLIC_WORKOS_REDIRECT_URI: http://localhost:3010/auth/callback
+      SUPABASE_URL: https://ci-placeholder.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ci_placeholder_service_role_key
+      # Analytics has to be *configured* for the consent tests to mean anything:
+      # without a key the tracker no-ops, and "no PostHog cookie after accepting"
+      # would pass for the wrong reason. The host points at port 9 (discard), so
+      # the key exists, cookies are set on init, and not one request leaves the
+      # runner.
+      NEXT_PUBLIC_POSTHOG_KEY: phc_ci_placeholder
+      NEXT_PUBLIC_POSTHOG_HOST: http://127.0.0.1:9
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      # Three attempts, because `next/font/google` fails the whole build when
+      # fonts.googleapis.com does not answer — see docs/handoff-2026-09-17.md
+      # §9. It is transient and it was always possible; with six builds per run
+      # instead of one (verify plus five shards) it is six times as likely to be
+      # seen. The first sharded run hit it once, in verify, while the five
+      # shard builds of the same commit passed.
+      - name: Production build
+        run: |
+          for attempt in 1 2 3; do
+            npm run build && exit 0
+            echo "build attempt $attempt failed; retrying"
+            sleep 10
+          done
+          exit 1
 
       # After the build, reusing its output: the e2e suite runs against `next start`,
       # not `next dev`, because it asserts on rendered metadata and structured data
@@ -195,46 +311,53 @@ jobs:
         timeout-minutes: 8
         run: npx playwright install ${{ steps.playwright.outputs.browsers }}
 
-      - name: End-to-end tests
-        timeout-minutes: 12
-        run: npm run test:e2e
+      - name: End-to-end tests (${{ matrix.shard }})
+        timeout-minutes: 6
+        run: npx playwright test ${{ matrix.projects }} --reporter=blob
+        env:
+          PLAYWRIGHT_BLOB_OUTPUT_FILE: blob-report/${{ matrix.shard }}.zip
 
-      # Only on failure, and only then: a trace is tens of megabytes and is
-      # worth nothing for a run that passed. `trace: retain-on-failure` in
-      # playwright.config.ts means this directory is empty unless something
-      # actually broke — which is exactly when reproducing it locally is hardest.
-      # Lighthouse CI — SEO-E29.
-      #
-      # After the e2e suite because it is the slower signal and the less urgent
-      # one: a broken page should fail on an assertion about the page, not on a
-      # budget. Reuses the build above; LHCI starts its own `next start` on 3012
-      # so it cannot collide with the e2e server.
-      #
-      # What it actually guards, and what it does not: CLS, TBT, accessibility
-      # and SEO are asserted at the plan's own numbers and have real margin. LCP
-      # is asserted at a 7 s ceiling rather than the plan's 2.5 s target, because
-      # the target is not met today — the landing's reveal animation lands the
-      # LCP element after hydration. A gate that fails from its first commit is
-      # not a gate; it is a switch somebody turns off. The gap, the evidence and
-      # what fixing it would take are in docs/qa/lighthouse-budgets.md.
-      - name: Lighthouse budgets
-        timeout-minutes: 10
-        run: npm run lhci
-
-      - name: Upload Lighthouse reports
+      - name: Upload blob report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: lighthouse-report
-          path: .lighthouseci/
-          retention-days: 14
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
 
-      - name: Upload Playwright report
+      - name: Upload Playwright traces
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-report
-          path: |
-            playwright-report/
-            test-results/
+          name: playwright-report-${{ matrix.shard }}
+          path: test-results/
           retention-days: 14
+
+  # One number for the whole suite. Runs even when a shard failed — that is
+  # exactly when the merged report is worth reading — and fails if any did.
+  e2e:
+    needs: e2e-shard
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Download blob reports
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: blob-report-*
+          path: all-blob-reports
+          merge-multiple: true
+      - name: Merge into one report
+        run: npx playwright merge-reports --reporter=list all-blob-reports
+      - name: Fail if any shard failed
+        if: needs.e2e-shard.result != 'success'
+        run: exit 1

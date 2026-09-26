@@ -225,3 +225,51 @@ for m in re.finditer(r'<script[^>]*ld\+json[^>]*>(.*?)</script>', sys.stdin.read
 # hreflang: ojo con el case, Next emite hrefLang
 curl -s https://energycurve.app/ | grep -oiE '<link[^>]*alternate[^>]*>'
 ```
+
+---
+
+# Verificación en producción — Fase 2
+
+**Fecha:** 26/09/2026
+**Contra:** `https://energycurve.app` (producción, no el build local)
+**Commit que sirve producción:** sin confirmar como hash — Vercel no lo expone.
+Confirmado por marcador: producción sirve `/blog/how-to-structure-a-dj-set`
+(200), que llegó con el lote 10 (`d18551d`, mergeado en #261), así que incluye
+**todo** lo de la Fase 2, que es anterior.
+
+Cada fila es un comando corrido hoy contra el dominio real y su salida. Nada
+está citado de memoria ni del handoff.
+
+## Resultado
+
+| Fase | Estado |
+|---|---|
+| Fase 2 | **VERDE** — con una precisión sobre el filtro, abajo |
+
+## Lo que prometió la fase, y lo que se vio vivo
+
+| Qué | Comando | Salida | Estado |
+|---|---|---|---|
+| SEO-E13/E14 · los artículos en inglés se sirven | `for S in <los 11 slugs>; do curl -s -o x.html -w '%{http_code}' $P/blog/$S; grep -o '<html[^>]*lang="[a-z]*"' x.html; done \| sort \| uniq -c` | `11 200 lang="en"` | verde |
+| SEO-E12 · el índice `/blog` lista los artículos | `curl -s $P/blog` + contar `href="/blog/<slug>"` únicos | **11** enlaces a artículos, los 11 slugs presentes | verde |
+| SEO-E12 · el índice `/es/blog` lista los suyos | ídem sobre `/es/blog` | **5** enlaces a artículos | verde |
+| SEO-E14 · par traducido, `hreflang` en los dos sentidos | `curl -s $P/blog/is-my-dj-set-in-the-right-order` y `$P/es/blog/esta-bien-el-orden-de-mi-set`, extraer `<link rel="alternate" hreflang=…>` | en: `en=/blog/is-my-dj-set-in-the-right-order es=/es/blog/esta-bien-el-orden-de-mi-set x-default=/blog/…` · es: `es=/es/blog/esta-bien-el-orden-de-mi-set en=/blog/is-my-dj-set-in-the-right-order x-default=/blog/…` · canónica propia en cada uno | verde |
+| SEO-E15 · relacionados por tag dentro de cada artículo | buscar «Keep reading» / «Seguir leyendo» y contar los `href` a otros artículos en esa sección | en: sección encontrada, **3** artículos (`how-to-structure-a-dj-set`, `what-is-a-dj-set-energy-curve`, `how-to-order-a-dj-set-by-energy-warm-up`) · es: sección encontrada, **3** (`antes-de-tocar-no-despues`, `ordenar-un-set-desde-una-lista-de-texto`, `cuanto-es-mucho-salto-de-energia`) | verde |
+| SEO-E16 · el filtro del índice existe en el HTML del servidor | `curl -s $P/blog \| grep -c '<select'` y contar `<option` | `<select>` presente, **19** opciones en `/blog`; presente también en `/es/blog` | verde, con precisión |
+| SEO-E16 · `Blog` JSON-LD con su lista | parsear cada `<script type="application/ld+json">` de `/blog` y `/es/blog` con `JSON.parse` y leer `@type` y `blogPost.length` | `/blog`: `Blog+BreadcrumbList`, parsea, `blogPost: 11` · `/es/blog`: parsea, `blogPost: 5` | verde |
+| JSON-LD de un artículo | ídem sobre los dos del par | `BlogPosting+BreadcrumbList`, parsea, en los dos | verde |
+
+**La precisión sobre el filtro.** Lo que SEO-E16 diseñó es un `<select>` nativo
+que llega en el HTML del servidor, para que una elección hecha **antes** de
+hidratar no se pierda cuando la página hidrata (`useTypedBeforeHydration`, en
+`components/marketing/blog-tag-filter.tsx`). Con `curl` se verifica la
+precondición — el control está, con sus opciones, antes de cualquier JS — y no
+el comportamiento, que necesita un navegador. Ese comportamiento lo cubre el
+test unitario del hook en el repo; **no está verificado contra producción por
+este documento**, y se dice en vez de darlo por hecho. El filtro no funciona
+sin JavaScript en absoluto: no hay `<form method="get">` alrededor del
+`<select>`. Eso no es lo que la fase prometió, así que no es rojo — pero
+conviene saberlo.
+
+**Con esto la Fase 2 queda verificada en verde.** El hito «Phase 2 verified
+live» se puede cerrar.
