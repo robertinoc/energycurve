@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 import { useState } from "react"
 import { GripVertical, Sparkles } from "lucide-react"
 
@@ -41,6 +43,16 @@ interface LiveTracklistProps {
   /** Export dropdown for the current derived order (rendered next to the
    * smart-order button so the flow ends where the user's eye ends). */
   exportSlot?: React.ReactNode
+  /**
+   * The monthly AI-ordering allowance, read on the server (F1 audit, A4).
+   *
+   * `remaining: 0` disables the button and says why, with the way to PRO
+   * beside it. `null` on both is an unlimited plan and shows nothing. The
+   * limit itself is not decided here — it comes from PLAN_LIMITS and the
+   * server refuses on its own — this is only where it becomes visible before
+   * the click instead of after it.
+   */
+  aiQuota?: { remaining: number | null; limit: number | null }
   locale: SiteLocale
 }
 
@@ -61,8 +73,23 @@ export function LiveTracklist({
   onSmartOrder,
   onReset,
   exportSlot,
+  aiQuota,
   locale,
 }: LiveTracklistProps) {
+  const quotaSpent = aiQuota?.remaining === 0
+  const quotaNote =
+    !aiQuota || aiQuota.limit === null || aiQuota.remaining === null
+      ? null
+      : aiQuota.remaining === 0
+        ? aiQuota.limit === 1
+          ? ANALYSIS_UI.smartOrderSpent[locale]
+          : formatTemplate(ANALYSIS_UI.smartOrderSpentPlural[locale], { limit: aiQuota.limit })
+        : aiQuota.remaining === 1
+          ? formatTemplate(ANALYSIS_UI.smartOrderLeftOne[locale], { limit: aiQuota.limit })
+          : formatTemplate(ANALYSIS_UI.smartOrderLeft[locale], {
+              remaining: aiQuota.remaining,
+              limit: aiQuota.limit,
+            })
   const subtitle =
     movedCount > 0
       ? formatTemplate(ANALYSIS_UI.movedSubtitle[locale], {
@@ -126,7 +153,8 @@ export function LiveTracklist({
           <button
             type="button"
             onClick={onSmartOrder}
-            disabled={smartStatus === "thinking"}
+            disabled={smartStatus === "thinking" || quotaSpent}
+            aria-describedby={quotaNote ? "smart-order-quota" : undefined}
             className={cn(
               "inline-flex items-center gap-2 rounded-[13px] px-4 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0",
               "shadow-[0_8px_26px_rgba(106,92,240,0.35)]"
@@ -139,6 +167,28 @@ export function LiveTracklist({
             <Sparkles className="size-4" aria-hidden />
             {smartLabel}
           </button>
+          {quotaNote ? (
+            <span
+              id="smart-order-quota"
+              className={cn(
+                "text-xs",
+                quotaSpent ? "text-ec-amber" : "text-ec-text-dim"
+              )}
+            >
+              {quotaNote}
+              {quotaSpent ? (
+                <>
+                  {" "}
+                  <Link
+                    href="/pricing"
+                    className="font-semibold text-white underline underline-offset-4 hover:text-ec-cyan"
+                  >
+                    {ANALYSIS_UI.smartOrderUpgrade[locale]}
+                  </Link>
+                </>
+              ) : null}
+            </span>
+          ) : null}
           {manualMoveCount > 0 ? (
             <button
               type="button"

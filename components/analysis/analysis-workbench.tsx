@@ -211,6 +211,8 @@ export interface AnalysisWorkbenchProps {
    * so nothing below may assume it has entries.
    */
   residencyRepeats?: readonly ResidencyRepeat[]
+  /** See LiveTracklist. Read on the server; undefined means unlimited. */
+  aiQuota?: { remaining: number | null; limit: number | null }
   /**
    * Where the curve's energy values came from. Optional so the component still
    * renders for a caller that doesn't have it; absent means no caveat is shown.
@@ -251,6 +253,7 @@ export function AnalysisWorkbench({
   baseScore,
   targetCurve,
   residencyRepeats = [],
+  aiQuota,
   coverage,
   locale,
 }: AnalysisWorkbenchProps) {
@@ -291,6 +294,8 @@ export function AnalysisWorkbench({
   )
   const [smartStatus, setSmartStatus] = useState<SmartOrderStatus>("idle")
   const [smartError, setSmartError] = useState(false)
+  // The server refused for the month's allowance (402), as opposed to failed.
+  const [smartQuotaHit, setSmartQuotaHit] = useState(false)
   // How much of the order Claude has actually committed to. Null until the
   // first id lands, because "0 of 40" for several seconds reads as stuck.
   const [smartProgress, setSmartProgress] = useState<{
@@ -659,6 +664,7 @@ export function AnalysisWorkbench({
     }
 
     setSmartError(false)
+    setSmartQuotaHit(false)
     setSmartStatus("thinking")
     setSmartProgress(null)
 
@@ -667,6 +673,13 @@ export function AnalysisWorkbench({
         `/api/playlists/${playlistId}/smart-order`,
         { method: "POST" }
       )
+
+      // 402 is the allowance, not a failure: the page already says when it is
+      // spent, so this is the race — another tab, a stale page — and it gets
+      // its own sentence rather than the generic error.
+      if (response.status === 402) {
+        setSmartQuotaHit(true)
+      }
 
       if (!response.ok || !response.body) {
         throw new Error(`smart-order ${response.status}`)
@@ -1035,7 +1048,9 @@ export function AnalysisWorkbench({
         </div>
       ) : smartError ? (
         <div className="rounded-xl border border-ec-amber/35 bg-ec-amber/[0.06] px-4 py-3 text-sm text-white/80">
-          {ANALYSIS_UI.smartOrderError[locale]}
+          {smartQuotaHit
+            ? ANALYSIS_UI.smartOrderQuotaError[locale]
+            : ANALYSIS_UI.smartOrderError[locale]}
         </div>
       ) : smartStatus === "done" ? (
         <div className="flex items-center gap-3 rounded-xl border border-ec-cyan/35 bg-ec-cyan/[0.06] px-4 py-3 text-sm text-white/80">
@@ -1106,6 +1121,7 @@ export function AnalysisWorkbench({
         dirty={orderDirty}
         smartStatus={smartStatus}
         onSmartOrder={smartOrderRequest}
+        aiQuota={aiQuota}
         onReset={resetOrder}
         exportSlot={
           <PlaylistExportButton playlist={exportPlaylist} locale={locale} />

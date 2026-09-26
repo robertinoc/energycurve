@@ -598,6 +598,35 @@ export const ANALYSIS_UI = {
   },
   undoLastMove: { en: "Undo move", es: "Deshacer movimiento" },
   smartOrderCta: { en: "Smart ordering", es: "Ordenación inteligente" },
+  /**
+   * The monthly allowance, shown before the click (F1 audit, A4). The server
+   * has always refused an over-limit request with a 402; what was missing was
+   * the page saying so first, so a FREE account with its one ordering spent
+   * saw an enabled button that could only fail. The limit itself is unchanged
+   * and lives in PLAN_LIMITS; this is only where it becomes visible.
+   */
+  smartOrderLeft: {
+    en: "{remaining} of {limit} AI orderings left this month",
+    es: "Te quedan {remaining} de {limit} ordenamientos con IA este mes",
+  },
+  smartOrderLeftOne: {
+    en: "1 of {limit} AI orderings left this month",
+    es: "Te queda 1 de {limit} ordenamientos con IA este mes",
+  },
+  smartOrderSpent: {
+    en: "You've used this month's AI ordering. Everything here still works by hand.",
+    es: "Ya usaste el ordenamiento con IA de este mes. Todo lo de acá sigue funcionando a mano.",
+  },
+  smartOrderSpentPlural: {
+    en: "You've used this month's {limit} AI orderings. Everything here still works by hand.",
+    es: "Ya usaste los {limit} ordenamientos con IA de este mes. Todo lo de acá sigue funcionando a mano.",
+  },
+  smartOrderUpgrade: { en: "More on PRO", es: "Más en PRO" },
+  /** Shown if the server refuses after all — a race with another tab, say. */
+  smartOrderQuotaError: {
+    en: "This month's AI orderings are used up. The order you had is untouched, and you can keep editing by hand.",
+    es: "Los ordenamientos con IA de este mes ya se usaron. El orden que tenías está intacto, y podés seguir editando a mano.",
+  },
   smartOrderThinking: { en: "Thinking the order…", es: "Pensando el orden…" },
   smartOrderDone: { en: "Reordered with AI", es: "Reordenado con IA" },
   smartThinkingBanner: {

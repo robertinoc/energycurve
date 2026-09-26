@@ -24,7 +24,10 @@ import { parseSourceHeader } from "@/lib/playlists/source-entry"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
+import { getProfileBilling } from "@/services/billing-service"
 import { getResidencySummary } from "@/services/residency-service"
+import { readQuota } from "@/services/usage-service"
+import { quotaFor } from "@/lib/product/capabilities"
 import {
   getPlaylistAnalysis,
   MIN_ANALYZABLE_TRACKS,
@@ -113,6 +116,12 @@ export default async function PlaylistAnalysisPage({
 
   // Redesign (zone 0/1): every issue becomes an actionable fix with concrete
   // reorder operations; the client workbench derives order + score from them.
+  // The month's AI-ordering allowance, so the page can say it before the
+  // click. Read-only: the server route still decides, and still refuses.
+  const billing = await getProfileBilling(profile.id)
+  const aiLimit = quotaFor(billing.plan, billing.status, "ai_ordering")
+  const aiQuota = await readQuota(profile.id, "ai_ordering", aiLimit)
+
   const fixes = deriveFixes({
     trackIds: playlist.tracks.map((track) => track.id),
     energies,
@@ -203,6 +212,7 @@ export default async function PlaylistAnalysisPage({
           baseScore={analysis.setScore}
           targetCurve={analysis.targetCurve}
           residencyRepeats={residency.repeats}
+          aiQuota={{ remaining: aiQuota.remaining, limit: aiQuota.limit }}
           locale={locale}
         />
 
