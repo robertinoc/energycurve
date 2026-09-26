@@ -1,8 +1,15 @@
 # Auditoría F1 — la mitad autenticada
 
 **26/09/2026.** Contra el build de producción del commit de `plans/lote-9`,
-corriendo en local, con las tres cuentas de prueba. **No se arregló nada de lo
-de abajo**: el catálogo es el entregable y los arreglos son un lote aparte.
+corriendo en local, con las tres cuentas de prueba. En ese lote **no se arregló
+nada de lo de abajo**: el catálogo era el entregable y los arreglos, un lote
+aparte.
+
+> **Estado al 26/09/2026, lote 10:** A2, A3 y A4 **arreglados**, cada uno con
+> su bloque *Arreglado* abajo — fecha, commit y el test que lo cubre, probado en
+> rojo contra el build anterior y en verde después. A1 quedó resuelto durante la
+> propia auditoría (dato de prueba). A5 y A6 eran resultados negativos. Lo que
+> sigue abierto está en «Lo que esta auditoría NO cubre».
 
 El PR #255 auditó la superficie pública —33 rutas, el flujo de valor sin cuenta,
 cuatro estados de error— y dejó explícitamente afuera todo lo que necesita
@@ -90,6 +97,33 @@ de importar con la ventana a una altura en la que el botón quede abajo.
 bloquea el scroll, y eso está bien y es deliberado. Es que ocupa píxeles que
 alguien más estaba usando.
 
+**Arreglado** — 26/09/2026, `54517d4`. El banner mide su propia altura con un
+`ResizeObserver` y la publica en `--consent-banner-height`; `body` recibe ese
+padding inferior, para que los últimos controles de una página puedan subir por
+encima del banner, y `html` recibe ese `scroll-padding-bottom`, para que
+cualquier control que se scrollee o enfoque caiga por encima y no detrás. Se
+mide en vez de fijarse porque la altura depende de idioma, viewport y ajuste de
+línea. No se reabrió nada de lo decidido: sigue sin renderizarse en el servidor
+y el LCP no era el tema.
+
+**Test:** `e2e/consent.spec.ts`, «leaves every control reachable while it is
+showing», en inglés y en español. Recorre todos los enlaces y botones visibles,
+scrollea cada uno a la vista como lo hace el navegador y falla si alguno se
+solapa con el banner. Contra el build anterior: **10 controles debajo en
+inglés, 6 en español** — los del pie y el de instalar la app. Después: ninguno.
+A 390 px en la landing, el último enlace del pie pasó de y=697–717 (banner en
+y=638) a y=490–510.
+
+**Lo que el test encontró de más.** Al correrlo en los cuatro navegadores, en
+mobile-safari reportó «Install» a y=567–603 con el banner en y=453: es el aviso
+de instalar la app en móvil, **otro elemento fijo al fondo**, y dos fijos al
+mismo borde se solapan sin importar el scroll. Ahora ese aviso sube la altura
+del banner mientras esté visible — la misma variable — y vuelve cuando se
+responde. La primera versión del test, que recorría los controles desde
+Playwright de a uno, pasó en Chromium y agotó los 30 s en el WebKit del CI; la
+versión que quedó mide todo en una sola evaluación dentro de la página y tarda
+menos de 3 s en cualquiera de los cuatro.
+
 ---
 
 ## A3 · El formulario de importación dice "Ready to import" de archivos que no puede importar — **media**
@@ -120,6 +154,24 @@ archivos de la tabla, mirar el texto del formulario, después enviar.
 mensaje. No se determinó si el archivo se rechazó en silencio o si el envío no
 llegó a ocurrir. Es el que conviene mirar primero de los tres.
 
+**Arreglado** — 26/09/2026, `95db80a`. Lo que el lote 10 encontró al abrirlo:
+el formulario **no parseaba nada** en el navegador — «Ready to import» se
+ganaba con que el archivo tuviera nombre — y el servidor **tampoco chequeaba
+cero temas**: un export válido y vacío guardaba una playlist vacía. Ahora el
+navegador lee el archivo al elegirlo, con los mismos lectores y la misma
+decodificación por BOM que el servidor, y dice qué encontró: la cantidad de
+temas si los hay, y si no, cuál de tres cosas pasó y qué hacer. El botón queda
+apagado hasta que haya algo que enviar. El servidor conserva su mitad de la
+regla. La vara es un tema utilizable, a propósito baja: una playlist sin BPM ni
+tonalidad sigue entrando.
+
+**Test:** `e2e/import-readiness.auth.spec.ts` (los tres archivos de la
+auditoría más el control sin tags) — **4 de 4 en rojo** contra el build
+anterior, 4 de 4 en verde después; y `tests/import-readiness.test.ts`, 6 casos
+unitarios sobre `assessImport`. El `.txt` «sin confirmar» quedó explicado: el
+lector lo rechazaba como no reconocido y el mensaje existía, pero la auditoría
+no lo había buscado con las palabras correctas.
+
 ---
 
 ## A4 · Se ofrece el ordenamiento con IA con la cuota del mes ya gastada — **media-baja**
@@ -146,6 +198,18 @@ otro set, abrir su análisis.
 
 **Sin confirmar.** Qué muestra la interfaz **después** del 402 — no se llegó a
 observar el clic que lo provoca.
+
+**Arreglado** — 26/09/2026, `7066c64`. La página de análisis lee la cuota del
+mes con el mismo `readQuota` que usa la ruta y se la pasa a la lista: dice
+«1 of 3 AI orderings left this month» mientras quede algo, y en cero apaga el
+botón, dice por qué y pone el camino a PRO al lado. Si el servidor rechaza
+igual —otra pestaña, una página vieja—, el 402 tiene su propia frase en vez del
+error genérico, que era lo que quedaba **sin confirmar**. El límite no se movió:
+sigue saliendo de `PLAN_LIMITS` y la ruta sigue decidiendo.
+
+**Test:** `tests/live-tracklist-quota.test.ts`, sobre el markup renderizado —
+**1 de 3 en rojo** antes del cambio (la prop no existía y el botón seguía
+habilitado), 3 de 3 en verde después.
 
 ---
 

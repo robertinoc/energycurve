@@ -1,3 +1,4 @@
+import { EmptyImportError } from "@/lib/playlists/imported-track"
 import {
   parseDurationSeconds,
   type ImportedTrack,
@@ -157,7 +158,7 @@ export function parseM3u8(contents: string): ParsedImport {
   const kept = tracks.filter((track) => track.artist || track.name)
 
   if (kept.length === 0) {
-    throw new Error("No tracks found in the M3U8 playlist.")
+    throw new EmptyImportError("No tracks found in the M3U8 playlist.")
   }
 
   return { source: "m3u8", playlistName, tracks: kept }

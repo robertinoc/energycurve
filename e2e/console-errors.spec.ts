@@ -54,6 +54,13 @@ const PAGES = [
   ["import formats (es)", "/es/import-formats"],
   ["install (es)", "/es/install"],
   ["blog article (es)", "/es/blog/antes-de-tocar-no-despues"],
+  // The three lote-10 articles: English-only, each answering a learning query
+  // the keyword map saw with no page. One is enough for the renderer they
+  // share with the other eight, but all three are new HTML and each has its
+  // own FAQ block, which is the part that has gone wrong before.
+  ["article: how to structure a dj set", "/blog/how-to-structure-a-dj-set"],
+  ["article: how does a dj set work", "/blog/how-does-a-dj-set-work"],
+  ["article: what is a dj set", "/blog/what-is-a-dj-set"],
   ["landing", "/"],
   ["landing (es)", "/es"],
   // The blog index gained a controlled `<select>` (SEO-E16). That is the exact

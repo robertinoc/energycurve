@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">139</strong>
+      <strong id="tally-total">142</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -502,7 +502,7 @@
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
     <p><strong>Una sola cosa bloquea, y son cinco minutos en el SQL Editor: a la base de dev le faltan migraciones.</strong> Confirmado el 25/09 sondeando el enum en sólo-lectura: <strong>7 de los 12 géneros que ofrece el producto no existen en dev</strong> — <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code> y <code>bounce</code>. Los agrega la <code>0005</code>. Si mañana elegís uno de esos —o dejás la detección automática y lo elige ella— la importación falla con «Something went wrong while saving» y no vas a saber por qué. Eso salió de un E2E que se caía; sin arreglarlo te come la mañana. Aplicá <code>0005</code> y de paso <code>0027</code> a <code>0032</code>, en orden de número. La sesión <strong>DB</strong> tiene los pasos.</p>
-    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E quedó en verde de punta a punta — <strong>768 pruebas, 745 pasan, 23 saltean a propósito, cero fallan</strong>, en 13,3 minutos, corrido el 25/09 con las cuentas puestas y con el listener de Stripe levantado. Los 23 saltos: 12 del arco de pagos, que corre una sola vez sobre la cuenta FREE; 9 de sitemap, que corren sólo en Chromium; y 2 del plan free, que se saltean en PRO y PRO+. Las tres cuentas quedaron en <strong>0 playlists</strong>, contadas antes y después. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
+    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 26/09, <strong>públicos 739 pasan / 9 saltean / 0 fallan</strong> y <strong>autenticados 68 pasan / 28 saltean / 0 fallan</strong>, en dos mitades porque una sola corrida no cierra desde acá. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
     <ol style="margin:6px 0 0 18px;padding:0">
       <li><strong>DB.1 a DB.4 — 25 min.</strong> Aplicá las migraciones y corré el seed. Desbloquea todo lo demás: sin esto, siete géneros rompen y cualquier prueba de importación miente.</li>
@@ -511,7 +511,8 @@
       <li><strong>J y J2 — 70 min.</strong> Lo de Jordi. Necesita tu oído y un NML real, y es lo que ninguna máquina puede contestar.</li>
       <li><strong>UX — 60 min.</strong> Los cinco casos de borde que esperaban las cuentas. Ahora se pueden correr.</li>
       <li><strong>TOOL y TOOL2 — 105 min.</strong> Las herramientas públicas con tu librería de verdad y el teléfono.</li>
-      <li><strong>AUD — 30 min.</strong> Los cuatro hallazgos de la auditoría F1 del 26/09, que están catalogados y <strong>sin arreglar</strong> a propósito. Dos de ellos quedaron «sin confirmar» y necesitan tu ojo para decidir si son de severidad media o menos.</li>
+      <li><strong>AUD — 30 min.</strong> Los tres hallazgos de la auditoría F1 ya están <strong>arreglados</strong> (lote 10); lo que queda es validarlos con tus archivos y en tu teléfono. AUD.4 (la cuarta importación en FREE) y AUD.5 (ocho capabilities sin ejercitar) siguen abiertos.</li>
+      <li><strong>ART — 30 min.</strong> Los tres artículos en inglés. Leelos como DJ: la única prueba que ninguna máquina hace es si los firmarías.</li>
       <li><strong>CMP — 25 min.</strong> Las cuatro páginas de comparación. Lo que hay que juzgar no es un dato sino el tono: si alguna suena a que siempre ganamos nosotros, eso es el hallazgo.</li>
       <li><strong>PAY — 20 min.</strong> El camino del dinero. Necesita una terminal con <code>stripe listen</code> abierta; sin eso el spec saltea en vez de correr, que es lo correcto pero no te dice nada.</li>
       <li><strong>CONT.4 y CONT.5 — 30 min.</strong> Las 21 definiciones leídas por un DJ, y el validador de Google. Las dos que deciden si el contenido sirve.</li>
@@ -1405,22 +1406,22 @@
       why: "La auditoría autenticada del 26/09 está entera en <code>docs/qa/auditoria-f1-autenticada-2026-09-26.md</code>: cuatro hallazgos, dos resultados negativos y una lista de lo que no cubre. <strong>No se arregló nada</strong> — el catálogo era el entregable. Estas filas son las que necesitan tu ojo o tu decisión.",
       tests: [
         {
-          code: "AUD.1", title: "El banner tapando el botón de importar", sub: "Hallazgo A2 — severidad media",
-          steps: ["Cuenta recién creada, o borrá <code>ec.analytics-consent.v1</code> del <code>localStorage</code>", "Entrá a <code>/dashboard/playlists</code>", "Achicá la ventana hasta que el botón de importar quede abajo", "Intentá tocarlo sin scrollear"],
-          expect: "Hoy el banner se lleva el clic. Es <code>fixed inset-x-0 bottom-0 z-50</code> y tapa lo que haya al fondo del viewport. Le pasa a todo usuario recién registrado, porque consentimiento sin responder es el estado inicial.",
-          ifNot: "Si ya no pasa, alguien reservó el alto del banner — confirmá en qué commit y sacá esta fila."
+          code: "AUD.1", title: "El banner ya no tapa nada — validar el fix", sub: "Hallazgo A2 · arreglado el 26/09 en <code>54517d4</code> (lote 10)",
+          steps: ["Cuenta recién creada, o borrá <code>ec.analytics-consent.v1</code> del <code>localStorage</code>", "En el teléfono, a 390 px, abrí <code>/</code> y scrolleá hasta el final", "Tocá el último enlace del pie con el banner todavía visible", "Repetí en <code>/dashboard/playlists</code> con el botón de importar"],
+          expect: "El último enlace del pie queda <strong>por encima</strong> del banner y responde al toque; la página reserva el alto del banner en vez de dejarlo flotar encima. Medido el 26/09 a 390 px: el enlace pasó de y=697–717 (banner en y=638) a y=490–510. El test <code>leaves every control reachable</code> de <code>e2e/consent.spec.ts</code> recorre todos los controles y lo vigila.",
+          ifNot: "Si algo vuelve a quedar debajo, anotá qué control y a qué ancho: el test corre a escritorio en los cuatro navegadores, y un ancho raro es justo lo que no cubre."
         },
         {
-          code: "AUD.2", title: "«Ready to import» de una lista de compras", sub: "Hallazgo A3 — severidad media",
-          steps: ["Creá un <code>.txt</code> con dos líneas que no sean temas", "Elegilo en el formulario de importación", "Leé lo que dice el formulario", "Apretá Importar y esperá"],
-          expect: "Hoy dice <strong>«Ready to import»</strong>, y al enviar no aparece ni playlist ni mensaje. El archivo ya se parseó en el navegador —el formulario lo prueba nombrándolo— así que la información para decir «esto no parece una playlist» ya estaba.",
-          ifNot: "Éste es el caso <strong>sin confirmar</strong> de los tres: no se determinó si se rechaza en silencio o si el envío no llega a ocurrir. Es el primero que conviene mirar."
+          code: "AUD.2", title: "El importador lee el archivo antes de decir «listo» — validar el fix", sub: "Hallazgo A3 · arreglado el 26/09 en <code>95db80a</code> (lote 10)",
+          steps: ["Elegí un <code>.txt</code> con dos líneas que no sean temas", "Elegí un XML de Rekordbox al que le hayas borrado la mitad", "Elegí un export válido de una playlist vacía", "Y como control, un export válido de temas <strong>sin BPM ni tonalidad</strong>"],
+          expect: "Los tres primeros dicen qué pasó —«doesn't look like a playlist», «cut off or damaged», «has no tracks in it»— y el botón Importar queda apagado. El cuarto dice <strong>«Ready to import · N tracks»</strong> con la cantidad y entra: la vara es un tema utilizable, a propósito baja. Lo que el lote 10 encontró al abrirlo: el formulario no parseaba nada, y el servidor tampoco chequeaba cero temas — un export vacío guardaba una playlist vacía.",
+          ifNot: "Si un archivo válido de tu software real dice que no lo reconoce, guardalo: los lectores cubren XML/TXT/M3U8 de Rekordbox, NML de Traktor y CSV con columna de título, y un export real que no entre es el mejor insumo para ampliarlos."
         },
         {
-          code: "AUD.3", title: "El botón de IA con la cuota gastada", sub: "Hallazgo A4 — severidad media-baja",
-          steps: ["Con la cuenta FREE, corré un Smart ordering (es 1 por mes)", "Importá otro set", "Abrí su análisis y mirá el botón", "Apretalo y mirá qué muestra"],
-          expect: "El botón está y está habilitado, y nada dice que la cuota se agotó. El servidor sí responde 402 <code>quota_exceeded</code> con <code>used</code>, <code>limit</code> y <code>upgradeTo</code>. <strong>Lo que la interfaz muestra después del 402 no se llegó a observar</strong> — eso es lo que esta prueba agrega.",
-          ifNot: "Si el 402 sale con un mensaje claro, el hallazgo baja a «decilo antes del clic» y deja de ser un agujero."
+          code: "AUD.3", title: "La cuota de IA se ve antes del clic — validar el fix", sub: "Hallazgo A4 · arreglado el 26/09 en <code>7066c64</code> (lote 10)",
+          steps: ["Con la cuenta FREE (1 por mes), abrí el análisis de un set y mirá debajo del botón de Smart ordering", "Si todavía no usaste el del mes, usalo", "Importá otro set y abrí su análisis"],
+          expect: "Antes de usarlo dice cuántos quedan. Después, el botón está <strong>apagado</strong>, dice «You've used this month's AI ordering» y al lado hay un enlace «More on PRO» a <code>/pricing</code>. El límite no se movió: sigue saliendo de <code>PLAN_LIMITS</code> y el servidor sigue decidiendo — esto sólo lo hace visible antes.",
+          ifNot: "Si el botón aparece habilitado con la cuota en cero, mirá si la página se cargó antes de gastarla: la cuota se lee al renderizar, y una pestaña vieja la muestra vieja. Al apretar, el 402 ahora tiene su propia frase."
         },
         {
           code: "AUD.4", title: "La cuarta importación en FREE", sub: "El hueco declarado de la auditoría",
@@ -1433,6 +1434,32 @@
           steps: ["Leé la sección «Lo que esta auditoría NO cubre»"],
           expect: "<code>residency_mode</code>, <code>b2b_sets</code>, <code>custom_curve_templates</code>, <code>title_lookup</code>, <code>slot_aware_planning</code>, <code>planned_vs_played</code>, <code>version_history</code> leída y <code>audio_analysis</code>. Se confirmó que el registro y la matriz de precios coinciden; <strong>no</strong> que cada una ande contra el producto corriendo.",
           ifNot: "Todas están marcadas <code>shipped</code>, o sea que la matriz de precios las vende. Una que no ande es severidad alta."
+        }
+      ]
+    },
+    {
+      code: "ART",
+      title: "Los tres artículos en inglés del lote 10",
+      meta: "~30 min · sin cuenta · ART.3 necesita el deploy",
+      why: "El mapa de keywords tenía 11 de 30 consultas de aprendizaje en inglés sin página, contra 2 de 28 en español. El lote 10 cerró las tres que más veces se vieron: <code>how does a dj set work</code> (5), <code>how to structure a dj set</code> (3 — el tema central del producto sin página en inglés) y <code>what is a dj set</code> (2). Lo automático ya vigila lo mecánico: definición temprana, FAQ de tres, enlaces internos, «DJ» en el título, JSON-LD parseando, accesibilidad, consola. Lo que queda es si son <em>ciertos</em> y si suenan a alguien que sabe.",
+      tests: [
+        {
+          code: "ART.1", title: "Leerlos como DJ, no como redactor", sub: "La prueba que decide si sirven",
+          steps: ["Leé <code>/blog/how-to-structure-a-dj-set</code> entero", "Después <code>/blog/how-does-a-dj-set-work</code> y <code>/blog/what-is-a-dj-set</code>", "Marcá cualquier frase que un DJ con años de cabina no firmaría"],
+          expect: "Nada te hace fruncir el ceño. No hay números inventados ni claims de precisión: el de «what is a DJ set» contesta «how long is a DJ set» sin fijar una duración, a propósito, porque no hay una que fijar.",
+          ifNot: "La frase exacta y por qué. Es más barato reescribir una oración hoy que dejarla indexada."
+        },
+        {
+          code: "ART.2", title: "Los enlaces a las comparaciones caen donde el tema los pide", sub: "La mitad del valor de haber hecho esas páginas",
+          steps: ["En cada artículo, seguí el enlace a <code>/compare/…</code>", "Preguntate si el lector llegó ahí porque el texto lo llevó o porque alguien lo metió"],
+          expect: "Mixed In Key aparece donde se habla de tags por tema contra orden del set; DJ.Studio donde se distingue mezcla grabada de set en vivo; SetFlow donde se distingue generar un set de revisar uno armado. Ninguno suena a anuncio.",
+          ifNot: "Si uno suena forzado, sacalo. Un enlace interno que no aporta es peor que ninguno."
+        },
+        {
+          code: "ART.3", title: "Rich Results Test sobre uno de los tres", sub: "No se puede correr desde acá",
+          steps: ["Con el deploy hecho, pegá la URL de <code>/blog/how-to-structure-a-dj-set</code> en el Rich Results Test de Google"],
+          expect: "Detecta <code>BlogPosting</code>, <code>BreadcrumbList</code> y <code>FAQPage</code> con las tres preguntas, sin errores.",
+          ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa: anotá el campo exacto que nombre."
         }
       ]
     }

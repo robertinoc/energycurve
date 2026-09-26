@@ -1,3 +1,4 @@
+import { EmptyImportError } from "@/lib/playlists/imported-track"
 import {
   extractEnergyFromComment,
   parseBpm,
@@ -99,7 +100,7 @@ export function parseRekordboxTxt(contents: string): ParsedImport {
   }
 
   if (tracks.length === 0) {
-    throw new Error("No tracks found in the Rekordbox txt export.")
+    throw new EmptyImportError("No tracks found in the Rekordbox txt export.")
   }
 
   return { source: "text", playlistName: null, tracks }

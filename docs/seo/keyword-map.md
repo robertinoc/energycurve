@@ -70,10 +70,10 @@ tienen que ganar.
 
 | Consulta | Veces | Página que la contesta |
 |---|---|---|
-| `how does a dj set work` | 5 | **hueco** |
+| `how does a dj set work` | 5 | [`/blog/how-does-a-dj-set-work`](https://energycurve.app/blog/how-does-a-dj-set-work) — cerrado el 26/09/2026 (lote 10) |
 | `camelot wheel explained` | 4 | [`/glossary/camelot-wheel`](https://energycurve.app/glossary/camelot-wheel) |
 | `camelot wheel` | 3 | [`/glossary/camelot-wheel`](https://energycurve.app/glossary/camelot-wheel) |
-| `how to structure a dj set` | 3 | **hueco** — el tema central del producto, sin página en inglés |
+| `how to structure a dj set` | 3 | [`/blog/how-to-structure-a-dj-set`](https://energycurve.app/blog/how-to-structure-a-dj-set) — cerrado el 26/09/2026 (lote 10); era el tema central del producto sin página en inglés |
 | `camelot wheel rules` | 2 | [`/glossary/camelot-wheel`](https://energycurve.app/glossary/camelot-wheel) |
 | `harmonic mixing` | 2 | [`/glossary/harmonic-mixing`](https://energycurve.app/glossary/harmonic-mixing) |
 | `harmonic mixing camelot wheel` | 2 | [`/glossary/harmonic-mixing`](https://energycurve.app/glossary/harmonic-mixing) |
@@ -84,7 +84,7 @@ tienen que ganar.
 | `dj set energy` | 2 | [`/glossary/energy-curve`](https://energycurve.app/glossary/energy-curve) |
 | `dj set warm up` | 2 | [`/glossary/warm-up`](https://energycurve.app/glossary/warm-up) |
 | `peak time dj set` | 4 | [`/glossary/peak-time`](https://energycurve.app/glossary/peak-time) |
-| `what is a dj set` | 2 | **hueco** |
+| `what is a dj set` | 2 | [`/blog/what-is-a-dj-set`](https://energycurve.app/blog/what-is-a-dj-set) — cerrado el 26/09/2026 (lote 10); contesta también `how long is a dj set` sin fijar una duración |
 | `how do b2b dj sets work` | 2 | sólo glosario — [`/glossary/b2b`](https://energycurve.app/glossary/b2b) |
 | `dj set energy curve` | 1 | [`/glossary/energy-curve`](https://energycurve.app/glossary/energy-curve) |
 | `dj set energy levels` | 1 | [`/glossary/track-energy`](https://energycurve.app/glossary/track-energy) |
@@ -255,7 +255,7 @@ del sitio viven acá.
 
 | | Consultas | Con página | Hueco |
 |---|---|---|---|
-| Aprender — inglés | 30 | 19 | 11 |
+| Aprender — inglés | 30 | 22 | 8 — eran 11 hasta el 26/09/2026; el lote 10 cerró las tres más vistas |
 | Aprender — español | 28 | 26 | 2 |
 | Comparar | 21 | 1 | 20 |
 | Importar / exportar | 25 | 14 | 11 |
@@ -269,7 +269,7 @@ que empieza con `` | ` `` es una consulta, y las marcadas `**hueco**` son las
 que no tienen página.
 
 El contraste que más dice: en español **2 de 28** consultas de aprendizaje
-quedan sin página; en inglés, **11 de 30**. Es el mismo sitio, con el mismo
+quedan sin página; en inglés, **8 de 30** (eran 11 hasta el 26/09/2026, cuando el lote 10 cerró las tres consultas más vistas). Es el mismo sitio, con el mismo
 glosario, y la diferencia son los cinco artículos que existen sólo en español.
 
 ---

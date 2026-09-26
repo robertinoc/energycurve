@@ -77,7 +77,14 @@ export function InstallBanner({
     "ec-gradient-bg shrink-0 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(120,60,220,0.35)]"
 
   return (
-    <div className="fixed inset-x-4 z-50 md:hidden bottom-[calc(1rem+env(safe-area-inset-bottom))]">
+    // Sits above the consent banner while that is showing, by the banner's
+    // own measured height, and drops back when it is answered. Both are fixed
+    // to the bottom, and two fixed bars at the same edge overlap no matter how
+    // the page scrolls — the reachability test in e2e/consent.spec.ts caught
+    // exactly that on mobile-safari: "Install" at y=567-603 under a banner
+    // whose top was at 453. The variable is the same one body and html use;
+    // see components/privacy/consent-banner.tsx.
+    <div className="fixed inset-x-4 z-50 md:hidden bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--consent-banner-height,0px))]">
       <div className="flex items-center gap-3 rounded-2xl border border-white/12 bg-[#14101F]/95 p-3 shadow-[0_16px_48px_rgba(0,0,0,0.55)] backdrop-blur">
         <Image
           src="/icon-192.png"

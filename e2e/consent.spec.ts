@@ -85,6 +85,91 @@ test.describe("before anyone answers", () => {
     const viewport = page.viewportSize()
     expect(banner!.height).toBeLessThan((viewport?.height ?? 800) / 2)
   })
+
+  /**
+   * Nothing on the page may end up underneath the banner.
+   *
+   * Found by the F1 audit (finding A2): the banner is fixed to the bottom of
+   * the viewport, and a click on the dashboard's import button retried for
+   * four minutes against the banner's own paragraph, which was sitting on top
+   * of it. It is not a test problem. Every first-time visitor sees the banner,
+   * and the controls at the foot of a page are the ones it covers.
+   *
+   * The property asserted is the one a person experiences: scroll any control
+   * into view the way the browser does, and it is not under the banner. The
+   * fix has two halves and this test needs both — space reserved below the
+   * page so the last controls can rise above the banner, and scroll padding so
+   * a control scrolled into view lands above it rather than behind it.
+   *
+   * Every link and button, not a sample: the ones that fail are the last few
+   * on the page, and a sample that stops early passes for the wrong reason.
+   */
+  for (const [name, path, selector] of [
+    ["English", "/", BANNER],
+    ["Spanish", "/es", BANNER_ES],
+  ] as const) {
+    test(`leaves every control reachable while it is showing (${name})`, async ({
+      page,
+    }) => {
+      await page.goto(path)
+      const banner = page.locator(selector)
+      await expect(banner).toBeVisible()
+
+      // One pass inside the page, not one round trip per control. The first
+      // version drove each control from the test — scrollIntoViewIfNeeded,
+      // boundingBox, a closest() check, the banner's box — and on the CI
+      // runner's WebKit and mobile-safari that took longer than the 30-second
+      // test budget, four times over, which then pushed the whole E2E step
+      // past its own twelve minutes. The property is the same; it is measured
+      // where the elements are.
+      const covered = await page.evaluate((sel) => {
+        const shade = document.querySelector(sel)!
+        const isVisible = (el: Element) => {
+          const rect = el.getBoundingClientRect()
+          const style = getComputedStyle(el)
+          return (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            style.visibility !== "hidden" &&
+            style.display !== "none"
+          )
+        }
+
+        return Array.from(document.querySelectorAll("a[href], button"))
+          .filter((el) => !el.closest(sel) && isVisible(el))
+          .flatMap((el) => {
+            // `instant` overrides the site's smooth scrolling; `nearest` is
+            // what the browser does for focus, which is the case that matters.
+            el.scrollIntoView({ block: "nearest", behavior: "instant" })
+            const box = el.getBoundingClientRect()
+            const bar = shade.getBoundingClientRect()
+            // A control scrolled flush against the banner's top edge is above
+            // it — that is exactly what scroll-padding produces — and sub-pixel
+            // rounding puts its bottom a fraction past the edge. One pixel of
+            // tolerance separates "flush" from "under".
+            const overlaps = box.bottom > bar.top + 1 && box.top < bar.bottom
+
+            return overlaps
+              ? [
+                  `${(el.textContent ?? "").trim().slice(0, 40) || "(no text)"} @ y=${Math.round(
+                    box.top
+                  )}-${Math.round(box.bottom)}`,
+                ]
+              : []
+          })
+      }, selector)
+
+      const total = await page.locator("a[href], button").count()
+      expect(total).toBeGreaterThan(10)
+
+      expect(
+        covered,
+        `${covered.length} control(s) sit under the consent banner (top at y=${Math.round(
+          (await banner.boundingBox())!.y
+        )}): ${covered.join(" · ")}`
+      ).toEqual([])
+    })
+  }
 })
 
 test.describe("saying no", () => {

@@ -590,7 +590,36 @@ export const DASHBOARD_COPY = {
       en: "One file, straight from your DJ software",
       es: "Un archivo, directo de tu software de DJ",
     },
+    /**
+     * Readiness is earned by the parse, not by the extension (F1 audit, A3).
+     * "Ready to import" used to appear the moment a file had a name; it now
+     * appears only once the browser has read the file and found tracks in it,
+     * and it says how many, because a count is the proof that something was
+     * read. The three refusals name what happened and what to do, since this
+     * is the first screen somebody from a search result sees of the product.
+     */
+    fileChecking: { en: "Reading the file…", es: "Leyendo el archivo…" },
     fileReady: { en: "Ready to import", es: "Listo para importar" },
+    fileReadyCount: {
+      en: "Ready to import · {count} tracks",
+      es: "Listo para importar · {count} temas",
+    },
+    fileReadyOne: {
+      en: "Ready to import · 1 track",
+      es: "Listo para importar · 1 tema",
+    },
+    fileEmpty: {
+      en: "This file has no tracks in it. Export the playlist again from your DJ software and check it isn't empty.",
+      es: "Este archivo no tiene temas. Volvé a exportar la playlist desde tu software de DJ y fijate que no esté vacía.",
+    },
+    fileUnrecognised: {
+      en: "This doesn't look like a playlist export. We read Rekordbox XML, TXT and M3U8, Traktor NML, and CSV with a title column.",
+      es: "Esto no parece un export de playlist. Leemos XML, TXT y M3U8 de Rekordbox, NML de Traktor, y CSV con una columna de título.",
+    },
+    fileBroken: {
+      en: "We couldn't read this file — it looks cut off or damaged. Export it again from your DJ software.",
+      es: "No pudimos leer este archivo: parece cortado o dañado. Volvé a exportarlo desde tu software de DJ.",
+    },
     readsLabel: { en: "We read for you", es: "Leemos por vos" },
     readKey: { en: "Key → Camelot", es: "Key → Camelot" },
     readGenres: { en: "Genre tags", es: "Tags de género" },
@@ -1334,6 +1363,11 @@ export const DASHBOARD_COPY = {
     cantReadFile: {
       en: "We couldn't read that file. Make sure it's a Rekordbox XML or Traktor NML export.",
       es: "No pudimos leer ese archivo. Asegurate de que sea un export XML de Rekordbox o NML de Traktor.",
+    },
+    /** The server's half of the same rule: an export with no tracks saves nothing. */
+    emptyFile: {
+      en: "That file has no tracks in it, so there is nothing to import. Export the playlist again and check it isn't empty.",
+      es: "Ese archivo no tiene temas, así que no hay nada que importar. Volvé a exportar la playlist y fijate que no esté vacía.",
     },
     noValidLines: {
       en: "No valid lines found in the pasted text.",
