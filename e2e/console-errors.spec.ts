@@ -27,6 +27,14 @@ const PAGES = [
   ["glossary entry (es)", "/es/glosario/curva-de-energia"],
   ["guide index (es)", "/es/guia"],
   ["draft guide (es)", "/es/guia/componentes"],
+  // The comparison pages. Two of the four rather than all eight: they share one
+  // renderer and one registry, so a third adds coverage of the same code. These
+  // two are the ones that differ — SetFlow's page is the only one with a
+  // callout, and Lexicon's is the longest table.
+  ["comparison (setflow)", "/compare/setflow"],
+  ["comparison (lexicon)", "/compare/lexicon"],
+  ["comparison (es, setflow)", "/es/comparar/setflow"],
+  ["comparison (es, lexicon)", "/es/comparar/lexicon"],
   ["tools hub", "/tools"],
   ["energy curve tool", "/tools/energy-curve"],
   ["camelot wheel", "/tools/camelot-wheel"],

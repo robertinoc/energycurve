@@ -11,6 +11,7 @@ import {
   glossaryTermMetadata,
   guideMetadata,
 } from "@/lib/content/entry-metadata"
+import { COMPARISONS } from "@/lib/content/compare/comparisons"
 import { GLOSSARY_TERMS } from "@/lib/content/glossary/terms"
 import { GUIDES, publishedGuides } from "@/lib/content/guides/guides"
 import {
@@ -294,8 +295,13 @@ describe("the new content pages", () => {
      * The count is asserted because it is the one number that catches a whole
      * class of mistake at once — a locale dropped, an entry listed twice, a
      * draft leaking in. 32 before the content branch, 78 after it, 84 since
-     * SEO-E14 on 22/09/2026, 87 since SEO-E13, and **85 since 25/09/2026**,
-     * which is the arithmetic below.
+     * SEO-E14 on 22/09/2026, 87 since SEO-E13, 85 since 25/09/2026, and **93
+     * since SEO-E23 on 26/09/2026**, which is the arithmetic below.
+     *
+     * The eight from SEO-E23 are the four comparison pages in two languages.
+     * They add no index: `/compare` does not exist, deliberately — four pages
+     * do not need a list, and the entry above this one is the record of what an
+     * index with nothing in it costs.
      *
      * It went *down* by two, which is the unusual direction and the reason to
      * read the line: the guide index stopped listing itself in both languages
@@ -313,7 +319,7 @@ describe("the new content pages", () => {
      * asymmetry is the point of counting English and Spanish separately below:
      * a total alone would not show which side moved.
      */
-    it("is 85 URLs, and the arithmetic says why", () => {
+    it("is 93 URLs, and the arithmetic says why", () => {
       const glossaryUrls = GLOSSARY_TERMS.length * supportedLocales.length
       // One index, not two: the glossary's. The guide index is absent while it
       // has nothing to list, and `publishedGuides()` being empty is also why
@@ -333,7 +339,14 @@ describe("the new content pages", () => {
       expect(allPublishedPosts().filter((post) => post.locale === "en")).toHaveLength(8)
       expect(allPublishedPosts().filter((post) => post.locale === "es")).toHaveLength(5)
 
-      expect(urls).toHaveLength(85)
+      // The comparison pages: four, both languages, no index.
+      expect(COMPARISONS).toHaveLength(4)
+      expect(
+        urls.filter((url) => /\/(compare|es\/comparar)\//.test(url))
+      ).toHaveLength(COMPARISONS.length * supportedLocales.length)
+      expect(urls.some((url) => /\/(compare|es\/comparar)$/.test(url))).toBe(false)
+
+      expect(urls).toHaveLength(93)
     })
   })
 

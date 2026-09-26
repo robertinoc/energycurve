@@ -35,7 +35,24 @@ import {
  * — and bouncing it to English because of a cookie on this machine would make
  * Spanish links unshareable.
  */
-export function useSiteLocale(path: LocalizedPath, locale: SiteLocale) {
+/**
+ * Where the language toggle goes: a `LocalizedPath`, or the two URLs outright.
+ *
+ * The path form covers every fixed page, whose Spanish URL is derivable. The
+ * record form exists for pages whose slug differs per language and that have no
+ * index to fall back to — the comparisons. Guides and glossary entries have the
+ * same shape but do have an index, and point at it; sending a reader who
+ * switched language to a *list* instead of to the same page in their own
+ * language is a downgrade those pages accept and these cannot, because there is
+ * no list.
+ */
+export type LocaleToggleTarget = LocalizedPath | Record<SiteLocale, string>
+
+function resolveToggle(target: LocaleToggleTarget, locale: SiteLocale): string {
+  return typeof target === "string" ? localizedPath(target, locale) : target[locale]
+}
+
+export function useSiteLocale(path: LocaleToggleTarget, locale: SiteLocale) {
   const router = useRouter()
   const redirected = useRef(false)
 
@@ -50,7 +67,7 @@ export function useSiteLocale(path: LocalizedPath, locale: SiteLocale) {
     if (readStoredSiteLocale() === PREFIXED_LOCALE) {
       // replace, not push: the English URL the visitor never wanted shouldn't
       // become the thing their back button returns to.
-      router.replace(localizedPath(path, PREFIXED_LOCALE))
+      router.replace(resolveToggle(path, PREFIXED_LOCALE))
     }
   }, [locale, path, router])
 
@@ -63,7 +80,7 @@ export function useSiteLocale(path: LocalizedPath, locale: SiteLocale) {
       // Written before navigating so the destination — and the dashboard, and the
       // next email — already agree with the choice.
       persistSiteLocale(next)
-      router.push(localizedPath(path, next))
+      router.push(resolveToggle(path, next))
     },
     [locale, path, router]
   )

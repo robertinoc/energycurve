@@ -27,6 +27,8 @@ import { SectionReveal } from "@/components/marketing/section-reveal"
 import { EnergyCurveHeroVisual } from "@/components/marketing/energy-curve-hero-visual"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ResolvedSiteCopy } from "@/lib/content/site-copy"
+import { COMPARISONS } from "@/lib/content/compare/comparisons"
+import { comparisonPath } from "@/lib/content/compare/paths"
 import { isEmptyIndex, localizedPath } from "@/lib/content/locale-routing"
 import { cn } from "@/lib/utils"
 
@@ -806,6 +808,19 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
               { href: "#story", label: copy.nav.story },
               { href: "#contact", label: copy.nav.contact },
             ]}
+          />
+          {/* A column of their own rather than four more rows under Resources.
+              Without a link each, these pages would be reachable only from the
+              sitemap — the orphaning the blog and the glossary entries above
+              were added to fix. There is no `/compare` index to link instead:
+              four pages do not need a list, and an index with nothing to say is
+              the shape lote 8 spent a task removing. */}
+          <FooterColumn
+            heading={copy.footer.comparisons}
+            links={COMPARISONS.map((comparison) => ({
+              href: comparisonPath(comparison, copy.locale),
+              label: comparison.competitor,
+            }))}
           />
           <FooterColumn
             heading={copy.footer.resources}

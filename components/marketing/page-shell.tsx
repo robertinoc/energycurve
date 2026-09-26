@@ -5,8 +5,11 @@ import { ArrowLeft } from "lucide-react"
 
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { LanguageToggle } from "@/components/marketing/language-toggle"
-import { useSiteLocale } from "@/components/marketing/use-site-locale"
-import { localizedPath, type LocalizedPath } from "@/lib/content/locale-routing"
+import {
+  useSiteLocale,
+  type LocaleToggleTarget,
+} from "@/components/marketing/use-site-locale"
+import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
 /**
@@ -32,7 +35,7 @@ export function PageShell({
   children,
 }: {
   locale: SiteLocale
-  togglePath: LocalizedPath
+  togglePath: LocaleToggleTarget
   /** `prose` for reading, `wide` for a page with a chart in it. */
   width?: "prose" | "wide"
   children: React.ReactNode

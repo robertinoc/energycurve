@@ -22,6 +22,8 @@ import type { Metadata } from "next"
 import { glossaryTermPath, guidePath } from "@/lib/content/glossary/paths"
 import { supportedLocales, type SiteLocale } from "@/lib/content/site-copy"
 import type { GlossaryTerm } from "@/lib/content/glossary/terms"
+import type { Comparison } from "@/lib/content/compare/comparisons"
+import { comparisonPath } from "@/lib/content/compare/paths"
 import type { Guide } from "@/lib/content/guides/guides"
 import {
   openGraphLocale,
@@ -119,5 +121,27 @@ export function guideMetadata(guide: Guide, locale: SiteLocale): Metadata {
     type: "article",
     noindex: Boolean(guide.draft),
     modifiedTime: guide.updatedAt,
+  })
+}
+
+/**
+ * A comparison page's metadata.
+ *
+ * `type: "article"` like the guides, and `modifiedTime` is the date the
+ * competitor's pages were read rather than the date we edited the copy — on a
+ * page whose whole claim is "this is what they said, when", the review date is
+ * the one that means something.
+ */
+export function comparisonMetadata(
+  comparison: Comparison,
+  locale: SiteLocale
+): Metadata {
+  return entryMetadata({
+    title: comparison.title[locale],
+    description: comparison.description[locale],
+    path: (code) => comparisonPath(comparison, code),
+    locale,
+    type: "article",
+    modifiedTime: comparison.verifiedAt,
   })
 }
