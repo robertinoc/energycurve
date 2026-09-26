@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 
+import { readAppEnv } from "./env-file"
+
 /**
  * Deleting what a spec created, so the dev database is the same after a run as
  * before it — whether the run happened once or twenty times.
@@ -32,15 +34,24 @@ import { createClient } from "@supabase/supabase-js"
  */
 
 function adminClient() {
-  const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  // `readAppEnv`, not `process.env`, and that difference is the whole of a
+  // wasted run. The documented command sources `.env.e2e.local`, which holds
+  // the six account variables and no Supabase ones, so cleanup threw on every
+  // `afterEach`, three playlists survived, the FREE account hit its cap of
+  // three, and an entire file of import tests went red saying importing was
+  // broken when the product was refusing correctly. The credentials were on
+  // disk the whole time.
+  const url = readAppEnv("SUPABASE_URL")
+  const key = readAppEnv("SUPABASE_SERVICE_ROLE_KEY")
 
   if (!url || !key) {
     throw new Error(
       "Cannot clean up after the authenticated specs: SUPABASE_URL and " +
-        "SUPABASE_SERVICE_ROLE_KEY are not in the environment. They live in " +
-        "`.env.local`, which a fresh git worktree does not inherit. Refusing " +
-        "to finish quietly and leave rows behind in the dev database."
+        "SUPABASE_SERVICE_ROLE_KEY are neither in the environment nor in " +
+        "`.env.local` at the repo root — which a fresh git worktree does not " +
+        "inherit. Refusing to finish quietly and leave rows behind in the dev " +
+        "database: two strays are enough to fill the FREE plan's cap and turn " +
+        "the next run red for a reason that has nothing to do with the product."
     )
   }
 

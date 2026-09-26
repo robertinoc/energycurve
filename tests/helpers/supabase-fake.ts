@@ -13,6 +13,12 @@
  * read as a passing test.
  */
 
+/**
+ * What one response can carry, matching `max_rows` in `supabase/config.toml`
+ * and PostgREST's own default. Exported so a test can seed past it on purpose.
+ */
+export const MAX_ROWS_PER_RESPONSE = 1000
+
 export type Row = Record<string, unknown>
 export type Tables = Record<string, Row[]>
 
@@ -45,6 +51,13 @@ export interface Statement {
   op: "select" | "insert" | "update" | "delete"
   filters: Array<[string, string, unknown]>
   rowsTouched: number
+  /**
+   * Rows that actually came back in the body. Equal to `rowsTouched` for an
+   * ordinary read, and **zero** for a `head: true` count — which is how a test
+   * can tell "asked the database to count" from "fetched everything and
+   * counted it in JavaScript".
+   */
+  rowsReturned: number
 }
 
 type Filter = [
@@ -83,6 +96,8 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
   private rangeFrom: number | null = null
   private rangeTo: number | null = null
   private headOnly = false
+  /** True when the caller asked for `count`, so the total rides along. */
+  private wantsCount = false
 
   constructor(
     private readonly table: string,
@@ -102,6 +117,7 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
     if (this.op === "select") this.op = "select"
     this.wantsReturn = true
     if (options?.head) this.headOnly = true
+    if (options?.count) this.wantsCount = true
     return this
   }
 
@@ -288,16 +304,45 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
       })
     }
 
+    // The true size, before any ceiling. PostgREST answers `count: exact` from
+    // the query, not from the page it hands back, so a capped response can
+    // carry a count larger than its own body — which is precisely how a
+    // truncated list and a correct total end up contradicting each other on the
+    // same screen.
+    const total = result.length
+
     if (this.limitTo !== null) result = result.slice(0, this.limitTo)
     if (this.rangeFrom !== null && this.rangeTo !== null) {
       result = result.slice(this.rangeFrom, this.rangeTo + 1)
+    } else if (this.limitTo === null && result.length > MAX_ROWS_PER_RESPONSE) {
+      // The ceiling, and the reason this fake could not see the bug it exists
+      // to catch.
+      //
+      // PostgREST refuses to return more than `max_rows` (1000 in
+      // `supabase/config.toml`, and the hosted default). It does **not** error
+      // and it does **not** flag it: you get the first page and nothing that
+      // says there was a second. Until this line, the fake returned everything,
+      // so `services/` code that forgot to paginate passed every test and
+      // truncated in production.
+      //
+      // Applied only when the query asked for neither `range()` nor `limit()`,
+      // which is exactly the shape that gets truncated for real.
+      result = result.slice(0, MAX_ROWS_PER_RESPONSE)
     }
 
-    this.record(result.length)
+    // Two different numbers, and the difference is the point of a `head`
+    // query: it matches rows and returns none of them. Counting the matches as
+    // if they had crossed the wire would make "count without fetching" and
+    // "fetch everything and count it" look identical to a test.
+    this.record(result.length, this.headOnly ? 0 : result.length)
 
-    if (this.headOnly) return { data: null, error: null, count: result.length }
+    if (this.headOnly) return { data: null, error: null, count: total }
 
-    return this.shape(result)
+    const shaped = this.shape(result)
+
+    // `count` rides along with the rows when the caller asked for one, and it
+    // is the total rather than the length of what came back.
+    return this.wantsCount ? { ...shaped, count: total } : shaped
   }
 
   private shape(rows: Row[]) {
@@ -312,12 +357,13 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
     return { data: this.wantsReturn || this.op === "select" ? rows : null, error: null }
   }
 
-  private record(rowsTouched: number) {
+  private record(rowsTouched: number, rowsReturned = rowsTouched) {
     this.log.push({
       table: this.table,
       op: this.op,
       filters: this.filters.map(([c, o, v]) => [c, o, v] as [string, string, unknown]),
       rowsTouched,
+      rowsReturned,
     })
   }
 }

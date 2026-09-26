@@ -17,6 +17,7 @@
  * and the client (links, language toggle) compute the same answer.
  */
 
+import { publishedGuides } from "@/lib/content/guides/guides"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
 /** The one prefixed locale. English is the unprefixed default. */
@@ -119,9 +120,52 @@ const ES_SLUGS_REVERSED = new Map(
  */
 const NOINDEX_PAGES: ReadonlyArray<`${SiteLocale}:${LocalizedPath}`> = []
 
+/**
+ * Index pages that hide themselves while they have nothing to list.
+ *
+ * `/guide` has listed nothing since PR #237: the only entry in `GUIDES` is the
+ * component draft, and a draft is excluded by design — so the page rendered an
+ * empty index in two languages, sat in the sitemap, and was advertised from the
+ * footer. That is thin content published under our own name, twice.
+ *
+ * Derived rather than listed. Adding `en:/guide` and `es:/guide` to
+ * `NOINDEX_PAGES` above would have worked today and become wrong the day the
+ * first guide ships, silently, because nothing would fail — an empty page is
+ * visible and a hidden good page is not. A predicate goes both ways on its own:
+ * the index disappears while `publishedGuides()` is empty and comes back the
+ * moment it is not.
+ *
+ * Safe to import from here: `guides.ts` imports only types, so there is no
+ * runtime cycle.
+ */
+const EMPTY_WHEN: Partial<Record<LocalizedPath, () => boolean>> = {
+  "/guide": () => publishedGuides().length === 0,
+}
+
 /** Whether this page, in this language, should be offered to a search engine. */
 export function isIndexable(path: LocalizedPath, locale: SiteLocale): boolean {
-  return !NOINDEX_PAGES.includes(`${locale}:${path}`)
+  if (NOINDEX_PAGES.includes(`${locale}:${path}`)) {
+    return false
+  }
+
+  // Language-independent: an index with nothing in it is empty in every
+  // language, so hiding one and not the other would leave a `hreflang` pointing
+  // at a page that says it should not be indexed.
+  return !EMPTY_WHEN[path]?.()
+}
+
+/**
+ * True when a page is being hidden only because it has nothing to show — for
+ * the places that have to decide whether to link to it at all.
+ *
+ * A `noindex` keeps a page out of a search result; it does nothing about the
+ * footer offering it to a reader who is then shown an empty list. The three
+ * SEO consequences already follow from `isIndexable`; this is the fourth
+ * consumer, and it reads the same predicate rather than a second copy of the
+ * condition.
+ */
+export function isEmptyIndex(path: LocalizedPath): boolean {
+  return EMPTY_WHEN[path]?.() ?? false
 }
 
 /**

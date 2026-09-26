@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchAllRows } from "@/lib/supabase/paginate"
 
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -24,47 +25,81 @@ export async function getDashboardSnapshot(
   const supabase = getSupabaseAdminClient()
   const profile = await syncProfileFromWorkOSUser(user)
 
-  const { data: playlists, count: playlistCount, error: playlistsError } =
-    await supabase
+  /**
+   * Paged, because `count: "exact"` was only ever half an answer.
+   *
+   * The total below has always been right — PostgREST computes it from the
+   * query, not from the page it returns. The *list* was capped at 1000 with
+   * nothing saying so, which meant the number at the top of the dashboard and
+   * the sets under it could disagree, and the disagreement was invisible.
+   */
+  const { rows: playlistRows, error: playlistsError } = await fetchAllRows<
+    Playlist & PlaylistNameJoins
+  >((from, to) =>
+    supabase
       .from("playlists")
       .select(
-        "*, custom_context:user_contexts(name), custom_genre:user_genres(name)",
-        { count: "exact" }
+        "*, custom_context:user_contexts(name), custom_genre:user_genres(name)"
       )
       .eq("user_id", profile.id)
       .order("updated_at", { ascending: false })
+      .range(from, to) as never
+  )
 
   if (playlistsError) {
     throw new Error("Unable to load playlists for the dashboard.")
   }
 
-  const playlistRows = (playlists ?? []) as unknown as Array<
-    Playlist & PlaylistNameJoins
-  >
-
   const rows = playlistRows
+  const playlistCount = rows.length
   const playlistIds = rows.map((playlist) => playlist.id)
+  const latestRows = rows.slice(0, LATEST_PLAYLISTS_LIMIT)
+
   let trackCount = 0
   const trackCounts = new Map<string, number>()
 
   if (playlistIds.length > 0) {
-    const { data: trackRows, error: tracksError } = await supabase
-      .from("tracks")
-      .select("playlist_id")
-      .in("playlist_id", playlistIds)
+    /**
+     * Counted by the database, with no rows crossing the wire.
+     *
+     * This used to `select("playlist_id")` for every track the user owns and
+     * tally them in a `Map` — so a 30,000-track library moved 30,000 rows on
+     * every dashboard load, and PostgREST's 1000-row ceiling then cut it to the
+     * first page without a word. The total came out as 1000 and the per-set
+     * counts came out as however those first 1000 rows happened to be
+     * distributed: the sets near the top looked full and the rest looked empty.
+     *
+     * `head: true` asks the same question and brings back no body at all.
+     *
+     * The per-set counts are only rendered for the five most recent sets
+     * (`LATEST_PLAYLISTS_LIMIT`), so this is six bodiless queries whatever the
+     * library holds — not one per playlist.
+     */
+    const [{ count: total, error: tracksError }, ...perPlaylist] =
+      await Promise.all([
+        supabase
+          .from("tracks")
+          .select("id", { count: "exact", head: true })
+          .in("playlist_id", playlistIds),
+        ...latestRows.map((playlist) =>
+          supabase
+            .from("tracks")
+            .select("id", { count: "exact", head: true })
+            .eq("playlist_id", playlist.id)
+            .then((result) => ({ id: playlist.id, ...result }))
+        ),
+      ])
 
     if (tracksError) {
       throw new Error("Unable to load tracks for the dashboard.")
     }
 
-    for (const row of trackRows ?? []) {
-      trackCounts.set(row.playlist_id, (trackCounts.get(row.playlist_id) ?? 0) + 1)
+    trackCount = total ?? 0
+
+    for (const result of perPlaylist) {
+      trackCounts.set(result.id, result.count ?? 0)
     }
-
-    trackCount = trackRows?.length ?? 0
   }
-
-  const latestRows = rows.slice(0, LATEST_PLAYLISTS_LIMIT)
   const scoreHistories = new Map<string, number[]>()
 
   if (latestRows.length > 0) {

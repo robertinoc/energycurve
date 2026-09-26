@@ -118,19 +118,27 @@ describe("hreflang and canonicals", () => {
     })
   })
 
-  it("marks nothing noindex, and says so rather than leaving it implicit", () => {
-    // The mechanism is still there and still typed over `LocalizedPath`; what
-    // changed is that no page needs it. Asserting the empty state explicitly is
-    // what turns "we removed the entry" into "no page is being held back",
-    // which is the claim a reader of the sitemap cares about.
+  it("holds back only the indexes that have nothing to list", () => {
+    // This used to assert that *nothing* was noindex, because `NOINDEX_PAGES`
+    // had been emptied. It still is — what changed is that indexability is no
+    // longer only that list: `/guide` hides itself while `publishedGuides()` is
+    // empty, and comes back on its own when it is not. See
+    // `tests/empty-index.test.ts` for both directions of that rule.
+    //
+    // Asserted as an exact set rather than "some pages may be held back", so a
+    // future page quietly joining them shows up here as a failure with its own
+    // name in the message.
+    const held: string[] = []
+
     for (const path of LOCALIZED_PATHS) {
       for (const locale of ["en", "es"] as const) {
-        expect(
-          marketingMetadata(path, locale).robots,
-          `${locale}:${path}`
-        ).toBeUndefined()
+        if (marketingMetadata(path, locale).robots !== undefined) {
+          held.push(`${locale}:${path}`)
+        }
       }
     }
+
+    expect(held.sort()).toEqual(["en:/guide", "es:/guide"])
   })
 
   it("stops holding /blog out of the index once English articles exist", async () => {

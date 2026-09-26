@@ -502,7 +502,7 @@
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
     <p><strong>Una sola cosa bloquea, y son cinco minutos en el SQL Editor: a la base de dev le faltan migraciones.</strong> Confirmado el 25/09 sondeando el enum en sólo-lectura: <strong>7 de los 12 géneros que ofrece el producto no existen en dev</strong> — <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code> y <code>bounce</code>. Los agrega la <code>0005</code>. Si mañana elegís uno de esos —o dejás la detección automática y lo elige ella— la importación falla con «Something went wrong while saving» y no vas a saber por qué. Eso salió de un E2E que se caía; sin arreglarlo te come la mañana. Aplicá <code>0005</code> y de paso <code>0027</code> a <code>0032</code>, en orden de número. La sesión <strong>DB</strong> tiene los pasos.</p>
-    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E quedó en verde de punta a punta — <strong>750 pruebas, 739 pasan, 11 saltean a propósito, cero fallan</strong>, corrido el 25/09 con las cuentas puestas. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
+    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E quedó en verde de punta a punta — <strong>768 pruebas, 745 pasan, 23 saltean a propósito, cero fallan</strong>, en 13,3 minutos, corrido el 25/09 con las cuentas puestas y con el listener de Stripe levantado. Los 23 saltos: 12 del arco de pagos, que corre una sola vez sobre la cuenta FREE; 9 de sitemap, que corren sólo en Chromium; y 2 del plan free, que se saltean en PRO y PRO+. Las tres cuentas quedaron en <strong>0 playlists</strong>, contadas antes y después. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
     <ol style="margin:6px 0 0 18px;padding:0">
       <li><strong>DB.1 a DB.4 — 25 min.</strong> Aplicá las migraciones y corré el seed. Desbloquea todo lo demás: sin esto, siete géneros rompen y cualquier prueba de importación miente.</li>
@@ -511,9 +511,11 @@
       <li><strong>J y J2 — 70 min.</strong> Lo de Jordi. Necesita tu oído y un NML real, y es lo que ninguna máquina puede contestar.</li>
       <li><strong>UX — 60 min.</strong> Los cinco casos de borde que esperaban las cuentas. Ahora se pueden correr.</li>
       <li><strong>TOOL y TOOL2 — 105 min.</strong> Las herramientas públicas con tu librería de verdad y el teléfono.</li>
+      <li><strong>PAY — 20 min.</strong> El camino del dinero. Necesita una terminal con <code>stripe listen</code> abierta; sin eso el spec saltea en vez de correr, que es lo correcto pero no te dice nada.</li>
       <li><strong>CONT.4 y CONT.5 — 30 min.</strong> Las 21 definiciones leídas por un DJ, y el validador de Google. Las dos que deciden si el contenido sirve.</li>
       <li><strong>El resto de SEO</strong> — cuando haya deploy. No dependen de vos hoy.</li>
     </ol>
+    <p style="margin:9px 0 0"><strong>Los cuatro puntos de quiebre están arreglados</strong> — los tres truncamientos silenciosos y el reordenamiento en serie, en <code>67a5a0c</code>. Lo que conviene saber antes de probar: el que los tapaba era el <em>instrumento</em>. El fake de Supabase de los tests no modelaba el techo de mil filas de PostgREST, así que los cuatro defectos pasaban la suite en verde. Ahora corta en mil salvo que haya <code>range()</code> explícito, y cada arreglo se verificó en rojo contra el código viejo antes de pasar a verde. El detalle está en <code>docs/qa/breaking-points-2026-09.md</code>.</p>
     <p style="margin:9px 0 0">Las sesiones <strong>A4</strong> (backups) y <strong>A6</strong> (consolas) no entran en un día y no bloquean nada: agendalas aparte.</p>
   </div>
 
@@ -1290,13 +1292,25 @@
       code: "E2E",
       title: "Las tres suites autenticadas, ya corridas",
       meta: "~15 min · las cuentas ya están · ahora son automáticas",
-      why: "Esta sesión cambió de naturaleza el 25/09. Las tres specs del lote 6 se corrieron por primera vez y <strong>no funcionaban</strong>: 43 de 66 fallaban. Cuatro causas, todas reales — el spec hacía clic en el primer botón <code>submit</code>, que es «Log out»; la limpieza al final del archivo hacía que el plan FREE llegara a su tope de 3 playlists y el producto rechazara el resto, correctamente; la página hace streaming y durante el swap conviven dos árboles del DOM, así que un <code>id</code> único resolvía a dos elementos; y los tres proyectos corrían en paralelo contra una sola base. Hoy quedan en <strong>64 pasan, 2 saltean, 0 fallan</strong>. Lo que te queda a vos es confirmarlo y mirar lo que un test no mira.",
+      why: "Al 25/09 son <strong>745 pasan, 23 saltean, 0 fallan</strong> sobre 768. Esta sesión cambió de naturaleza el 25/09. Las tres specs del lote 6 se corrieron por primera vez y <strong>no funcionaban</strong>: 43 de 66 fallaban. Cuatro causas, todas reales — el spec hacía clic en el primer botón <code>submit</code>, que es «Log out»; la limpieza al final del archivo hacía que el plan FREE llegara a su tope de 3 playlists y el producto rechazara el resto, correctamente; la página hace streaming y durante el swap conviven dos árboles del DOM, así que un <code>id</code> único resolvía a dos elementos; y los tres proyectos corrían en paralelo contra una sola base. Hoy quedan en <strong>64 pasan, 2 saltean, 0 fallan</strong>. Lo que te queda a vos es confirmarlo y mirar lo que un test no mira.",
       tests: [
         {
           code: "E2E.1", title: "La suite entera, como línea de base del día", sub: "Es el primer comando de la mañana",
-          steps: ["<code>cd ~/Documents/code/energycurve</code>", "<code>set -a; . .env.e2e.local; set +a</code>", "<code>npx playwright test</code>", "Leé sólo el resumen final"],
-          expect: "<strong>739 pasan, 11 saltean, 0 fallan</strong> sobre 750. Los 11 skips son a propósito: 9 son pruebas de sitemap que corren sólo en Chromium («HTTP only») y 2 son el test del plan free, que se saltea en PRO y PRO+.",
+          steps: ["<code>cd ~/Documents/code/energycurve</code>", "<code>npx playwright test</code>", "Leé sólo el resumen final"],
+          expect: "<strong>745 pasan, 23 saltean, 0 fallan</strong> sobre 768, en 13,3 minutos. Medido el 25/09. Los 23 skips son a propósito: 12 del arco de pagos, que corre una sola vez sobre FREE porque en PRO y PRO+ compraría una segunda suscripción para afirmar lo mismo; 9 de sitemap, que corren sólo en Chromium («HTTP only»); y 2 del test del plan free, que se saltea en PRO y PRO+.",
           ifNot: "Si falla algo de import o export, lo más probable es que falten las migraciones: mirá primero DB.1. Si fallan las dos de consent y login, el build salió sin <code>.env.local</code> — corré desde el checkout principal, no desde un worktree. Los dos casos ahora te lo dicen en el mensaje del fallo."
+        },
+        {
+          code: "E2E.1b", title: "Ya no hace falta exportar nada — y antes sí", sub: "El paso que faltaba se comió una corrida entera",
+          steps: ["Corré la suite sin exportar ninguna variable", "Al terminar, contá las playlists de la cuenta FREE"],
+          expect: "Cero playlists «Synthetic Set». El <code>set -a; . .env.e2e.local; set +a</code> que decía este paso hasta el 25/09 <strong>estaba de más y era insuficiente al mismo tiempo</strong>: ese archivo tiene las seis variables de cuentas y ninguna de Supabase, que es lo que la limpieza necesita y vive en <code>.env.local</code>. Sin ellas la limpieza tiraba en cada <code>afterEach</code>, sobrevivían tres playlists, la cuenta FREE llegaba a su tope de 3, y un archivo entero de tests se ponía rojo diciendo que importar estaba roto cuando el producto estaba rechazando <em>correctamente</em>. Ahora los helpers leen los dos archivos del disco.",
+          ifNot: "Si aparecen «Synthetic Set», mirá el mensaje: nombra los dos archivos donde busca las credenciales."
+        },
+        {
+          code: "E2E.1c", title: "La cuenta PRO+ está en FREE", sub: "Hallazgo del 25/09 — el proyecto dice PRO+ y no lo es",
+          steps: ["Mirá la fila del perfil de la cuenta PRO+ en <code>profiles</code>", "Fijate en <code>plan</code>, <code>plan_status</code> y <code>stripe_customer_id</code>"],
+          expect: "Debería decir <code>pro_plus</code>. Dice <strong><code>plan=free</code>, <code>plan_status=null</code>, <code>stripe_customer_id=null</code></strong>, confirmado el 25/09 con el service-role client. El paso A1.3 la iba a habilitar «por lista de cortesía» y eso nunca se aplicó — y no hay ningún mecanismo de cortesía en el código: el plan sale de la fila del perfil y nada más lo escribe salvo el webhook de Stripe.",
+          ifNot: "Ninguna prueba está mintiendo hoy: las specs de <code>auth-proPlus</code> no afirman nada específico de PRO+, así que pasan por buenas razones. Lo que no existe es la cobertura que el nombre del proyecto promete. Para arreglarlo: poné la fila en <code>pro_plus</code> a mano, o pagá el checkout con tarjeta de prueba como hace la sesión PAY."
         },
         {
           code: "E2E.2", title: "Que la base quede como estaba", sub: "La propiedad que las hace repetibles",
@@ -1309,6 +1323,38 @@
           steps: ["Leé esta lista antes de planificar el día"],
           expect: "Automático desde hoy: importar en los <strong>cuatro formatos</strong> (Rekordbox XML, Traktor NML, M3U8, CSV) y ver los temas; que se dibuje la curva; que el set siga ahí después de recargar; que la página de comparación abra; <strong>los cinco formatos de export</strong> con el nombre de archivo exacto y un solo punto; y que <code>CUE_V2</code> y <code>AUDIO_ID</code> sobrevivan el viaje de ida y vuelta — el P0 del 07/09 visto desde afuera.",
           ifNot: "Lo que sigue siendo tuyo: si la curva <em>se ve</em> bien, si el orden que propone <em>suena</em> bien, y el export abierto en Rekordbox o Traktor de verdad. Un test confirma que el archivo tiene los cues; sólo Traktor dice qué hace Traktor al importarlo."
+        }
+      ]
+    },
+    {
+      code: "PAY",
+      title: "El camino del dinero, ahora automático",
+      meta: "~20 min · necesita el CLI de Stripe · modo test siempre",
+      why: "La última fila del tablero F3 que se probaba a mano, y la única donde un fallo silencioso cuesta un cliente en vez de una visita. La entitlement no la otorga la app: <code>checkout/route.ts</code> lo dice con todas las letras — «Entitlement is granted only by the webhook, never here». O sea que un checkout puede prosperar en Stripe, la tarjeta cobrarse, y la cuenta quedarse en FREE sin que nada levante la voz. Desde el 25/09 eso lo cubre un spec que recorre los cuatro estados distintos de <code>planNotice</code>: <strong>PRO is active</strong> (alta), el portal abriendo para ese cliente más una primera factura pagada (facturación), <strong>PRO ends on</strong> (baja) y <strong>Your PRO subscription ended</strong> (cancelación). Se verificó inyectándole el defecto que dice prevenir: sacando <code>customer.subscription.created/updated</code> de <code>HANDLED_EVENTS</code>, el test se pone rojo mientras el checkout sigue prosperando en Stripe.",
+      tests: [
+        {
+          code: "PAY.1", title: "El arco completo, con el listener puesto", sub: "Es la única forma de que el spec corra de verdad",
+          steps: ["En una terminal aparte: <code>stripe listen --forward-to http://127.0.0.1:3010/api/billing/webhook</code>", "Confirmá que dice <code>Ready!</code> y dejala abierta", "<code>npx playwright test e2e/subscription-billing.auth.spec.ts --project=auth-free</code>"],
+          expect: "<strong>9 pasan, 0 fallan</strong> (3 son el login de las tres cuentas). Corrido dos veces seguidas el 25/09 con el mismo resultado, y dejando <strong>0 suscripciones vivas</strong> las dos veces.",
+          ifNot: "Si el webhook contesta algo que no sea 200 en la terminal del listener, el secreto de firma del CLI no coincide con <code>STRIPE_WEBHOOK_SECRET</code> de <code>.env.local</code>. El CLI imprime el suyo al arrancar."
+        },
+        {
+          code: "PAY.2", title: "Que sin listener saltee en vez de mentir", sub: "Un verde sobre algo que no corrió es peor que un rojo",
+          steps: ["Cortá el <code>stripe listen</code>", "Corré el mismo comando de PAY.1", "Leé el motivo del skip"],
+          expect: "<strong>6 saltean, 0 fallan</strong>, y el motivo nombra el comando exacto a levantar. No dice «Stripe no configurado»: distingue entre no haber clave, no tener el CLI y no tener listener, porque dos de cada tres veces eso te mandaría al archivo equivocado.",
+          ifNot: "Si en vez de saltear falla, el que se rompió es el detector y no el producto."
+        },
+        {
+          code: "PAY.3", title: "Lo que el test no puede contestar y sigue siendo tuyo", sub: "Leelo antes de planificar el día",
+          steps: ["Leé esta lista"],
+          expect: "Sigue siendo manual: una tarjeta real con 3-D Secure; los controles propios del portal de Stripe (el spec afirma que el portal <em>abre para ese cliente</em>, no hace clic adentro, porque romper el día que Stripe mueve un botón diría «billing está roto» de un producto sano); el downgrade de tramo PRO+ → PRO, que necesita una segunda suscripción viva sobre una cuenta compartida y una configuración de portal que permita cambiar de plan; y los mails de Stripe y la factura que le llega de verdad al cliente.",
+          ifNot: "Nada de esto es un fallo si no lo hacés: es alcance declarado, no alcance perdido."
+        },
+        {
+          code: "PAY.4", title: "Un botón que el copy llama por un nombre que no existe", sub: "Hallazgo del 25/09, no arreglado",
+          steps: ["Entrá a <code>/dashboard/account</code> con una cuenta con suscripción", "Mirá cómo se llama el botón", "Buscá «Manage billing» en el copy de cancelación"],
+          expect: "El botón dice <strong>«Manage subscription»</strong>. Dos textos de <code>dashboard-copy.ts</code> le dicen al usuario «use <strong>Manage billing</strong> above instead» y «Open <strong>Manage billing</strong> and cancel it there» — un nombre que ningún control de la pantalla lleva, justo en el momento en que alguien intenta dejar de pagar.",
+          ifNot: "Se dejó anotado en vez de arreglado porque es copy de producto y el lote 8 no tocaba billing. Decidilo vos."
         }
       ]
     }

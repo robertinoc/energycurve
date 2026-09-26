@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchAllRows } from "@/lib/supabase/paginate"
 
 import { logInfo } from "@/lib/observability/logger"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
@@ -106,43 +107,76 @@ export async function buildAccountExport(
     return null
   }
 
-  const { data: playlists } = await supabase
-    .from("playlists")
-    .select("*")
-    .eq("user_id", profileId)
-    .order("created_at", { ascending: true })
+  /**
+   * Every one of the reads below pages, and that is the difference between an
+   * export and a sample.
+   *
+   * PostgREST caps a response at 1000 rows without erroring and without
+   * flagging it, so the nine queries this function used to make each returned a
+   * first page and stopped. The file still got a name, a date and a "your data"
+   * label on it. Article 20 asks for the data; an unannounced truncation is a
+   * wrong answer to a right the user cannot audit — they have no way to know
+   * that 1000 tracks was not all of them.
+   *
+   * `fetchAllRows` is the same helper `library-service.ts` already uses. Its
+   * `truncated` flag is deliberately not consulted here: its ceiling is 50,000
+   * rows per table, and an export that large is a different conversation than
+   * this fix. What matters is that the 1000 is gone.
+   */
+  const { rows: playlists } = await fetchAllRows((from, to) =>
+    supabase
+      .from("playlists")
+      .select("*")
+      .eq("user_id", profileId)
+      .order("created_at", { ascending: true })
+      .range(from, to)
+  )
 
-  const playlistIds = (playlists ?? []).map((row) => row.id as string)
+  const playlistIds = playlists.map((row) => row.id as string)
 
-  // `in` with an empty list is a query that matches nothing, which is what we
-  // want — but some drivers treat it as a syntax error, so short-circuit.
-  const tracks = playlistIds.length
-    ? (
-        await supabase
-          .from("tracks")
-          .select("*")
-          .in("playlist_id", playlistIds)
-          .order("position", { ascending: true })
-      ).data ?? []
-    : []
+  /** Pages one table that hangs off the playlists. */
+  const byPlaylist = async (table: string, order?: string) => {
+    // `in` with an empty list is a query that matches nothing, which is what we
+    // want — but some drivers treat it as a syntax error, so short-circuit.
+    if (playlistIds.length === 0) {
+      return []
+    }
 
-  const versions = playlistIds.length
-    ? (await supabase.from("playlist_versions").select("*").in("playlist_id", playlistIds))
-        .data ?? []
-    : []
+    const { rows } = await fetchAllRows((from, to) => {
+      const query = supabase
+        .from(table)
+        .select("*")
+        .in("playlist_id", playlistIds)
 
-  const collaborators = playlistIds.length
-    ? (await supabase.from("set_collaborators").select("*").in("playlist_id", playlistIds))
-        .data ?? []
-    : []
+      return (order ? query.order(order, { ascending: true }) : query).range(
+        from,
+        to
+      )
+    })
+
+    return rows
+  }
+
+  /** Pages one table that hangs off the profile. */
+  const byProfile = async (table: string, column: string) => {
+    const { rows } = await fetchAllRows((from, to) =>
+      supabase.from(table).select("*").eq(column, profileId).range(from, to)
+    )
+
+    return rows
+  }
+
+  const tracks = await byPlaylist("tracks", "position")
+  const versions = await byPlaylist("playlist_versions")
+  const collaborators = await byPlaylist("set_collaborators")
 
   const [analyses, templates, genres, contexts, usage, authored] = await Promise.all([
-    supabase.from("analyses").select("*").eq("user_id", profileId),
-    supabase.from("curve_templates").select("*").eq("user_id", profileId),
-    supabase.from("user_genres").select("*").eq("user_id", profileId),
-    supabase.from("user_contexts").select("*").eq("user_id", profileId),
-    supabase.from("feature_usage").select("*").eq("profile_id", profileId),
-    supabase.from("set_suggestions").select("*").eq("author_id", profileId),
+    byProfile("analyses", "user_id"),
+    byProfile("curve_templates", "user_id"),
+    byProfile("user_genres", "user_id"),
+    byProfile("user_contexts", "user_id"),
+    byProfile("feature_usage", "profile_id"),
+    byProfile("set_suggestions", "author_id"),
   ])
 
   logInfo("account.data_exported", {
@@ -168,19 +202,19 @@ export async function buildAccountExport(
     },
     playlists: clean(playlists ?? []),
     tracks: clean(tracks),
-    analyses: clean(analyses.data ?? []),
+    analyses: clean(analyses),
     versions: clean(versions),
-    curveTemplates: clean(templates.data ?? []),
-    customGenres: clean(genres.data ?? []),
-    customContexts: clean(contexts.data ?? []),
-    featureUsage: clean(usage.data ?? []),
+    curveTemplates: clean(templates),
+    customGenres: clean(genres),
+    customContexts: clean(contexts),
+    featureUsage: clean(usage),
     collaborations: {
       shared: clean(collaborators),
       // The playlist id of someone else's set stays: it is an opaque uuid, and
       // without it a person cannot tell which set their own suggestion was
       // about. What must not appear is that set's *content* — its name, its
       // venue, its tracks — and none of that is read here.
-      suggestionsAuthored: clean(authored.data ?? []),
+      suggestionsAuthored: clean(authored),
     },
     heldElsewhere: [
       "WorkOS holds your name, your password and your sign-in history. Ask us and we will retrieve it.",
