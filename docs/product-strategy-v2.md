@@ -25,7 +25,7 @@ Tagline stays: **"Shape the curve. Own the dancefloor."**
 | Product | Price | What it is | What it does NOT do |
 |---|---|---|---|
 | [Mixed In Key 11 / Flow](https://mixedinkey.com/) | **$58 one-time** | Desktop key + energy (1–10) + cue detection; writes tags | No set curve, no narrative analysis, no recommendations, no web |
-| [Lexicon](https://www.lexicondj.com/pricing) | **$9.99/mo** Essential · **$19.99/mo** Ultimate · lifetime $199/$399 | Library manager: sync/convert between Rekordbox, Serato, Traktor, Engine, VirtualDJ, djay | Doesn't analyze the *set* — it organizes the *library* |
+| [Lexicon](https://www.lexicondj.com/pricing) | **US$10.49/mo** Essential · **US$20.99/mo** Ultimate · lifetime US$249/US$499 — read from their pricing page on 26 Sep 2026, after their own notice "Prices went up on September 8"; library conversion is free | Library manager: sync/convert between Rekordbox, Serato, Traktor, Engine, VirtualDJ, djay | Doesn't analyze the *set* — it organizes the *library* |
 | [Mixo](https://thedjmixtape.com/mixo-vs-lexicon/) | Subscription-only; conversion paywalled | Library manager (Lexicon's weaker rival) | Same gap as Lexicon |
 | [DJ.Studio](https://dj.studio/blog/dj-software-integration) | Paid desktop | AI-assisted mix *arrangement* (builds the actual mix audio) | Studio tool, not a set-planning copilot; validates "AI for sets" demand |
 | [rekordbox](https://rekordbox.com/en/2026/04/rekordbox-for-android-now-supports-beatport-streaming/) | Free–Professional tiers | The player/ecosystem (CloudDirectPlay, Beatport Streaming on CDJs) | Analysis is per-track, not per-set; closed ecosystem |
@@ -215,10 +215,10 @@ the story carries itself.
 
 ### Pricing rationale
 
-- **$5.99 / $11.99** undercuts Lexicon ($9.99/$19.99) while staying serious;
+- **$5.99 / $11.99** undercuts Lexicon (US$10.49 / US$20.99 as of 26 Sep 2026 — they were $9.99 / $19.99 when this was written) while staying serious;
   we're the newer brand, price is our wedge. Annual ≈ 2 months free.
-- **No lifetime** at launch (protects recurring revenue; MIK's $58-once and
-  Lexicon's $199 lifetime anchor exists, revisit at month 6 with churn data).
+- **No lifetime** at launch (protects recurring revenue; MIK's $58-once (unverified — their shop prices by the visitor's country, see `docs/seo/competitor-facts-2026-09-26.md`) and
+  Lexicon's lifetime anchor exists — US$249 Essential / US$499 Ultimate as of 26 Sep 2026, up from $199/$399 — revisit at month 6 with churn data).
 - Rough revenue sketch (paid users → MRR at 70/30 PRO/PRO+ mix):
   100 → ~$780 · 500 → ~$3.9k · 2,000 → ~$15.6k.
 
