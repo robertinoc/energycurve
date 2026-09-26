@@ -2,12 +2,14 @@
 
 import { useActionState, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { CheckCircle2, UploadCloud } from "lucide-react"
+import { CheckCircle2, TriangleAlert, UploadCloud } from "lucide-react"
 
 import {
   importPlaylistAction,
 } from "@/app/(en)/dashboard/playlists/actions"
 import { initialPlaylistActionState } from "@/lib/playlists/action-state"
+import { decodeUploadedText } from "@/lib/playlists/decode-upload"
+import { assessImport, type ImportReadiness } from "@/lib/playlists/import-readiness"
 import { AudioFilesImport } from "@/components/playlists/audio-files-import"
 import { ManualCreatePanel } from "@/components/playlists/manual-create-panel"
 import { Button } from "@/components/ui/button"
@@ -15,6 +17,7 @@ import {
   TaxonomySelect,
   type TaxonomyCustomOption,
 } from "@/components/playlists/taxonomy-select"
+import { formatTemplate } from "@/lib/content/analysis-copy"
 import { CONTEXT_COPY, DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -107,8 +110,38 @@ export function PlaylistImportUpload({
     [isClient, dismissed]
   )
   const [fileName, setFileName] = useState<string | null>(null)
+  /**
+   * What the browser found in the file, decided by parsing it.
+   *
+   * "Ready to import" used to appear the moment a file had a name. The F1
+   * audit (finding A3) walked a truncated XML, an empty export and a shopping
+   * list through this form and got "Ready to import" for all three; the person
+   * found out on submit, or found out nothing. Now the file is read here, with
+   * the same readers the server uses, and readiness is earned by finding at
+   * least one track. `null` is no file; "checking" is the read in flight.
+   */
+  const [readiness, setReadiness] = useState<ImportReadiness | "checking" | null>(null)
   const [dragging, setDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function inspect(file: File | null | undefined) {
+    if (!file) {
+      setFileName(null)
+      setReadiness(null)
+      return
+    }
+
+    setFileName(file.name)
+    setReadiness("checking")
+
+    try {
+      // Decode by BOM, exactly as the server does: Rekordbox' .txt export is
+      // UTF-16, everything else UTF-8. One rulebook for both judges.
+      setReadiness(assessImport(decodeUploadedText(await file.arrayBuffer())))
+    } catch {
+      setReadiness({ kind: "broken" })
+    }
+  }
 
   function acceptDroppedFile(files: FileList | null) {
     const file = files?.[0]
@@ -122,8 +155,29 @@ export function PlaylistImportUpload({
     const transfer = new DataTransfer()
     transfer.items.add(file)
     fileInputRef.current.files = transfer.files
-    setFileName(file.name)
+    void inspect(file)
   }
+
+  const ready = readiness !== null && readiness !== "checking" && readiness.kind === "ready"
+  const refused =
+    readiness !== null && readiness !== "checking" && readiness.kind !== "ready"
+      ? readiness.kind
+      : null
+
+  const verdict =
+    readiness === "checking"
+      ? COPY.fileChecking[locale]
+      : readiness === null
+        ? null
+        : readiness.kind === "ready"
+          ? readiness.tracks === 1
+            ? COPY.fileReadyOne[locale]
+            : formatTemplate(COPY.fileReadyCount[locale], { count: readiness.tracks })
+          : readiness.kind === "empty"
+            ? COPY.fileEmpty[locale]
+            : readiness.kind === "unrecognised"
+              ? COPY.fileUnrecognised[locale]
+              : COPY.fileBroken[locale]
 
   return (
     <div className="rounded-[26px] bg-[linear-gradient(140deg,rgba(162,77,224,0.85),rgba(106,92,240,0.35)_40%,rgba(34,211,238,0.75))] p-px shadow-[0_30px_80px_rgba(0,0,0,0.45),0_0_60px_rgba(162,77,224,0.14)]">
@@ -261,7 +315,9 @@ export function PlaylistImportUpload({
               aria-hidden
               className="ec-gradient-bg mx-auto mb-3.5 grid size-13 place-items-center rounded-2xl shadow-[0_8px_26px_rgba(106,92,240,0.45)]"
             >
-              {fileName ? (
+              {refused ? (
+                <TriangleAlert className="size-6 text-white" />
+              ) : fileName ? (
                 <CheckCircle2 className="size-6 text-white" />
               ) : (
                 <UploadCloud className="size-6 text-white" />
@@ -273,8 +329,14 @@ export function PlaylistImportUpload({
                 <span className="block truncate px-4 font-heading text-[16.5px] font-semibold text-white">
                   {fileName}
                 </span>
-                <span className="mt-1.5 block text-[12.5px] text-ec-cyan">
-                  {COPY.fileReady[locale]}
+                <span
+                  role={refused ? "alert" : undefined}
+                  className={cn(
+                    "mt-1.5 block text-[12.5px]",
+                    refused ? "text-ec-amber" : "text-ec-cyan"
+                  )}
+                >
+                  {verdict}
                 </span>
               </>
             ) : (
@@ -315,7 +377,7 @@ export function PlaylistImportUpload({
             required
             className="sr-only"
             onChange={(event) =>
-              setFileName(event.target.files?.[0]?.name ?? null)
+              void inspect(event.target.files?.[0])
             }
           />
 
@@ -415,7 +477,9 @@ export function PlaylistImportUpload({
           </div>
 
           <div className="flex flex-wrap items-center gap-4 pt-1">
-            <Button type="submit" size="lg" disabled={isPending}>
+            {/* Off until the file has been read and has tracks in it. A submit
+                that can only fail is the thing this form used to offer. */}
+            <Button type="submit" size="lg" disabled={isPending || !ready}>
               {isPending ? COPY.importing[locale] : COPY.importCta[locale]}
             </Button>
             <span className="text-[12.5px] text-ec-text-dim">

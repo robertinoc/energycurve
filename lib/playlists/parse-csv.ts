@@ -1,3 +1,4 @@
+import { EmptyImportError } from "@/lib/playlists/imported-track"
 import {
   extractEnergyFromComment,
   parseBpm,
@@ -224,7 +225,7 @@ export function parseCsv(contents: string): ParsedImport {
     .filter((track) => track.artist || track.name)
 
   if (tracks.length === 0) {
-    throw new Error("No tracks found in the CSV playlist.")
+    throw new EmptyImportError("No tracks found in the CSV playlist.")
   }
 
   return { source: "csv", playlistName: null, tracks }

@@ -1,3 +1,4 @@
+import { EmptyImportError } from "@/lib/playlists/imported-track"
 import { XMLParser } from "fast-xml-parser"
 
 import { inspectXmlDocument } from "@/lib/playlists/xml-guard"
@@ -234,7 +235,7 @@ export function parseRekordbox(
     .filter((t) => t.artist || t.name)
 
   if (tracks.length === 0) {
-    throw new Error("No tracks found in the Rekordbox export.")
+    throw new EmptyImportError("No tracks found in the Rekordbox export.")
   }
 
   return {

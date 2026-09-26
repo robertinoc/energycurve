@@ -27,8 +27,7 @@ import type {
 import {
   detectGenres,
   parseImport,
-  UnsupportedImportError,
-} from "@/lib/playlists/parse-import"
+  UnsupportedImportError, EmptyImportError } from "@/lib/playlists/parse-import"
 import {
   createAudioImportSchema,
   createPlaylistSchema,
@@ -690,6 +689,13 @@ export async function importPlaylistAction(
   } catch (error) {
     if (error instanceof UnsupportedImportError) {
       return failure(error.message)
+    }
+    // The server's half of the readiness rule: an export with no tracks saves
+    // nothing. The form already refuses it before submit; this is for the
+    // request that arrives without the form. Not logged as a parse failure,
+    // because nothing failed to parse — the file is simply empty.
+    if (error instanceof EmptyImportError) {
+      return failure(ACTION_COPY.emptyFile[locale])
     }
     logError("playlist.import_parse_failed", error, { profileId: profile.id })
     return failure(ACTION_COPY.cantReadFile[locale])

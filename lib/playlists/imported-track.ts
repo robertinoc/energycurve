@@ -182,3 +182,15 @@ export function parseBpm(raw: unknown): number | null {
 
   return Math.round(value * 100) / 100
 }
+
+/**
+ * A recognised export whose playlist has no tracks in it.
+ *
+ * Its own class so a caller can tell "this is a Rekordbox file with nothing in
+ * it" from "this file is cut off or damaged" — the two are told to a person
+ * differently, and until this existed both surfaced as a generic Error and read
+ * as the same failure. Thrown by every reader at the point it would otherwise
+ * return zero tracks. Declared here, in the leaf module every reader already
+ * imports from, so no reader has to import the dispatcher that imports it.
+ */
+export class EmptyImportError extends Error {}

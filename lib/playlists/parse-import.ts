@@ -33,6 +33,10 @@ export { mapGenreTag } from "@/lib/playlists/genre-mapping"
 
 export class UnsupportedImportError extends Error {}
 
+// `EmptyImportError` lives in imported-track.ts, the leaf every reader
+// imports from; it is re-exported here so callers have one import.
+export { EmptyImportError } from "@/lib/playlists/imported-track"
+
 /**
  * Detects the export format and parses it. Supports the shapes Rekordbox and
  * Traktor emit — Rekordbox XML / Traktor NML (both XML, distinct roots), the
