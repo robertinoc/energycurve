@@ -125,8 +125,20 @@ jobs:
         # the WARNING findings stay visible in the log without failing a build.
         run: npm run sast
 
+      # Three attempts, because `next/font/google` fails the whole build when
+      # fonts.googleapis.com does not answer — see docs/handoff-2026-09-17.md
+      # §9. It is transient and it was always possible; with six builds per run
+      # instead of one (verify plus five shards) it is six times as likely to be
+      # seen. The first sharded run hit it once, in verify, while the five
+      # shard builds of the same commit passed.
       - name: Production build
-        run: npm run build
+        run: |
+          for attempt in 1 2 3; do
+            npm run build && exit 0
+            echo "build attempt $attempt failed; retrying"
+            sleep 10
+          done
+          exit 1
 
       # Lighthouse CI — SEO-E29.
       #
@@ -217,8 +229,20 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      # Three attempts, because `next/font/google` fails the whole build when
+      # fonts.googleapis.com does not answer — see docs/handoff-2026-09-17.md
+      # §9. It is transient and it was always possible; with six builds per run
+      # instead of one (verify plus five shards) it is six times as likely to be
+      # seen. The first sharded run hit it once, in verify, while the five
+      # shard builds of the same commit passed.
       - name: Production build
-        run: npm run build
+        run: |
+          for attempt in 1 2 3; do
+            npm run build && exit 0
+            echo "build attempt $attempt failed; retrying"
+            sleep 10
+          done
+          exit 1
 
       # After the build, reusing its output: the e2e suite runs against `next start`,
       # not `next dev`, because it asserts on rendered metadata and structured data
