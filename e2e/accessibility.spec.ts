@@ -34,6 +34,13 @@ const PUBLIC_PAGES = [
   ["terms (es)", "/es/terms"],
   ["privacy (es)", "/es/privacy"],
   ["blog index (es)", "/es/blog"],
+  // The three lote-10 articles: English-only, each answering a learning query
+  // the keyword map saw with no page. One is enough for the renderer they
+  // share with the other eight, but all three are new HTML and each has its
+  // own FAQ block, which is the part that has gone wrong before.
+  ["article: how to structure a dj set", "/blog/how-to-structure-a-dj-set"],
+  ["article: how does a dj set work", "/blog/how-does-a-dj-set-work"],
+  ["article: what is a dj set", "/blog/what-is-a-dj-set"],
   // The public tools. They arrived in two batches (#229, #231) and neither added
   // them here, so the WCAG sweep skipped the only pages on the site a stranger
   // is expected to *operate* rather than read — and #229's own Lighthouse run

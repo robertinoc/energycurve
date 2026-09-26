@@ -295,8 +295,14 @@ describe("the new content pages", () => {
      * The count is asserted because it is the one number that catches a whole
      * class of mistake at once — a locale dropped, an entry listed twice, a
      * draft leaking in. 32 before the content branch, 78 after it, 84 since
-     * SEO-E14 on 22/09/2026, 87 since SEO-E13, 85 since 25/09/2026, and **93
-     * since SEO-E23 on 26/09/2026**, which is the arithmetic below.
+     * SEO-E14 on 22/09/2026, 87 since SEO-E13, 85 since 25/09/2026, 93 since
+     * SEO-E23 on 26/09/2026, and **96 since lote 10 on the same day**, which is
+     * the arithmetic below.
+     *
+     * The three from lote 10 are English-only articles for the three
+     * learning queries the keyword map saw most often with no page — "how
+     * does a dj set work", "how to structure a dj set", "what is a dj set" —
+     * so, like the SEO-E13 three, they add one URL each.
      *
      * The eight from SEO-E23 are the four comparison pages in two languages.
      * They add no index: `/compare` does not exist, deliberately — four pages
@@ -319,7 +325,7 @@ describe("the new content pages", () => {
      * asymmetry is the point of counting English and Spanish separately below:
      * a total alone would not show which side moved.
      */
-    it("is 93 URLs, and the arithmetic says why", () => {
+    it("is 96 URLs, and the arithmetic says why", () => {
       const glossaryUrls = GLOSSARY_TERMS.length * supportedLocales.length
       // One index, not two: the glossary's. The guide index is absent while it
       // has nothing to list, and `publishedGuides()` being empty is also why
@@ -335,8 +341,8 @@ describe("the new content pages", () => {
       // typed in here would have to be edited by every article, and the whole
       // point of asserting a total is that it is the one number nobody edits
       // casually.
-      expect(allPublishedPosts()).toHaveLength(13)
-      expect(allPublishedPosts().filter((post) => post.locale === "en")).toHaveLength(8)
+      expect(allPublishedPosts()).toHaveLength(16)
+      expect(allPublishedPosts().filter((post) => post.locale === "en")).toHaveLength(11)
       expect(allPublishedPosts().filter((post) => post.locale === "es")).toHaveLength(5)
 
       // The comparison pages: four, both languages, no index.
@@ -346,7 +352,7 @@ describe("the new content pages", () => {
       ).toHaveLength(COMPARISONS.length * supportedLocales.length)
       expect(urls.some((url) => /\/(compare|es\/comparar)$/.test(url))).toBe(false)
 
-      expect(urls).toHaveLength(93)
+      expect(urls).toHaveLength(96)
     })
   })
 
