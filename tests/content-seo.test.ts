@@ -83,14 +83,13 @@ describe("the new content pages", () => {
       })
     })
 
-    it("keeps the guide index's copy ready, but declares no alternates while it is empty", () => {
-      // The description still has to be search-result shaped: the page comes
-      // back the day a guide ships, and copy that only gets checked then is
-      // copy nobody checks.
-      //
-      // What it must *not* do meanwhile is advertise itself. `publishedGuides()`
-      // is empty, so the index lists nothing — and an `hreflang` pointing at a
-      // page carrying `noindex` tells a crawler the site contradicts itself.
+    it("gives the guide index a canonical, both alternates and no noindex, now that it lists a guide", () => {
+      // Until 26/09/2026 this asserted the opposite: no alternates and a
+      // `noindex`, because `publishedGuides()` was empty and an index with
+      // nothing in it should not advertise itself. The first real guide
+      // flipped it with no edit to the routing — which is the point of
+      // deriving the rule from the registry. The empty direction is still
+      // asserted, by mocking, in `tests/empty-index.test.ts`.
       const meta = marketingMetadata("/guide", locale)
       const { description } = pageMetadata("/guide", locale)
 
@@ -100,8 +99,12 @@ describe("the new content pages", () => {
       const alternates = alternatesOf(meta)
 
       expect(alternates.canonical).toBe(guideIndexPath(locale))
-      expect(alternates.languages).toBeUndefined()
-      expect(meta.robots).toMatchObject({ index: false })
+      expect(alternates.languages).toMatchObject({
+        en: guideIndexPath("en"),
+        es: guideIndexPath("es"),
+        "x-default": guideIndexPath("en"),
+      })
+      expect(meta.robots ?? {}).not.toMatchObject({ index: false })
     })
 
     it.each(GLOSSARY_TERMS.map((term) => [term.id, term] as const))(
@@ -236,15 +239,14 @@ describe("the new content pages", () => {
     const entries = sitemap()
     const urls = entries.map((entry) => entry.url)
 
-    it("lists both languages of every glossary entry, and neither of the empty guide index", () => {
+    it("lists both languages of every glossary entry, and of the guide index now that it has a guide", () => {
       for (const locale of supportedLocales) {
         expect(urls).toContain(`${SITE_URL}${glossaryIndexPath(locale)}`)
 
-        // The guide index used to be here. It lists nothing — the only entry in
-        // `GUIDES` is the component draft — so offering a crawler two URLs of
-        // empty page was thin content under our own name. It returns on its
-        // own; `tests/empty-index.test.ts` asserts that direction.
-        expect(urls).not.toContain(`${SITE_URL}${guideIndexPath(locale)}`)
+        // Absent from 25/09 to 26/09/2026, while `GUIDES` held only the
+        // component draft. The first published guide brought it back with no
+        // edit to the sitemap; `tests/empty-index.test.ts` asserts the reverse.
+        expect(urls).toContain(`${SITE_URL}${guideIndexPath(locale)}`)
 
         for (const term of GLOSSARY_TERMS) {
           expect(urls).toContain(`${SITE_URL}${glossaryTermPath(term, locale)}`)
@@ -296,8 +298,14 @@ describe("the new content pages", () => {
      * class of mistake at once — a locale dropped, an entry listed twice, a
      * draft leaking in. 32 before the content branch, 78 after it, 84 since
      * SEO-E14 on 22/09/2026, 87 since SEO-E13, 85 since 25/09/2026, 93 since
-     * SEO-E23 on 26/09/2026, and **96 since lote 10 on the same day**, which is
-     * the arithmetic below.
+     * SEO-E23 on 26/09/2026, 96 since lote 10 on the same day, and **100 since
+     * lote 11, also 26/09/2026**, which is the arithmetic below.
+     *
+     * The four from lote 11 are the first real guide in both languages, plus
+     * the guide index coming back in both — the index had been held out while
+     * `publishedGuides()` was empty, and the first published guide is what
+     * brings it back, with no edit to that logic. That is the property lote 8
+     * built and this count proves.
      *
      * The three from lote 10 are English-only articles for the three
      * learning queries the keyword map saw most often with no page — "how
@@ -325,17 +333,17 @@ describe("the new content pages", () => {
      * asymmetry is the point of counting English and Spanish separately below:
      * a total alone would not show which side moved.
      */
-    it("is 96 URLs, and the arithmetic says why", () => {
+    it("is 100 URLs, and the arithmetic says why", () => {
       const glossaryUrls = GLOSSARY_TERMS.length * supportedLocales.length
-      // One index, not two: the glossary's. The guide index is absent while it
-      // has nothing to list, and `publishedGuides()` being empty is also why
-      // the third term below is zero — the same fact, counted once as a page
-      // and once as its contents.
-      const indexes = 1 * supportedLocales.length
+      // Two indexes now: the glossary's and the guides'. The guide index was
+      // absent while it had nothing to list; the first published guide brought
+      // it back on its own, which is why the two terms below move together —
+      // the same fact, counted once as a page and once as its contents.
+      const indexes = 2 * supportedLocales.length
       const guides = publishedGuides().length * supportedLocales.length
 
-      expect(publishedGuides()).toHaveLength(0)
-      expect(glossaryUrls + indexes + guides).toBe(44)
+      expect(publishedGuides()).toHaveLength(1)
+      expect(glossaryUrls + indexes + guides).toBe(48)
 
       // The articles, counted from the corpus rather than hardcoded: a number
       // typed in here would have to be edited by every article, and the whole
@@ -352,7 +360,7 @@ describe("the new content pages", () => {
       ).toHaveLength(COMPARISONS.length * supportedLocales.length)
       expect(urls.some((url) => /\/(compare|es\/comparar)$/.test(url))).toBe(false)
 
-      expect(urls).toHaveLength(96)
+      expect(urls).toHaveLength(100)
     })
   })
 

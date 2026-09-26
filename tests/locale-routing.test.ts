@@ -138,7 +138,11 @@ describe("hreflang and canonicals", () => {
       }
     }
 
-    expect(held.sort()).toEqual(["en:/guide", "es:/guide"])
+    // Nothing, since 26/09/2026: the first real guide shipped and `/guide`
+    // came back on its own. Between 25/09 and 26/09 this read
+    // `["en:/guide", "es:/guide"]`; the mocked empty direction in
+    // `tests/empty-index.test.ts` is what still proves the hiding half.
+    expect(held.sort()).toEqual([])
   })
 
   it("stops holding /blog out of the index once English articles exist", async () => {
