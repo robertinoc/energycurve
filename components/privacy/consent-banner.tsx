@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useSyncExternalStore } from "react"
+import { useEffect, useRef, useSyncExternalStore } from "react"
 
 import { shouldAskForConsent, writeConsent } from "@/lib/privacy/consent"
 import { useIsClient } from "@/lib/use-is-client"
@@ -56,12 +56,58 @@ export function ConsentBanner() {
   // for everyone sending Do Not Track, since neither storage nor the DNT signal
   // is readable on the server. The question only exists once there is a browser
   // to answer it.
-  if (!isClient || !shouldAskForConsent(state)) {
+  const asking = isClient && shouldAskForConsent(state)
+
+  // The banner reserves its own space instead of floating over the page.
+  //
+  // It is `fixed` to the bottom of the viewport, and the F1 audit found what
+  // that costs (finding A2): whatever sits at the foot of a page is underneath
+  // it, and a click there lands on the banner. A click on the dashboard's
+  // import button retried for four minutes against this component's own
+  // paragraph. Every first-time visitor sees the banner, so every first-time
+  // visitor has a strip of the page they cannot reach.
+  //
+  // The cure has two halves, both driven by one CSS variable this effect keeps
+  // current: `body` gets that much bottom padding, so the page's last controls
+  // can scroll up past the banner; and `html` gets that much
+  // `scroll-padding-bottom`, so anything scrolled or focused into view lands
+  // above it rather than behind it. See `app/globals.css`.
+  //
+  // Measured rather than hardcoded: the height depends on locale, viewport and
+  // wrapping, and a guessed number would be wrong on exactly the narrow screens
+  // where the banner is tallest. Cleared on unmount, so answering the question
+  // gives the space back.
+  const region = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const root = document.documentElement
+    const node = region.current
+
+    if (!asking || !node) {
+      root.style.removeProperty("--consent-banner-height")
+      return
+    }
+
+    const apply = () =>
+      root.style.setProperty("--consent-banner-height", `${node.offsetHeight}px`)
+
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(node)
+
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty("--consent-banner-height")
+    }
+  }, [asking])
+
+  if (!asking) {
     return null
   }
 
   return (
     <div
+      ref={region}
       // `polite`, not `alert`: this is a question, not an emergency, and it
       // should not interrupt whatever a screen reader is already saying.
       role="region"

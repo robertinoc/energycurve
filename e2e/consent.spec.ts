@@ -85,6 +85,76 @@ test.describe("before anyone answers", () => {
     const viewport = page.viewportSize()
     expect(banner!.height).toBeLessThan((viewport?.height ?? 800) / 2)
   })
+
+  /**
+   * Nothing on the page may end up underneath the banner.
+   *
+   * Found by the F1 audit (finding A2): the banner is fixed to the bottom of
+   * the viewport, and a click on the dashboard's import button retried for
+   * four minutes against the banner's own paragraph, which was sitting on top
+   * of it. It is not a test problem. Every first-time visitor sees the banner,
+   * and the controls at the foot of a page are the ones it covers.
+   *
+   * The property asserted is the one a person experiences: scroll any control
+   * into view the way the browser does, and it is not under the banner. The
+   * fix has two halves and this test needs both — space reserved below the
+   * page so the last controls can rise above the banner, and scroll padding so
+   * a control scrolled into view lands above it rather than behind it.
+   *
+   * Every link and button, not a sample: the ones that fail are the last few
+   * on the page, and a sample that stops early passes for the wrong reason.
+   */
+  for (const [name, path, selector] of [
+    ["English", "/", BANNER],
+    ["Spanish", "/es", BANNER_ES],
+  ] as const) {
+    test(`leaves every control reachable while it is showing (${name})`, async ({
+      page,
+    }) => {
+      await page.goto(path)
+      const banner = page.locator(selector)
+      await expect(banner).toBeVisible()
+
+      const controls = page.locator("a[href], button").filter({ visible: true })
+      const total = await controls.count()
+      expect(total).toBeGreaterThan(10)
+
+      const covered: string[] = []
+
+      for (let index = 0; index < total; index++) {
+        const control = controls.nth(index)
+
+        // Skip the banner's own buttons and links: they are *on* it, not under
+        // it. Asked of the element itself — the first version asked the banner
+        // whether it "has" the control and got every control back, which put
+        // the banner's own Yes and No in the failure list.
+        if (await control.evaluate((el, sel) => Boolean(el.closest(sel)), selector)) {
+          continue
+        }
+
+        await control.scrollIntoViewIfNeeded()
+        const box = await control.boundingBox()
+        const shade = await banner.boundingBox()
+
+        if (!box || !shade) {
+          continue
+        }
+
+        // Overlap on the vertical axis is what makes a click land on the banner.
+        if (box.y + box.height > shade.y && box.y < shade.y + shade.height) {
+          const label = (await control.textContent())?.trim().slice(0, 40) || "(no text)"
+          covered.push(`${label} @ y=${Math.round(box.y)}-${Math.round(box.y + box.height)}`)
+        }
+      }
+
+      expect(
+        covered,
+        `${covered.length} control(s) sit under the consent banner (top at y=${Math.round(
+          (await banner.boundingBox())!.y
+        )}): ${covered.join(" · ")}`
+      ).toEqual([])
+    })
+  }
 })
 
 test.describe("saying no", () => {
