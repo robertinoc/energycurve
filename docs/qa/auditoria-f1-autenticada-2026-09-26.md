@@ -114,6 +114,16 @@ inglés, 6 en español** — los del pie y el de instalar la app. Después: ning
 A 390 px en la landing, el último enlace del pie pasó de y=697–717 (banner en
 y=638) a y=490–510.
 
+**Lo que el test encontró de más.** Al correrlo en los cuatro navegadores, en
+mobile-safari reportó «Install» a y=567–603 con el banner en y=453: es el aviso
+de instalar la app en móvil, **otro elemento fijo al fondo**, y dos fijos al
+mismo borde se solapan sin importar el scroll. Ahora ese aviso sube la altura
+del banner mientras esté visible — la misma variable — y vuelve cuando se
+responde. La primera versión del test, que recorría los controles desde
+Playwright de a uno, pasó en Chromium y agotó los 30 s en el WebKit del CI; la
+versión que quedó mide todo en una sola evaluación dentro de la página y tarda
+menos de 3 s en cualquiera de los cuatro.
+
 ---
 
 ## A3 · El formulario de importación dice "Ready to import" de archivos que no puede importar — **media**

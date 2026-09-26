@@ -115,37 +115,52 @@ test.describe("before anyone answers", () => {
       const banner = page.locator(selector)
       await expect(banner).toBeVisible()
 
-      const controls = page.locator("a[href], button").filter({ visible: true })
-      const total = await controls.count()
+      // One pass inside the page, not one round trip per control. The first
+      // version drove each control from the test — scrollIntoViewIfNeeded,
+      // boundingBox, a closest() check, the banner's box — and on the CI
+      // runner's WebKit and mobile-safari that took longer than the 30-second
+      // test budget, four times over, which then pushed the whole E2E step
+      // past its own twelve minutes. The property is the same; it is measured
+      // where the elements are.
+      const covered = await page.evaluate((sel) => {
+        const shade = document.querySelector(sel)!
+        const isVisible = (el: Element) => {
+          const rect = el.getBoundingClientRect()
+          const style = getComputedStyle(el)
+          return (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            style.visibility !== "hidden" &&
+            style.display !== "none"
+          )
+        }
+
+        return Array.from(document.querySelectorAll("a[href], button"))
+          .filter((el) => !el.closest(sel) && isVisible(el))
+          .flatMap((el) => {
+            // `instant` overrides the site's smooth scrolling; `nearest` is
+            // what the browser does for focus, which is the case that matters.
+            el.scrollIntoView({ block: "nearest", behavior: "instant" })
+            const box = el.getBoundingClientRect()
+            const bar = shade.getBoundingClientRect()
+            // A control scrolled flush against the banner's top edge is above
+            // it — that is exactly what scroll-padding produces — and sub-pixel
+            // rounding puts its bottom a fraction past the edge. One pixel of
+            // tolerance separates "flush" from "under".
+            const overlaps = box.bottom > bar.top + 1 && box.top < bar.bottom
+
+            return overlaps
+              ? [
+                  `${(el.textContent ?? "").trim().slice(0, 40) || "(no text)"} @ y=${Math.round(
+                    box.top
+                  )}-${Math.round(box.bottom)}`,
+                ]
+              : []
+          })
+      }, selector)
+
+      const total = await page.locator("a[href], button").count()
       expect(total).toBeGreaterThan(10)
-
-      const covered: string[] = []
-
-      for (let index = 0; index < total; index++) {
-        const control = controls.nth(index)
-
-        // Skip the banner's own buttons and links: they are *on* it, not under
-        // it. Asked of the element itself — the first version asked the banner
-        // whether it "has" the control and got every control back, which put
-        // the banner's own Yes and No in the failure list.
-        if (await control.evaluate((el, sel) => Boolean(el.closest(sel)), selector)) {
-          continue
-        }
-
-        await control.scrollIntoViewIfNeeded()
-        const box = await control.boundingBox()
-        const shade = await banner.boundingBox()
-
-        if (!box || !shade) {
-          continue
-        }
-
-        // Overlap on the vertical axis is what makes a click land on the banner.
-        if (box.y + box.height > shade.y && box.y < shade.y + shade.height) {
-          const label = (await control.textContent())?.trim().slice(0, 40) || "(no text)"
-          covered.push(`${label} @ y=${Math.round(box.y)}-${Math.round(box.y + box.height)}`)
-        }
-      }
 
       expect(
         covered,
