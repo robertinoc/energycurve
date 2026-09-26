@@ -91,8 +91,11 @@ el número de cobertura.
 
 ## Las pruebas manuales: dónde se anotan y cómo llegan al repo
 
-Las ~36 pruebas que ningún test puede correr —las que necesitan una consola, un
-oído o una tarjeta— se anotan en una página, no en este archivo:
+Las **129 pruebas en 23 sesiones** que ningún test puede correr —las que
+necesitan una consola, un oído, un teléfono o una tarjeta— se anotan en una
+página, no en este archivo. El número es del 25/09, contado sobre el array
+`SESSIONS` de `banco-de-pruebas.html`; decía «~36» desde antes de que existieran
+la mitad de las sesiones:
 
 **[Banco de Pruebas EnergyCurve](https://claude.ai/artifact/S4cBUXpSRXp3X9z1REwQgA)**
 — copia de trabajo, cuenta personal. Es el único lugar donde se registra estado
