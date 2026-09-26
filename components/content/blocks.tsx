@@ -99,7 +99,27 @@ export function Comparacion({
   locale: SiteLocale
 }) {
   return (
-    <div className="my-6 overflow-x-auto rounded-2xl border border-white/8">
+    /*
+      A scrollable region has to be a keyboard stop, or the only way to read the
+      right-hand column on a narrow screen is to drag it.
+
+      Found by the WCAG sweep the moment the comparison pages joined it:
+      mobile-safari flagged `scrollable-region-focusable` (serious) on the
+      Lexicon page, in both languages, while chromium, webkit and firefox passed
+      — at their widths the table fits and nothing scrolls. Lexicon is the one
+      that overflows first because its price row is the longest.
+
+      Same three attributes `key-table.tsx` and the import-formats tables
+      already carry, for the same reason. `aria-label` rather than
+      `aria-labelledby`: this component is used more than once on a page, so a
+      shared id would be a duplicate — and the caption is the table's own name.
+    */
+    <div
+      className="my-6 overflow-x-auto rounded-2xl border border-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/45"
+      tabIndex={0}
+      role="region"
+      aria-label={caption[locale]}
+    >
       <table className="w-full border-collapse text-left text-sm">
         <caption className="px-4 pt-4 text-left text-[11px] uppercase tracking-[0.16em] text-white/50">
           {caption[locale]}
