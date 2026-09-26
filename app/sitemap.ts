@@ -14,6 +14,8 @@ import {
   glossaryTermPath,
   guidePath,
 } from "@/lib/content/glossary/paths"
+import { COMPARISONS } from "@/lib/content/compare/comparisons"
+import { comparisonPath } from "@/lib/content/compare/paths"
 import { pageLastModified } from "@/lib/content/page-metadata"
 import { GLOSSARY_TERMS } from "@/lib/content/glossary/terms"
 import { publishedGuides } from "@/lib/content/guides/guides"
@@ -203,7 +205,38 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }))
   })
 
+  // The comparison pages. Same shape as the guides — both languages, reciprocal
+  // `alternates`, per-language slug — with one difference worth naming: their
+  // `lastModified` is `verifiedAt`, the day the competitor's pages were read.
+  // On a page whose claim is "this is what they said, when", the review date is
+  // the date a crawler should be told about; the day we reworded a paragraph is
+  // not.
+  //
+  // Higher priority than the guides because these answer a buying question. The
+  // keyword map counts twenty-one comparison queries against one page that
+  // half-answers them.
+  const comparisons: MetadataRoute.Sitemap = COMPARISONS.flatMap(
+    (comparison) => {
+      const languages = alternateLanguages(
+        Object.fromEntries(
+          supportedLocales.map((locale) => [
+            locale,
+            `${SITE_URL}${comparisonPath(comparison, locale)}`,
+          ])
+        )
+      )
+
+      return supportedLocales.map((locale) => ({
+        url: `${SITE_URL}${comparisonPath(comparison, locale)}`,
+        lastModified: new Date(comparison.verifiedAt),
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+        alternates: { languages },
+      }))
+    }
+  )
+
   // Pages first, in priority order, then the articles — the file is read
   // top-down, so the homepage should not sit below a blog post.
-  return [...pages, ...entries, ...guides, ...articles]
+  return [...pages, ...comparisons, ...entries, ...guides, ...articles]
 }

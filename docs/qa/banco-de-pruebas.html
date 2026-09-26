@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">123</strong>
+      <strong id="tally-total">139</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -511,6 +511,8 @@
       <li><strong>J y J2 — 70 min.</strong> Lo de Jordi. Necesita tu oído y un NML real, y es lo que ninguna máquina puede contestar.</li>
       <li><strong>UX — 60 min.</strong> Los cinco casos de borde que esperaban las cuentas. Ahora se pueden correr.</li>
       <li><strong>TOOL y TOOL2 — 105 min.</strong> Las herramientas públicas con tu librería de verdad y el teléfono.</li>
+      <li><strong>AUD — 30 min.</strong> Los cuatro hallazgos de la auditoría F1 del 26/09, que están catalogados y <strong>sin arreglar</strong> a propósito. Dos de ellos quedaron «sin confirmar» y necesitan tu ojo para decidir si son de severidad media o menos.</li>
+      <li><strong>CMP — 25 min.</strong> Las cuatro páginas de comparación. Lo que hay que juzgar no es un dato sino el tono: si alguna suena a que siempre ganamos nosotros, eso es el hallazgo.</li>
       <li><strong>PAY — 20 min.</strong> El camino del dinero. Necesita una terminal con <code>stripe listen</code> abierta; sin eso el spec saltea en vez de correr, que es lo correcto pero no te dice nada.</li>
       <li><strong>CONT.4 y CONT.5 — 30 min.</strong> Las 21 definiciones leídas por un DJ, y el validador de Google. Las dos que deciden si el contenido sirve.</li>
       <li><strong>El resto de SEO</strong> — cuando haya deploy. No dependen de vos hoy.</li>
@@ -1355,6 +1357,82 @@
           steps: ["Entrá a <code>/dashboard/account</code> con una cuenta con suscripción", "Mirá cómo se llama el botón", "Buscá «Manage billing» en el copy de cancelación"],
           expect: "El botón dice <strong>«Manage subscription»</strong>. Dos textos de <code>dashboard-copy.ts</code> le dicen al usuario «use <strong>Manage billing</strong> above instead» y «Open <strong>Manage billing</strong> and cancel it there» — un nombre que ningún control de la pantalla lleva, justo en el momento en que alguien intenta dejar de pagar.",
           ifNot: "Se dejó anotado en vez de arreglado porque es copy de producto y el lote 8 no tocaba billing. Decidilo vos."
+        }
+      ]
+    },
+    {
+      code: "CMP",
+      title: "Las cuatro páginas de comparación",
+      meta: "~25 min · sin cuenta · necesita el deploy para CMP.4",
+      why: "SEO-E23, que estuvo frenado meses esperando <em>qué se puede afirmar de cada competidor</em>. La respuesta terminó siendo una regla y no una reunión: sólo entra un hecho citable de la página pública del propio competidor, con la URL y la fecha en que se leyó. La evidencia está en <code>docs/seo/competitor-facts-2026-09-26.md</code> y lo que no se pudo sostener está ahí sin publicar — el precio de Mixed In Key entre otras cosas, porque su tienda cobra por país y a nosotros nos mostró pesos argentinos. Lo automatizado es fuerte: <code>tests/comparisons.test.ts</code> prohíbe las construcciones de superioridad en los dos idiomas y exige que cada página nombre un caso en que conviene el <em>otro</em>. Lo que queda es lo que ninguna máquina juzga: si el texto es justo.",
+      tests: [
+        {
+          code: "CMP.1", title: "Leer la de SetFlow como si fueras ellos", sub: "Es la más cercana, y la que más fácil se vuelve injusta",
+          steps: ["Abrí <code>/compare/setflow</code> y leela entera", "Después leé <code>setflow.app</code>", "Preguntate si un empleado de SetFlow la firmaría como descripción de su producto"],
+          expect: "Que sí. La página dice con todas las letras, en un callout, que nuestra frase habitual —ellos analizan el tema, nosotros el set— <strong>no se sostiene contra SetFlow</strong>, y que en precio publicado ellos están por debajo. Si algo suena a que siempre ganamos nosotros, eso es el hallazgo.",
+          ifNot: "Marcá la frase exacta. El riesgo de estas páginas no es equivocarse en un dato: es el tono."
+        },
+        {
+          code: "CMP.2", title: "Verificar dos filas contra la fuente", sub: "El trabajo que hace publicable la página",
+          steps: ["Elegí dos filas de dos páginas distintas", "Abrí el enlace de la sección Fuentes", "Buscá la frase citada en la página de ellos"],
+          expect: "Está, literal. Todas las filas salen de <code>docs/seo/competitor-facts-2026-09-26.md</code>, que tiene la cita y el enlace.",
+          ifNot: "Una fila que no se encuentra en la fuente hay que sacarla el mismo día, no discutirla. Es una afirmación sobre una empresa con nombre."
+        },
+        {
+          code: "CMP.3", title: "Los precios envejecen", sub: "Lexicon ya subió los suyos una vez",
+          steps: ["Mirá la fecha de verificación arriba de cada página", "Abrí las páginas de precios de DJ.Studio, Lexicon y SetFlow", "Compará contra lo que decimos"],
+          expect: "Coinciden, o si no coinciden hay que corregir. Lexicon avisa en su propio sitio «Prices went up on September 8», y eso ya dejó desactualizada la tabla de mercado de <code>docs/product-strategy-v2.md</code>, que sigue diciendo u$s9,99 / u$s19,99.",
+          ifNot: "La página dice explícitamente que gana la página de ellos. Actualizá el archivo de hechos y la fecha, no sólo el número."
+        },
+        {
+          code: "CMP.4", title: "Rich Results Test sobre una comparación", sub: "No se puede correr desde acá",
+          steps: ["Con el deploy hecho, abrí el Rich Results Test de Google", "Pegá la URL de una comparación", "Repetí con la gemela en español"],
+          expect: "Detecta <code>FAQPage</code> y <code>BreadcrumbList</code> sin errores. El <code>WebPage</code> lleva <code>lastReviewed</code> y las fuentes como <code>citation</code>.",
+          ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa — anotá el campo exacto que nombre."
+        },
+        {
+          code: "CMP.5", title: "El toggle de idioma va a la gemela, no a un índice", sub: "Estas páginas no tienen índice",
+          steps: ["En <code>/compare/lexicon</code> cambiá el idioma", "Fijate dónde caés"],
+          expect: "En <code>/es/comparar/lexicon</code>. No hay <code>/compare</code>: cuatro páginas no necesitan una lista, y el lote 8 gastó una tarea sacando exactamente esa forma. <code>/compare</code> es un 404 con marca, a propósito.",
+          ifNot: "Si caés en la home, el toggle volvió a resolver contra un <code>LocalizedPath</code>."
+        }
+      ]
+    },
+    {
+      code: "AUD",
+      title: "Lo que la auditoría F1 dejó para verificar a mano",
+      meta: "~30 min · necesita las tres cuentas",
+      why: "La auditoría autenticada del 26/09 está entera en <code>docs/qa/auditoria-f1-autenticada-2026-09-26.md</code>: cuatro hallazgos, dos resultados negativos y una lista de lo que no cubre. <strong>No se arregló nada</strong> — el catálogo era el entregable. Estas filas son las que necesitan tu ojo o tu decisión.",
+      tests: [
+        {
+          code: "AUD.1", title: "El banner tapando el botón de importar", sub: "Hallazgo A2 — severidad media",
+          steps: ["Cuenta recién creada, o borrá <code>ec.analytics-consent.v1</code> del <code>localStorage</code>", "Entrá a <code>/dashboard/playlists</code>", "Achicá la ventana hasta que el botón de importar quede abajo", "Intentá tocarlo sin scrollear"],
+          expect: "Hoy el banner se lleva el clic. Es <code>fixed inset-x-0 bottom-0 z-50</code> y tapa lo que haya al fondo del viewport. Le pasa a todo usuario recién registrado, porque consentimiento sin responder es el estado inicial.",
+          ifNot: "Si ya no pasa, alguien reservó el alto del banner — confirmá en qué commit y sacá esta fila."
+        },
+        {
+          code: "AUD.2", title: "«Ready to import» de una lista de compras", sub: "Hallazgo A3 — severidad media",
+          steps: ["Creá un <code>.txt</code> con dos líneas que no sean temas", "Elegilo en el formulario de importación", "Leé lo que dice el formulario", "Apretá Importar y esperá"],
+          expect: "Hoy dice <strong>«Ready to import»</strong>, y al enviar no aparece ni playlist ni mensaje. El archivo ya se parseó en el navegador —el formulario lo prueba nombrándolo— así que la información para decir «esto no parece una playlist» ya estaba.",
+          ifNot: "Éste es el caso <strong>sin confirmar</strong> de los tres: no se determinó si se rechaza en silencio o si el envío no llega a ocurrir. Es el primero que conviene mirar."
+        },
+        {
+          code: "AUD.3", title: "El botón de IA con la cuota gastada", sub: "Hallazgo A4 — severidad media-baja",
+          steps: ["Con la cuenta FREE, corré un Smart ordering (es 1 por mes)", "Importá otro set", "Abrí su análisis y mirá el botón", "Apretalo y mirá qué muestra"],
+          expect: "El botón está y está habilitado, y nada dice que la cuota se agotó. El servidor sí responde 402 <code>quota_exceeded</code> con <code>used</code>, <code>limit</code> y <code>upgradeTo</code>. <strong>Lo que la interfaz muestra después del 402 no se llegó a observar</strong> — eso es lo que esta prueba agrega.",
+          ifNot: "Si el 402 sale con un mensaje claro, el hallazgo baja a «decilo antes del clic» y deja de ser un agujero."
+        },
+        {
+          code: "AUD.4", title: "La cuarta importación en FREE", sub: "El hueco declarado de la auditoría",
+          steps: ["Con FREE en 3 playlists, intentá importar una cuarta", "Mirá qué pasa"],
+          expect: "Sin confirmar. El control de importación sigue presente en el tope; no se determinó si el intento se rechaza con un mensaje útil o si falla de otra forma.",
+          ifNot: "Si falla sin explicar, es severidad media: el producto está rechazando correctamente y pareciendo roto."
+        },
+        {
+          code: "AUD.5", title: "Las ocho capabilities que quedaron sin ejercitar", sub: "Decidí si valen un lote",
+          steps: ["Leé la sección «Lo que esta auditoría NO cubre»"],
+          expect: "<code>residency_mode</code>, <code>b2b_sets</code>, <code>custom_curve_templates</code>, <code>title_lookup</code>, <code>slot_aware_planning</code>, <code>planned_vs_played</code>, <code>version_history</code> leída y <code>audio_analysis</code>. Se confirmó que el registro y la matriz de precios coinciden; <strong>no</strong> que cada una ande contra el producto corriendo.",
+          ifNot: "Todas están marcadas <code>shipped</code>, o sea que la matriz de precios las vende. Una que no ande es severidad alta."
         }
       ]
     }

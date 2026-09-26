@@ -281,6 +281,7 @@ interface SiteCopySchema {
     blog: LocalizedLabel
     glossary: LocalizedLabel
     guides: LocalizedLabel
+    comparisons: LocalizedLabel
     energyTags: LocalizedLabel
     importFormats: LocalizedLabel
     legal: LocalizedLabel
@@ -1479,6 +1480,7 @@ const siteCopy: SiteCopySchema = {
     // pages hang off this one link, so the label is doing real work.
     glossary: { en: "DJ terms, explained", es: "Términos de DJ, explicados" },
     guides: { en: "Guides", es: "Guías" },
+    comparisons: { en: "Compared to", es: "Comparado con" },
     /**
      * The two reference pages. Labelled by the question they answer rather than
      * by their slug: "Energy tags" means nothing to somebody who has not yet
@@ -1951,6 +1953,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       energyTags: siteCopy.footer.energyTags[locale],
       importFormats: siteCopy.footer.importFormats[locale],
       guides: siteCopy.footer.guides[locale],
+      comparisons: siteCopy.footer.comparisons[locale],
       legal: siteCopy.footer.legal[locale],
       privacy: siteCopy.footer.privacy[locale],
       terms: siteCopy.footer.terms[locale],

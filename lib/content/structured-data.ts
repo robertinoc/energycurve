@@ -1,5 +1,5 @@
 /**
- * schema.org for the glossary and the guides.
+ * schema.org for the glossary, the guides and the comparison pages.
  *
  * Built the way `lib/seo.ts` and `lib/tools/structured-data.ts` build theirs:
  * from the same objects the page renders, never hand-written beside them. The
@@ -14,7 +14,9 @@ import {
   guideIndexPath,
   guidePath,
 } from "@/lib/content/glossary/paths"
-import { GLOSSARY_COPY, GUIDES_COPY } from "@/lib/content/content-copy"
+import { COMPARE_COPY, GLOSSARY_COPY, GUIDES_COPY } from "@/lib/content/content-copy"
+import { comparisonPath } from "@/lib/content/compare/paths"
+import type { Comparison } from "@/lib/content/compare/comparisons"
 import { GLOSSARY_TERMS, type GlossaryTerm } from "@/lib/content/glossary/terms"
 import { localizedPath } from "@/lib/content/locale-routing"
 import { SITE_URL, SOCIAL_IMAGE_URL, buildFaqPage, buildOrganization } from "@/lib/seo"
@@ -183,6 +185,75 @@ export function buildGuideStructuredData(guide: Guide, locale: SiteLocale) {
           `${SITE_URL}${guideIndexPath(locale)}`
         ),
         crumb(3, guide.title[locale], url),
+      ],
+    },
+  ]
+
+  if (faqEntries.length > 0) {
+    graph.push({
+      ...buildFaqPage({
+        id: url,
+        entries: faqEntries.map((entry) => ({
+          question: entry.question[locale],
+          answer: entry.answer[locale],
+        })),
+      }),
+    })
+  }
+
+  return { "@context": "https://schema.org", "@graph": graph }
+}
+
+/**
+ * `WebPage` + `FAQPage` for a comparison.
+ *
+ * `WebPage` rather than `TechArticle`: this is not a tutorial and does not have
+ * an author in the sense the guides do — it is a page of sourced statements
+ * about two products. `lastReviewed` and `citation` carry the thing that makes
+ * it trustworthy, which is that somebody read the competitor's own pages on a
+ * named date and said which ones.
+ *
+ * The FAQ entries come off the page's own nodes, exactly as the guides' do. A
+ * question that is not rendered cannot reach the markup.
+ */
+export function buildComparisonStructuredData(
+  comparison: Comparison,
+  locale: SiteLocale
+) {
+  const url = `${SITE_URL}${comparisonPath(comparison, locale)}`
+
+  const faqEntries = comparison.sections
+    .flatMap((section) => section.nodes)
+    .filter((node) => node.kind === "faq")
+    .flatMap((node) => node.entries)
+
+  const graph: Record<string, unknown>[] = [
+    {
+      "@type": "WebPage",
+      "@id": `${url}#webpage`,
+      name: comparison.title[locale],
+      description: comparison.description[locale],
+      url,
+      inLanguage: locale,
+      lastReviewed: comparison.verifiedAt,
+      publisher: buildOrganization(locale),
+      primaryImageOfPage: SOCIAL_IMAGE_URL,
+      citation: comparison.sources.map((source) => ({
+        "@type": "WebPage",
+        name: source.label,
+        url: source.url,
+      })),
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${url}#breadcrumb`,
+      itemListElement: [
+        crumb(
+          1,
+          COMPARE_COPY.home[locale],
+          `${SITE_URL}${localizedPath("/", locale)}`
+        ),
+        crumb(2, comparison.title[locale], url),
       ],
     },
   ]

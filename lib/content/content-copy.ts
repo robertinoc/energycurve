@@ -48,6 +48,29 @@ export const GUIDES_COPY = {
   home: { es: "Inicio", en: "Home" },
 } as const
 
+/**
+ * The chrome of a comparison page.
+ *
+ * `verifiedOn` and `sources` are not decoration: they are the page's argument.
+ * Every claim about a competitor traces to a page of theirs on a date, and a
+ * reader who cannot see the date and the link has to take our word for it —
+ * which is the thing a comparison page is least entitled to ask for.
+ */
+export const COMPARE_COPY = {
+  home: { es: "Inicio", en: "Home" },
+  crumb: { es: "Comparaciones", en: "Comparisons" },
+  verifiedOn: {
+    es: "Datos del competidor leídos de sus propias páginas el",
+    en: "Competitor facts read from their own pages on",
+  },
+  sources: { es: "Fuentes", en: "Sources" },
+  disclaimer: {
+    es: "Los precios y las descripciones cambian. Si algo de acá ya no coincide con lo que dice su página, gana la página de ellos — escribinos y lo corregimos.",
+    en: "Prices and descriptions change. If anything here no longer matches their page, their page wins — tell us and we will fix it.",
+  },
+  contents: { es: "Contenido", en: "Contents" },
+} as const
+
 export const CTA_COPY = {
   tool: {
     title: {
