@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">142</strong>
+      <strong id="tally-total">146</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -502,7 +502,7 @@
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
     <p><strong>Una sola cosa bloquea, y son cinco minutos en el SQL Editor: a la base de dev le faltan migraciones.</strong> Confirmado el 25/09 sondeando el enum en sólo-lectura: <strong>7 de los 12 géneros que ofrece el producto no existen en dev</strong> — <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code> y <code>bounce</code>. Los agrega la <code>0005</code>. Si mañana elegís uno de esos —o dejás la detección automática y lo elige ella— la importación falla con «Something went wrong while saving» y no vas a saber por qué. Eso salió de un E2E que se caía; sin arreglarlo te come la mañana. Aplicá <code>0005</code> y de paso <code>0027</code> a <code>0032</code>, en orden de número. La sesión <strong>DB</strong> tiene los pasos.</p>
-    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 26/09, <strong>públicos 739 pasan / 9 saltean / 0 fallan</strong> y <strong>autenticados 68 pasan / 28 saltean / 0 fallan</strong>, en dos mitades porque una sola corrida no cierra desde acá. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
+    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 26/09, al 26/09 (lote 11) <strong>823 pasan / 37 saltean / 0 fallan en 285 segundos</strong>, la suite entera en un solo comando: <code>npm run test:e2e</code> corre cinco shards en paralelo y devuelve un solo resumen. Hasta el lote 10 se corría en dos mitades (13,3 min); ese comando ya no existe. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
     <ol style="margin:6px 0 0 18px;padding:0">
       <li><strong>DB.1 a DB.4 — 25 min.</strong> Aplicá las migraciones y corré el seed. Desbloquea todo lo demás: sin esto, siete géneros rompen y cualquier prueba de importación miente.</li>
@@ -1460,6 +1460,38 @@
           steps: ["Con el deploy hecho, pegá la URL de <code>/blog/how-to-structure-a-dj-set</code> en el Rich Results Test de Google"],
           expect: "Detecta <code>BlogPosting</code>, <code>BreadcrumbList</code> y <code>FAQPage</code> con las tres preguntas, sin errores.",
           ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa: anotá el campo exacto que nombre."
+        }
+      ]
+    },
+    {
+      code: "GUIA",
+      title: "La guía pilar: la curva de energía en un set de DJ",
+      meta: "~40 min · sin cuenta · GUIA.3 necesita el deploy",
+      why: "Desde el PR #237 el sitio tenía toda la maquinaria de guías —curvas, escala, pasos, FAQ, comparación— y ninguna guía adentro; el lote 8 tuvo que esconder el índice vacío. El lote 11 escribió la primera de verdad, en español con su gemela en inglés, sobre el tema central del producto. Lo automático ya vigila lo mecánico: el índice volvió solo al sitemap y al footer (96 → 100 URLs), <code>TechArticle</code>+<code>FAQPage</code> parsean, accesibilidad y consola pasan, y a 390 px ninguna de las cuatro curvas desborda. Lo que queda es si es <em>cierta</em> y si un DJ la firmaría.",
+      tests: [
+        {
+          code: "GUIA.1", title: "Leerla como DJ, no como redactor", sub: "La única prueba que ninguna máquina hace",
+          steps: ["Abrí <code>/es/guia/curva-de-energia-en-un-set-de-dj</code> y leela entera", "Marcá cualquier frase que un DJ con años de cabina no firmaría", "Mirá si cada curva dibujada aclara el párrafo de al lado o lo repite"],
+          expect: "Nada te hace fruncir el ceño. No hay números inventados: la escala sale del motor, los saltos «grandes» y «chicos» no tienen cifra a propósito, y las reglas armónicas mandan a la rueda en vez de repetirlas.",
+          ifNot: "La frase exacta y por qué. Es más barato reescribir una oración hoy que dejarla indexada."
+        },
+        {
+          code: "GUIA.2", title: "El vocabulario de la decisión 29", sub: "tonalidad, temas, librería, toque — y voseo",
+          steps: ["Buscá en la guía «canciones», «tracks», «biblioteca», «pinchar», «tú», «tienes», «puedes»"],
+          expect: "Ninguna aparece. Se buscó por script el 26/09 y no estaban; esta fila existe porque el script no juzga si «vos» suena natural, y vos sí.",
+          ifNot: "Corregí la palabra y anotá cuál: la regla es del sitio entero, no de la guía."
+        },
+        {
+          code: "GUIA.3", title: "Rich Results Test sobre la guía", sub: "No se puede correr desde acá",
+          steps: ["Con el deploy hecho, pegá la URL de la guía en el Rich Results Test de Google", "Repetí con la gemela en inglés"],
+          expect: "Detecta <code>TechArticle</code>, <code>BreadcrumbList</code> y <code>FAQPage</code> con las cuatro preguntas, sin errores.",
+          ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa: anotá el campo exacto que nombre."
+        },
+        {
+          code: "GUIA.4", title: "El índice de guías volvió solo", sub: "La lógica del lote 8, verificada en la dirección que importa",
+          steps: ["Abrí <code>/es/guia</code> y <code>/guide</code>", "Mirá el footer de la home en los dos idiomas"],
+          expect: "El índice lista la guía, está indexable (sin <code>noindex</code>), está en el sitemap y el footer lo enlaza — sin que nadie tocara <code>isIndexable</code> ni <code>isEmptyIndex</code>. Los tests que afirmaban el estado vacío se dieron vuelta y el vacío quedó cubierto con un mock.",
+          ifNot: "Si el índice no aparece, el bug es de esa lógica y no de la guía: ése era el hallazgo posible, y no ocurrió."
         }
       ]
     }
