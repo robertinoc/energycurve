@@ -510,6 +510,7 @@ None of these are fixed by picking different tracks. All of them are fixed by mo
   related: [
     { path: "/tools/energy-curve", label: { es: "Herramienta de curva de energía", en: "Energy curve tool" } },
     { path: "/tools/camelot-wheel", label: { es: "Rueda Camelot", en: "Camelot wheel" } },
+    { path: "/harmonic-mixing-cheat-sheet", label: { es: "Tabla de mezcla armónica", en: "Harmonic mixing cheat sheet" } },
     { path: "/energy-tags", label: { es: "Dónde guarda cada programa la energía", en: "Where each program keeps energy" } },
     { path: "/glossary", label: { es: "Glosario de DJ", en: "DJ glossary" } },
   ],

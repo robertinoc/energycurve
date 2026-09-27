@@ -46,6 +46,8 @@ const PUBLIC_PAGES = [
   ["article: serato crates and rekordbox", "/blog/serato-crates-and-rekordbox"],
   ["article: rekordbox to usb", "/blog/rekordbox-export-playlist-to-usb-greyed-out"],
   ["article: crates de serato (es)", "/es/blog/crates-de-serato-y-rekordbox"],
+  // Lote 13: the preparation article.
+  ["article: how djs prepare their sets", "/blog/how-djs-prepare-their-sets"],
   // The public tools. They arrived in two batches (#229, #231) and neither added
   // them here, so the WCAG sweep skipped the only pages on the site a stranger
   // is expected to *operate* rather than read — and #229's own Lighthouse run
@@ -84,6 +86,11 @@ const PUBLIC_PAGES = [
   ["comparison (lexicon)", "/compare/lexicon"],
   ["comparison (es, setflow)", "/es/comparar/setflow"],
   ["comparison (es, lexicon)", "/es/comparar/lexicon"],
+  // Lote 13: the market comparisons, five programs and no "us" column.
+  ["comparison (rekordbox vs serato vs traktor)", "/compare/rekordbox-vs-serato-vs-traktor"],
+  ["comparison (best dj software)", "/compare/best-dj-software"],
+  ["comparison (es, rekordbox vs serato vs traktor)", "/es/comparar/rekordbox-vs-serato-vs-traktor"],
+  ["comparison (es, mejor software para dj)", "/es/comparar/mejor-software-para-dj"],
   // SEO-E30. The two reference pages were outside the sweep in both languages,
   // and they are dense data tables inside horizontally scrollable regions —
   // the exact shape that produced the keyboard trap #232 found on the Camelot
@@ -92,6 +99,9 @@ const PUBLIC_PAGES = [
   ["import formats", "/import-formats"],
   ["energy tags (es)", "/es/energy-tags"],
   ["import formats (es)", "/es/import-formats"],
+  // Lote 13: the generated harmonic table, two wide tables and an SVG preview.
+  ["harmonic cheat sheet", "/harmonic-mixing-cheat-sheet"],
+  ["harmonic cheat sheet (es)", "/es/tabla-de-mezcla-armonica"],
   // One article, Spanish, because Spanish is the only language they exist in.
   // Like the glossary, the five are one component rendered with different
   // words, so one of them tests the markup.

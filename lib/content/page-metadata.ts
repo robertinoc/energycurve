@@ -77,6 +77,16 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
       es: "Qué formatos de playlist lee EnergyCurve, qué trae cada uno, y exactamente qué columnas necesita un CSV — para Rekordbox, Traktor, Lexicon y cualquier cosa que exporte una planilla.",
     },
   },
+  "/harmonic-mixing-cheat-sheet": {
+    title: {
+      en: "Harmonic mixing cheat sheet for DJs: Camelot wheel, keys and moves",
+      es: "Tabla de mezcla armónica para DJs: rueda Camelot, tonalidades y movimientos",
+    },
+    description: {
+      en: "Every Camelot code with its Open Key and musical key, the moves recommended from each, and an SVG of the wheel — from the table the DJ set analyser uses.",
+      es: "Cada código Camelot con su Open Key y tonalidad, los movimientos recomendados desde cada uno y la rueda en SVG gratis, de la tabla del analizador de sets.",
+    },
+  },
   "/privacy": {
     title: {
       en: "Privacy Policy",
@@ -246,6 +256,7 @@ export const PAGE_LAST_MODIFIED: Record<LocalizedPath, string> = {
   "/install": "2026-08-18",
   "/energy-tags": "2026-09-07",
   "/import-formats": "2026-09-11",
+  "/harmonic-mixing-cheat-sheet": "2026-09-27",
   // One copy file, one edit: these four genuinely changed together.
   "/privacy": "2026-09-11",
   "/terms": "2026-09-11",

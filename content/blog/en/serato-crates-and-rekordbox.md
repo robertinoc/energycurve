@@ -110,7 +110,9 @@ DJ software's format from another's. It is not a converter, and it is not going 
 say the conversion step is easy when it is the step neither vendor built. What
 each format carries is listed on [the import formats page](/import-formats);
 [the comparison with Lexicon](/compare/lexicon) is the honest pointer for anyone
-whose real problem is the conversion itself.
+whose real problem is the conversion itself, and
+[Rekordbox vs Serato vs Traktor](/compare/rekordbox-vs-serato-vs-traktor) is the one
+for anyone still deciding which side to be on.
 
 ```faq
 Q: What is a crate in Serato?

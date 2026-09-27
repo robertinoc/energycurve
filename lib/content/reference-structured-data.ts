@@ -1,5 +1,6 @@
 import type { FaqEntry } from "@/lib/content/content-nodes"
 import { ENERGY_TAGS_FAQ } from "@/lib/content/energy-tags-copy"
+import { CHEAT_SHEET_FAQ } from "@/lib/content/harmonic-cheat-sheet-copy"
 import { IMPORT_FORMATS_FAQ } from "@/lib/content/import-formats-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import {
@@ -30,11 +31,15 @@ import { SITE_URL, SOCIAL_IMAGE_URL, buildFaqPage, buildOrganization } from "@/l
  * for the same reason the sitemap stopped using it — see SEO-E09.
  */
 
-type ReferencePath = "/energy-tags" | "/import-formats"
+type ReferencePath =
+  | "/energy-tags"
+  | "/import-formats"
+  | "/harmonic-mixing-cheat-sheet"
 
 const FAQS: Record<ReferencePath, FaqEntry[]> = {
   "/energy-tags": ENERGY_TAGS_FAQ,
   "/import-formats": IMPORT_FORMATS_FAQ,
+  "/harmonic-mixing-cheat-sheet": CHEAT_SHEET_FAQ,
 }
 
 const HOME_CRUMB: Record<SiteLocale, string> = { en: "Home", es: "Inicio" }

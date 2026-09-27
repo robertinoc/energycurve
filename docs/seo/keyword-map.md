@@ -90,16 +90,16 @@ tienen que ganar.
 | `dj set energy levels` | 1 | [`/glossary/track-energy`](https://energycurve.app/glossary/track-energy) |
 | `build up dj set` | 1 | [`/glossary/build-up`](https://energycurve.app/glossary/build-up) |
 | `what makes a good dj set` | 1 | [`/blog/what-is-a-dj-set`](https://energycurve.app/blog/what-is-a-dj-set) — sección «What makes a DJ set good»; cerrado el 26/09/2026 (lote 10), recontado el 27/09/2026 |
-| `how do djs prepare their sets` | 1 | **hueco** |
-| `how to plan a dj set` | 1 | **hueco** |
-| `how to organize music for djing` | 1 | **hueco** |
+| `how do djs prepare their sets` | 1 | [`/blog/how-djs-prepare-their-sets`](https://energycurve.app/blog/how-djs-prepare-their-sets) — cerrado el 27/09/2026 (lote 13) |
+| `how to plan a dj set` | 1 | [`/blog/how-to-structure-a-dj-set`](https://energycurve.app/blog/how-to-structure-a-dj-set) — ya la contestaba: el artículo entero es el método de planificación (el slot, el arco, llenarlo); marcado en el recuento del 27/09/2026 (lote 13), sin escribir nada |
+| `how to organize music for djing` | 1 | [`/blog/how-djs-prepare-their-sets`](https://energycurve.app/blog/how-djs-prepare-their-sets) — sección «Organizing your music so all three stages are fast»; cerrado el 27/09/2026 (lote 13) |
 | `how long is a dj set` | 1 | [`/blog/what-is-a-dj-set`](https://energycurve.app/blog/what-is-a-dj-set) — la contesta en la FAQ; cerrado el 26/09/2026 (lote 10), recontado el 27/09/2026 |
-| `camelot wheel vs circle of fifths` | 1 | **hueco** — [`/glossary/camelot-wheel`](https://energycurve.app/glossary/camelot-wheel) no lo menciona |
-| `how to structure a house dj set` | 1 | **hueco** |
+| `camelot wheel vs circle of fifths` | 1 | [`/harmonic-mixing-cheat-sheet`](https://energycurve.app/harmonic-mixing-cheat-sheet) — sección «Camelot and the circle of fifths are the same wheel»; cerrado el 27/09/2026 (lote 13) |
+| `how to structure a house dj set` | 1 | **hueco** — a propósito (lote 13, 27/09/2026): el sitio no puede decir nada del house que no valga para cualquier set; un artículo con «house» en el título sobre `/blog/how-to-structure-a-dj-set` sería contenido delgado |
 | `how to get the bpm of a song` | 1 | [`/glossary/bpm`](https://energycurve.app/glossary/bpm) + [`/tools/key-bpm-compatibility`](https://energycurve.app/tools/key-bpm-compatibility) |
 | `mixing in key explained` | 1 | [`/glossary/harmonic-mixing`](https://energycurve.app/glossary/harmonic-mixing) |
 | `mixing in key rules` | 1 | [`/glossary/harmonic-mixing`](https://energycurve.app/glossary/harmonic-mixing) |
-| `harmonic mixing cheat sheet` | 1 | **hueco** — pide una tabla, y la tabla existe en `lib/music/harmonic-transitions.ts` |
+| `harmonic mixing cheat sheet` | 1 | [`/harmonic-mixing-cheat-sheet`](https://energycurve.app/harmonic-mixing-cheat-sheet) — generada desde `lib/music/harmonic-transitions.ts`, no escrita; cerrado el 27/09/2026 (lote 13) |
 
 ### Español
 
@@ -129,8 +129,8 @@ tienen que ganar.
 | `como saber que tonalidad esta una cancion` | 1 | [`/es/blog/tus-temas-no-tienen-bpm-ni-tonalidad`](https://energycurve.app/es/blog/tus-temas-no-tienen-bpm-ni-tonalidad) |
 | `circulo de mezcla armonica` | 1 | [`/es/herramientas/rueda-camelot`](https://energycurve.app/es/herramientas/rueda-camelot) |
 | `guia camelot mezcla armonica` | 1 | [`/es/guia`](https://energycurve.app/es/guia) |
-| `rueda camelot notas` | 1 | **hueco** — la correspondencia Camelot↔notas no está escrita en ningún lado |
-| `rueda camelot musical` | 1 | **hueco** — misma razón |
+| `rueda camelot notas` | 1 | [`/es/tabla-de-mezcla-armonica`](https://energycurve.app/es/tabla-de-mezcla-armonica) — las 24 filas Camelot↔Open Key↔tonalidad, verificadas por test contra el círculo de quintas; cerrado el 27/09/2026 (lote 13) |
+| `rueda camelot musical` | 1 | [`/es/tabla-de-mezcla-armonica`](https://energycurve.app/es/tabla-de-mezcla-armonica) — cerrado el 27/09/2026 (lote 13) |
 | `como subir la energia en un set` | 0 (semilla sin sugerencias) | [`/es/blog/cuanto-es-mucho-salto-de-energia`](https://energycurve.app/es/blog/cuanto-es-mucho-salto-de-energia) |
 | `curva de energia dj` | 0 (semilla sin sugerencias) | [`/es/glosario/curva-de-energia`](https://energycurve.app/es/glosario/curva-de-energia) |
 
@@ -152,31 +152,33 @@ de la plata y la que el sitio tiene **completamente descubierta**.
 | `mixed in key alternative reddit` | en | 1 | [`/compare/mixed-in-key`](https://energycurve.app/compare/mixed-in-key) — cerrado el 26/09/2026 (lote 9), recontado el 27/09/2026 |
 | `mixed in key 11 alternative` | en | 1 | [`/compare/mixed-in-key`](https://energycurve.app/compare/mixed-in-key) — cerrado el 26/09/2026 (lote 9), recontado el 27/09/2026 |
 | `mixed in key free alternative reddit` | en | 1 | [`/compare/mixed-in-key`](https://energycurve.app/compare/mixed-in-key) — cerrado el 26/09/2026 (lote 9), recontado el 27/09/2026 |
-| `rekordbox vs serato` | en | 2 | **hueco** |
-| `rekordbox vs serato dj pro` | en | 2 | **hueco** |
-| `rekordbox vs traktor` | en | 2 | **hueco** |
-| `rekordbox vs djay pro` | en | 2 | **hueco** |
-| `rekordbox vs virtual dj` | en | 2 | **hueco** |
-| `rekordbox vs serato vs virtual dj` | en | 2 | **hueco** |
-| `best dj software for beginners` | en | 2 | **hueco** |
-| `best dj software for mac` | en | 2 | **hueco** |
-| `best dj software for windows` | en | 2 | **hueco** |
-| `best dj software for spotify` | en | 2 | **hueco** |
+| `rekordbox vs serato` | en | 2 | [`/compare/rekordbox-vs-serato-vs-traktor`](https://energycurve.app/compare/rekordbox-vs-serato-vs-traktor) — cerrado el 27/09/2026 (lote 13) |
+| `rekordbox vs serato dj pro` | en | 2 | [`/compare/rekordbox-vs-serato-vs-traktor`](https://energycurve.app/compare/rekordbox-vs-serato-vs-traktor) — cerrado el 27/09/2026 (lote 13) |
+| `rekordbox vs traktor` | en | 2 | [`/compare/rekordbox-vs-serato-vs-traktor`](https://energycurve.app/compare/rekordbox-vs-serato-vs-traktor) — cerrado el 27/09/2026 (lote 13) |
+| `rekordbox vs djay pro` | en | 2 | [`/compare/rekordbox-vs-serato-vs-traktor`](https://energycurve.app/compare/rekordbox-vs-serato-vs-traktor) — cerrado el 27/09/2026 (lote 13) |
+| `rekordbox vs virtual dj` | en | 2 | [`/compare/rekordbox-vs-serato-vs-traktor`](https://energycurve.app/compare/rekordbox-vs-serato-vs-traktor) — cerrado el 27/09/2026 (lote 13) |
+| `rekordbox vs serato vs virtual dj` | en | 2 | [`/compare/rekordbox-vs-serato-vs-traktor`](https://energycurve.app/compare/rekordbox-vs-serato-vs-traktor) — cerrado el 27/09/2026 (lote 13) |
+| `best dj software for beginners` | en | 2 | [`/compare/best-dj-software`](https://energycurve.app/compare/best-dj-software) — cerrado el 27/09/2026 (lote 13) |
+| `best dj software for mac` | en | 2 | [`/compare/best-dj-software`](https://energycurve.app/compare/best-dj-software) — cerrado el 27/09/2026 (lote 13) |
+| `best dj software for windows` | en | 2 | [`/compare/best-dj-software`](https://energycurve.app/compare/best-dj-software) — cerrado el 27/09/2026 (lote 13) |
+| `best dj software for spotify` | en | 2 | [`/compare/best-dj-software`](https://energycurve.app/compare/best-dj-software) — cerrado el 27/09/2026 (lote 13) |
 | `dj set analysis` | en | 2 | [`/`](https://energycurve.app/) — la landing, no una página dedicada |
 | `alternativa a mixed in key` | es | 1 | [`/es/comparar/mixed-in-key`](https://energycurve.app/es/comparar/mixed-in-key) — cerrado el 26/09/2026 (lote 9), recontado el 27/09/2026 |
-| `mejor software para dj` | es | 2 | **hueco** |
-| `cual es el mejor software para dj` | es | 1 | **hueco** |
-| `mejor software para dj gratis` | es | 1 | **hueco** |
-| `programa para armar sets dj` | es | 0 (sin sugerencias) | **hueco** |
+| `mejor software para dj` | es | 2 | [`/es/comparar/mejor-software-para-dj`](https://energycurve.app/es/comparar/mejor-software-para-dj) — cerrado el 27/09/2026 (lote 13) |
+| `cual es el mejor software para dj` | es | 1 | [`/es/comparar/mejor-software-para-dj`](https://energycurve.app/es/comparar/mejor-software-para-dj) — cerrado el 27/09/2026 (lote 13) |
+| `mejor software para dj gratis` | es | 1 | [`/es/comparar/mejor-software-para-dj`](https://energycurve.app/es/comparar/mejor-software-para-dj) — sección «Para empezar: qué es gratis»; cerrado el 27/09/2026 (lote 13) |
+| `programa para armar sets dj` | es | 0 (sin sugerencias) | [`/es/comparar/mejor-software-para-dj`](https://energycurve.app/es/comparar/mejor-software-para-dj) — sección «Un programa para armar sets, que es otra pregunta»; cerrado el 27/09/2026 (lote 13) |
 
-**21 consultas de comparación, 14 sin página** — recontado el 27/09/2026. Eran
-20 sin página hasta el 26/09/2026, cuando el lote 9 publicó las cuatro
-comparaciones (`/compare/{mixed-in-key,dj-studio,setflow,lexicon}` y sus
-gemelas en `/es/comparar/`) y cerró las seis variantes de `mixed in key
-alternative`. Las 14 que quedan son los `rekordbox vs …` (6), los `best dj
-software for …` (4) y los cuatro en español, que necesitan páginas de otra clase:
-comparaciones entre programas de DJ que EnergyCurve no reemplaza, y la decisión
-de Robertino sobre qué se puede afirmar de cada uno (SEO-E23, segunda tanda).
+**21 consultas de comparación, 0 sin página** — recontado el 27/09/2026 (lote
+13). Eran 20 sin página hasta el 26/09/2026, cuando el lote 9 publicó las cuatro
+comparaciones contra competidores (`/compare/{mixed-in-key,dj-studio,setflow,lexicon}`
+y sus gemelas en `/es/comparar/`); las 14 restantes las cerró el lote 13 con dos
+páginas de otra clase — comparaciones entre programas de DJ que EnergyCurve no
+reemplaza —: `/compare/rekordbox-vs-serato-vs-traktor` (los seis `rekordbox vs …`)
+y `/compare/best-dj-software` con su gemela `/es/comparar/mejor-software-para-dj`
+(los cuatro `best dj software for …` y los cuatro en español). Ninguna dice cuál
+es «el mejor»: dicen lo que cada fabricante dice, con URL y fecha, y para qué caso
+conviene cada uno.
 
 `mixed in key alternative` aparece con cinco variantes distintas, incluidas dos
 que terminan en `reddit` — gente que busca explícitamente una opinión que no sea
@@ -243,7 +245,7 @@ del sitio viven acá.
 | `free camelot wheel` | en | 1 | [`/tools/camelot-wheel`](https://energycurve.app/tools/camelot-wheel) |
 | `camelot wheel chart` | en | 1 | [`/tools/camelot-wheel`](https://energycurve.app/tools/camelot-wheel) |
 | `camelot wheel with keys` | en | 1 | [`/tools/camelot-wheel`](https://energycurve.app/tools/camelot-wheel) |
-| `camelot wheel free download` | en | 1 | **hueco** — busca un PNG, no una app |
+| `camelot wheel free download` | en | 1 | [`/harmonic-mixing-cheat-sheet`](https://energycurve.app/harmonic-mixing-cheat-sheet) — descarga `/camelot-wheel.svg`, generada en build; cerrado el 27/09/2026 (lote 13) |
 | `dj set planner` | en | 1 | [`/tools/energy-curve`](https://energycurve.app/tools/energy-curve) |
 | `free dj set planner` | en | 1 | [`/tools/energy-curve`](https://energycurve.app/tools/energy-curve) |
 | `dj set planner app` | en | 1 | [`/tools/energy-curve`](https://energycurve.app/tools/energy-curve) |
@@ -264,17 +266,19 @@ del sitio viven acá.
 
 | | Consultas | Con página | Hueco |
 |---|---|---|---|
-| Aprender — inglés | 30 | 24 | 6 — eran 11 hasta el 26/09/2026; el lote 10 cerró cinco (tres al publicarse y dos más que el recuento del 27/09/2026 encontró contestadas en `/blog/what-is-a-dj-set`) |
-| Aprender — español | 28 | 26 | 2 |
-| Comparar | 21 | 7 | 14 — eran 20 hasta el 26/09/2026 (lote 9) |
+| Aprender — inglés | 30 | 29 | 1 — `how to structure a house dj set`, dejado a propósito (lote 13) |
+| Aprender — español | 28 | 28 | 0 — eran 2 hasta el lote 13 (la tabla armónica) |
+| Comparar | 21 | 21 | 0 — eran 20 hasta el 26/09/2026 (lote 9), 14 hasta el lote 13 |
 | Importar / exportar | 25 | 23 | 2 — eran 11 hasta el 27/09/2026 (lote 12) |
-| Herramienta | 22 | 17 | 5 |
-| **Total** | **126** | **97** | **29** |
+| Herramienta | 22 | 18 | 4 — eran 5 hasta el lote 13 (`camelot wheel free download`) |
+| **Total** | **126** | **119** | **7** |
 
 **Recuentos:** 19/09/2026 (original: 77 con página, 49 huecos) · 26/09/2026
 (lotes 9 y 10, parcial: la tabla de comparación no se actualizó) · 27/09/2026
-(lote 12: 97 con página, 29 huecos — el conteo de la tabla y el `grep` del
-archivo coinciden).
+(lote 12: 97 con página, 29 huecos) · 27/09/2026, lote 13: **119 con página, 7
+huecos** — el conteo de la tabla y el `grep` del archivo coinciden. De las 22
+que cerró el lote 13, una (`how to plan a dj set`) ya estaba contestada y se
+marcó sin escribir.
 
 Por idioma: **80 en inglés, 46 en español**.
 
@@ -282,13 +286,12 @@ Los números de esta tabla están contados sobre el archivo, no a ojo: cada fila
 que empieza con `` | ` `` es una consulta, y las marcadas `**hueco**` son las
 que no tienen página.
 
-El contraste que más dice: en español **2 de 28** consultas de aprendizaje
-quedan sin página; en inglés, **6 de 30** (eran 11 hasta el 26/09/2026). Es el
-mismo sitio, con el mismo glosario; la diferencia eran los cinco artículos que
-existían sólo en español, y desde el lote 10 el inglés tiene más artículos que
-el español (14 contra 6 al 27/09/2026). El contraste se dio vuelta en la otra
-intención: en importar/exportar los dos huecos que quedan son los dos españoles
-sin gemela.
+El contraste que más dice, al 27/09/2026 (lote 13): en español **0 de 28**
+consultas de aprendizaje quedan sin página; en inglés, **1 de 30**, dejada a
+propósito. Es el mismo sitio, con el mismo glosario; la diferencia eran los cinco
+artículos que existían sólo en español, y desde el lote 10 el inglés tiene más
+artículos que el español (15 contra 6). Lo que queda del contraste está en
+importar/exportar: los dos huecos que quedan son los dos españoles sin gemela.
 
 ---
 
@@ -296,13 +299,14 @@ sin gemela.
 
 Ordenada por cuántos huecos cierra cada cosa, no por volumen — que no lo sé.
 
-Recontada el 27/09/2026. Lo tachado se cerró; queda anotado con qué.
+Recontada el 27/09/2026, dos veces (lotes 12 y 13). Lo tachado se cerró; queda
+anotado con qué.
 
-1. **Comparaciones entre programas de DJ** (cierra 14). `rekordbox vs serato`
-   y sus cinco variantes, `best dj software for X` (4), `mejor software para dj`
-   (3), `programa para armar sets dj`. Es la segunda tanda de SEO-E23 y está
-   frenada por lo mismo que la primera: qué se puede afirmar de cada uno. Es
-   ahora el bloque más grande. ~~`mixed in key alternative` y sus variantes~~ —
+1. ~~**Comparaciones entre programas de DJ** (cierra 14).~~ Cerrado por el lote
+   13 con dos páginas (`/compare/rekordbox-vs-serato-vs-traktor`,
+   `/compare/best-dj-software` y gemela en español), sobre la regla de evidencia
+   de `competitor-facts-2026-09-26.md` extendida a Rekordbox, Serato, Traktor,
+   VirtualDJ y djay Pro. ~~`mixed in key alternative` y sus variantes~~ —
    cerradas por el lote 9 con `/compare/mixed-in-key`.
 
 2. ~~**Artículos de trayecto A→B para importar** (cierra ~9).~~ Cerrado por el
@@ -311,19 +315,31 @@ Recontada el 27/09/2026. Lo tachado se cerró; queda anotado con qué.
    usb`, `exportar playlist de traktor a rekordbox`): cierra 2, y son
    traducciones de artículos que ya existen.
 
-3. **Lo que falta del blog en inglés** (cierra 4). `how do djs prepare their
-   sets`, `how to plan a dj set`, `how to organize music for djing`,
-   `how to structure a house dj set`. ~~`how does a dj set work`,
+3. ~~**Lo que falta del blog en inglés** (cierra 4).~~ El lote 13 cerró tres:
+   `how do djs prepare their sets` y `how to organize music for djing` con un
+   artículo (`/blog/how-djs-prepare-their-sets`), y `how to plan a dj set` sin
+   escribir, porque `/blog/how-to-structure-a-dj-set` ya la contestaba. Queda
+   `how to structure a house dj set`, a propósito: el sitio no tiene nada
+   particular del house que decir. ~~`how does a dj set work`,
    `how to structure a dj set`, `what makes a good dj set`, `how long is a dj
-   set`~~ — cerradas por el lote 10. Es SEO-E13/E14, que escribe Robertino.
+   set`~~ — cerradas por el lote 10.
 
 4. ~~**Preguntas de problema** (cierra ~3).~~ `rekordbox export playlist greyed
    out`, el arquetipo, la cerró el lote 12. Las que quedan de esa clase son las
    de herramienta (`camelot wheel free download`, `analyzing dj sets`).
 
-5. **La tabla armónica como página** (cierra 4: `harmonic mixing cheat sheet`,
+5. ~~**La tabla armónica como página** (cierra 4: `harmonic mixing cheat sheet`,
    `camelot wheel vs circle of fifths`, `rueda camelot notas`, `rueda camelot
-   musical`).
+   musical`).~~ Cerrado por el lote 13 con `/harmonic-mixing-cheat-sheet` y
+   `/es/tabla-de-mezcla-armonica`, **generadas** desde
+   `lib/music/harmonic-transitions.ts` y no escritas, más `/camelot-wheel.svg`
+   para `camelot wheel free download` (cierra 5 en total).
+
+6. **Lo que queda** (7 huecos): dos gemelas españolas de artículos A→B
+   (`exportar playlist rekordbox a usb`, `exportar playlist de traktor a
+   rekordbox`); cuatro de herramienta (`ai dj set planner free` — decisión sobre
+   la palabra «AI» —, `analyzing dj sets`, `tracklist analyze dj sets`,
+   `programa gratis para dj`); y `how to structure a house dj set`, dejada.
    `harmonic mixing cheat sheet`, `rueda camelot notas`, `rueda camelot musical`.
    Ojo: las reglas armónicas salen de `lib/music/harmonic-transitions.ts` y **no
    se duplican en contenido** — la página tendría que renderizarlas desde ahí.

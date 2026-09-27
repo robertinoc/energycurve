@@ -1,6 +1,10 @@
-import Link from "next/link"
+import Link from "next/link";
 
-import type { BlogBlock, InlineNode } from "@/lib/blog/markdown"
+import {
+  inlineToText,
+  type BlogBlock,
+  type InlineNode,
+} from "@/lib/blog/markdown";
 
 /**
  * The renderers for parsed markdown, shared by the blog, the guides and the
@@ -20,9 +24,9 @@ export function Inline({ nodes }: { nodes: InlineNode[] }) {
       {nodes.map((node, index) => {
         switch (node.kind) {
           case "strong":
-            return <strong key={index}>{node.text}</strong>
+            return <strong key={index}>{node.text}</strong>;
           case "em":
-            return <em key={index}>{node.text}</em>
+            return <em key={index}>{node.text}</em>;
           case "term":
             // The same markup `<Termino>` renders. Not the component itself:
             // that one looks a term up by id, and here the node already carries
@@ -45,7 +49,7 @@ export function Inline({ nodes }: { nodes: InlineNode[] }) {
                   {node.short}
                 </span>
               </span>
-            )
+            );
           case "link":
             // Internal links go through next/link so they don't reload the app;
             // external ones are plain anchors with the usual safety attributes.
@@ -62,28 +66,28 @@ export function Inline({ nodes }: { nodes: InlineNode[] }) {
               >
                 {node.text}
               </a>
-            )
+            );
           default:
-            return node.text
+            return node.text;
         }
       })}
     </>
-  )
+  );
 }
 
 export function Block({ block }: { block: BlogBlock }) {
   switch (block.kind) {
     case "heading": {
       // The level is data, so the tag has to be chosen rather than written.
-      const Tag = `h${block.level}` as "h2" | "h3" | "h4"
+      const Tag = `h${block.level}` as "h2" | "h3" | "h4";
       return (
         <Tag>
           <Inline nodes={block.inline} />
         </Tag>
-      )
+      );
     }
     case "list": {
-      const Tag = block.ordered ? "ol" : "ul"
+      const Tag = block.ordered ? "ol" : "ul";
       return (
         <Tag>
           {block.items.map((item, index) => (
@@ -92,39 +96,57 @@ export function Block({ block }: { block: BlogBlock }) {
             </li>
           ))}
         </Tag>
-      )
+      );
     }
     case "code":
       return (
         <pre>
           <code>{block.lines.join("\n")}</code>
         </pre>
-      )
+      );
     case "table":
+      /**
+       * A scrollable region has to be a keyboard stop, or on a narrow screen
+       * the right-hand columns can only be reached by dragging. Same barrier
+       * and same fix as the key table and the comparison block; found when the
+       * five-column tables of the market comparisons (lote 13) joined the WCAG
+       * sweep and mobile-safari flagged `scrollable-region-focusable` on all
+       * four pages. Named after its own header row, which is the one name a
+       * table carries in every language without the renderer knowing which.
+       */
       return (
-        <table>
-          <thead>
-            <tr>
-              {block.header.map((cell, index) => (
-                <th key={index}>
-                  <Inline nodes={cell} />
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {block.rows.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                {row.map((cell, cellIndex) => (
-                  <td key={cellIndex}>
+        <div
+          className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/45"
+          tabIndex={0}
+          role="region"
+          aria-label={block.header
+            .map((cell) => inlineToText(cell))
+            .join(" · ")}
+        >
+          <table>
+            <thead>
+              <tr>
+                {block.header.map((cell, index) => (
+                  <th key={index}>
                     <Inline nodes={cell} />
-                  </td>
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )
+            </thead>
+            <tbody>
+              {block.rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={cellIndex}>
+                      <Inline nodes={cell} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
     case "faq":
       /**
        * Native `<details>`, matching `components/content/blocks.tsx` and for the
@@ -153,13 +175,13 @@ export function Block({ block }: { block: BlogBlock }) {
             </details>
           ))}
         </div>
-      )
+      );
     default:
       return (
         <p>
           <Inline nodes={block.inline} />
         </p>
-      )
+      );
   }
 }
 
@@ -171,5 +193,5 @@ export function Prose({ blocks }: { blocks: BlogBlock[] }) {
         <Block key={index} block={block} />
       ))}
     </div>
-  )
+  );
 }

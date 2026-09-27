@@ -37,7 +37,9 @@ slower" but where the energy is allowed to go.
   dropping it. The energy falls, but by choice and gradually, and the last
   track is a decision rather than whatever was left.
 
-Write the slot down first. Every other choice in this guide is made against it.
+Write the slot down first. Every other choice in this guide is made against it. If
+the tracks are not chosen yet, [how a DJ prepares a set](/blog/how-djs-prepare-their-sets)
+covers the stage before this one.
 
 ## Draw the arc, then fill it
 

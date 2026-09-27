@@ -40,6 +40,11 @@ const PAGES = [
   ["comparison (lexicon)", "/compare/lexicon"],
   ["comparison (es, setflow)", "/es/comparar/setflow"],
   ["comparison (es, lexicon)", "/es/comparar/lexicon"],
+  // Lote 13: the market comparisons, five programs and no "us" column.
+  ["comparison (rekordbox vs serato vs traktor)", "/compare/rekordbox-vs-serato-vs-traktor"],
+  ["comparison (best dj software)", "/compare/best-dj-software"],
+  ["comparison (es, rekordbox vs serato vs traktor)", "/es/comparar/rekordbox-vs-serato-vs-traktor"],
+  ["comparison (es, mejor software para dj)", "/es/comparar/mejor-software-para-dj"],
   ["tools hub", "/tools"],
   ["energy curve tool", "/tools/energy-curve"],
   ["camelot wheel", "/tools/camelot-wheel"],
@@ -57,6 +62,9 @@ const PAGES = [
   ["install", "/install"],
   ["energy tags (es)", "/es/energy-tags"],
   ["import formats (es)", "/es/import-formats"],
+  // Lote 13: the generated harmonic table, two wide tables and an SVG preview.
+  ["harmonic cheat sheet", "/harmonic-mixing-cheat-sheet"],
+  ["harmonic cheat sheet (es)", "/es/tabla-de-mezcla-armonica"],
   ["install (es)", "/es/install"],
   ["blog article (es)", "/es/blog/antes-de-tocar-no-despues"],
   // The three lote-10 articles: English-only, each answering a learning query
@@ -71,6 +79,8 @@ const PAGES = [
   ["article: serato crates and rekordbox", "/blog/serato-crates-and-rekordbox"],
   ["article: rekordbox to usb", "/blog/rekordbox-export-playlist-to-usb-greyed-out"],
   ["article: crates de serato (es)", "/es/blog/crates-de-serato-y-rekordbox"],
+  // Lote 13: the preparation article.
+  ["article: how djs prepare their sets", "/blog/how-djs-prepare-their-sets"],
   ["landing", "/"],
   ["landing (es)", "/es"],
   // The blog index gained a controlled `<select>` (SEO-E16). That is the exact

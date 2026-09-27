@@ -359,8 +359,13 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
-    display: block;
-    overflow-x: auto;
+    /* The table used to be its own scroller (display: block; overflow-x: auto),
+       which is a scrollable region with no keyboard access — axe's
+       `scrollable-region-focusable`, flagged on the five-column tables of the
+       market comparisons (lote 13). The renderer now wraps every prose table in
+       a focusable region that scrolls; the table itself must not. */
+    display: table;
+    overflow: visible;
   }
   .ec-prose th,
   .ec-prose td {

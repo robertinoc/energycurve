@@ -88,6 +88,7 @@ export function GET() {
     ...section("Reference", [
       pageEntry("/energy-tags"),
       pageEntry("/import-formats"),
+      pageEntry("/harmonic-mixing-cheat-sheet"),
       pageEntry("/install"),
     ]),
 

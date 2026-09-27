@@ -102,6 +102,11 @@ function CrossLinks({
         path: "/tools/energy-curve",
         label: { en: "Energy curve analyzer", es: "Analizador de curva de energía" },
       },
+      // Lote 13: the same table, published as a page and a download.
+      {
+        path: "/harmonic-mixing-cheat-sheet",
+        label: { en: "Harmonic mixing cheat sheet", es: "Tabla de mezcla armónica" },
+      },
     ]
 
   return (

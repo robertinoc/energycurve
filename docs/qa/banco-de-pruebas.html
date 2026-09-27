@@ -502,7 +502,7 @@
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
     <p><strong>Una sola cosa bloquea, y son cinco minutos en el SQL Editor: a la base de dev le faltan migraciones.</strong> Confirmado el 25/09 sondeando el enum en sólo-lectura: <strong>7 de los 12 géneros que ofrece el producto no existen en dev</strong> — <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code> y <code>bounce</code>. Los agrega la <code>0005</code>. Si mañana elegís uno de esos —o dejás la detección automática y lo elige ella— la importación falla con «Something went wrong while saving» y no vas a saber por qué. Eso salió de un E2E que se caía; sin arreglarlo te come la mañana. Aplicá <code>0005</code> y de paso <code>0027</code> a <code>0032</code>, en orden de número. La sesión <strong>DB</strong> tiene los pasos.</p>
-    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 27/09 (lote 12) <strong>855 pasan / 37 saltean / 0 fallan en 4,7 minutos</strong> (al 26/09, lote 11, eran 823 / 37 / 0 en 285 segundos), la suite entera en un solo comando: <code>npm run test:e2e</code> corre cinco shards en paralelo y devuelve un solo resumen. Hasta el lote 10 se corría en dos mitades (13,3 min); ese comando ya no existe. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
+    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 27/09 (lote 13) <strong>911 pasan / 37 saltean / 0 fallan en 4,6 minutos</strong> (lote 12: 855 / 37 / 0; lote 11: 823 / 37 / 0), la suite entera en un solo comando: <code>npm run test:e2e</code> corre cinco shards en paralelo y devuelve un solo resumen. Hasta el lote 10 se corría en dos mitades (13,3 min); ese comando ya no existe. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
     <ol style="margin:6px 0 0 18px;padding:0">
       <li><strong>DB.1 a DB.4 — 25 min.</strong> Aplicá las migraciones y corré el seed. Desbloquea todo lo demás: sin esto, siete géneros rompen y cualquier prueba de importación miente.</li>
@@ -514,6 +514,8 @@
       <li><strong>AUD — 30 min.</strong> Los tres hallazgos de la auditoría F1 ya están <strong>arreglados</strong> (lote 10); lo que queda es validarlos con tus archivos y en tu teléfono. AUD.4 (la cuarta importación en FREE) y AUD.5 (ocho capabilities sin ejercitar) siguen abiertos.</li>
       <li><strong>ART — 30 min.</strong> Los tres artículos en inglés. Leelos como DJ: la única prueba que ninguna máquina hace es si los firmarías.</li>
       <li><strong>CMP — 25 min.</strong> Las cuatro páginas de comparación. Lo que hay que juzgar no es un dato sino el tono: si alguna suena a que siempre ganamos nosotros, eso es el hallazgo.</li>
+      <li><strong>ARM — 30 min.</strong> La tabla armónica generada desde la constante. Lo único que ninguna máquina hace es reconocer una tonalidad de oído: ARM.1 es la fila que importa.</li>
+      <li><strong>CMP2 — 30 min.</strong> Las dos comparaciones entre programas de DJ. Lo que hay que juzgar es si alguna fila dice algo que el fabricante no dice, y si el tono aguanta leído desde cada uno de los cinco.</li>
       <li><strong>A2B — 45 min.</strong> Los cuatro artículos de trayecto (Traktor→Rekordbox, Serato↔Rekordbox, Rekordbox→USB y la gemela en español). Cada paso sale del manual del fabricante y ninguno se probó con el software abierto: A2B.3 es la única verificación que sólo podés hacer vos.</li>
       <li><strong>PAY — 20 min.</strong> El camino del dinero. Necesita una terminal con <code>stripe listen</code> abierta; sin eso el spec saltea en vez de correr, que es lo correcto pero no te dice nada.</li>
       <li><strong>CONT.4 y CONT.5 — 30 min.</strong> Las 21 definiciones leídas por un DJ, y el validador de Google. Las dos que deciden si el contenido sirve.</li>
@@ -1531,6 +1533,70 @@
           steps: ["Abrí <code>/import-formats</code> y bajá hasta «Moving a playlist between programs»", "Repetí en <code>/es/import-formats</code>", "Preguntate si un DJ que llegó buscando «qué formato exporto» entiende por qué esa lista está ahí"],
           expect: "En inglés, tres enlaces con el par de programas en el texto; en español, uno (la gemela). Ninguno suena a anuncio: es la página diciendo dónde termina y dónde sigue.",
           ifNot: "Si la lista estorba o el título no explica, anotalo: es una sección de plantilla, no de contenido, y se ajusta en minutos."
+        }
+      ]
+    },
+    {
+      code: "ARM",
+      title: "La tabla armónica, generada y no escrita",
+      meta: "~30 min · sin cuenta · ARM.1 necesita tu oído o un piano · ARM.4 necesita el deploy",
+      why: "Cinco consultas del mapa pedían literalmente la tabla — <code>harmonic mixing cheat sheet</code>, <code>rueda camelot notas</code>, <code>camelot wheel free download</code> — y la regla del sitio es que las reglas armónicas viven en <code>lib/music/harmonic-transitions.ts</code> y no se duplican en contenido. El lote 13 la publicó <em>generándola</em>: <code>/harmonic-mixing-cheat-sheet</code> y <code>/es/tabla-de-mezcla-armonica</code> renderizan las 24 tonalidades y los 288 movimientos desde la constante, y <code>/camelot-wheel.svg</code> se dibuja en build de los mismos datos. Un test compara cada celda de la página contra la constante y otro verifica las 24 tonalidades contra el círculo de quintas, porque la tabla 2.1 de Jordi tiene 10 de 24 mal y no se podía copiar. Lo que ninguna máquina hace es reconocer una tonalidad de oído.",
+      tests: [
+        {
+          code: "ARM.1", title: "Mirar la rueda y reconocer la tonalidad", sub: "La columna que Jordi tenía mal en 10 filas",
+          steps: ["Abrí <code>/es/tabla-de-mezcla-armonica</code>", "Tomá cinco filas al azar de la primera tabla — incluí alguna entre 3A y 7B, que son las que el archivo de Jordi tiene mal — y confirmá con tu oído, un piano o el propio Rekordbox que el código corresponde a esa tonalidad", "Repetí con la rueda SVG descargada"],
+          expect: "Las cinco coinciden. 8B es Do mayor, 8A es La menor, 3A es Si♭ menor, 7B es Fa mayor. Si conocés una tabla que diga otra cosa, la que está mal es esa tabla.",
+          ifNot: "Anotá el código y la tonalidad que ves. Un error acá es de <code>lib/music/camelot.ts</code>, no de la página, y toca al producto entero."
+        },
+        {
+          code: "ARM.2", title: "Una fila de movimientos contra la rueda interactiva", sub: "Que la tabla y la herramienta digan lo mismo",
+          steps: ["En la segunda tabla, leé la fila de <code>8A</code>", "Abrí <code>/es/herramientas/rueda-camelot</code> y elegí 8A", "Compará: las tonalidades iluminadas en la rueda tienen que ser exactamente las de la fila, con los mismos nombres de movimiento"],
+          expect: "Coinciden, porque las dos leen la misma constante. Los paréntesis de la tabla son la segunda opción de un nivel.",
+          ifNot: "Si difieren, una de las dos dejó de leer la constante. Anotá cuál."
+        },
+        {
+          code: "ARM.3", title: "La descarga", sub: "Un archivo, no una captura",
+          steps: ["Tocá «Descargar la rueda Camelot (SVG)»", "Abrí el archivo en el navegador y en el visor de imágenes del teléfono", "Imprimilo en A4 si tenés impresora"],
+          expect: "Se descarga como <code>camelot-wheel.svg</code>, se ve nítido a cualquier tamaño, los 24 códigos con su tonalidad y su Open Key son legibles, y imprime en una hoja.",
+          ifNot: "Anotá en qué visor falla. Es un SVG plano sin fuentes externas; si algo no se ve, es el visor."
+        },
+        {
+          code: "ARM.4", title: "Rich Results Test sobre la tabla", sub: "No se puede correr desde acá",
+          steps: ["Con el deploy hecho, pegá <code>/harmonic-mixing-cheat-sheet</code> en el Rich Results Test de Google", "Repetí con <code>/es/tabla-de-mezcla-armonica</code>"],
+          expect: "Detecta <code>TechArticle</code>, <code>BreadcrumbList</code> y <code>FAQPage</code> con las cuatro preguntas, sin errores.",
+          ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa: anotá el campo exacto que nombre."
+        }
+      ]
+    },
+    {
+      code: "CMP2",
+      title: "La segunda tanda de comparaciones: cinco programas y ninguna columna nuestra",
+      meta: "~30 min · sin cuenta · CMP2.4 necesita el deploy",
+      why: "Diez de los catorce huecos de comparación que quedaban no nos comparaban con nadie: <code>rekordbox vs serato</code>, <code>best dj software for beginners</code>. El lote 13 los cerró con dos páginas (<code>/compare/rekordbox-vs-serato-vs-traktor</code>, <code>/compare/best-dj-software</code> y su gemela <code>/es/comparar/mejor-software-para-dj</code>) sobre la misma regla de evidencia que la primera tanda: sólo un hecho citable de la página del propio fabricante, con URL y fecha, en <code>docs/seo/competitor-facts-2026-09-26.md</code>. Ninguna dice cuál es «el mejor» — un test lo prohíbe — y cada una nombra para qué caso conviene cada uno de los cinco. Lo que queda es lo que un test no juzga: si alguna fila dice algo que el fabricante no dice.",
+      tests: [
+        {
+          code: "CMP2.1", title: "Ninguna fila afirma lo que el fabricante no afirma", sub: "La revisión humana que pide la regla",
+          steps: ["Abrí <code>/compare/rekordbox-vs-serato-vs-traktor</code>", "Elegí tres filas de tres programas distintos y abrí la fuente de cada uno (sección Fuentes)", "Buscá la afirmación en la página del fabricante"],
+          expect: "Está, literal o parafraseada sin agregar nada. Donde el fabricante no dice algo — el precio de djay Pro, el streaming de VirtualDJ — la página dice «no está publicado» o «no verificado» en vez de completar.",
+          ifNot: "Una fila que no se encuentra en la fuente se saca el mismo día. Es una afirmación sobre una empresa con nombre."
+        },
+        {
+          code: "CMP2.2", title: "Leerla como si fueras cada uno de los cinco", sub: "El tono, que ningún test mide",
+          steps: ["Leé <code>/compare/best-dj-software</code> entera", "Preguntate, por cada programa, si un empleado de esa empresa la firmaría como descripción de su producto", "Mirá si el enlace a EnergyCurve aparece sólo donde el tema lo pide (armar sets, después de elegir) y no antes"],
+          expect: "Los cinco la firmarían. EnergyCurve aparece en una sección propia y en el CTA, nombrado como lo que se lee <em>después</em> de elegir el software, no en vez de.",
+          ifNot: "Marcá la frase exacta. Si suena a que empujamos el producto donde no corresponde, esa frase se va."
+        },
+        {
+          code: "CMP2.3", title: "Los precios envejecen", sub: "Cinco fabricantes, cinco páginas de precios",
+          steps: ["Mirá la fecha de verificación arriba de cada página", "Abrí las páginas de precios de Rekordbox, Serato, Traktor y VirtualDJ", "Compará contra lo que decimos; en Rekordbox, dejá el selector en Yearly, que es como se leyó"],
+          expect: "Coinciden, o si no coinciden hay que corregir el archivo de hechos, la página y la fecha. Ojo: los «por mes» de Rekordbox son la conversión mensual de un pago anual, y la página lo aclara.",
+          ifNot: "La página dice explícitamente que gana la página de ellos. Actualizá <code>competitor-facts-2026-09-26.md</code> y <code>market-comparisons.ts</code>, no sólo un número."
+        },
+        {
+          code: "CMP2.4", title: "Rich Results Test sobre una de las dos", sub: "No se puede correr desde acá",
+          steps: ["Con el deploy hecho, pegá la URL de una de las dos en el Rich Results Test de Google", "Repetí con la gemela en español"],
+          expect: "Detecta <code>FAQPage</code> y <code>BreadcrumbList</code> sin errores. El <code>WebPage</code> lleva <code>lastReviewed</code> y las diez fuentes como <code>citation</code>.",
+          ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa — anotá el campo exacto que nombre."
         }
       ]
     }
