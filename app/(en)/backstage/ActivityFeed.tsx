@@ -43,7 +43,7 @@ function scoreTone(score: number) {
     return "text-[#FFC96B] bg-[rgba(245,165,36,0.13)] border-[rgba(245,165,36,0.4)]"
   }
 
-  return "text-[#FF6B6B] bg-[rgba(255,107,107,0.14)] border-[rgba(255,107,107,0.25)]"
+  return "text-ec-error bg-ec-error/15 border-ec-error/25"
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -68,7 +68,7 @@ export function ActivityFeed({
   const latestSignups = users.slice(0, FEED_LIMIT)
 
   return (
-    <div className="space-y-6">
+    <div className="grid items-start gap-6 lg:grid-cols-3">
       <Bento tone="panel" className="p-5">
         <div className="mb-3 flex items-baseline justify-between">
           <BentoLabel>Latest signups</BentoLabel>

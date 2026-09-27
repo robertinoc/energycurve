@@ -127,10 +127,10 @@ function AnalysesHero({ summary }: { summary: BackstageAnalyticsSummary }) {
     <Bento tone="accent" glow className="p-6">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:items-end">
         <div className="space-y-3">
-          <BentoLabel className="text-[#CDA2F1]">
+          <BentoLabel>
             Analyses completed · {periodLabel}
           </BentoLabel>
-          <p className="bg-[linear-gradient(135deg,#fff_0%,#A24DE0_100%)] bg-clip-text font-heading text-[56px] font-bold leading-none text-transparent">
+          <p className="ec-gradient-text font-heading text-[56px] font-bold leading-none">
             {numberFormat.format(summary.analysesCompleted.current)}
           </p>
           <div className="flex items-center gap-2">
@@ -149,7 +149,7 @@ function AnalysesHero({ summary }: { summary: BackstageAnalyticsSummary }) {
         <div className="space-y-2">
           <Sparkbars
             data={summary.series.map((point) => point.value)}
-            color="#22D3EE"
+            color="var(--ec-cyan)"
             height={120}
           />
           <div className="flex gap-[2px] font-mono text-[10px] text-white/40">
@@ -298,25 +298,25 @@ export function AnalyticsPanel({ embedUrls }: { embedUrls: string[] }) {
               <StatTile
                 label="Active users"
                 metric={state.summary.activeUsers}
-                color="#A24DE0"
+                color="var(--ec-violet)"
                 icon={<Activity className="size-3.5" />}
               />
               <StatTile
                 label="Signups"
                 metric={state.summary.signups}
-                color="#22D3EE"
+                color="var(--ec-cyan)"
                 icon={<UserPlus className="size-3.5" />}
               />
               <StatTile
                 label="Analyses run"
                 metric={state.summary.analysesCompleted}
-                color="#F0348A"
+                color="var(--ec-magenta)"
                 icon={<Waves className="size-3.5" />}
               />
               <StatTile
                 label="Playlists created"
                 metric={state.summary.playlistsCreated}
-                color="#F5A524"
+                color="var(--ec-amber)"
                 icon={<ListMusic className="size-3.5" />}
               />
               <RetentionTile retention={state.summary.retention} />

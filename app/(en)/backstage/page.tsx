@@ -64,22 +64,22 @@ export default async function BackstageUsersPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <div className="min-w-0 xl:col-span-2">
-          <UsersTable users={users} />
-        </div>
-        <div className="min-w-0 space-y-6">
-          {/* Above the activity feed on purpose: the feed is a record of what
-              happened, and this is a list of what is owed with a date on it. */}
-          <PrivacyRequestQueue requests={privacyRequests} />
-          <PendingDeletions deletions={pendingDeletions} />
-          <ActivityFeed
-            users={users}
-            recentAnalyses={recentAnalyses}
-            adminActions={adminActions}
-          />
-        </div>
+      {/* Full width on purpose: with a side column the 8-column table forced
+          horizontal scroll at desktop widths. */}
+      <UsersTable users={users} />
+
+      {/* Above the activity feed on purpose: the feed is a record of what
+          happened, and this is a list of what is owed with a date on it. */}
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <PrivacyRequestQueue requests={privacyRequests} />
+        <PendingDeletions deletions={pendingDeletions} />
       </div>
+
+      <ActivityFeed
+        users={users}
+        recentAnalyses={recentAnalyses}
+        adminActions={adminActions}
+      />
     </div>
   )
 }

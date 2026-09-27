@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 type BentoTone = "panel" | "accent" | "cyan" | "green"
 
 const BENTO_BG: Record<BentoTone, string> = {
-  panel: "bg-[#14101F]/80",
+  panel: "bg-ec-surface/80",
   accent:
     "bg-[linear-gradient(160deg,rgba(162,77,224,0.16)_0%,rgba(162,77,224,0.03)_100%)]",
   cyan: "bg-[linear-gradient(160deg,rgba(34,211,238,0.12)_0%,rgba(34,211,238,0.03)_100%)]",
@@ -22,7 +22,7 @@ const BENTO_BG: Record<BentoTone, string> = {
 }
 
 const BENTO_BORDER: Record<BentoTone, string> = {
-  panel: "border-white/10",
+  panel: "border-ec-border",
   accent: "border-[rgba(162,77,224,0.32)]",
   cyan: "border-[rgba(34,211,238,0.25)]",
   green: "border-[rgba(74,222,128,0.25)]",
@@ -63,10 +63,12 @@ export function BentoLabel({
   className?: string
   children: React.ReactNode
 }) {
+  // The brand-kit eyebrow recipe (Space Mono 700 uppercase cyan — see
+  // .ec-eyebrow in globals.css), sized down for panel headers.
   return (
     <p
       className={cn(
-        "font-heading text-[10px] font-bold uppercase tracking-[2px] text-white/50",
+        "font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ec-cyan",
         className
       )}
     >
@@ -92,7 +94,7 @@ export function TrendPill({
     direction === "up"
       ? "bg-[rgba(74,222,128,0.14)] text-[#4ADE80] border-[rgba(74,222,128,0.25)]"
       : direction === "down"
-        ? "bg-[rgba(255,107,107,0.14)] text-[#FF6B6B] border-[rgba(255,107,107,0.25)]"
+        ? "bg-ec-error/15 text-ec-error border-ec-error/25"
         : "bg-white/[0.06] text-white/70 border-white/10"
 
   return (
@@ -113,7 +115,7 @@ export function TrendPill({
 /** Pure-SVG line sparkline (StageLink SlPrimitives.Sparkline). */
 export function Sparkline({
   data,
-  color = "#A24DE0",
+  color = "var(--ec-violet)",
   height = 28,
   width = 200,
   fill = true,
@@ -137,7 +139,7 @@ export function Sparkline({
 
     return `${x},${y}`
   })
-  const gradientId = `spark-${color.replace("#", "")}`
+  const gradientId = `spark-${color.replace(/[^a-zA-Z0-9]/g, "")}`
 
   return (
     <svg
@@ -175,7 +177,7 @@ export function Sparkline({
 /** Dependency-free bar sparkline (StageLink SlPrimitives.Sparkbars). */
 export function Sparkbars({
   data,
-  color = "#A24DE0",
+  color = "var(--ec-violet)",
   height = 36,
 }: {
   data: number[]
