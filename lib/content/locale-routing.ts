@@ -53,6 +53,9 @@ export const LOCALIZED_PATHS = [
   "/install",
   "/energy-tags",
   "/import-formats",
+  // Lote 13. The harmonic table, published by generating it from the engine's
+  // constant. Same kind of page as the two above: a reference, both languages.
+  "/harmonic-mixing-cheat-sheet",
   "/privacy",
   "/terms",
   "/cookie-policy",
@@ -91,6 +94,9 @@ const ES_SLUGS: Partial<Record<LocalizedPath, string>> = {
   // because a `[slug]` route cannot be expressed in this table at all.
   "/glossary": "/glosario",
   "/guide": "/guia",
+  // Found by "rueda camelot notas" / "tabla mezcla armónica", not by the
+  // English slug — the same reasoning as the tools.
+  "/harmonic-mixing-cheat-sheet": "/tabla-de-mezcla-armonica",
 }
 
 /** The reverse table, so a Spanish URL can be read back to its path. */

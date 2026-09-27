@@ -1,5 +1,9 @@
 import type { Bilingual, ContentNode } from "@/lib/content/content-nodes"
 import type { SiteLocale } from "@/lib/content/site-copy"
+import {
+  CHOOSING_DJ_SOFTWARE,
+  REKORDBOX_VS,
+} from "@/lib/content/compare/market-comparisons"
 
 /**
  * The comparison pages, and the rule that makes them publishable.
@@ -32,6 +36,17 @@ import type { SiteLocale } from "@/lib/content/site-copy"
 
 export interface Comparison {
   id: string
+  /**
+   * `vs` (the default) is "EnergyCurve vs one competitor". `market` is a page
+   * where EnergyCurve is not one of the things compared — five DJ programs
+   * against each other (lote 13). The renderer is the same; what changes is
+   * the footer label and which names the publishability tests look for.
+   */
+  kind?: "vs" | "market"
+  /** On a `market` page, the programs compared; each must get a "right call". */
+  subjects?: string[]
+  /** What the footer calls the page, when `competitor` is not a name. */
+  footerLabel?: Bilingual
   slug: Record<SiteLocale, string>
   /** The competitor's name, spelled the way they spell it. */
   competitor: string
@@ -648,6 +663,9 @@ export const COMPARISONS: Comparison[] = [
   SETFLOW,
   DJ_STUDIO,
   LEXICON,
+  // Lote 13: the market pages, where we are not a column.
+  REKORDBOX_VS,
+  CHOOSING_DJ_SOFTWARE,
 ]
 
 export function comparisonBySlug(

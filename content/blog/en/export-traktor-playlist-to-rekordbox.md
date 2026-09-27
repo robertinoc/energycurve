@@ -89,7 +89,9 @@ tells you whether the order was worth keeping in the first place.
 To be clear about what EnergyCurve is not: it reads both formats, Traktor NML and
 Rekordbox XML, but it does not write one from the other. It is not a converter.
 Library managers built for that job exist — [the comparison with
-Lexicon](/compare/lexicon) says where the line is — and this article does not
+Lexicon](/compare/lexicon) says where the line is, and
+[Rekordbox vs Serato vs Traktor](/compare/rekordbox-vs-serato-vs-traktor) compares the
+two programs themselves — and this article does not
 pretend the conversion step away. It tells you which step has no tool and how to
 do it with the least pain. The full list of what each format carries is on
 [the import formats page](/import-formats).

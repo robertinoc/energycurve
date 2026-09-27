@@ -114,7 +114,9 @@ software de DJ a partir del de otro. No es un conversor, y no va a decir que el
 paso de conversión es fácil cuando es el paso que ninguno de los dos fabricantes
 construyó. Qué trae cada formato está en [la página de formatos](/es/import-formats);
 [la comparación con Lexicon](/es/comparar/lexicon) es el señalamiento honesto para
-quien tiene como problema real la conversión en sí.
+quien tiene como problema real la conversión en sí, y
+[Rekordbox vs Serato vs Traktor](/es/comparar/rekordbox-vs-serato-vs-traktor) la
+lectura para quien todavía decide de qué lado estar.
 
 ```faq
 Q: ¿Qué es un crate en Serato?

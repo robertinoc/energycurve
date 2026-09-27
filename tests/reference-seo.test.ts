@@ -5,6 +5,7 @@ import { allPublishedPosts, listPosts } from "@/lib/blog/posts"
 import { articleCardPath, articleCardUrl } from "@/lib/blog/social-card"
 import { buildArticleStructuredData } from "@/lib/blog/structured-data"
 import { ENERGY_TAGS_FAQ } from "@/lib/content/energy-tags-copy"
+import { CHEAT_SHEET_FAQ } from "@/lib/content/harmonic-cheat-sheet-copy"
 import { GLOSSARY_TERMS } from "@/lib/content/glossary/terms"
 import { IMPORT_FORMATS_FAQ } from "@/lib/content/import-formats-copy"
 import { buildInstallStructuredData } from "@/lib/content/install-structured-data"
@@ -42,6 +43,7 @@ describe("the reference pages' structured data", () => {
   const pages = [
     ["/energy-tags", ENERGY_TAGS_FAQ],
     ["/import-formats", IMPORT_FORMATS_FAQ],
+    ["/harmonic-mixing-cheat-sheet", CHEAT_SHEET_FAQ],
   ] as const
 
   it.each(pages)("publishes TechArticle, FAQPage and breadcrumbs on %s", (path) => {

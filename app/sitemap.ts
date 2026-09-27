@@ -54,6 +54,9 @@ const HINTS: Record<
   // Same shape as /energy-tags: a reference a DJ lands on from the import
   // screen or a search for "csv format for a dj playlist".
   "/import-formats": { changeFrequency: "monthly", priority: 0.5 },
+  // The published harmonic table. A reference like the two above, but one
+  // people search for by name, so it sits nearer the tools than the specs.
+  "/harmonic-mixing-cheat-sheet": { changeFrequency: "monthly", priority: 0.6 },
   "/privacy": { changeFrequency: "yearly", priority: 0.3 },
   "/terms": { changeFrequency: "yearly", priority: 0.3 },
   "/cookie-policy": { changeFrequency: "yearly", priority: 0.3 },

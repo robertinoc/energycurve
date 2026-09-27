@@ -178,6 +178,11 @@ export function LandingPage({ locale }: { locale: SiteLocale }) {
               label: copy.footer.glossary,
               icon: BookOpen,
             },
+            {
+              href: localizedPath("/harmonic-mixing-cheat-sheet", locale),
+              label: copy.footer.harmonicCheatSheet,
+              icon: BookOpen,
+            },
           ],
         },
         {

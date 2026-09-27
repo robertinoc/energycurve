@@ -88,6 +88,67 @@ se convierten: una conversión es una inferencia con fecha de vencimiento.
 
 ---
 
+## Segunda tanda — 27/09/2026, lote 13
+
+Cinco programas de DJ que **no compiten con EnergyCurve**: son el software con
+el que se toca, y EnergyCurve es lo que se lee después de elegir uno. Las
+páginas `/compare/rekordbox-vs-serato-vs-traktor` y `/compare/best-dj-software`
+(y sus gemelas en `/es/comparar/`) salen de estas filas y de ninguna otra
+fuente. Todo leído el **27/09/2026** desde el navegador.
+
+### Rekordbox (AlphaTheta)
+
+| Qué | Dónde lo dice | Leído |
+|---|---|---|
+| Cuatro planes: **Free**, **Core**, **Creative**, **Professional**; el Free se describe como «For people who want basic music management features and DJ experience» y no muestra precio | [rekordbox.com/en/plan](https://rekordbox.com/en/plan/) | 27/09/2026 |
+| Con el selector en **Yearly**: Professional «$30USD/month» (monthly conversion) · «$360USD/year» · Creative + Cloud Option «$23USD/month» · «$276USD/year» · Core + Cloud Option «$19USD/month» · «$228USD/year» · Free + Cloud Option «$9USD/month» · «$108USD/year» | [rekordbox.com/en/plan](https://rekordbox.com/en/plan/) | 27/09/2026 |
+| «*Cancel or change your plan anytime» · «*Subscription plans and pricing will be modified in the product page.» | [rekordbox.com/en/plan](https://rekordbox.com/en/plan/) | 27/09/2026 |
+| «Compatible with music streaming services — Access tracks from Beatport/Beatsource/TIDAL/SoundCloud and other music streaming services. *Some music streaming services are not available in some countries.» | [rekordbox.com/en/plan](https://rekordbox.com/en/plan/), tabla «Compare plans» | 27/09/2026 |
+| Requisitos: «Windows 11 / Windows 10 (The latest service pack) / macOS Tahoe 26 (Updated to the latest version)…»; se describe como «Application for music management and DJ players (for Windows/Mac)» | [rekordbox.com/en/download](https://rekordbox.com/en/download/) | 27/09/2026 |
+
+**Ojo con los precios:** la página tiene un selector Yearly/Monthly y se leyó
+con **Yearly**; los «$X/month» son la «Monthly conversion» de un pago anual, y
+así se publican, con esa aclaración. El precio con facturación mensual no se
+leyó y no se publica.
+
+### Serato
+
+| Qué | Dónde lo dice | Leído |
+|---|---|---|
+| «Serato DJ Pro — $11.99 USD/m … Subscribe or Buy 299 USD» · «Serato DJ Suite — $14.99 USD/m … Subscribe or Buy 499 USD» | [serato.com/dj/pro/pricing](https://serato.com/dj/pro/pricing) | 27/09/2026 |
+| «Get started for free with Serato DJ Lite.» · «Serato DJ Lite is free to download, easy to access, and keeps things simple while you learn to DJ.» · «Serato DJ Lite comes with Practice Mode, so you can start mixing without any DJ hardware.» | [serato.com/dj/pro/pricing](https://serato.com/dj/pro/pricing), [serato.com/dj/lite](https://serato.com/dj/lite) | 27/09/2026 |
+| «If you have hardware that unlocks Serato DJ Pro when connected, you don't need a license or subscription.» · «you can DJ with just your laptop using Practice Mode, which is a free, basic version of Serato DJ Pro that doesn't require DJ hardware» | [serato.com/dj/pro](https://serato.com/dj/pro), FAQ | 27/09/2026 |
+| «Serato DJ Pro supports the following music streaming services: Apple Music, Beatport, SoundCloud, Spotify, Tidal» · «Recording is not available if you: Play music from a streaming service.» | [serato.com/dj/pro](https://serato.com/dj/pro), FAQ | 27/09/2026 |
+| Descarga «for Mac & PC» (título de la página); versión leída: «Serato DJ Pro 4.0.10» | [serato.com/dj/pro/downloads](https://serato.com/dj/pro/downloads) | 27/09/2026 |
+
+### Traktor (Native Instruments)
+
+| Qué | Dónde lo dice | Leído |
+|---|---|---|
+| «Traktor Pro 4 — $149.00» · «Download: available immediately» · «If you already own Native Instruments products, you might qualify for a better price, log in to see.» | [native-instruments.com/products/traktor-pro](https://www.native-instruments.com/products/traktor-pro) | 27/09/2026 |
+| «Mix across four decks, including stem separation and Beatport streaming.» · «plus Beatport or Beatsource Streaming» · «Get access to two months of free streaming directly connected to Traktor Pro 4 with Beatport Pro … Only available to new Beatport users.» | misma página | 27/09/2026 |
+| Preguntas de la FAQ de la página: «Why has Traktor Pro Plus been canceled?» · «Does the cancellation of Traktor Pro Plus mean Traktor is moving away from a subscription model for good?» | misma página, sección FAQ (títulos) | 27/09/2026 |
+| Requisitos: «Mac — macOS 13, 14, 15 (latest update), iTunes 12 (latest update), Intel Core i5 or Apple M1, M2, M3…» · «Win — Windows 11 (latest service pack), Intel Core i5 or equivalent CPU, 4 GB RAM» | misma página, «System Requirements» | 27/09/2026 |
+
+### VirtualDJ (Atomix)
+
+| Qué | Dónde lo dice | Leído |
+|---|---|---|
+| «VirtualDJ is free for home use» · «And best of all it's free for non-professional use.» | [virtualdj.com/download](https://virtualdj.com/download/), [virtualdj.com/products/virtualdj/features.html](https://virtualdj.com/products/virtualdj/features.html) | 27/09/2026 |
+| «VIRTUALDJ HOME — $4/MO — Low cost for home use · Full featured software · Only entry-level controllers · Cannot remove audio branding · Cannot be used at paid gigs» · «VDJ PRO — $19/MO — Full DJ software, no limitations … Works with every DJ controller … Can be used in public or paid gigs» · «BUSINESS PLAN — $99/MO» · «prices shown in US dollars, before taxes» | [virtualdj.com/buy](https://virtualdj.com/buy/) | 27/09/2026 |
+| «MINIMUM REQUIREMENTS: Windows 10 / macOS X 10.15 · RECOMMENDED: Windows 11 / macOS 26»; descargas «Windows — VirtualDJ 2026 b9644 PC» y «MacOS — VirtualDJ 2026 b9644 MAC» | [virtualdj.com/download](https://virtualdj.com/download/) | 27/09/2026 |
+| «plug & play support for over 300+ controllers» (afirmación de ellos) | [features.html](https://virtualdj.com/products/virtualdj/features.html) | 27/09/2026 |
+
+### djay Pro (Algoriddim)
+
+| Qué | Dónde lo dice | Leído |
+|---|---|---|
+| «Requires macOS 10.15 or later» (Mac) · «Requires Windows 11 or Windows 10 (version 21H1 or later)» (Windows); el pie lista «djay Pro for Mac», «djay Pro for Windows», «djay for iOS», «djay for Android» | [algoriddim.com/djay-pro-mac](https://www.algoriddim.com/djay-pro-mac), [algoriddim.com/djay-pro-windows](https://www.algoriddim.com/djay-pro-windows) | 27/09/2026 |
+| «Connect your Spotify or Apple Music account to access millions of songs instantly» · «Instantly access your favorite songs from Spotify or Apple Music, dive into millions of tracks from TIDAL, SoundCloud, and Beatport, or browse your own local library» · «Spotify is now at the core of the djay Pro experience.» | mismas páginas | 27/09/2026 |
+| «Whether you're a beginner or a seasoned DJ, djay Pro gives you everything you need to mix, perform, and build DJ sets» (afirmación de ellos) | mismas páginas | 27/09/2026 |
+
+---
+
 ## Lo que NO se pudo sostener, y por eso no se publica
 
 1. **El precio de Mixed In Key.** Su tienda declara «(Prices in ARS)» y devuelve
@@ -104,3 +165,26 @@ se convierten: una conversión es una inferencia con fecha de vencimiento.
    afirmamos la nuestra fuera del spike.
 4. **Si SetFlow es de la misma empresa que `setflowdj.com`.** Aparecen los dos
    dominios; no se verificó la relación, así que se cita sólo `setflow.app`.
+
+
+**Agregado el 27/09/2026 (segunda tanda):**
+
+5. **El precio de djay Pro.** `algoriddim.com` no publica una página de
+   precios (`/pricing` devuelve 404, y las páginas de producto no muestran
+   cifra); el precio vive en las tiendas de Apple y Microsoft. Sin cifra citable
+   desde el sitio del fabricante, **la fila de precio de djay Pro sale vacía**,
+   diciendo por qué.
+6. **El precio de Rekordbox con facturación mensual.** La página se leyó con el
+   selector en Yearly; los precios mensuales de facturación mensual no se
+   leyeron y no se publican.
+7. **Cuál es «el mejor».** Ninguna página de fabricante lo sostiene y la nuestra
+   tampoco: las páginas de esta tanda comparan lo que cada uno dice y dejan la
+   elección al lector. Un título puede contestar la consulta sin que el cuerpo
+   diga un veredicto.
+8. **Cifras de popularidad.** VirtualDJ dice «190,640,460 downloads» y «#1 MOST
+   POPULAR DJ SOFTWARE»; Serato, «the most popular DJ software globally»;
+   Traktor, «hundreds of thousands of DJs». Son autoinformadas, mutuamente
+   incompatibles y no verificables; no entran a ninguna tabla.
+9. **Si VirtualDJ integra Spotify.** No se leyó una lista de servicios de
+   streaming en las páginas de VirtualDJ consultadas; la fila queda como «no
+   verificado» en vez de inferido.

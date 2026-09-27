@@ -284,6 +284,7 @@ interface SiteCopySchema {
     comparisons: LocalizedLabel
     energyTags: LocalizedLabel
     importFormats: LocalizedLabel
+    harmonicCheatSheet: LocalizedLabel
     legal: LocalizedLabel
     privacy: LocalizedLabel
     terms: LocalizedLabel
@@ -1495,6 +1496,12 @@ const siteCopy: SiteCopySchema = {
       en: "What we can import",
       es: "Qué podemos importar",
     },
+    // Lote 13. Named after the query, "harmonic mixing cheat sheet", because
+    // that is the name a DJ types for the thing the page is.
+    harmonicCheatSheet: {
+      en: "Harmonic mixing cheat sheet",
+      es: "Tabla de mezcla armónica",
+    },
     legal: { en: "Legal", es: "Legal" },
     privacy: { en: "Privacy Policy", es: "Política de Privacidad" },
     terms: { en: "Terms of Service", es: "Términos del Servicio" },
@@ -1954,6 +1961,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       importFormats: siteCopy.footer.importFormats[locale],
       guides: siteCopy.footer.guides[locale],
       comparisons: siteCopy.footer.comparisons[locale],
+      harmonicCheatSheet: siteCopy.footer.harmonicCheatSheet[locale],
       legal: siteCopy.footer.legal[locale],
       privacy: siteCopy.footer.privacy[locale],
       terms: siteCopy.footer.terms[locale],

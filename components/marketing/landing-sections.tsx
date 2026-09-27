@@ -819,7 +819,7 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
             heading={copy.footer.comparisons}
             links={COMPARISONS.map((comparison) => ({
               href: comparisonPath(comparison, copy.locale),
-              label: comparison.competitor,
+              label: comparison.footerLabel?.[copy.locale] ?? comparison.competitor,
             }))}
           />
           <FooterColumn
@@ -844,6 +844,13 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
               {
                 href: localizedPath("/glossary", copy.locale),
                 label: copy.footer.glossary,
+              },
+              // The published harmonic table (lote 13). Reachable from the
+              // wheel, the glossary and the guide; the footer is what makes it
+              // one link away from every landing.
+              {
+                href: localizedPath("/harmonic-mixing-cheat-sheet", copy.locale),
+                label: copy.footer.harmonicCheatSheet,
               },
               // Offered only while there is something to open. The guides
               // index has listed nothing since #237, so the footer was sending

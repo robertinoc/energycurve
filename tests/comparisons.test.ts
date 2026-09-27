@@ -65,8 +65,19 @@ function visibleText(comparison: Comparison, locale: SiteLocale): string {
 }
 
 describe("the registry holds together", () => {
-  it("has the four pages the plan asks for", () => {
-    expect(COMPARISONS).toHaveLength(4)
+  it("has the four pages the plan asks for, and the two market pages of lote 13", () => {
+    expect(COMPARISONS).toHaveLength(6)
+    expect(COMPARISONS.filter((comparison) => comparison.kind === "market")).toHaveLength(2)
+  })
+
+  it("gives every market page its subjects and a footer label", () => {
+    for (const comparison of COMPARISONS) {
+      if (comparison.kind !== "market") continue
+
+      expect(comparison.subjects?.length ?? 0).toBeGreaterThan(1)
+      expect(comparison.footerLabel?.en).toBeTruthy()
+      expect(comparison.footerLabel?.es).toBeTruthy()
+    }
   })
 
   it("gives every comparison a slug in both languages, and no two share one", () => {
@@ -150,17 +161,25 @@ describe("what makes these pages publishable", () => {
 
       const english = visibleText(comparison, "en")
       const spanish = visibleText(comparison, "es")
-      const name = comparison.competitor
+      // On a market page every program compared gets its case; on a "vs"
+      // page, the one competitor does. The rule is the same either way: the
+      // page names who the *other* thing is right for.
+      const names =
+        comparison.kind === "market"
+          ? (comparison.subjects ?? [])
+          : [comparison.competitor]
 
-      expect(
-        english.includes(`**${name} is the right call**`),
-        `${comparison.id} (en) never says ${name} is the right call for anyone`
-      ).toBe(true)
+      for (const name of names) {
+        expect(
+          english.includes(`**${name} is the right call**`),
+          `${comparison.id} (en) never says ${name} is the right call for anyone`
+        ).toBe(true)
 
-      expect(
-        spanish.includes(`**Conviene ${name}**`),
-        `${comparison.id} (es) nunca dice que conviene ${name}`
-      ).toBe(true)
+        expect(
+          spanish.includes(`**Conviene ${name}**`),
+          `${comparison.id} (es) nunca dice que conviene ${name}`
+        ).toBe(true)
+      }
     }
   })
 

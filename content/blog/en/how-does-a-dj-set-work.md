@@ -104,7 +104,7 @@ Q: Does a DJ set have to be continuous?
 A: In most club and festival contexts, yes — the music not stopping is the basic promise. But a set can still contain deliberate silence or a long breakdown; what it avoids is an unplanned gap, which reads as a mistake because it is one.
 
 Q: How does a DJ know which track comes next?
-A: Usually from a plan made before the gig — an ordered list, checked for tempo, key and energy — adjusted live. Experienced DJs prepare more than they play, so the next track is a choice among a few prepared options rather than a search through the whole library.
+A: Usually from a plan made before the gig — an ordered list, checked for tempo, key and energy — adjusted live. Experienced DJs prepare more than they play, so the next track is a choice among a few prepared options rather than a search through the whole library. [How a DJ prepares a set](/blog/how-djs-prepare-their-sets) goes through the stages.
 
 Q: Is a DJ set the same as a DJ mix?
 A: Not quite. A set is played live, to a room, in a slot. A mix is usually a recorded product — a podcast, a radio hour — built on a timeline and rendered to a file. The mechanics overlap, but a mix can be edited after the fact and a set cannot; what is a DJ set, exactly, is its own question.

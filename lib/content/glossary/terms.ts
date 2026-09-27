@@ -230,7 +230,16 @@ A warning belongs here. For years the rule taught alongside the wheel was "stay 
 
 If two tools give you different verdicts on the same pair of tracks, they are probably using different rules rather than one of them being broken.`,
     },
-    links: [{ path: "/tools/camelot-wheel", label: { es: "Abrí la rueda", en: "Open the wheel" } }],
+    links: [
+      { path: "/tools/camelot-wheel", label: { es: "Abrí la rueda", en: "Open the wheel" } },
+      {
+        path: "/harmonic-mixing-cheat-sheet",
+        label: {
+          es: "La tabla completa: tonalidades, Open Key y movimientos",
+          en: "The full table: keys, Open Key and every move",
+        },
+      },
+    ],
     see: ["tonalidad", "open-key", "mezcla-armonica"],
     match: { es: ["rueda Camelot", "Camelot"], en: ["Camelot wheel", "Camelot"] },
   },
