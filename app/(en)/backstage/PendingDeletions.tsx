@@ -34,7 +34,7 @@ export function PendingDeletions({
       {overdue > 0 ? (
         <p
           role="alert"
-          className="rounded-xl border border-[rgba(255,107,107,0.3)] bg-[rgba(255,107,107,0.08)] px-3 py-2 text-[12px] leading-5 text-[#FF8F8F]"
+          className="rounded-xl border border-ec-error/30 bg-ec-error/10 px-3 py-2 text-[12px] leading-5 text-ec-error"
         >
           {overdue} {overdue === 1 ? "account is" : "accounts are"} past the
           30-day grace period and still here. The sweep runs from the daily cron,
@@ -53,7 +53,7 @@ export function PendingDeletions({
           {deletions.map((deletion) => (
             <li
               key={deletion.profileId}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-[#0A0714]/60 px-3 py-2"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-ec-sunken/60 px-3 py-2"
             >
               <span className="font-mono text-[11px] break-all text-white/65">
                 {deletion.email}
@@ -61,7 +61,7 @@ export function PendingDeletions({
               <span
                 className={`rounded-full border px-2 py-0.5 font-mono text-[10px] ${
                   deletion.daysLeft < 0
-                    ? "border-[rgba(255,107,107,0.3)] bg-[rgba(255,107,107,0.14)] text-[#FF6B6B]"
+                    ? "border-ec-error/30 bg-ec-error/15 text-ec-error"
                     : "border-white/14 text-white/50"
                 }`}
               >
