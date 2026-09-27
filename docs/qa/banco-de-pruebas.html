@@ -502,7 +502,7 @@
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
     <p><strong>Una sola cosa bloquea, y son cinco minutos en el SQL Editor: a la base de dev le faltan migraciones.</strong> Confirmado el 25/09 sondeando el enum en sólo-lectura: <strong>7 de los 12 géneros que ofrece el producto no existen en dev</strong> — <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code> y <code>bounce</code>. Los agrega la <code>0005</code>. Si mañana elegís uno de esos —o dejás la detección automática y lo elige ella— la importación falla con «Something went wrong while saving» y no vas a saber por qué. Eso salió de un E2E que se caía; sin arreglarlo te come la mañana. Aplicá <code>0005</code> y de paso <code>0027</code> a <code>0032</code>, en orden de número. La sesión <strong>DB</strong> tiene los pasos.</p>
-    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 27/09 (lote 13) <strong>911 pasan / 37 saltean / 0 fallan en 4,6 minutos</strong> (lote 12: 855 / 37 / 0; lote 11: 823 / 37 / 0), la suite entera en un solo comando: <code>npm run test:e2e</code> corre cinco shards en paralelo y devuelve un solo resumen. Hasta el lote 10 se corría en dos mitades (13,3 min); ese comando ya no existe. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
+    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 27/09 (lote 14) <strong>927 pasan / 37 saltean / 0 fallan en 5,0 minutos</strong> (lote 13: 911 / 37 / 0; lote 12: 855 / 37 / 0), la suite entera en un solo comando: <code>npm run test:e2e</code> corre cinco shards en paralelo y devuelve un solo resumen. Hasta el lote 10 se corría en dos mitades (13,3 min); ese comando ya no existe. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
     <ol style="margin:6px 0 0 18px;padding:0">
       <li><strong>DB.1 a DB.4 — 25 min.</strong> Aplicá las migraciones y corré el seed. Desbloquea todo lo demás: sin esto, siete géneros rompen y cualquier prueba de importación miente.</li>
@@ -514,6 +514,7 @@
       <li><strong>AUD — 30 min.</strong> Los tres hallazgos de la auditoría F1 ya están <strong>arreglados</strong> (lote 10); lo que queda es validarlos con tus archivos y en tu teléfono. AUD.4 (la cuarta importación en FREE) y AUD.5 (ocho capabilities sin ejercitar) siguen abiertos.</li>
       <li><strong>ART — 30 min.</strong> Los tres artículos en inglés. Leelos como DJ: la única prueba que ninguna máquina hace es si los firmarías.</li>
       <li><strong>CMP — 25 min.</strong> Las cuatro páginas de comparación. Lo que hay que juzgar no es un dato sino el tono: si alguna suena a que siempre ganamos nosotros, eso es el hallazgo.</li>
+      <li><strong>F45 — 2 h repartidas.</strong> Lo que cierra las fases 4 y 5 del plan SEO y sólo podés hacer vos: PostHog, los perfiles de entidad, StageLink, las menciones. El código de las dos fases ya se verificó contra producción; ninguna se marcó verificada porque falta esto.</li>
       <li><strong>ARM — 30 min.</strong> La tabla armónica generada desde la constante. Lo único que ninguna máquina hace es reconocer una tonalidad de oído: ARM.1 es la fila que importa.</li>
       <li><strong>CMP2 — 30 min.</strong> Las dos comparaciones entre programas de DJ. Lo que hay que juzgar es si alguna fila dice algo que el fabricante no dice, y si el tono aguanta leído desde cada uno de los cinco.</li>
       <li><strong>A2B — 45 min.</strong> Los cuatro artículos de trayecto (Traktor→Rekordbox, Serato↔Rekordbox, Rekordbox→USB y la gemela en español). Cada paso sale del manual del fabricante y ninguno se probó con el software abierto: A2B.3 es la única verificación que sólo podés hacer vos.</li>
@@ -1597,6 +1598,52 @@
           steps: ["Con el deploy hecho, pegá la URL de una de las dos en el Rich Results Test de Google", "Repetí con la gemela en español"],
           expect: "Detecta <code>FAQPage</code> y <code>BreadcrumbList</code> sin errores. El <code>WebPage</code> lleva <code>lastReviewed</code> y las diez fuentes como <code>citation</code>.",
           ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa — anotá el campo exacto que nombre."
+        }
+      ]
+    },
+    {
+      code: "F45",
+      title: "Cerrar las fases 4 y 5 del plan SEO: lo que sólo podés hacer vos",
+      meta: "~2 h repartidas · cuentas tuyas (PostHog, Product Hunt, Wikidata, StageLink) · ninguna necesita el deploy salvo F45.1",
+      why: "El lote 14 verificó contra producción la mitad de código de las dos fases y <strong>no las marcó verificadas</strong>: por código quedaron dos rojos que el lote arregla (el <code>/llms.txt</code> no listaba las comparaciones ni los artículos en inglés, y el CTA de los artículos no emitía <code>content_cta_click</code>), y el resto de cada fase son tareas externas que ningún lote puede hacer. Están en <code>docs/seo/verificacion-produccion-2026-09.md</code>, sección «Fases 4 y 5», con el comando y la salida de cada fila. Esta sesión es la lista de lo que falta, en el orden en que destraba.",
+      tests: [
+        {
+          code: "F45.1", title: "Repetir las dos filas rojas después del deploy", sub: "E24 y E28, contra el dominio",
+          steps: ["Con el lote 14 deployado: <code>curl -s https://energycurve.app/llms.txt | grep -c '/compare/'</code> y <code>grep -c '## Articles (English)'</code>", "Abrí un artículo, tocá el CTA, y mirá en PostHog si llega <code>content_cta_click</code> con <code>page</code> = la ruta del artículo"],
+          expect: "Seis comparaciones y una sección de artículos en inglés en el <code>llms.txt</code>; el evento llega desde un artículo, no sólo desde <code>/energy-tags</code>.",
+          ifNot: "Si el <code>llms.txt</code> sigue sin comparaciones, producción no tiene el lote 14. Si el evento no llega desde un artículo pero sí desde una referencia, anotá la ruta."
+        },
+        {
+          code: "F45.2", title: "E28: key events y funnel en PostHog", sub: "La mitad de la fase 5 que vive en tu cuenta",
+          steps: ["En PostHog, marcá <code>signup_completed</code> y <code>first_analysis</code> como key events", "Armá el funnel orgánico → <code>content_cta_click</code> → <code>signup_completed</code> → <code>first_analysis</code>", "Pegá una captura o el enlace del funnel en el hilo de Asana de SEO-E28"],
+          expect: "El funnel existe y muestra al menos el primer paso con datos, aunque sean pocos.",
+          ifNot: "Si <code>first_analysis</code> no aparece como evento, no es de PostHog: es que nadie completó un análisis desde que se instrumentó. Decilo así."
+        },
+        {
+          code: "F45.3", title: "E22: los cinco perfiles que faltan", sub: "Hoy <code>sameAs</code> tiene uno: Instagram",
+          steps: ["Creá o reclamá: Product Hunt, AlternativeTo (alternativa a Mixed In Key / DJ.Studio), Crunchbase bajo StageLink LLC, X o TikTok, y un ítem de Wikidata", "Mismo nombre («EnergyCurve — DJ set copilot»), misma descripción y mismo logo en todos", "Pasame las URLs: van a <code>ENTITY_PROFILES</code> en <code>lib/seo.ts</code>, que es un array"],
+          expect: "Seis perfiles vivos con el mismo nombre. El código tarda un minuto; los perfiles, lo que tarden.",
+          ifNot: "Un perfil que no existe o que es de otro «EnergyCurve» no entra: la nota de <code>lib/seo.ts</code> explica por qué un <code>sameAs</code> malo es peor que ninguno."
+        },
+        {
+          code: "F45.4", title: "E25, E26, E27 y E31: lo externo", sub: "Menciones, StageLink, la corrida mensual, el log de PSI",
+          steps: ["E26: el enlace desde stagelink.art y el post «cómo planifican sets los DJs» en su blog", "E25: elegí el primer medio; los textos los redacto yo y no sale nada sin tu OK", "E27: la primera corrida de visibilidad en IA (SEO-E04) y la revisión de GSC, con nota de 10 líneas en Asana", "E31: la primera fila de <code>docs/seo/cwv-log.md</code> con PSI para 6 URLs"],
+          expect: "Una fila hecha de cada una alcanza para saber que el circuito funciona; las fases se cierran cuando el plan dice (≥3 menciones, 3 corridas, 4 filas).",
+          ifNot: "Si alguna no va a hacerse, mejor decirlo y sacarla del plan que dejar el hito abierto indefinidamente."
+        }
+      ]
+    },
+    {
+      code: "IMP",
+      title: "La playlist que aparece vacía un segundo",
+      meta: "~10 min · cuenta PRO · necesita dos pestañas",
+      why: "El test intermitente del export (lotes 12 y 13: «Export» deshabilitado al hacer clic, una de cada tres corridas completas) se caracterizó en el lote 14: <code>createPlaylist</code> inserta la fila de la playlist primero y los temas después, así que hay una ventana en la que el set aparece en la lista y su página se renderiza con cero temas y el botón de exportar deshabilitado — y como la página es de servidor, no se refresca sola. En cinco corridas aisladas del spec no se reprodujo; con los cinco shards en paralelo, sí. El arnés ahora espera la señal real del producto (los temas en la página). Lo que queda es del producto, y es esto.",
+      tests: [
+        {
+          code: "IMP.1", title: "Abrir la playlist en la ventana entre el alta y los temas", sub: "Reproducirlo a mano es difícil; verlo, no",
+          steps: ["Importá un set grande (100+ temas) desde la pestaña A", "Apenas aparezca en la lista, abrilo desde la pestaña B", "Mirá si la página muestra cero temas y «Export» deshabilitado, y si se corrige sola"],
+          expect: "Lo esperable hoy: si llegás en la ventana, ves un set vacío que no se refresca hasta que recargás. Si no llegás, no viste nada, y eso también vale anotarlo.",
+          ifNot: "Si lo ves, es el hallazgo: la creación debería ser una transacción (playlist + temas) o la lista no debería mostrar un set sin temas. Es código del importador, no de scoring, y se decide en su propio PR."
         }
       ]
     }

@@ -288,9 +288,16 @@ export function getImportFormatsCopy(locale: SiteLocale) {
       locale === "es"
         ? [
             {
+              slug: "exportar-playlist-de-traktor-a-rekordbox",
+              label: "De Traktor a Rekordbox: qué sobrevive al pase",
+            },
+            {
               slug: "crates-de-serato-y-rekordbox",
-              label:
-                "Crates de Serato y Rekordbox: qué es un crate, cómo se mueve y por qué no hay export a texto",
+              label: "Crates de Serato y Rekordbox, en los dos sentidos",
+            },
+            {
+              slug: "exportar-playlist-de-rekordbox-a-usb",
+              label: "De Rekordbox al pendrive, y el «Export» en gris",
             },
           ]
         : [

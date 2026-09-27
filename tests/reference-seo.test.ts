@@ -4,6 +4,8 @@ import { GET as llmsTxt } from "@/app/llms.txt/route"
 import { allPublishedPosts, listPosts } from "@/lib/blog/posts"
 import { articleCardPath, articleCardUrl } from "@/lib/blog/social-card"
 import { buildArticleStructuredData } from "@/lib/blog/structured-data"
+import { COMPARISONS } from "@/lib/content/compare/comparisons"
+import { comparisonPath } from "@/lib/content/compare/paths"
 import { ENERGY_TAGS_FAQ } from "@/lib/content/energy-tags-copy"
 import { CHEAT_SHEET_FAQ } from "@/lib/content/harmonic-cheat-sheet-copy"
 import { GLOSSARY_TERMS } from "@/lib/content/glossary/terms"
@@ -263,11 +265,36 @@ describe("llms.txt", () => {
    * The articles are Spanish-only. A model that lists them as English pages
    * will quote them as English pages, so the file says which is which.
    */
-  it("says the articles are Spanish and the rest is mirrored", async () => {
+  it("lists the articles under one heading per language, and says the rest is mirrored", async () => {
     const text = await body()
 
+    expect(text).toContain("## Articles (English)")
     expect(text).toContain("## Articles (Spanish)")
     expect(text).toContain("Spanish twin")
+
+    for (const post of listPosts("en")) {
+      expect(text, `${post.slug} is missing`).toContain(
+        `${SITE_URL}${localizedPath(`/blog/${post.slug}`, "en")}`
+      )
+    }
+  })
+
+  /**
+   * SEO-E24 names the comparisons among what the file must carry. Found
+   * missing while verifying Phase 4 against production (lote 14): the route
+   * predated the comparison pages and nobody added them.
+   */
+  it("lists every comparison page, with its verification date", async () => {
+    const text = await body()
+
+    expect(text).toContain("## Comparisons")
+
+    for (const comparison of COMPARISONS) {
+      expect(text, `${comparison.id} is missing`).toContain(
+        `${SITE_URL}${comparisonPath(comparison, "en")}`
+      )
+      expect(text).toContain(`verified ${comparison.verifiedAt}`)
+    }
   })
 
   /**

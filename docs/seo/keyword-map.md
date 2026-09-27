@@ -212,8 +212,8 @@ intención donde el producto tiene la respuesta más directa.
 | `what are crates in serato` | en | 1 | [`/blog/serato-crates-and-rekordbox`](https://energycurve.app/blog/serato-crates-and-rekordbox) — cerrado el 27/09/2026 (lote 12) |
 | `exportar playlist rekordbox` | es | 2 | [`/es/import-formats`](https://energycurve.app/es/import-formats) |
 | `exportar playlist traktor` | es | 2 | [`/es/import-formats`](https://energycurve.app/es/import-formats) |
-| `exportar playlist rekordbox a usb` | es | 1 | **hueco** |
-| `exportar playlist de traktor a rekordbox` | es | 1 | **hueco** |
+| `exportar playlist rekordbox a usb` | es | 1 | [`/es/blog/exportar-playlist-de-rekordbox-a-usb`](https://energycurve.app/es/blog/exportar-playlist-de-rekordbox-a-usb) — gemela de `rekordbox-export-playlist-to-usb-greyed-out`; cerrado el 27/09/2026 (lote 14) |
+| `exportar playlist de traktor a rekordbox` | es | 1 | [`/es/blog/exportar-playlist-de-traktor-a-rekordbox`](https://energycurve.app/es/blog/exportar-playlist-de-traktor-a-rekordbox) — gemela de `export-traktor-playlist-to-rekordbox`; cerrado el 27/09/2026 (lote 14) |
 | `exportar playlist de rekordbox a serato` | es | 1 | [`/es/blog/crates-de-serato-y-rekordbox`](https://energycurve.app/es/blog/crates-de-serato-y-rekordbox) — cerrado el 27/09/2026 (lote 12) |
 | `importar lista de reproduccion rekordbox` | es | 1 | [`/es/import-formats`](https://energycurve.app/es/import-formats) |
 | `mis temas no tienen bpm` | es | 0 (sin sugerencias) | [`/es/blog/tus-temas-no-tienen-bpm-ni-tonalidad`](https://energycurve.app/es/blog/tus-temas-no-tienen-bpm-ni-tonalidad) |
@@ -224,9 +224,8 @@ gente no busca "qué formatos soporta"; busca "cómo llevo esto de acá para all
 Nueve huecos de esta tabla eran variantes de A→B; el lote 12 (27/09/2026) los
 cerró con tres artículos en inglés y una gemela en español, agrupados por
 recorrido —Traktor→Rekordbox, Serato↔Rekordbox (con «qué es un crate»),
-Rekordbox→USB (con «greyed out»)— y `/import-formats` ahora los enlaza. Quedan
-dos en español sin gemela: `exportar playlist rekordbox a usb` y
-`exportar playlist de traktor a rekordbox`.
+Rekordbox→USB (con «greyed out»)— y `/import-formats` los enlaza. El lote 14
+escribió las otras dos gemelas en español; la tabla queda sin huecos.
 
 ---
 
@@ -249,15 +248,15 @@ del sitio viven acá.
 | `dj set planner` | en | 1 | [`/tools/energy-curve`](https://energycurve.app/tools/energy-curve) |
 | `free dj set planner` | en | 1 | [`/tools/energy-curve`](https://energycurve.app/tools/energy-curve) |
 | `dj set planner app` | en | 1 | [`/tools/energy-curve`](https://energycurve.app/tools/energy-curve) |
-| `ai dj set planner free` | en | 1 | **hueco** — y hay que decidir si el producto quiere la palabra "AI" |
+| `ai dj set planner free` | en | 1 | **hueco** — decisión de Robertino, no de un lote (lote 14, 27/09/2026): si el producto quiere la palabra «AI» en su posicionamiento. `/tools/energy-curve` la contestaría en todo menos en la palabra |
 | `harmonic dj set planner` | en | 1 | [`/tools/energy-curve`](https://energycurve.app/tools/energy-curve) |
 | `analyze dj set` | en | 1 | [`/`](https://energycurve.app/) |
-| `analyzing dj sets` | en | 1 | **hueco** |
-| `tracklist analyze dj sets` | en | 1 | **hueco** |
+| `analyzing dj sets` | en | 1 | [`/tools/energy-curve`](https://energycurve.app/tools/energy-curve) — ya la contestaba: título «Energy curve analyzer», lede «Drop in a playlist export or paste a tracklist…»; marcada en el recuento del 27/09/2026 (lote 14), sin escribir |
+| `tracklist analyze dj sets` | en | 1 | [`/tools/energy-curve`](https://energycurve.app/tools/energy-curve) — ya la contestaba: «paste a tracklist» y «Analyze this list» son el copy de la página; marcada el 27/09/2026 (lote 14), sin escribir |
 | `rueda camelot online` | es | 1 | [`/es/herramientas/rueda-camelot`](https://energycurve.app/es/herramientas/rueda-camelot) |
 | `analizar bpm y tonalidad` | es | 1 | [`/es/herramientas/compatibilidad-tonalidad-bpm`](https://energycurve.app/es/herramientas/compatibilidad-tonalidad-bpm) |
 | `programa para analizar bpm canciones` | es | 1 | [`/es/herramientas/compatibilidad-tonalidad-bpm`](https://energycurve.app/es/herramientas/compatibilidad-tonalidad-bpm) |
-| `programa gratis para dj` | es | 1 | **hueco** |
+| `programa gratis para dj` | es | 1 | [`/es/comparar/mejor-software-para-dj`](https://energycurve.app/es/comparar/mejor-software-para-dj) — la consulta pide un programa para tocar, no nuestra herramienta: la sección «Para empezar: qué es gratis» lista los que lo son según su fabricante; marcada el 27/09/2026 (lote 14), sin escribir |
 | `rueda camelot online gratis` | es | 0 (sin sugerencias) | [`/es/herramientas/rueda-camelot`](https://energycurve.app/es/herramientas/rueda-camelot) |
 
 ---
@@ -269,16 +268,21 @@ del sitio viven acá.
 | Aprender — inglés | 30 | 29 | 1 — `how to structure a house dj set`, dejado a propósito (lote 13) |
 | Aprender — español | 28 | 28 | 0 — eran 2 hasta el lote 13 (la tabla armónica) |
 | Comparar | 21 | 21 | 0 — eran 20 hasta el 26/09/2026 (lote 9), 14 hasta el lote 13 |
-| Importar / exportar | 25 | 23 | 2 — eran 11 hasta el 27/09/2026 (lote 12) |
-| Herramienta | 22 | 18 | 4 — eran 5 hasta el lote 13 (`camelot wheel free download`) |
-| **Total** | **126** | **119** | **7** |
+| Importar / exportar | 25 | 25 | 0 — eran 11 hasta el lote 12, 2 hasta el lote 14 |
+| Herramienta | 22 | 21 | 1 — `ai dj set planner free`, que es una decisión; eran 5 hasta el lote 13, 4 hasta el lote 14 |
+| **Total** | **126** | **124** | **2** |
 
 **Recuentos:** 19/09/2026 (original: 77 con página, 49 huecos) · 26/09/2026
 (lotes 9 y 10, parcial: la tabla de comparación no se actualizó) · 27/09/2026
-(lote 12: 97 con página, 29 huecos) · 27/09/2026, lote 13: **119 con página, 7
-huecos** — el conteo de la tabla y el `grep` del archivo coinciden. De las 22
-que cerró el lote 13, una (`how to plan a dj set`) ya estaba contestada y se
-marcó sin escribir.
+(lote 12: 97 con página, 29 huecos) · 27/09/2026, lote 13: 119 con página, 7
+huecos — de las 22 que cerró, una (`how to plan a dj set`) ya estaba
+contestada y se marcó sin escribir · 27/09/2026, lote 14: **124 con página, 2
+huecos** — el conteo de la tabla y el `grep` del archivo coinciden. De las 5
+que cerró el lote 14, tres ya estaban contestadas (`analyzing dj sets`,
+`tracklist analyze dj sets` por `/tools/energy-curve`; `programa gratis para
+dj` por la comparación de software) y dos son las gemelas españolas escritas.
+Los dos que quedan no son de contenido: uno es una decisión (`ai dj set
+planner free`) y el otro se dejó a propósito (`house`).
 
 Por idioma: **80 en inglés, 46 en español**.
 
@@ -335,14 +339,19 @@ anotado con qué.
    `lib/music/harmonic-transitions.ts` y no escritas, más `/camelot-wheel.svg`
    para `camelot wheel free download` (cierra 5 en total).
 
-6. **Lo que queda** (7 huecos): dos gemelas españolas de artículos A→B
-   (`exportar playlist rekordbox a usb`, `exportar playlist de traktor a
-   rekordbox`); cuatro de herramienta (`ai dj set planner free` — decisión sobre
-   la palabra «AI» —, `analyzing dj sets`, `tracklist analyze dj sets`,
-   `programa gratis para dj`); y `how to structure a house dj set`, dejada.
-   `harmonic mixing cheat sheet`, `rueda camelot notas`, `rueda camelot musical`.
-   Ojo: las reglas armónicas salen de `lib/music/harmonic-transitions.ts` y **no
-   se duplican en contenido** — la página tendría que renderizarlas desde ahí.
+6. **Lo que queda** (2 huecos, al 27/09/2026, lote 14): `ai dj set planner
+   free`, que es una decisión de Robertino sobre la palabra «AI» y no una
+   tarea; y `how to structure a house dj set`, dejada a propósito por el lote
+   13. ~~Las dos gemelas españolas A→B~~ las escribió el lote 14; ~~`analyzing
+   dj sets`, `tracklist analyze dj sets` y `programa gratis para dj`~~ ya
+   estaban contestadas por `/tools/energy-curve` y por la comparación de
+   software, y se marcaron sin escribir. (Una versión anterior de este punto
+   repetía las tres consultas de la tabla armónica que el punto 5 ya daba por
+   cerradas, con una nota sobre no duplicar las reglas armónicas que dejó de
+   aplicar cuando la página pasó a generarlas; se sacó el 27/09/2026.)
+
+**El mapa está cerrado por el lado del contenido.** Lo que sigue es GSC: en 60
+días, con datos de qué busca la gente que ya llega, y no del autocompletado.
 
 ---
 

@@ -79,7 +79,8 @@ Lo que viaja con los archivos es lo que tengan en los tags: BPM, tonalidad y el
 campo de comentario. Serato no tiene campo de energía propio, así que si un crate
 estaba etiquetado por energía se hizo en el comentario —casi siempre con Mixed In
 Key— y Rekordbox lo muestra en Comments. El mapa de quién guarda la energía dónde
-está en [la referencia de tags de energía](/es/energy-tags).
+está en [la referencia de tags de energía](/es/energy-tags), y el mismo recorrido
+desde Traktor está en [exportar una playlist de Traktor a Rekordbox](/es/blog/exportar-playlist-de-traktor-a-rekordbox).
 
 ## De una playlist de Rekordbox a Serato
 
@@ -93,8 +94,8 @@ de ellas.
 Así que el recorrido es el espejo:
 
 1. Poné los archivos de la playlist en una carpeta. El export a USB de Rekordbox
-   hace eso; los detalles están en [la página de formatos](/es/import-formats) y en
-   el artículo en inglés sobre el export a USB.
+   hace eso; los detalles, y qué hacer cuando el botón está en gris, están en
+   [exportar una playlist de Rekordbox a USB](/es/blog/exportar-playlist-de-rekordbox-a-usb).
 2. En Serato, arrastrá la carpeta sobre la zona de importación. El manual de
    Serato: arrastrás una carpeta y se importan los archivos compatibles en un
    crate.

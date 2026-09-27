@@ -1,4 +1,6 @@
 import { listPosts, postUpdatedAt } from "@/lib/blog/posts"
+import { COMPARISONS } from "@/lib/content/compare/comparisons"
+import { comparisonPath } from "@/lib/content/compare/paths"
 import { GLOSSARY_TERMS } from "@/lib/content/glossary/terms"
 import { glossaryTermPath, guidePath } from "@/lib/content/glossary/paths"
 import { publishedGuides } from "@/lib/content/guides/guides"
@@ -54,10 +56,12 @@ function section(heading: string, lines: string[]): string[] {
 export function GET() {
   const copy = getSiteCopy("en")
 
-  // Spanish, because that is the only language the articles exist in. Saying so
-  // is the point — a model that lists them as English pages will quote them as
-  // English pages.
-  const articles = listPosts("es")
+  // Both languages, each under its own heading, so a model quoting an article
+  // knows which language it is quoting. The English ones exist since SEO-E14
+  // (22/09/2026); this file said "Spanish only" for five days longer than that
+  // was true, which lote 14 found while verifying Phase 4 against production.
+  const englishArticles = listPosts("en")
+  const spanishArticles = listPosts("es")
 
   const body = [
     "# EnergyCurve",
@@ -114,13 +118,41 @@ export function GET() {
       ),
     ]),
 
+    // SEO-E24 asks for the comparisons. Sourced statements about named
+    // products, dated — the kind of page an engine is most likely to quote,
+    // and the one it most needs the date for.
+    ...section("Comparisons", [
+      ...COMPARISONS.map((comparison) =>
+        entry(
+          comparison.title.en,
+          `${SITE_URL}${comparisonPath(comparison, "en")}`,
+          `${comparison.description.en} (verified ${comparison.verifiedAt})`
+        )
+      ),
+    ]),
+
+    ...section("Articles (English)", [
+      entry(
+        PAGE_METADATA["/blog"].title.en,
+        `${SITE_URL}${localizedPath("/blog", "en")}`,
+        PAGE_METADATA["/blog"].description.en
+      ),
+      ...englishArticles.map((post) =>
+        entry(
+          post.title,
+          `${SITE_URL}${localizedPath(`/blog/${post.slug}`, "en")}`,
+          `${post.description} (updated ${postUpdatedAt(post)})`
+        )
+      ),
+    ]),
+
     ...section("Articles (Spanish)", [
       entry(
         PAGE_METADATA["/blog"].title.es,
         `${SITE_URL}${localizedPath("/blog", "es")}`,
         PAGE_METADATA["/blog"].description.es
       ),
-      ...articles.map((post) =>
+      ...spanishArticles.map((post) =>
         entry(
           post.title,
           `${SITE_URL}${localizedPath(`/blog/${post.slug}`, "es")}`,
@@ -130,7 +162,7 @@ export function GET() {
     ]),
 
     ...section("In Spanish", [
-      "Every page above except the articles has a Spanish twin under `/es`; the articles are Spanish-only and have no English translation yet.",
+      "Every page above except the articles has a Spanish twin under `/es`. The articles are written per language: some have a twin in the other language (their pages declare it with hreflang), most do not.",
       entry(
         PAGE_METADATA["/"].title.es,
         `${SITE_URL}${localizedPath("/", "es")}`,
