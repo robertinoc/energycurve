@@ -33,11 +33,11 @@ const KIND_LABELS: Record<PrivacyRequestKind, string> = {
 
 function dueTone(days: number) {
   if (days < 0) {
-    return "text-[#FF6B6B] bg-[rgba(255,107,107,0.14)] border-[rgba(255,107,107,0.3)]"
+    return "text-ec-error bg-ec-error/15 border-ec-error/30"
   }
 
   if (days <= 7) {
-    return "text-[#FBBF24] bg-[rgba(251,191,36,0.14)] border-[rgba(251,191,36,0.3)]"
+    return "text-ec-amber bg-ec-amber/15 border-ec-amber/30"
   }
 
   return "text-[#4ADE80] bg-[rgba(74,222,128,0.14)] border-[rgba(74,222,128,0.25)]"
@@ -119,7 +119,7 @@ export function PrivacyRequestQueue({
       </div>
 
       {error ? (
-        <p role="alert" className="text-[12px] text-[#FF6B6B]">
+        <p role="alert" className="text-[12px] text-ec-error">
           {error}
         </p>
       ) : null}
@@ -134,7 +134,7 @@ export function PrivacyRequestQueue({
           {open.map((request) => (
             <li
               key={request.id}
-              className="space-y-2 rounded-xl border border-white/10 bg-[#0A0714]/60 p-3"
+              className="space-y-2 rounded-xl border border-white/10 bg-ec-sunken/60 p-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-[13px] font-medium text-white/88">

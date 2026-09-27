@@ -176,7 +176,7 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
                       {suspended ? (
                         <Badge variant="warning">Suspended</Badge>
                       ) : (
-                        <Badge variant="accent">Active</Badge>
+                        <Badge variant="positive">Active</Badge>
                       )}
                     </td>
                     <td className="px-3 py-3">
