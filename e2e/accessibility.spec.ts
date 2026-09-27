@@ -41,6 +41,11 @@ const PUBLIC_PAGES = [
   ["article: how to structure a dj set", "/blog/how-to-structure-a-dj-set"],
   ["article: how does a dj set work", "/blog/how-does-a-dj-set-work"],
   ["article: what is a dj set", "/blog/what-is-a-dj-set"],
+  // Lote 12: the A→B articles, with a table and a FAQ block each.
+  ["article: traktor to rekordbox", "/blog/export-traktor-playlist-to-rekordbox"],
+  ["article: serato crates and rekordbox", "/blog/serato-crates-and-rekordbox"],
+  ["article: rekordbox to usb", "/blog/rekordbox-export-playlist-to-usb-greyed-out"],
+  ["article: crates de serato (es)", "/es/blog/crates-de-serato-y-rekordbox"],
   // The public tools. They arrived in two batches (#229, #231) and neither added
   // them here, so the WCAG sweep skipped the only pages on the site a stranger
   // is expected to *operate* rather than read — and #229's own Lighthouse run

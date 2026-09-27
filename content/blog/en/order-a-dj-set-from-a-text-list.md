@@ -99,7 +99,9 @@ list we do not have the real paths to your files.
 
 That is not a bug that can be fixed at this end — a path is a fact about your machine,
 and a list of names does not contain it. The [import formats page](/import-formats)
-sets out which format survives which round trip.
+sets out which format survives which round trip. And if the list you have is a Serato
+crate rather than text, [Serato crates and Rekordbox](/blog/serato-crates-and-rekordbox)
+explains why there is no text export and what to do instead.
 
 If your tags turn out to be empty once you do export,
 [tracks with no BPM or key](/blog/dj-tracks-with-no-bpm-or-key) covers what can be

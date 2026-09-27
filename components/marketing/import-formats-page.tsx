@@ -209,6 +209,27 @@ export function ImportFormatsPage({ locale }: { locale: SiteLocale }) {
           <FAQ entries={IMPORT_FORMATS_FAQ} locale={locale} />
         </section>
 
+        {/* Lote 12. The A→B articles: this page is where somebody moving a
+            playlist between programs lands, and it used to stop at "what each
+            format carries". A list rather than prose with links buried in it,
+            because the reader is scanning for their pair of programs. */}
+        <section className="space-y-2">
+          <h2 className="font-heading text-lg font-semibold">{t.journeysHeading}</h2>
+          <p className="max-w-2xl text-sm leading-7 text-white/64">{t.journeysIntro}</p>
+          <ul className="max-w-2xl space-y-1.5 text-sm leading-7">
+            {t.journeys.map((journey) => (
+              <li key={journey.slug}>
+                <Link
+                  href={localizedPath(`/blog/${journey.slug}`, locale)}
+                  className="text-white/80 underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
+                >
+                  {journey.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         {/* The sibling reference page — see the matching note on
             `energy-tags-page.tsx`. */}
         <p className="text-sm leading-6 text-white/56">

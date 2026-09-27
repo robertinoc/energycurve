@@ -97,7 +97,9 @@ archivos.
 Eso no es un bug que se pueda arreglar de este lado — una ruta es un hecho sobre tu
 máquina, y una lista de nombres no la contiene. La
 [página de formatos](/es/import-formats) dice qué formato sobrevive a qué ida y
-vuelta.
+vuelta. Y si lo que tenés no es texto sino un crate de Serato,
+[crates de Serato y Rekordbox](/es/blog/crates-de-serato-y-rekordbox) explica por qué
+no hay export a texto y qué hacer en su lugar.
 
 Si al exportar te encontrás con que los tags están vacíos,
 [tus temas no tienen BPM ni tonalidad](/es/blog/tus-temas-no-tienen-bpm-ni-tonalidad)
