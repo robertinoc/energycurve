@@ -270,6 +270,43 @@ export function getImportFormatsCopy(locale: SiteLocale) {
       locale === "es"
         ? "Si lo que falta es la energía, mirá de qué tag la leemos."
         : "If it is energy that is missing, see which tag we read it from.",
+    // Lote 12. The keyword map's finding on this page, verbatim: it covers the
+    // format but not the journey. People do not search "which formats are
+    // supported"; they search "how do I get this from here to there". The
+    // journeys are articles, and this is the page they hang off.
+    journeysHeading:
+      locale === "es"
+        ? "Mover una playlist de un programa a otro"
+        : "Moving a playlist between programs",
+    journeysIntro:
+      locale === "es"
+        ? "Esta página dice qué trae cada formato. Los recorridos — de dónde a dónde, y qué sobrevive — tienen artículo propio:"
+        : "This page says what each format carries. The journeys — from where to where, and what survives — each have their own article:",
+    // Slugs, not paths: the page resolves them through `localizedPath`, and
+    // the Spanish article is a twin with a slug of its own.
+    journeys:
+      locale === "es"
+        ? [
+            {
+              slug: "crates-de-serato-y-rekordbox",
+              label:
+                "Crates de Serato y Rekordbox: qué es un crate, cómo se mueve y por qué no hay export a texto",
+            },
+          ]
+        : [
+            {
+              slug: "export-traktor-playlist-to-rekordbox",
+              label: "Traktor to Rekordbox: what survives the trip",
+            },
+            {
+              slug: "serato-crates-and-rekordbox",
+              label: "Serato crates and Rekordbox, in both directions",
+            },
+            {
+              slug: "rekordbox-export-playlist-to-usb-greyed-out",
+              label: "Rekordbox to USB, and the greyed-out export option",
+            },
+          ],
     columns: COLUMNS.map((row) => ({
       field: pick(row.field),
       accepted: row.accepted,

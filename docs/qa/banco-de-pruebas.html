@@ -502,7 +502,7 @@
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
     <p><strong>Una sola cosa bloquea, y son cinco minutos en el SQL Editor: a la base de dev le faltan migraciones.</strong> Confirmado el 25/09 sondeando el enum en sólo-lectura: <strong>7 de los 12 géneros que ofrece el producto no existen en dev</strong> — <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code> y <code>bounce</code>. Los agrega la <code>0005</code>. Si mañana elegís uno de esos —o dejás la detección automática y lo elige ella— la importación falla con «Something went wrong while saving» y no vas a saber por qué. Eso salió de un E2E que se caía; sin arreglarlo te come la mañana. Aplicá <code>0005</code> y de paso <code>0027</code> a <code>0032</code>, en orden de número. La sesión <strong>DB</strong> tiene los pasos.</p>
-    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 26/09, al 26/09 (lote 11) <strong>823 pasan / 37 saltean / 0 fallan en 285 segundos</strong>, la suite entera en un solo comando: <code>npm run test:e2e</code> corre cinco shards en paralelo y devuelve un solo resumen. Hasta el lote 10 se corría en dos mitades (13,3 min); ese comando ya no existe. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
+    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 27/09 (lote 12) <strong>855 pasan / 37 saltean / 0 fallan en 4,7 minutos</strong> (al 26/09, lote 11, eran 823 / 37 / 0 en 285 segundos), la suite entera en un solo comando: <code>npm run test:e2e</code> corre cinco shards en paralelo y devuelve un solo resumen. Hasta el lote 10 se corría en dos mitades (13,3 min); ese comando ya no existe. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
     <ol style="margin:6px 0 0 18px;padding:0">
       <li><strong>DB.1 a DB.4 — 25 min.</strong> Aplicá las migraciones y corré el seed. Desbloquea todo lo demás: sin esto, siete géneros rompen y cualquier prueba de importación miente.</li>
@@ -514,6 +514,7 @@
       <li><strong>AUD — 30 min.</strong> Los tres hallazgos de la auditoría F1 ya están <strong>arreglados</strong> (lote 10); lo que queda es validarlos con tus archivos y en tu teléfono. AUD.4 (la cuarta importación en FREE) y AUD.5 (ocho capabilities sin ejercitar) siguen abiertos.</li>
       <li><strong>ART — 30 min.</strong> Los tres artículos en inglés. Leelos como DJ: la única prueba que ninguna máquina hace es si los firmarías.</li>
       <li><strong>CMP — 25 min.</strong> Las cuatro páginas de comparación. Lo que hay que juzgar no es un dato sino el tono: si alguna suena a que siempre ganamos nosotros, eso es el hallazgo.</li>
+      <li><strong>A2B — 45 min.</strong> Los cuatro artículos de trayecto (Traktor→Rekordbox, Serato↔Rekordbox, Rekordbox→USB y la gemela en español). Cada paso sale del manual del fabricante y ninguno se probó con el software abierto: A2B.3 es la única verificación que sólo podés hacer vos.</li>
       <li><strong>PAY — 20 min.</strong> El camino del dinero. Necesita una terminal con <code>stripe listen</code> abierta; sin eso el spec saltea en vez de correr, que es lo correcto pero no te dice nada.</li>
       <li><strong>CONT.4 y CONT.5 — 30 min.</strong> Las 21 definiciones leídas por un DJ, y el validador de Google. Las dos que deciden si el contenido sirve.</li>
       <li><strong>El resto de SEO</strong> — cuando haya deploy. No dependen de vos hoy.</li>
@@ -1492,6 +1493,44 @@
           steps: ["Abrí <code>/es/guia</code> y <code>/guide</code>", "Mirá el footer de la home en los dos idiomas"],
           expect: "El índice lista la guía, está indexable (sin <code>noindex</code>), está en el sitemap y el footer lo enlaza — sin que nadie tocara <code>isIndexable</code> ni <code>isEmptyIndex</code>. Los tests que afirmaban el estado vacío se dieron vuelta y el vacío quedó cubierto con un mock.",
           ifNot: "Si el índice no aparece, el bug es de esa lógica y no de la guía: ése era el hallazgo posible, y no ocurrió."
+        }
+      ]
+    },
+    {
+      code: "A2B",
+      title: "Los cuatro artículos de trayecto A→B del lote 12",
+      meta: "~45 min · sin cuenta · A2B.3 necesita tu Traktor, tu Rekordbox y tu Serato · A2B.4 necesita el deploy",
+      why: "El mapa de keywords tenía 11 consultas de importar/exportar sin página, todas variantes de «cómo llevo esto de acá para allá»: <code>/import-formats</code> decía qué trae cada formato y no el recorrido. El lote 12 escribió tres artículos en inglés (Traktor→Rekordbox, Serato↔Rekordbox con «qué es un crate», Rekordbox→USB con «greyed out») y una gemela en español del de Serato; cierran 9 de las 11. Cada paso de software sale del manual del fabricante —el de Rekordbox 7.2.18, el de Traktor, el soporte de Serato— y donde el fabricante no documenta nada el artículo lo dice en vez de inventar un paso. Lo automático ya vigila lo mecánico: parsean, <code>BlogPosting</code>+<code>BreadcrumbList</code>+<code>FAQPage</code> salen, accesibilidad 100 y consola limpia en los dos idiomas, y cada uno recibe entre 5 y 7 páginas que lo enlazan. Lo que queda es si son <em>ciertos</em> contra el software de verdad, y si un DJ los firmaría.",
+      tests: [
+        {
+          code: "A2B.1", title: "Leerlos como DJ, no como redactor", sub: "La prueba que decide si sirven",
+          steps: ["Leé <code>/blog/export-traktor-playlist-to-rekordbox</code> entero", "Después <code>/blog/serato-crates-and-rekordbox</code> y <code>/blog/rekordbox-export-playlist-to-usb-greyed-out</code>", "Marcá cualquier frase que un DJ con años de cabina no firmaría, y cualquier lugar donde el artículo suene a que EnergyCurve convierte librerías"],
+          expect: "Nada te hace fruncir el ceño. Los tres dicen sin vueltas que EnergyCurve lee los dos lados y no es un conversor, y que el orden se rearma a mano. No hay números inventados.",
+          ifNot: "La frase exacta y por qué. Es más barato reescribir una oración hoy que dejarla indexada."
+        },
+        {
+          code: "A2B.2", title: "La gemela en español y el vocabulario de la decisión 29", sub: "tonalidad, temas, librería, toque — y voseo",
+          steps: ["Leé <code>/es/blog/crates-de-serato-y-rekordbox</code> entera", "Buscá «canciones», «biblioteca», «pinchar», «tú», «tienes», «puedes»", "Mirá si «crate» y «playlist» sin traducir te suenan bien en la cabina"],
+          expect: "Ninguna de las palabras prohibidas aparece; «crate» y «playlist» quedaron en inglés a propósito, porque así las dice un DJ. La gemela lleva <code>translationOf</code> en los dos sentidos y el hreflang sale en las dos páginas.",
+          ifNot: "Corregí la palabra y anotá cuál: la regla es del sitio entero, no del artículo."
+        },
+        {
+          code: "A2B.3", title: "Los pasos contra el software de verdad", sub: "La única verificación que no se pudo hacer desde acá",
+          steps: ["En Traktor: clic derecho sobre una playlist → «Export Playlist» → ¿te deja una carpeta con los temas y un <code>.nml</code>?", "En Rekordbox: Preferences → Advanced → Database → «rekordbox xml» → «Imported Library»: ¿aparece el nodo <em>rekordbox xml</em> en el árbol, y arrastrar una playlist de ahí a Playlists la copia?", "En Rekordbox: arrastrar una carpeta desde Explorer a Playlists, ¿crea una playlist con el nombre de la carpeta?", "En Serato: arrastrar un crate sobre un disco en el panel Files, ¿copia los temas y el crate al disco?", "Con un pendrive en exFAT: ¿«Export» aparece gris en Rekordbox?"],
+          expect: "Los cinco pasos se comportan como los describen los artículos. Salen del manual de Rekordbox 7.2.18 (p. 18 y 46), del manual de Traktor y del soporte de Serato; ninguno se probó con el software abierto.",
+          ifNot: "Anotá el paso y qué pasó de verdad. Un artículo con un paso falso es peor que ninguno, y se corrige en el día."
+        },
+        {
+          code: "A2B.4", title: "Rich Results Test sobre uno de los cuatro", sub: "No se puede correr desde acá",
+          steps: ["Con el deploy hecho, pegá la URL de <code>/blog/serato-crates-and-rekordbox</code> en el Rich Results Test de Google", "Repetí con la gemela <code>/es/blog/crates-de-serato-y-rekordbox</code>"],
+          expect: "Detecta <code>BlogPosting</code>, <code>BreadcrumbList</code> y <code>FAQPage</code> con las tres preguntas, sin errores.",
+          ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa: anotá el campo exacto que nombre."
+        },
+        {
+          code: "A2B.5", title: "La lista de recorridos en /import-formats", sub: "El enlace entrante que los hace encontrables",
+          steps: ["Abrí <code>/import-formats</code> y bajá hasta «Moving a playlist between programs»", "Repetí en <code>/es/import-formats</code>", "Preguntate si un DJ que llegó buscando «qué formato exporto» entiende por qué esa lista está ahí"],
+          expect: "En inglés, tres enlaces con el par de programas en el texto; en español, uno (la gemela). Ninguno suena a anuncio: es la página diciendo dónde termina y dónde sigue.",
+          ifNot: "Si la lista estorba o el título no explica, anotalo: es una sección de plantilla, no de contenido, y se ajusta en minutos."
         }
       ]
     }

@@ -106,7 +106,9 @@ of one is that your library works as it is.
 What is worth knowing is **which** field yours are in, for one reason: if you ever move
 software, that decides whether the tagging work you have done for years comes with you.
 A value in Grouping or a dedicated ENERGY field travels. A value in Traktor's `COMMENT2`
-is a Traktor fact.
+is a Traktor fact. What else does and does not make the trip is written up per route:
+[Traktor to Rekordbox](/blog/export-traktor-playlist-to-rekordbox) and
+[Serato crates and Rekordbox](/blog/serato-crates-and-rekordbox), in both directions.
 
 If you want to see what a tool actually reads out of your library, the fastest check is
 to drop an export into [the energy curve tool](/tools/energy-curve) — it takes Rekordbox

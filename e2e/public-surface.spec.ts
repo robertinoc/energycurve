@@ -268,8 +268,9 @@ test.describe("blog", () => {
     await page.goto("/es/blog")
 
     await expect(page.locator("html")).toHaveAttribute("lang", "es")
-    // Five seed articles, each written against a measured gap in the AEO baseline.
-    await expect(page.locator("main ul li")).toHaveCount(5)
+    // Five seed articles, each written against a measured gap in the AEO
+    // baseline, plus the Spanish twin of the Serato article (lote 12).
+    await expect(page.locator("main ul li")).toHaveCount(6)
   })
 
   test("an article renders its markdown, not its markdown source", async ({
