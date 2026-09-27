@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Block } from "@/components/content/prose"
 import { linkGlossaryTerms } from "@/lib/blog/link-terms"
 import { BlogShell } from "@/components/marketing/blog-shell"
-import { CTAButton } from "@/components/marketing/cta-button"
+import { ContentCtaLink } from "@/components/content/cta-link"
 import { BLOG_COPY, formatPostDate } from "@/lib/content/blog-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import type { BlogPost } from "@/lib/blog/posts"
@@ -60,20 +60,38 @@ function KeepReading({ posts }: { posts: BlogPost[] }) {
  * and a heading repeating it word for word is the same sentence twice in a card
  * six lines tall.
  */
-function ArticleCta({ locale }: { locale: BlogPost["locale"] }) {
+function ArticleCta({
+  locale,
+  page,
+}: {
+  locale: BlogPost["locale"]
+  /** The article's own path, carried into `content_cta_click`. */
+  page: string
+}) {
   return (
     <section className="flex flex-col items-start gap-4 rounded-2xl border border-white/8 bg-white/[0.02] p-6">
       <p className="max-w-xl text-sm leading-7 text-white/64">
         {BLOG_COPY.ctaBody[locale]}
       </p>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-        <CTAButton href="/signup">{BLOG_COPY.ctaTitle[locale]}</CTAButton>
-        <Link
-          href={localizedPath("/tools/energy-curve", locale)}
-          className="text-sm text-ec-cyan underline-offset-4 hover:underline"
-        >
-          {BLOG_COPY.ctaTool[locale]}
-        </Link>
+        {/* SEO-E28 asks for `content_cta_click` on every post, and until lote
+            14 the articles had the links and not the event: the reference
+            pages went through `ContentCtaLink` and this block through a plain
+            button. Found verifying Phase 5 against production. Same anchor
+            component now, so the funnel can tell an article from a reference
+            page by the `page` property rather than by its absence. */}
+        <ContentCtaLink
+          variant="signup"
+          locale={locale}
+          page={page}
+          label={BLOG_COPY.ctaTitle[locale]}
+        />
+        <ContentCtaLink
+          variant="tool"
+          locale={locale}
+          page={page}
+          label={BLOG_COPY.ctaTool[locale]}
+        />
         {/* SEO-E15. `localizedPath`, not an absolute URL: the articles used to
             carry one hard-coded `https://energycurve.app/es` and it is the kind
             of link that survives a domain change by breaking quietly.
@@ -127,7 +145,10 @@ export function BlogArticle({
 
         <div className="flex flex-col gap-8 border-t border-white/8 pt-8">
           <KeepReading posts={related} />
-          <ArticleCta locale={post.locale} />
+          <ArticleCta
+            locale={post.locale}
+            page={localizedPath(`/blog/${post.slug}`, post.locale)}
+          />
 
           <nav>
             <Link

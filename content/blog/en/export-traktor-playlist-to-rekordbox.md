@@ -3,6 +3,7 @@ title: "Export a Traktor playlist to Rekordbox: what survives the move between D
 description: "Traktor exports a playlist as a folder plus an NML file, and Rekordbox does not open NML. What actually moves, what does not, and how to keep the order."
 slug: export-traktor-playlist-to-rekordbox
 locale: en
+translationOf: exportar-playlist-de-traktor-a-rekordbox
 targetQuery: "export traktor playlist to rekordbox"
 publishedAt: 2026-09-27
 tags: traktor, rekordbox, importing, exporting

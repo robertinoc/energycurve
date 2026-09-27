@@ -273,3 +273,115 @@ conviene saberlo.
 
 **Con esto la Fase 2 queda verificada en verde.** El hito «Phase 2 verified
 live» se puede cerrar.
+
+---
+
+# Verificación en producción — Fases 4 y 5
+
+**Fecha:** 27/09/2026 (lote 14)
+**Contra:** `https://energycurve.app` (producción, no el build local)
+**Commit que sirve producción:** sin confirmar como hash — Vercel no lo expone
+(`x-vercel-id` es un id de request). **Confirmado por marcador: producción
+sirve el lote 13**, es decir `d97a84f` (merge del PR #265) o posterior: responden
+200 `/harmonic-mixing-cheat-sheet`, `/compare/best-dj-software`,
+`/blog/how-djs-prepare-their-sets` y `/camelot-wheel.svg`, que sólo existen
+desde ese merge, y el sitemap trae 111 URLs, que es el número de ese lote.
+
+```
+for U in /guide/energy-curve-in-a-dj-set /compare/mixed-in-key /blog/export-traktor-playlist-to-rekordbox /harmonic-mixing-cheat-sheet /compare/best-dj-software /blog/how-djs-prepare-their-sets /camelot-wheel.svg; do curl -s -o /dev/null -w "$U %{http_code}\n" https://energycurve.app$U; done
+→ los siete: 200
+curl -s https://energycurve.app/sitemap.xml | grep -o '<loc>' | wc -l
+→ 111
+```
+
+Cada fila es un comando corrido hoy contra el dominio real y su salida.
+
+## Resultado
+
+| Fase | Código, en producción | Fase entera |
+|---|---|---|
+| Fase 4 | **ROJO** — E23 verde; E24 servido pero incompleto (sin comparaciones ni artículos en inglés); E22 con 1 perfil de 6 | **NO VERIFICADA** — esperan E22, E25, E26, E27 |
+| Fase 5 | **ROJO** — E28 en los artículos no emite el evento; E29 y E30 verdes | **NO VERIFICADA** — esperan la mitad de PostHog de E28, y E31 |
+
+**Ninguna de las dos fases se marca verificada.** Lo que está verde por código
+está abajo, fila por fila; lo que falta tiene nombre y apellido al final.
+
+## Fase 4 — la mitad de código
+
+### SEO-E23 — las comparaciones, las dos tandas
+
+| Qué | Comando | Salida | Estado |
+|---|---|---|---|
+| Las 12 URLs responden 200 con JSON-LD que parsea | `for U in …; do curl -s $P$U \| python3 -c "…json.loads…"` sobre las seis de `/compare/` y las seis de `/es/comparar/` | las 12: `200 · WebPage, BreadcrumbList, FAQPage(3)` | verde |
+| Están en el sitemap | `curl -s $P/sitemap.xml \| grep -c "<loc>$P/compare/…</loc>"` | 1 por URL, las 12 | verde |
+| El pie las enlaza | `curl -s $P/ \| grep -oE 'href="/compare/[^"]*"' \| sort \| uniq -c` (y `/es` con `/es/comparar/`) | 6 y 6, una ancla cada una | verde |
+
+### SEO-E24 — `/llms.txt`
+
+| Qué | Comando | Salida | Estado |
+|---|---|---|---|
+| 200, texto plano | `curl -sI $P/llms.txt \| grep -iE '^(HTTP\|content-type)'` | `HTTP/2 200` · `text/plain; charset=utf-8` · 9724 bytes | verde |
+| Qué es EnergyCurve, con la línea de contraste | `grep -c "# EnergyCurve"` · `grep -c "Mixed In Key"` | 1 · 2 | verde |
+| Precios | `grep -n -i pric` | línea 12: «Pricing — Free, PRO US$9.99, PRO+ US$19.99 … (US$99 / US$199 a year)» | verde |
+| Las dos páginas de referencia | `grep -c /energy-tags` · `grep -c /import-formats` | 1 · 1 | verde |
+| La empresa | `grep -c "StageLink LLC"` | 1 | verde |
+| **Los artículos pilares** | `grep -c how-to-structure-a-dj-set` · `grep "^## "` | **0** — las secciones son `Articles (Spanish)` e `In Spanish`; los artículos en inglés existen desde el 22/09 y el archivo dice «no tienen traducción todavía» | **rojo** |
+| **Las comparaciones** | `grep -c /compare/` | **0** — no hay sección de comparaciones | **rojo** |
+
+Los dos rojos son de código y este lote los arregla en `app/llms.txt/route.ts`
+(sección «Comparisons» con la fecha de verificación de cada página, sección
+«Articles (English)», y la línea de «In Spanish» corregida), con test en
+`tests/reference-seo.test.ts`. **Producción sigue sirviendo la versión sin
+eso hasta que se deploye**: esta fila se repite contra el dominio después del
+deploy, no se da por verde con el PR.
+
+### SEO-E22 — la entidad (la mitad de código)
+
+| Qué | Comando | Salida | Estado |
+|---|---|---|---|
+| `Organization` con `alternateName` | `curl -s $P/ \| python3 -c "…@type=='Organization'…"` | `alternateName= EnergyCurve DJ` | verde |
+| `sameAs` | ídem | `['https://www.instagram.com/energycurve.app/']` — **1 perfil**; el criterio de aceptación pide ≥ 6 | verde por código, **la tarea externa sigue abierta** |
+
+## Fase 5 — la mitad de código
+
+### SEO-E28 — los CTA de contenido
+
+| Qué | Comando | Salida | Estado |
+|---|---|---|---|
+| CTA en `/energy-tags` e `/import-formats`, los dos idiomas | `curl -s $P$U \| grep -oE 'See your set(&#x27;\|…)s curve, free'` y el `href` a la herramienta | las cuatro páginas: copy presente y ancla a `/tools/energy-curve` / `/es/herramientas/curva-de-energia` (el apóstrofo va escapado en el HTML, un `grep` literal da 0 y engaña) | verde |
+| CTA en los artículos | `curl -s $P/blog/how-to-structure-a-dj-set \| grep -c 'href="/tools/energy-curve"'` | 2 anclas (el CTA del artículo y una del cuerpo) | verde: el CTA está |
+| **El evento `content_cta_click` en los artículos** | leído en el código servido: `components/marketing/blog-article.tsx` en `d97a84f` | el CTA de los artículos usa `CTAButton` y `Link` **sin `captureContentCtaClick`**; sólo los bloques `<CTA>` de las páginas de referencia pasan por `ContentCtaLink`, que es el único lugar que emite el evento | **rojo** |
+| Key events y funnel en PostHog | — | no verificable sin la cuenta | **externo (Robertino)** |
+
+El rojo es de código y este lote lo arregla: `ArticleCta` pasa por
+`ContentCtaLink` con la ruta del artículo como `page`. Igual que E24: producción
+no lo tiene hasta el deploy.
+
+### SEO-E29 — Lighthouse CI
+
+| Qué | Comando | Salida | Estado |
+|---|---|---|---|
+| El workflow existe y corre las cuatro rutas | `grep -n url lighthouserc.json` · `grep -n "Lighthouse budgets" .github/workflows/ci.yml` | `/`, `/es`, `/pricing`, `/es/blog/antes-de-tocar-no-despues` · paso `Lighthouse budgets` en el job `verify` | verde |
+| Corre en `main` y falla por regresión | `gh run list --branch main --limit 3` · `gh run view <id> --json jobs` | `d97a84f` (27/09 20:44 UTC): `Production build: success`, `Lighthouse budgets: success`; el run de `109406c` falló ese mismo paso por TBT 205 ms contra 200 en `/` y pasó al relanzarlo — el gate corta | verde |
+
+E29 se verifica en CI, no en producción: es un guardarraíl del repositorio y no
+tiene superficie servida.
+
+### SEO-E30 — el barrido de accesibilidad
+
+| Qué | Comando | Salida | Estado |
+|---|---|---|---|
+| Cubre `/energy-tags`, `/import-formats` y un artículo en cada idioma | `grep -n "energy-tags\|import-formats\|blog" e2e/accessibility.spec.ts` | líneas 98–99 las dos referencias (más sus gemelas), 41–50 seis artículos en inglés y dos en español | verde |
+| Pasa | `npm run test:e2e` del lote 13 | 911 pasan, 37 saltean, 0 fallan | verde |
+
+## Lo que falta para cerrar cada fase, con nombre
+
+| Fase | Tarea | Qué falta | De quién |
+|---|---|---|---|
+| 4 | E22 | 5 perfiles más (Product Hunt, AlternativeTo, Crunchbase, X/Instagram/TikTok, Wikidata) y sus URLs en `ENTITY_PROFILES` de `lib/seo.ts` | Robertino crea los perfiles; el código es un array |
+| 4 | E24 | deploy del arreglo de este lote, y repetir las dos filas rojas contra el dominio | Robertino (deploy) |
+| 4 | E25 | el programa de menciones: textos aprobados por Robertino antes de enviar nada | Robertino |
+| 4 | E26 | el enlace desde stagelink.art y el post en su blog | Robertino |
+| 4 | E27 | la corrida mensual de visibilidad en IA y la revisión de GSC | Robertino |
+| 5 | E28 | deploy del arreglo; marcar `signup_completed` y `first_analysis` como key events y armar el funnel en PostHog | Robertino (cuenta de PostHog) |
+| 5 | E31 | el log semanal de PSI para 6 URLs (`docs/seo/cwv-log.md`, 4 filas) | Robertino |

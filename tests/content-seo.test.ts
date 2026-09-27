@@ -333,7 +333,7 @@ describe("the new content pages", () => {
      * asymmetry is the point of counting English and Spanish separately below:
      * a total alone would not show which side moved.
      */
-    it("is 111 URLs, and the arithmetic says why", () => {
+    it("is 113 URLs, and the arithmetic says why", () => {
       const glossaryUrls = GLOSSARY_TERMS.length * supportedLocales.length
       // Two indexes now: the glossary's and the guides'. The guide index was
       // absent while it had nothing to list; the first published guide brought
@@ -349,9 +349,9 @@ describe("the new content pages", () => {
       // typed in here would have to be edited by every article, and the whole
       // point of asserting a total is that it is the one number nobody edits
       // casually.
-      expect(allPublishedPosts()).toHaveLength(21)
+      expect(allPublishedPosts()).toHaveLength(23)
       expect(allPublishedPosts().filter((post) => post.locale === "en")).toHaveLength(15)
-      expect(allPublishedPosts().filter((post) => post.locale === "es")).toHaveLength(6)
+      expect(allPublishedPosts().filter((post) => post.locale === "es")).toHaveLength(8)
 
       // The comparison pages: four, both languages, no index.
       expect(COMPARISONS).toHaveLength(6)
@@ -360,7 +360,7 @@ describe("the new content pages", () => {
       ).toHaveLength(COMPARISONS.length * supportedLocales.length)
       expect(urls.some((url) => /\/(compare|es\/comparar)$/.test(url))).toBe(false)
 
-      expect(urls).toHaveLength(111)
+      expect(urls).toHaveLength(113)
     })
   })
 

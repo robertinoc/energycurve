@@ -46,6 +46,9 @@ const PUBLIC_PAGES = [
   ["article: serato crates and rekordbox", "/blog/serato-crates-and-rekordbox"],
   ["article: rekordbox to usb", "/blog/rekordbox-export-playlist-to-usb-greyed-out"],
   ["article: crates de serato (es)", "/es/blog/crates-de-serato-y-rekordbox"],
+  // Lote 14: the other two Spanish twins of the A→B articles.
+  ["article: traktor a rekordbox (es)", "/es/blog/exportar-playlist-de-traktor-a-rekordbox"],
+  ["article: rekordbox a usb (es)", "/es/blog/exportar-playlist-de-rekordbox-a-usb"],
   // Lote 13: the preparation article.
   ["article: how djs prepare their sets", "/blog/how-djs-prepare-their-sets"],
   // The public tools. They arrived in two batches (#229, #231) and neither added

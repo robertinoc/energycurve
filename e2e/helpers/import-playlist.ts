@@ -189,5 +189,37 @@ export async function importPlaylist(
 
   await page.waitForLoadState("networkidle")
 
+  // "A playlist exists" is not "the import is done". `createPlaylist` inserts
+  // the playlist row first and the tracks after it, so there is a window in
+  // which the set is listed, its page renders with zero tracks, and the Export
+  // button is disabled — and a server-rendered page does not refresh itself
+  // when the tracks land. Under the five parallel shards of `npm run test:e2e`
+  // that window was wide enough to be hit about once a run (lotes 12 and 13:
+  // "Export" disabled, a different format each time); in isolation, five runs
+  // of the export spec never hit it (lote 14). So the readiness signal is the
+  // product's own: the page, reloaded, shows the tracks. Not a retry of any
+  // assertion — a wait for the state the spec is about to assert on.
+  await expect
+    .poll(
+      async () => {
+        const exportButton = page.getByRole("button", { name: /export/i }).first()
+
+        if (await exportButton.isEnabled().catch(() => false)) {
+          return true
+        }
+
+        await page.reload()
+        await page.waitForLoadState("networkidle")
+
+        return false
+      },
+      {
+        timeout: 30_000,
+        message:
+          "the imported playlist never showed its tracks: the page kept rendering with Export disabled",
+      }
+    )
+    .toBe(true)
+
   return page.url()
 }

@@ -3,6 +3,7 @@ title: "Rekordbox export to USB for DJ players, and what to do when Export is gr
 description: "What Rekordbox writes to a USB stick, which library format it picks, and the file-system reason the export option goes grey, from Pioneer's own guides."
 slug: rekordbox-export-playlist-to-usb-greyed-out
 locale: en
+translationOf: exportar-playlist-de-rekordbox-a-usb
 targetQuery: "rekordbox export playlist greyed out"
 publishedAt: 2026-09-27
 tags: rekordbox, usb, exporting
