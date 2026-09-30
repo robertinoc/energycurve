@@ -323,6 +323,27 @@ describe("article structured data", () => {
     return { post, serialized, graph: JSON.parse(serialized)["@graph"] }
   }
 
+  it("carries the post's tags as `keywords`, like the index already did", async () => {
+    // H-13. The index emitted `keywords` for each of its five posts and the
+    // article — the page a crawler actually reads — emitted none, while the
+    // tags sat in the frontmatter the whole time. Asserted against the
+    // article's own `tags` rather than a fixed string so it keeps holding as
+    // the corpus grows, and asserted for EVERY published post so one article
+    // written without tags is visible as a content gap rather than as a
+    // silently absent property.
+    const { allPublishedPosts } = await import("@/lib/blog/posts")
+
+    for (const post of allPublishedPosts()) {
+      const { graph } = await graphFor(post.slug)
+      const posting = graph.find(
+        (node: { "@type": string }) => node["@type"] === "BlogPosting"
+      )
+
+      expect(post.tags.length, `${post.slug} has no tags`).toBeGreaterThan(0)
+      expect(posting.keywords, post.slug).toBe(post.tags.join(", "))
+    }
+  })
+
   it("publishes a BlogPosting and a BreadcrumbList for every article", async () => {
     const { allPublishedPosts } = await import("@/lib/blog/posts")
 
