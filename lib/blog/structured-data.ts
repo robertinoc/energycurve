@@ -163,6 +163,12 @@ export function buildArticleStructuredData(post: BlogPost, updatedAt: string) {
         // generated card — both paths go through `articleImageUrl` so the two
         // cannot disagree.
         image: articleImageUrl(post),
+        // The same tags the index already emits for this post (H-13). They were
+        // missing here, which is the page where they matter: the index gives a
+        // crawler five headlines, and the article is the thing being read. The
+        // data was always there — `tags` comes off the frontmatter — so this was
+        // a property that existed everywhere except at its destination.
+        ...(post.tags.length > 0 ? { keywords: post.tags.join(", ") } : {}),
         mainEntityOfPage: {
           "@type": "WebPage",
           "@id": url,
