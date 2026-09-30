@@ -1232,9 +1232,9 @@
           ifNot: "Lo que <strong>no</strong> hay que hacer está escrito en el mismo documento: partir el párrafo en dos <code>&lt;p&gt;</code>, bajarle la opacidad o retrasarlo. Las tres bajan el número sin cambiar nada de lo que el visitante ve."
         },
         {
-          code: "SEO5.4", title: "El rojo de la verificación de producción", sub: "Una sola cosa falló, y es de una línea",
-          steps: ["Abrí <code>docs/seo/verificacion-produccion-2026-09.md</code>", "Andá a la sección «Lo que quedó en rojo»", "Abrí <code>docs/roadmap-status.md</code> y buscá una mención a <code>docs/seo/SEO-PLAN.md</code>", "Confirmá que no está"],
-          expect: "Las fases 1 y 3 están verdes contra producción con el comando y la salida de cada una. La fase 0 no: <code>AGENTS.md</code> apunta al plan, <code>docs/roadmap-status.md</code> no. Por eso la fase 0 no se marcó verificada.",
+          code: "SEO5.4", title: "El rojo de la verificación de producción", sub: "Una sola cosa falló, era de una línea, y ya está",
+          steps: ["Abrí <code>docs/seo/verificacion-produccion-2026-09.md</code>", "Andá a la sección «Lo que quedó en rojo»", "Abrí <code>docs/roadmap-status.md</code> y buscá una mención a <code>docs/seo/SEO-PLAN.md</code>", "Confirmá que <strong>sí</strong> está — se agregó en un lote posterior al 20/09; hasta entonces este paso decía «confirmá que no está»"],
+          expect: "Las fases 1 y 3 están verdes contra producción con el comando y la salida de cada una. La fase 0 quedó en rojo el 20/09 porque <code>AGENTS.md</code> apuntaba al plan y <code>docs/roadmap-status.md</code> no; hoy los dos lo mencionan (roadmap-status.md:251, con link) y el rojo no tiene por qué seguir.",
           ifNot: "Si preferís que lo arregle en el próximo lote, decilo. No se arregló acá porque la tarea era verificar, y un rojo listado vale más que un tilde apurado."
         },
         {
@@ -1532,7 +1532,7 @@
         {
           code: "A2B.5", title: "La lista de recorridos en /import-formats", sub: "El enlace entrante que los hace encontrables",
           steps: ["Abrí <code>/import-formats</code> y bajá hasta «Moving a playlist between programs»", "Repetí en <code>/es/import-formats</code>", "Preguntate si un DJ que llegó buscando «qué formato exporto» entiende por qué esa lista está ahí"],
-          expect: "En inglés, tres enlaces con el par de programas en el texto; en español, uno (la gemela). Ninguno suena a anuncio: es la página diciendo dónde termina y dónde sigue.",
+          expect: "Tres enlaces con el par de programas en el texto, en los dos idiomas — cuando se escribió este caso en español había uno solo, y desde entonces existen las gemelas de Traktor→Rekordbox y Rekordbox→USB. Ninguno suena a anuncio: es la página diciendo dónde termina y dónde sigue.",
           ifNot: "Si la lista estorba o el título no explica, anotalo: es una sección de plantilla, no de contenido, y se ajusta en minutos."
         }
       ]

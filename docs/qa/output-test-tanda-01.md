@@ -35,6 +35,10 @@ que resolver **antes** de escribir el arreglo.
 | H-9 | Sin crédito en la cuenta de Anthropic | Operación | **Robertino** | Pendiente |
 | H-10 | Un problema de facturación se muestra como request mal formado | Bug | — | ✅ PR #246 · validar |
 | — | El botón de login dice «Login» en español | Bug de copy | — | ✅ PR #249 · validar |
+| H-13 | El JSON-LD del artículo no emite `keywords`; el del índice sí | Bug menor | — | PR #267 abierto |
+| H-14 | La comparación publica el precio del paquete «+ Cloud Option» como si fuera el plan de Rekordbox | **Bug de contenido** | Claude | Pendiente |
+| H-15 | Tres citas de Lexicon ya no son literales en su sitio | Deriva de fuente | Claude | Pendiente |
+| H-16 | Dos textos mandan a un botón «Manage billing» que se llama «Manage subscription» | Bug de copy | Robertino decide | Pendiente |
 
 ---
 
@@ -176,6 +180,78 @@ Ejemplo real: `...-with-energycurve.app.csv`. Pedido:
 algún sistema lea `.app` como la extensión.
 
 Afecta a los cinco formatos de export, no sólo al CSV.
+
+## H-13 · El artículo no emite `keywords` en su JSON-LD; el índice sí
+
+Salió de SEO3.3 el 20/09, con `curl` contra producción. `buildBlogIndexStructuredData`
+(`lib/blog/structured-data.ts:80`) agrega `keywords` a cada `BlogPosting` del
+índice cuando el post tiene tags; `buildArticleStructuredData` (`:119`) no lo
+hacía. **Arreglado en el PR #267** (abierto al 30/09), verificado por mutación
+sacando sólo la línea del artículo — la misma expresión aparece dos veces.
+
+## H-14 · La comparación vende los precios de Rekordbox más caros de lo que son
+
+**Severidad media, y es de las que la regla de evidencia existe para evitar.**
+Salió de CMP2.1 el 30/09, leyendo `rekordbox.com/en/plan` con el selector en
+Yearly.
+
+`/compare/rekordbox-vs-serato-vs-traktor` (y su gemela `/es/comparar/…`) dice:
+*«Core US$19, Creative US$23, Professional US$30 per month, quoted as the
+monthly conversion of US$228, US$276 and US$360 a year»*.
+
+Lo que Rekordbox publica hoy, mismo selector:
+
+| Plan | Solo | + Cloud Option |
+|---|---|---|
+| Core | **US$10**/mes · US$120/año | US$19/mes · US$228/año |
+| Creative | **US$15**/mes · US$180/año | US$23/mes · US$276/año |
+| Professional | US$30/mes · US$360/año | — |
+| Free | US$0 | US$9/mes · US$108/año |
+
+O sea: US$19 y US$23 son los paquetes con Cloud Option, y la página los
+presenta como el precio del plan. Professional y Free + Cloud están bien. **El
+archivo de hechos sí lo tenía bien** — `competitor-facts-2026-09-26.md` dice
+«Creative + Cloud Option $23» y «Core + Cloud Option $19»; el calificador se
+perdió entre el archivo y `market-comparisons.ts`. En la única página donde
+comparamos a otros entre sí, a uno le cobramos el doble en su plan de entrada.
+
+**Al arreglar:** la página, el archivo de hechos no (ya está bien), y el
+`lastReviewed` de esa página. `/compare/best-dj-software` no repite el error.
+Lo demás de la página sostiene contra los fabricantes (Serato, Traktor,
+VirtualDJ, djay), verificado el mismo día.
+
+## H-15 · Tres citas de Lexicon ya no son literales
+
+**Severidad baja.** Salió de CMP.2 el 30/09. Las tres siguen siendo verdad en
+sustancia; lo que cambió es la redacción del sitio de ellos, y la página las
+publica entre comillas bajo una regla que dice «su página gana».
+
+| Decimos | Su sitio dice hoy |
+|---|---|
+| «Lexicon works on Windows & macOS.» | «works on Windows and macOS.» |
+| «Supports Rekordbox, Serato, Traktor, VirtualDJ, Engine DJ and djay Pro.» | «supports Rekordbox, Serato, Engine DJ, Traktor, VirtualDJ and djay Pro.» |
+| «Lexicon is free to download and convert your library to and from any DJ app we support, this is 100% free…» | «library conversion… completely free» / «converting your library between any of the DJ apps we support is 100% free» |
+
+La primera está entre comillas en `/compare/lexicon` tal cual. Los precios de
+Lexicon (10,49 / 20,99 / 249 / 499) siguen coincidiendo. SetFlow y DJ.Studio:
+todas las citas y precios literales al 30/09.
+
+## H-16 · «Manage billing» no existe; el botón dice «Manage subscription»
+
+Hallazgo del 25/09 (PAY.4), **confirmado sin arreglar al 30/09** en
+`origin/main`:
+
+- `lib/content/dashboard-copy.ts:1690` → el botón: «Manage subscription» /
+  «Gestionar suscripción».
+- `:1230` → «…If all you want is to stop paying, use **Manage billing** above
+  instead…»
+- `:1291` → «…Open **Manage billing** and cancel it there, or write to us and
+  we will.»
+
+Dos textos mandan a un control que no existe, justo cuando alguien intenta
+dejar de pagar. Es un rename de dos strings y sus versiones en español. Está
+en la cola porque es copy de billing y la regla de esta ronda es no tocar
+billing sin que lo decidas.
 
 ## H-9 · Sin crédito en la cuenta de Anthropic
 
