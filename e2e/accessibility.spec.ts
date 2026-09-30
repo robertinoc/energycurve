@@ -59,10 +59,12 @@ const PUBLIC_PAGES = [
   ["energy curve tool", "/tools/energy-curve"],
   ["camelot wheel", "/tools/camelot-wheel"],
   ["key and BPM checker", "/tools/key-bpm-compatibility"],
+  ["playlist converter", "/tools/traktor-rekordbox-converter"],
   ["tools hub (es)", "/es/herramientas"],
   ["energy curve tool (es)", "/es/herramientas/curva-de-energia"],
   ["camelot wheel (es)", "/es/herramientas/rueda-camelot"],
   ["key and BPM checker (es)", "/es/herramientas/compatibilidad-tonalidad-bpm"],
+  ["playlist converter (es)", "/es/herramientas/conversor-traktor-rekordbox"],
   // The content pages. One glossary entry rather than all twenty-one: they are
   // one component rendered with different words, and sweeping forty-two pages
   // would add minutes to every CI run to re-test the same markup. The draft

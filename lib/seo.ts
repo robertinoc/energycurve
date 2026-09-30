@@ -105,6 +105,13 @@ const CARD_OVERRIDES: Partial<
       es: "EnergyCurve — chequeá si dos temas mezclan, por tonalidad y por BPM",
     },
   },
+  "/tools/traktor-rekordbox-converter": {
+    path: "/opengraph-image/traktor-rekordbox",
+    alt: {
+      en: "EnergyCurve — convert Traktor playlists to Rekordbox and back, free, in the browser",
+      es: "EnergyCurve — convertí playlists de Traktor a Rekordbox y al revés, gratis, en el navegador",
+    },
+  },
 }
 
 function socialImage(locale: SiteLocale, path?: LocalizedPath) {

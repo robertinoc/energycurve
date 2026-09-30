@@ -6,6 +6,7 @@ import { analyticsRunning } from "@/components/analytics/analytics-runtime"
 import { readConsent } from "@/lib/privacy/consent"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import type { ImportSource } from "@/lib/playlists/imported-track"
+import type { ConversionDirection } from "@/lib/tools/playlist-converter"
 
 /**
  * The four things worth knowing about the free tool, and nothing else.
@@ -34,8 +35,12 @@ export type ToolEvent =
   | "camelot_key_selected"
   | "compatibility_checked"
 
-/** Which page the event came from, so three tools don't blur into one funnel. */
-export type ToolName = "energy_curve" | "camelot_wheel" | "key_bpm"
+/** Which page the event came from, so four tools don't blur into one funnel. */
+export type ToolName =
+  | "energy_curve"
+  | "camelot_wheel"
+  | "key_bpm"
+  | "playlist_converter"
 
 interface ToolEventProperties {
   locale: SiteLocale
@@ -45,6 +50,11 @@ interface ToolEventProperties {
   trackCount?: number
   /** Rounded to a whole number: the distribution is the interesting part. */
   score?: number
+  /**
+   * The converter's one property: which way the file went. Never the filename,
+   * never a playlist name — same rule as the energy tool's `source`.
+   */
+  direction?: ConversionDirection
 }
 
 export function captureToolEvent(

@@ -49,10 +49,12 @@ const PAGES = [
   ["energy curve tool", "/tools/energy-curve"],
   ["camelot wheel", "/tools/camelot-wheel"],
   ["key and BPM checker", "/tools/key-bpm-compatibility"],
+  ["playlist converter", "/tools/traktor-rekordbox-converter"],
   ["tools hub (es)", "/es/herramientas"],
   ["energy curve tool (es)", "/es/herramientas/curva-de-energia"],
   ["camelot wheel (es)", "/es/herramientas/rueda-camelot"],
   ["key and BPM checker (es)", "/es/herramientas/compatibilidad-tonalidad-bpm"],
+  ["playlist converter (es)", "/es/herramientas/conversor-traktor-rekordbox"],
   // The routes this branch touched. All three gained rendered copy and a
   // `<script type="application/ld+json">` emitted from a server component into
   // a client-component page, which is precisely the arrangement that produced

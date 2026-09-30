@@ -41,6 +41,13 @@ const HINTS: Record<
   // to be the page somebody arrives on.
   "/tools/camelot-wheel": { changeFrequency: "monthly", priority: 0.8 },
   "/tools/key-bpm-compatibility": { changeFrequency: "monthly", priority: 0.8 },
+  // The converter ranks with the two reference tools: a page people search
+  // for by the problem it solves ("traktor to rekordbox"), less often the one
+  // they arrive on first.
+  "/tools/traktor-rekordbox-converter": {
+    changeFrequency: "monthly",
+    priority: 0.8,
+  },
   "/tools": { changeFrequency: "monthly", priority: 0.6 },
   "/blog": { changeFrequency: "weekly", priority: 0.7 },
   // The glossary index is a hub for forty-two entries and is the page most

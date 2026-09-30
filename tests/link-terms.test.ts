@@ -135,9 +135,12 @@ describe("linking glossary terms into an article", () => {
         )
       )
 
-      // These are the words a grep says are actually in the five articles. If
-      // one stops being linked, either an article changed or the match phrases
+      // These are the words a grep says are actually in the articles. If one
+      // stops being linked, either an article changed or the match phrases
       // drifted — both worth knowing about.
+      //
+      // `cue-point` joined on 30/09/2026, when the Traktor → Rekordbox article
+      // gained a paragraph on what the playlist converter does not carry.
       expect(new Set(linkedSomewhere)).toEqual(
         new Set([
           "curva-de-energia",
@@ -149,6 +152,7 @@ describe("linking glossary terms into an article", () => {
           "peak-time",
           "pitch",
           "transicion",
+          "cue-point",
         ])
       )
     })

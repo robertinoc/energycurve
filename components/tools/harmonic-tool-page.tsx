@@ -26,7 +26,13 @@ import { keyTable } from "@/lib/tools/harmonic-tools"
  * client components hold no key data that could drift from the app's.
  */
 
-function Article({
+/**
+ * Exported since the converter (the fourth tool) needed the same three blocks.
+ * One rendering of an article, a FAQ and the cross-links, used by three pages,
+ * rather than the fourth copy — the FAQ markup in particular is what the
+ * FAQPage schema is generated from, and two versions of it is how they drift.
+ */
+export function ToolArticle({
   sections,
   locale,
 }: {
@@ -47,7 +53,7 @@ function Article({
   )
 }
 
-function Faq({
+export function ToolFaq({
   entries,
   locale,
 }: {
@@ -78,7 +84,7 @@ function Faq({
   )
 }
 
-function CrossLinks({
+export function ToolCrossLinks({
   locale,
   except,
 }: {
@@ -101,6 +107,13 @@ function CrossLinks({
       {
         path: "/tools/energy-curve",
         label: { en: "Energy curve analyzer", es: "Analizador de curva de energía" },
+      },
+      {
+        path: "/tools/traktor-rekordbox-converter",
+        label: {
+          en: "Traktor ↔ Rekordbox converter",
+          es: "Conversor Traktor ↔ Rekordbox",
+        },
       },
       // Lote 13: the same table, published as a page and a download.
       {
@@ -158,9 +171,9 @@ export function CamelotWheelPage({ locale }: { locale: SiteLocale }) {
         }))}
       />
 
-      <Article sections={WHEEL_COPY.article} locale={locale} />
-      <Faq entries={WHEEL_COPY.faq} locale={locale} />
-      <CrossLinks locale={locale} except="/tools/camelot-wheel" />
+      <ToolArticle sections={WHEEL_COPY.article} locale={locale} />
+      <ToolFaq entries={WHEEL_COPY.faq} locale={locale} />
+      <ToolCrossLinks locale={locale} except="/tools/camelot-wheel" />
     </PageShell>
   )
 }
@@ -183,9 +196,9 @@ export function KeyBpmPage({ locale }: { locale: SiteLocale }) {
 
       <KeyBpmChecker locale={locale} />
 
-      <Article sections={CHECKER_COPY.article} locale={locale} />
-      <Faq entries={CHECKER_COPY.faq} locale={locale} />
-      <CrossLinks locale={locale} except="/tools/key-bpm-compatibility" />
+      <ToolArticle sections={CHECKER_COPY.article} locale={locale} />
+      <ToolFaq entries={CHECKER_COPY.faq} locale={locale} />
+      <ToolCrossLinks locale={locale} except="/tools/key-bpm-compatibility" />
     </PageShell>
   )
 }

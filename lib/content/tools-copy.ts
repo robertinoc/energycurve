@@ -67,6 +67,14 @@ export const TOOLS_HUB_COPY = {
     en: "Two tracks in: whether they mix, how far the tempo has to move, and what that does to the key.",
     es: "Dos temas: si mezclan, cuánto tiene que moverse el tempo y qué le hace eso a la tonalidad.",
   },
+  converterName: {
+    en: "Traktor ↔ Rekordbox playlist converter",
+    es: "Conversor de playlists Traktor ↔ Rekordbox",
+  },
+  converterBlurb: {
+    en: "A Traktor .nml becomes a Rekordbox .m3u8, or the other way round. Order and paths kept, nothing uploaded.",
+    es: "Un .nml de Traktor pasa a .m3u8 de Rekordbox, o al revés. Orden y rutas intactos, sin subir nada.",
+  },
   /** Placed beside the tools because a word you cannot define is the reason a
       tool's output does not help. */
   glossaryName: {

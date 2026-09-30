@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import {
+  ArrowLeftRight,
   BookOpen,
   Compass,
   Download,
@@ -161,6 +162,11 @@ export function LandingPage({ locale }: { locale: SiteLocale }) {
               href: localizedPath("/tools/key-bpm-compatibility", locale),
               label: copy.footer.keyBpmChecker,
               icon: GitCompareArrows,
+            },
+            {
+              href: localizedPath("/tools/traktor-rekordbox-converter", locale),
+              label: copy.footer.playlistConverter,
+              icon: ArrowLeftRight,
             },
             {
               href: localizedPath("/tools", locale),
