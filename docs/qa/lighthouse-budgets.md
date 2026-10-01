@@ -130,7 +130,7 @@ respondió. Ese bug ya se arregló una vez.
 | Métrica | Umbral | Nivel | Margen contra lo medido |
 |---|---|---|---|
 | CLS | ≤ 0,1 | error | grande: el peor es 0,013 |
-| TBT | ≤ 200 ms | error | grande: el peor es 100 ms |
+| TBT | ≤ 350 ms (era 200 hasta el 01/10) | error | el runner de CI mide medianas de 201–269 ms; local, 9–100 ms |
 | Accesibilidad | = 100 | error | exacto: hoy es 100 |
 | SEO | = 100 | error | exacto: hoy es 100 |
 | LCP | ≤ 7000 ms | **error** | ~24% sobre el peor medido (5,64 s) |
@@ -144,6 +144,26 @@ lo que el lote 3 evitó a propósito y sigue valiendo.
 
 Bajarlo a 2500 era condicional a que las cuatro rutas cumplieran. Cumplieron
 dos. Un techo que no se cumple es peor que uno alto y honesto.
+
+---
+
+## El umbral de TBT se subió una vez, y acá está el número
+
+El 200 ms salió de corridas locales, donde el peor valor fue 100 ms. En el
+runner de GitHub la misma página mide el doble: entre el 30/09 y el 01/10 el
+paso «Lighthouse budgets» se puso rojo en tres PRs seguidos — #268 (sólo
+documentación, cero código), #270 (un bump de Dependabot) y una rama de
+herramientas — siempre por TBT y nunca por otra métrica. Las medianas de tres
+corridas que el runner devolvió: `/` 201, 214 y 269 ms; `/es` 204 y 208 ms.
+La primera corrida de cada tanda es en frío y llega a 500–1100 ms; por eso la
+aserción agrega por mediana y no por máximo.
+
+El umbral pasa a **350 ms**, una sola vez, con estos números al lado. Cubre
+todas las medianas vistas con ~30 % de margen y sigue agarrando una regresión
+real: un PR de código que lleve la mediana arriba de 350 es un hallazgo, no
+ruido. Si vuelve a fallar sin que el PR toque la página, la respuesta no es
+subirlo otra vez — es medir qué cambió en el runner. Un gate que se afloja dos
+veces ya no es un gate.
 
 ---
 
