@@ -138,17 +138,19 @@ test.describe("WCAG 2.1 AA on the public surface", () => {
 })
 
 test.describe("the parts axe cannot see on its own", () => {
-  test("the page has exactly one h1, and it is not empty", async ({ page }) => {
-    // Axe checks heading order but tolerates several h1s. A screen-reader user
-    // navigating by heading needs one answer to "what is this page".
-    for (const [name, path] of PUBLIC_PAGES) {
+  // Axe checks heading order but tolerates several h1s. A screen-reader user
+  // navigating by heading needs one answer to "what is this page".
+  // One test per page, like the WCAG sweep above: a single test looping over
+  // every public page outgrew the 30 s budget on mobile-safari.
+  for (const [name, path] of PUBLIC_PAGES) {
+    test(`${name} has exactly one h1, and it is not empty`, async ({ page }) => {
       await page.goto(path)
 
       const headings = page.locator("h1")
       await expect(headings, `${name} should have one h1`).toHaveCount(1)
       await expect(headings.first()).not.toBeEmpty()
-    }
-  })
+    })
+  }
 
   test("every FAQ answer is in the HTML even while collapsed", async ({ page }) => {
     // The FAQ uses native <details> precisely so answers ship server-side, for

@@ -224,12 +224,20 @@ test.describe("the converter is reachable", () => {
     }
   })
 
-  test("from the landing's Resources menu", async ({ page }) => {
+  test("from the landing's Resources menu", async ({ page, isMobile }) => {
     await page.goto("/")
-    await page.getByRole("button", { name: /resources/i }).first().click()
+
+    // Below `lg` the Resources dropdown is not rendered as a button: its groups
+    // live inside the hamburger panel (#mobile-nav), already expanded.
+    const scope = isMobile ? page.locator("#mobile-nav") : page
+    if (isMobile) {
+      await page.getByRole("button", { name: "Open menu" }).click()
+    } else {
+      await page.getByRole("button", { name: /resources/i }).first().click()
+    }
 
     await expect(
-      page.locator('a[href="/tools/traktor-rekordbox-converter"]').first()
+      scope.locator('a[href="/tools/traktor-rekordbox-converter"]').first()
     ).toBeVisible()
   })
 })
