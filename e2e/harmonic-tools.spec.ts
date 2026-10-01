@@ -179,15 +179,24 @@ for (const { locale, path } of CHECKER) {
   })
 }
 
-test.describe("the hub lists all three tools", () => {
+test.describe("the hub lists all four tools", () => {
   for (const [hub, paths] of [
-    ["/tools", ["/tools/energy-curve", "/tools/camelot-wheel", "/tools/key-bpm-compatibility"]],
+    [
+      "/tools",
+      [
+        "/tools/energy-curve",
+        "/tools/camelot-wheel",
+        "/tools/key-bpm-compatibility",
+        "/tools/traktor-rekordbox-converter",
+      ],
+    ],
     [
       "/es/herramientas",
       [
         "/es/herramientas/curva-de-energia",
         "/es/herramientas/rueda-camelot",
         "/es/herramientas/compatibilidad-tonalidad-bpm",
+        "/es/herramientas/conversor-traktor-rekordbox",
       ],
     ],
   ] as const) {

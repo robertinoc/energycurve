@@ -151,6 +151,16 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
       es: "¿Mezclan estos dos temas? Compatibilidad armónica, diferencia de BPM, half-time y en qué tonalidad queda el tema si ajustás el pitch. Gratis y sin cuenta.",
     },
   },
+  "/tools/traktor-rekordbox-converter": {
+    title: {
+      en: "Traktor to Rekordbox playlist converter — NML ↔ M3U8, free",
+      es: "Conversor de playlists Traktor a Rekordbox — NML ↔ M3U8, gratis",
+    },
+    description: {
+      en: "Convert a Traktor .nml playlist to a Rekordbox .m3u8, or a .m3u8 back to .nml. Order and file paths kept. Free, no account, and the file never leaves your browser.",
+      es: "Convertí una playlist .nml de Traktor a .m3u8 para Rekordbox, o un .m3u8 de vuelta a .nml. Conserva el orden y las rutas. Gratis, sin cuenta y sin subir el archivo.",
+    },
+  },
   "/blog": {
     /**
      * Not the bare word "Blog" in both languages: the locale test rejects a title
@@ -246,10 +256,13 @@ export function pageMetadata(path: LocalizedPath, locale: SiteLocale) {
 export const PAGE_LAST_MODIFIED: Record<LocalizedPath, string> = {
   "/": "2026-09-19",
   "/pricing": "2026-09-11",
-  "/tools": "2026-09-19",
+  // The hub lists a fourth tool since 30/09; the three older tools gained a
+  // cross-link to it the same day.
+  "/tools": "2026-09-30",
   "/tools/energy-curve": "2026-09-19",
-  "/tools/camelot-wheel": "2026-09-17",
-  "/tools/key-bpm-compatibility": "2026-09-17",
+  "/tools/camelot-wheel": "2026-09-30",
+  "/tools/key-bpm-compatibility": "2026-09-30",
+  "/tools/traktor-rekordbox-converter": "2026-09-30",
   "/blog": "2026-09-19",
   "/glossary": "2026-09-19",
   "/guide": "2026-09-19",

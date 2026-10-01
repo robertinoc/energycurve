@@ -47,6 +47,9 @@ export const LOCALIZED_PATHS = [
   "/tools/energy-curve",
   "/tools/camelot-wheel",
   "/tools/key-bpm-compatibility",
+  // The fourth tool: TraktorBox, ported. A converter, not a reader like the
+  // other three, but the same kind of page — free, no account, in the browser.
+  "/tools/traktor-rekordbox-converter",
   "/blog",
   "/glossary",
   "/guide",
@@ -87,6 +90,8 @@ const ES_SLUGS: Partial<Record<LocalizedPath, string>> = {
   "/tools/camelot-wheel": "/herramientas/rueda-camelot",
   "/tools/key-bpm-compatibility":
     "/herramientas/compatibilidad-tonalidad-bpm",
+  "/tools/traktor-rekordbox-converter":
+    "/herramientas/conversor-traktor-rekordbox",
   // Same reasoning as the tools: these two pages exist to be found by someone
   // typing "glosario dj" or "guía para armar un set", and an English slug on
   // them throws away the words the search is made of. The entries underneath

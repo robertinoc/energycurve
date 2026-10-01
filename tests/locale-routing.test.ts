@@ -223,6 +223,7 @@ describe("hreflang and canonicals", () => {
       "/tools/energy-curve",
       "/tools/camelot-wheel",
       "/tools/key-bpm-compatibility",
+      "/tools/traktor-rekordbox-converter",
     ] as const
 
     const cards = tools.map(cardOf)

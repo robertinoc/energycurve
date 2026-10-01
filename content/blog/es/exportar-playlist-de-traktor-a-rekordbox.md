@@ -6,6 +6,7 @@ locale: es
 translationOf: export-traktor-playlist-to-rekordbox
 targetQuery: "exportar playlist de traktor a rekordbox"
 publishedAt: 2026-09-27
+updatedAt: 2026-09-30
 tags: traktor, rekordbox, importar, exportar
 ---
 
@@ -87,9 +88,17 @@ lee el orden y el campo de energía que escribió Traktor, sin cuenta, y te mues
 el set como lista y como curva. Esa lista es tu guía mientras reordenás en
 Rekordbox — y la curva te dice si el orden valía la pena conservarlo.
 
-Para que quede claro qué no es EnergyCurve: lee los dos formatos, NML de Traktor y
-XML de Rekordbox, pero no escribe uno a partir del otro. No es un conversor. Los
-gestores de librería hechos para ese trabajo existen —
+Ahora hay un camino más corto para el paso tres. [El conversor gratuito de playlists
+Traktor ↔ Rekordbox](/es/herramientas/conversor-traktor-rekordbox) convierte el
+`.nml` en un `.m3u8` en tu navegador, con el orden y las rutas intactos, y Rekordbox
+importa un `.m3u8` directo (File → Import → Import playlist). Antes vivía en
+apps.robertino.world como TraktorBox; acá hace la misma conversión, sin subir el
+archivo.
+
+Para que quede claro qué no es el conversor: mueve la playlist — orden, rutas,
+títulos, duraciones — y nada más. Los cue points, los beatgrids y el análisis se
+quedan en la librería de cada programa, porque ninguno de los dos formatos tiene
+dónde ponerlos. Los gestores de librería hechos para ese trabajo existen —
 [la comparación con Lexicon](/es/comparar/lexicon) dice dónde está la línea, y
 [Rekordbox vs Serato vs Traktor](/es/comparar/rekordbox-vs-serato-vs-traktor) compara
 los dos programas en sí — y este artículo no hace de cuenta que el paso de

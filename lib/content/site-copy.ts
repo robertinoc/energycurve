@@ -277,6 +277,8 @@ interface SiteCopySchema {
     /** The two tools that reached no menu until now, plus the hub. */
     camelotWheel: LocalizedLabel
     keyBpmChecker: LocalizedLabel
+    /** TraktorBox, ported (30/09). The one tool that writes a file. */
+    playlistConverter: LocalizedLabel
     toolsHub: LocalizedLabel
     blog: LocalizedLabel
     glossary: LocalizedLabel
@@ -1471,6 +1473,10 @@ const siteCopy: SiteCopySchema = {
       en: "Check if two tracks mix",
       es: "Fijate si dos temas mezclan",
     },
+    playlistConverter: {
+      en: "Convert Traktor ↔ Rekordbox playlists",
+      es: "Convertí playlists Traktor ↔ Rekordbox",
+    },
     toolsHub: {
       en: "All free tools",
       es: "Todas las herramientas",
@@ -1954,6 +1960,7 @@ export function getSiteCopy(locale: SiteLocale = "en") {
       freeTool: siteCopy.footer.freeTool[locale],
       camelotWheel: siteCopy.footer.camelotWheel[locale],
       keyBpmChecker: siteCopy.footer.keyBpmChecker[locale],
+      playlistConverter: siteCopy.footer.playlistConverter[locale],
       toolsHub: siteCopy.footer.toolsHub[locale],
       blog: siteCopy.footer.blog[locale],
       glossary: siteCopy.footer.glossary[locale],

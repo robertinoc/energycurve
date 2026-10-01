@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Activity, BookOpen, Music4, Scale } from "lucide-react"
+import { Activity, ArrowLeftRight, BookOpen, Music4, Scale } from "lucide-react"
 
 import { PageShell } from "@/components/marketing/page-shell"
 import { TOOLS_HUB_COPY } from "@/lib/content/tools-copy"
@@ -29,12 +29,21 @@ const TOOLS = [
     blurb: "checkerBlurb",
     icon: Scale,
   },
+  // Last: the only one that changes a file rather than reading it, and the
+  // one a DJ reaches for at a different moment — when moving between
+  // programs, not when preparing a set.
+  {
+    path: "/tools/traktor-rekordbox-converter",
+    name: "converterName",
+    blurb: "converterBlurb",
+    icon: ArrowLeftRight,
+  },
 ] as const
 
 /**
  * The tools index.
  *
- * Three tools now. The list is data rather than markup so a fourth is one entry
+ * Four tools now. The list is data rather than markup so a fourth is one entry
  * and not a copied block — the first version of this page had the single tool
  * hardcoded, which is exactly the shape that rots.
  */

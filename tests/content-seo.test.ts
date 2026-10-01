@@ -298,8 +298,14 @@ describe("the new content pages", () => {
      * class of mistake at once — a locale dropped, an entry listed twice, a
      * draft leaking in. 32 before the content branch, 78 after it, 84 since
      * SEO-E14 on 22/09/2026, 87 since SEO-E13, 85 since 25/09/2026, 93 since
-     * SEO-E23 on 26/09/2026, 96 since lote 10 on the same day, and **100 since
-     * lote 11, also 26/09/2026**, which is the arithmetic below.
+     * SEO-E23 on 26/09/2026, 96 since lote 10 on the same day, 100 since
+     * lote 11, also 26/09/2026, 113 by lote 14, and **115 since 30/09/2026**,
+     * which is the arithmetic below.
+     *
+     * The two from 30/09 are the fourth free tool — the Traktor ↔ Rekordbox
+     * playlist converter ported from TraktorBox — in both languages. A fixed
+     * page, so it comes from `LOCALIZED_PATHS` and adds exactly one URL per
+     * locale, like the three tools before it.
      *
      * The four from lote 11 are the first real guide in both languages, plus
      * the guide index coming back in both — the index had been held out while
@@ -333,7 +339,7 @@ describe("the new content pages", () => {
      * asymmetry is the point of counting English and Spanish separately below:
      * a total alone would not show which side moved.
      */
-    it("is 113 URLs, and the arithmetic says why", () => {
+    it("is 115 URLs, and the arithmetic says why", () => {
       const glossaryUrls = GLOSSARY_TERMS.length * supportedLocales.length
       // Two indexes now: the glossary's and the guides'. The guide index was
       // absent while it had nothing to list; the first published guide brought
@@ -360,7 +366,7 @@ describe("the new content pages", () => {
       ).toHaveLength(COMPARISONS.length * supportedLocales.length)
       expect(urls.some((url) => /\/(compare|es\/comparar)$/.test(url))).toBe(false)
 
-      expect(urls).toHaveLength(113)
+      expect(urls).toHaveLength(115)
     })
   })
 

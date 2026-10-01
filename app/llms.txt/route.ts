@@ -85,6 +85,7 @@ export function GET() {
       pageEntry("/tools"),
       pageEntry("/tools/camelot-wheel"),
       pageEntry("/tools/key-bpm-compatibility"),
+      pageEntry("/tools/traktor-rekordbox-converter"),
     ]),
 
     // The two pages that answer the questions a DJ has before exporting a

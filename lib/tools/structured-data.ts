@@ -1,4 +1,5 @@
 import { CHECKER_COPY, WHEEL_COPY } from "@/lib/content/harmonic-tools-copy"
+import { CONVERTER_COPY } from "@/lib/content/playlist-converter-copy"
 import { TOOL_COPY, TOOLS_HUB_COPY } from "@/lib/content/tools-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import { pageMetadata } from "@/lib/content/page-metadata"
@@ -174,6 +175,65 @@ export function buildHarmonicToolStructuredData(
           crumb(1, HOME_CRUMB[locale], "/", locale),
           crumb(2, TOOLS_HUB_COPY.h1[locale], "/tools", locale),
           crumb(3, copy.h1[locale], path, locale),
+        ],
+      },
+    ],
+  }
+}
+
+/**
+ * The converter's graph. Same three entities as the other tools; the
+ * `featureList` names the two directions because "playlist converter" on its
+ * own does not say which programs, and that pair is the whole query.
+ */
+export function buildPlaylistConverterStructuredData(locale: SiteLocale) {
+  const path = "/tools/traktor-rekordbox-converter"
+  const url = `${SITE_URL}${localizedPath(path, locale)}`
+  const { description } = pageMetadata(path, locale)
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": `${url}#app`,
+        name: CONVERTER_COPY.h1[locale],
+        url,
+        description,
+        applicationCategory: "MultimediaApplication",
+        applicationSubCategory: "DJ playlist conversion",
+        operatingSystem: "Web browser",
+        browserRequirements: "Requires JavaScript",
+        inLanguage: locale,
+        publisher: buildOrganization(locale),
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+          availability: "https://schema.org/InStock",
+        },
+        featureList: [
+          `${CONVERTER_COPY.ui.nmlToM3u8[locale]} (.nml → .m3u8)`,
+          `${CONVERTER_COPY.ui.m3u8ToNml[locale]} (.m3u8 → .nml)`,
+        ],
+      },
+      {
+        ...buildFaqPage({
+          id: url,
+          inLanguage: locale,
+          entries: CONVERTER_COPY.faq.map((entry) => ({
+            question: entry.question[locale],
+            answer: entry.answer[locale],
+          })),
+        }),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${url}#breadcrumb`,
+        itemListElement: [
+          crumb(1, HOME_CRUMB[locale], "/", locale),
+          crumb(2, TOOLS_HUB_COPY.h1[locale], "/tools", locale),
+          crumb(3, TOOLS_HUB_COPY.converterName[locale], path, locale),
         ],
       },
     ],
