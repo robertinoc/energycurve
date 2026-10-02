@@ -30,9 +30,10 @@
           "error",
           { "maxNumericValue": 0.1, "aggregationMethod": "median" }
         ],
+        "//tbt": "Raised ONCE, 200 -> 350, on 2026-10-01. The 200 came from local runs (worst 100 ms). On the GitHub runner the per-URL medians over five consecutive CI runs were 201, 204, 208, 214 and 269 ms, with cold first runs up to 1106 ms, so the gate went red on three pull requests that changed no code (#268 was docs only). 350 clears every runner median seen with ~30% to spare and still catches a real regression; a median above it on a code PR is a finding, not noise. See docs/qa/lighthouse-budgets.md.",
         "total-blocking-time": [
           "error",
-          { "maxNumericValue": 200, "aggregationMethod": "median" }
+          { "maxNumericValue": 350, "aggregationMethod": "median" }
         ],
         "categories:accessibility": [
           "error",
