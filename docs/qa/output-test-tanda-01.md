@@ -39,6 +39,9 @@ que resolver **antes** de escribir el arreglo.
 | H-14 | La comparación publica el precio del paquete «+ Cloud Option» como si fuera el plan de Rekordbox | **Bug de contenido** | Claude | Pendiente |
 | H-15 | Tres citas de Lexicon ya no son literales en su sitio | Deriva de fuente | Claude | Pendiente |
 | H-16 | Dos textos mandan a un botón «Manage billing» que se llama «Manage subscription» | Bug de copy | Robertino decide | Pendiente |
+| H-17 | La promesa «no guardamos tu IP» se apoya en una opción de PostHog que no hace nada | **Privacidad · alta** | **Robertino** (ajuste) + Claude (copy) | Pendiente |
+| H-18 | Dos artículos en inglés enlazan el mismo término de glosario dos veces | Bug menor | Claude | Pendiente |
+| H-19 | El tooltip de término no se cierra con Escape (WCAG 1.4.13) | Accesibilidad · media | Claude | Pendiente |
 
 ---
 
@@ -252,6 +255,77 @@ Dos textos mandan a un control que no existe, justo cuando alguien intenta
 dejar de pagar. Es un rename de dos strings y sus versiones en español. Está
 en la cola porque es copy de billing y la regla de esta ronda es no tocar
 billing sin que lo decidas.
+
+## H-17 · «No guardamos tu IP» se apoya en una opción que no hace nada
+
+**Severidad alta — es una promesa de privacidad publicada.** Salió de TOOL.3 el
+02/10, revisando qué manda PostHog.
+
+Lo que decimos, en tres lugares:
+
+- El banner: «Nunca graba tu pantalla, **tu IP** ni tu música» / «It never
+  records your screen, **your IP** or your music» (`lib/content/site-copy.ts:1417-1418`).
+- La política de privacidad sobre PostHog: «**we do not send it your IP
+  address**» (`lib/content/legal-copy.ts:225`, y su gemela en `:451`).
+- `docs/compliance/privacy-by-design.md:146`: «No se envía IP».
+
+Lo que lo respalda en el código es una línea: `ip: false` en el `posthog.init` de
+`components/analytics/analytics-runtime.ts:49`. En la versión instalada
+(`posthog-js` 1.396.6) esa opción no existe más, y el SDK lo dice en su propio
+código:
+
+> The `ip` config option has NO EFFECT AT ALL and has been deprecated. Use a
+> custom transformation or "Discard IP data" project setting instead.
+
+Los eventos van directo a `us.i.posthog.com`, sin proxy, así que cada request le
+llega a PostHog con la IP del visitante en la conexión. Si la guarda o no
+depende sólo del ajuste «Discard client IP data» del proyecto, que ningún
+documento del repo menciona.
+
+Dos consecuencias, y la segunda no depende del ajuste:
+
+1. Si el ajuste está apagado, el banner y la política afirman algo falso hoy.
+2. Aun prendido, «we do not send it your IP address» es literalmente falso: se
+   la mandamos en cada request y PostHog la descarta. Lo verdadero es «PostHog
+   no la guarda».
+
+**Qué hace falta, en orden:** Robertino confirma (y si hace falta prende) el
+ajuste en PostHog → Settings → Project. Después: corregir la frase de la
+política y de `privacy-by-design.md`, y sacar el `ip: false` muerto o
+reemplazarlo por un `before_send` que borre `$ip`. Es copy legal y compliance;
+no se tocó. No es asesoramiento legal.
+
+Es el patrón del repo, otra vez: un instrumento que mide un sustituto. La
+promesa se respaldó con una opción de configuración y se asumió que la opción
+hacía lo que dice su nombre.
+
+## H-18 · Dos artículos en inglés enlazan el mismo término dos veces
+
+**Severidad baja.** Salió de CONT.7 el 02/10. De 23 artículos, 21 enlazan cada
+término de glosario una sola vez. Los otros dos:
+
+- `/blog/how-djs-prepare-their-sets` — `warm-up` dos veces.
+- `/blog/how-does-a-dj-set-work` — `bpm`, `key` y `transition` dos veces cada
+  uno (17 enlaces de glosario en 1100 palabras).
+
+Causa: en esos dos `.md` hay enlaces escritos a mano
+(`how-djs-prepare-their-sets.md:31`, `how-does-a-dj-set-work.md:26/38/45`) y
+`lib/blog/link-terms.ts` además enlaza la primera aparición por su cuenta, sin
+saber que el término ya tiene un enlace. Se arregla sacando los enlaces
+manuales o haciendo que `link-terms` cuente los existentes.
+
+## H-19 · El tooltip de término no se cierra con Escape
+
+**Severidad media (accesibilidad).** Salió de CONT.3 el 02/10. El término
+(`components/content/termino.tsx`) es un enlace con `aria-describedby`; el
+tooltip aparece al recibir foco, pero **Escape no lo cierra**: es sólo CSS
+(`.ec-term:focus-within`, `app/globals.css:523`), y el comentario del bloque
+dice que no hace falta porque perder el foco lo oculta.
+
+Eso choca con WCAG 2.1 · 1.4.13 (nivel AA): lo que aparece al enfocar tiene que
+poder descartarse sin mover el foco, y este tooltip se dibuja encima de la
+línea anterior. Se arregla con un handler de Escape en el componente que oculte
+el tip hasta el próximo foco.
 
 ## H-9 · Sin crédito en la cuenta de Anthropic
 
