@@ -190,8 +190,10 @@ lo que un data room pregunta —"¿cómo cumplen X?"— sin releer el dossier en
   controles de §2 están verificados a nivel de código y de handler. El pentest y
   el IDOR entre dos cuentas reales siguen bloqueados en las cuentas de prueba.
 - **La restauración de backups nunca se ejecutó.**
-- **Las consolas no se auditaron**: permisos de Vercel, región y plan de
-  Supabase, MFA de WorkOS. No se ven desde el repo y no tengo acceso.
-- **Tres controles están escritos y no corren**: las cuatro ventanas de
-  retención y el log de auditoría, por `CRON_SECRET` sin setear y las
-  migraciones 0027 y 0028 sin aplicar.
+- **Las consolas no se auditaron**: permisos de Vercel, plan de Supabase, MFA de
+  WorkOS. No se ven desde el repo y no tengo acceso. La **región** de Supabase sí
+  quedó confirmada: `us-east-2` (A2.6, 20/09).
+- ~~**Tres controles están escritos y no corren**~~ — **corren desde el 20/09**:
+  `CRON_SECRET` está seteado (A2.4, el endpoint pasó de 503 a 401 sin secreto y
+  200 con él) y las migraciones 0027 a 0029 están aplicadas en los dos entornos
+  (A2.1–A2.3).
