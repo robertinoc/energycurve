@@ -18,6 +18,13 @@
  * - **The second appearance onwards.** One link per term per article. A word
  *   linked every time it occurs turns a paragraph blue, which is the complaint
  *   that kills this kind of feature.
+ * - **A term the article already links by hand.** The `.md` is allowed to link a
+ *   glossary entry itself, and when it does that link *is* the article's one
+ *   link for the term. Until H-18 this function did not look, so two English
+ *   articles linked `bpm`, `key`, `transition` and `warm-up` twice each — once
+ *   by the author and once here, on an earlier mention. Counting the existing
+ *   links rather than stripping them from the prose keeps the rule in one
+ *   place: a new article that links a term by hand cannot reintroduce it.
  */
 
 import { GLOSSARY_TERMS, type GlossaryTerm } from "@/lib/content/glossary/terms"
@@ -99,12 +106,65 @@ function linkInNodes(
   return { nodes, linked: false }
 }
 
+/** Every glossary entry's path in both languages, to the entry's id. */
+const TERM_BY_PATH = new Map<string, string>(
+  GLOSSARY_TERMS.flatMap((term) =>
+    (["en", "es"] as const).map(
+      (locale) => [glossaryTermPath(term, locale), term.id] as const
+    )
+  )
+)
+
+/** The glossary entry a hand-written href points at, if it points at one. */
+function termIdForHref(href: string): string | undefined {
+  // `/glossary/bpm/`, `/glossary/bpm#tempo` and `https://energycurve.app/…`
+  // are the same link to a reader, so they are the same link here.
+  const path = href
+    .replace(/^https?:\/\/[^/]+/i, "")
+    .replace(/[?#].*$/, "")
+    .replace(/\/+$/, "")
+
+  return TERM_BY_PATH.get(path)
+}
+
+/** Every inline node in an article, wherever the parser put it. */
+function allInline(blocks: BlogBlock[]): InlineNode[] {
+  return blocks.flatMap((block) => {
+    switch (block.kind) {
+      case "paragraph":
+      case "heading":
+        return block.inline
+      case "list":
+        return block.items.flat()
+      case "table":
+        return [...block.header.flat(), ...block.rows.flat(2)]
+      case "faq":
+        return block.entries.flatMap((entry) => entry.answer)
+      case "code":
+        return []
+    }
+  })
+}
+
+/** The terms an article already links by hand — each one already has its link. */
+export function termsLinkedByHand(blocks: BlogBlock[]): Set<string> {
+  const ids = new Set<string>()
+
+  for (const node of allInline(blocks)) {
+    if (node.kind !== "link") continue
+    const id = termIdForHref(node.href)
+    if (id) ids.add(id)
+  }
+
+  return ids
+}
+
 export function linkGlossaryTerms(
   blocks: BlogBlock[],
   locale: SiteLocale
 ): BlogBlock[] {
   let current = blocks
-  const used = new Set<string>()
+  const used = termsLinkedByHand(blocks)
 
   for (const { term, phrase } of phrases(locale)) {
     if (used.has(term.id)) continue

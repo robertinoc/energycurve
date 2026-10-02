@@ -67,6 +67,8 @@ import {
 import { listCurveTemplates } from "@/services/curve-template-service"
 import { listVersions } from "@/services/version-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
+import { ImportArriving } from "@/components/playlists/import-arriving"
+import { importStillArriving } from "@/lib/playlists/import-arrival"
 import { getResidencySummary } from "@/services/residency-service"
 
 export const metadata: Metadata = {
@@ -111,6 +113,29 @@ export default async function PlaylistDetailPage({
   }
 
   const locale = await getRequestLocale()
+
+  // IMP.1: an import whose tracks are still being written renders as what it
+  // is, and refreshes itself, instead of as a finished empty set with Export
+  // disabled. Server time on purpose — the window is measured against the row's
+  // created_at, which the database wrote.
+  if (
+    importStillArriving(
+      {
+        importSource: playlist.import_source,
+        trackCount: playlist.tracks.length,
+        createdAt: playlist.created_at,
+      },
+      // eslint-disable-next-line react-hooks/purity -- a request-time read, not render state
+      Date.now()
+    )
+  ) {
+    return (
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
+        <h1 className="font-heading text-2xl font-bold text-ec-text">{playlist.name}</h1>
+        <ImportArriving locale={locale} />
+      </div>
+    )
+  }
   const canShareSet = can(billing.plan, billing.status, "b2b_sets")
   const canMeasureAudio = can(billing.plan, billing.status, "audio_analysis")
   // Hidden entirely with no key configured, rather than shown and failing: an

@@ -185,6 +185,47 @@ test.describe("the parts axe cannot see on its own", () => {
     expect(focused).not.toBeNull()
   })
 
+  // WCAG 2.1 · 1.4.13: content that appears on focus has to be dismissible
+  // without moving the focus. Axe cannot check that — it is behaviour, not
+  // markup — and the glossary tooltip failed it until H-19, with a comment
+  // saying Escape was not needed. One article per language: the tooltip is the
+  // same component everywhere, and the two root layouts are what could differ.
+  for (const [name, path] of [
+    ["an article (es)", "/es/blog/esta-bien-el-orden-de-mi-set"],
+    ["an article (en)", "/blog/how-to-structure-a-dj-set"],
+  ] as const) {
+    test(`${name}: Escape closes a term's tooltip without moving focus`, async ({
+      page,
+    }) => {
+      await page.goto(path)
+      await page.waitForLoadState("networkidle")
+
+      const term = page.locator(".ec-term").first()
+      const link = term.locator("a")
+      const tip = term.locator('[role="tooltip"]')
+
+      await link.focus()
+      await expect(tip).toBeVisible()
+
+      await page.keyboard.press("Escape")
+      await expect(tip).toBeHidden()
+
+      // The point of the criterion: the reader is still where they were.
+      expect(
+        await link.evaluate((node) => node === document.activeElement)
+      ).toBe(true)
+
+      // And the definition comes back the next time somebody asks for it,
+      // rather than staying dismissed for the rest of the visit. Leaving and
+      // re-entering by focus() rather than Tab/Shift+Tab: WebKit, like Safari by
+      // default, does not move Tab focus onto links, so a Tab there never leaves
+      // the term — which said nothing about the tooltip.
+      await link.evaluate((node) => (node as HTMLElement).blur())
+      await link.focus()
+      await expect(tip).toBeVisible()
+    })
+  }
+
   test("the language toggle is a real control, not a styled div", async ({ page }) => {
     await page.goto("/")
 

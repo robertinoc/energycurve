@@ -1018,6 +1018,17 @@ export const DASHBOARD_COPY = {
    * carries a path and a duration and nothing else — the product knew that and
    * said nothing, which is the actual defect.
    */
+  // IMP.1 — shown instead of an empty set while an import's tracks are still
+  // being written. Anchored at importSummary, not at the end of the table, so a
+  // parallel branch adding copy elsewhere does not collide here.
+  importArriving: {
+    title: { en: "Still bringing your tracks in", es: "Todavía estamos trayendo tus temas" },
+    body: {
+      en: "The set exists and its tracks are on their way. This page updates on its own in a moment.",
+      es: "El set ya existe y los temas están llegando. Esta página se actualiza sola en un momento.",
+    },
+  },
+
   importSummary: {
     title: { en: "What we read from your file", es: "Qué leímos de tu archivo" },
     tracks: { en: "{count} tracks", es: "{count} tracks" },

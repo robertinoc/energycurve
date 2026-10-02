@@ -56,9 +56,20 @@ Pro), porque un precio promocional no es el precio del producto.
 | «Lexicon is a robust music library management tool designed for DJs, by DJs.» | [lexicondj.com](https://www.lexicondj.com/) | 26/09/2026 |
 | «Lexicon works on Windows & macOS.» | [lexicondj.com](https://www.lexicondj.com/) | 26/09/2026 |
 | «Supports Rekordbox, Serato, Traktor, VirtualDJ, Engine DJ and djay Pro.» | [lexicondj.com](https://www.lexicondj.com/) | 26/09/2026 |
-| «Lexicon is free to download and convert your library to and from any DJ app we support, this is 100% free. For the library management features, you need to upgrade to a paid package.» | [lexicondj.com/pricing](https://www.lexicondj.com/pricing) | 26/09/2026 |
+| «Downloading Lexicon and converting your library between any of the DJ apps we support is 100% free. Upgrade to a paid plan when you want the library management tools.» · y «A big part of Lexicon is now free: library conversion» | [lexicondj.com/pricing](https://www.lexicondj.com/pricing) | 02/10/2026 |
 | Essential **US$ 10,49/mes** o **US$ 249** de por vida · Ultimate **US$ 20,99/mes** o **US$ 499** de por vida | [lexicondj.com/pricing](https://www.lexicondj.com/pricing) | 26/09/2026 |
 | «30 day money-back guarantee» | [lexicondj.com/pricing](https://www.lexicondj.com/pricing) | 26/09/2026 |
+
+**Releído el 02/10/2026 (H-15).** De las tres citas de Lexicon que la tanda 01 dio
+por cambiadas, **sólo una lo estaba**: la de la conversión gratis, que su página
+de precios reescribió (la anterior decía «Lexicon is free to download and convert
+your library to and from any DJ app we support, this is 100% free»). Las otras
+dos siguen literales: «Lexicon works on Windows & macOS» está en el hero, con
+cada palabra en su propio `<span>` — por eso una búsqueda que reemplazaba las
+etiquetas por espacios no la encontraba —, y «Supports Rekordbox, Serato,
+Traktor, VirtualDJ, Engine DJ and djay Pro» convive en la misma página con una
+segunda redacción en otro orden. Precios releídos el mismo día: 10.49 / 20.99 /
+249 / 499, sin cambios.
 
 **Los precios subieron.** El sitio muestra un aviso propio: «Prices went up on
 September 8.» Eso deja desactualizada la tabla de mercado de

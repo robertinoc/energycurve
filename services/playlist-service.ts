@@ -2,7 +2,7 @@ import "server-only"
 
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
-import { logError, logInfo } from "@/lib/observability/logger"
+import { logError, logInfo, logWarn } from "@/lib/observability/logger"
 import { finalPositions, isValidReorder } from "@/lib/tracklist/reorder"
 import { captureVersion } from "@/services/version-service"
 import type { CurveShape } from "@/lib/product/strategy"
@@ -149,6 +149,68 @@ export async function createPlaylist(
 
   logInfo("playlist.created", { profileId, playlistId: data.id })
   return data
+}
+
+/**
+ * Creates a playlist *and* its tracks, or neither (IMP.1).
+ *
+ * The three create paths — paste, file import, audio import — used to call
+ * `createPlaylist` and then `replaceTracks` themselves. Two requests, and
+ * PostgREST gives no transaction across them, which costs two different things:
+ *
+ * 1. **If the tracks fail, the playlist stayed.** The action returned "something
+ *    went wrong", and the library kept an empty set with the file's name on it,
+ *    forever, counting against a free user's three. This function deletes it
+ *    again before rethrowing, so a failed import leaves no trace.
+ * 2. **Between the two requests the set exists with no tracks.** Opened from a
+ *    second tab in that window, its page rendered an empty table and a disabled
+ *    Export, and — being a server page — never refreshed. That window is not
+ *    closed here; it would take a database function (see below). The page
+ *    instead recognises an import that is still arriving (`importStillArriving`
+ *    in `lib/playlists/import-arrival.ts`) and says so.
+ *
+ * Why not a transaction. The correct fix is one statement: a Postgres function
+ * that inserts the playlist and its tracks together. That means a new migration
+ * applied by hand in both projects, and shipping code that depends on a
+ * migration nobody has applied is the exact way analyses stopped persisting for
+ * 76 days (H-12). It would also put the track column list in SQL, a second copy
+ * of `replaceTracks`'s mapping. Both are worth doing on purpose, not in passing.
+ */
+export async function createPlaylistWithTracks(
+  profileId: string,
+  input: PlaylistCreateData,
+  tracks: TrackWriteInput[]
+): Promise<Playlist> {
+  const playlist = await createPlaylist(profileId, input)
+
+  if (tracks.length === 0) {
+    return playlist
+  }
+
+  try {
+    await replaceTracks(profileId, playlist.id, tracks)
+  } catch (error) {
+    try {
+      await deletePlaylist(profileId, playlist.id)
+      logWarn("playlist.create_rolled_back", {
+        profileId,
+        playlistId: playlist.id,
+        trackCount: tracks.length,
+      })
+    } catch (cleanupError) {
+      // The one case that still leaves an empty set behind. Logged with both
+      // ids so it can be found; the page shows it as an import that did not
+      // finish rather than as a finished empty set.
+      logError("playlist.create_rollback_failed", cleanupError, {
+        profileId,
+        playlistId: playlist.id,
+      })
+    }
+
+    throw error
+  }
+
+  return playlist
 }
 
 export async function listPlaylists(

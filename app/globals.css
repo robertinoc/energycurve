@@ -486,8 +486,14 @@
    * before-hydration trouble the tool pages had to solve in #232.
    *
    * Shown on :hover and on :focus-within. The second one is what makes it
-   * reachable with a keyboard: tab to the link and the tip appears, Escape is
-   * not needed because blurring hides it again.
+   * reachable with a keyboard: tab to the link and the tip appears.
+   *
+   * Escape closes it too, without moving focus — WCAG 2.1 · 1.4.13 requires it,
+   * because the tip is drawn over the line above and "blur to hide" means
+   * moving the focus away. This block used to say Escape was not needed; it
+   * was (H-19). The listener is components/content/term-tooltip-dismiss.tsx,
+   * one per page, and the only state it keeps is the data-dismissed attribute
+   * below, cleared the next time the term is entered.
    */
   .ec-term {
     position: relative;
@@ -524,6 +530,10 @@
   .ec-term:focus-within .ec-term-tip {
     opacity: 1;
     visibility: visible;
+  }
+  .ec-term[data-dismissed]:is(:hover, :focus-within) .ec-term-tip {
+    opacity: 0;
+    visibility: hidden;
   }
 
   /* On a narrow screen an absolutely positioned tip can leave the viewport;

@@ -1,5 +1,6 @@
 import posthog from "posthog-js"
 
+import { stripClientIp } from "@/lib/analytics/posthog-privacy"
 import { analyticsAllowed, type ConsentState } from "@/lib/privacy/consent"
 
 /**
@@ -42,13 +43,18 @@ function initialise(): void {
     capture_pageview: false,
     capture_pageleave: true,
     persistence: "localStorage+cookie",
-    // Privacy-first defaults: honor the browser's Do Not Track signal,
-    // don't store visitor IPs, and keep autocapture off so we only send
-    // the explicit product events we defined.
+    // Privacy-first defaults: honor the browser's Do Not Track signal, and
+    // keep autocapture off so we only send the explicit product events we
+    // defined.
     respect_dnt: true,
-    ip: false,
     autocapture: false,
     disable_session_recording: true,
+    // No client IP in the event payload. This used to be `ip: false`, which
+    // posthog-js 1.396.6 ignores ("has NO EFFECT AT ALL"), and three pieces of
+    // privacy copy rested on it (H-17). What this hook does and does not cover —
+    // the connection still carries the IP to PostHog — is spelled out in
+    // lib/analytics/posthog-privacy.ts.
+    before_send: stripClientIp,
   })
 
   initialized = true
