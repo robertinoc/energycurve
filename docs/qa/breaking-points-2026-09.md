@@ -208,7 +208,28 @@ Vale decirlo, porque una lista que sólo enumera defectos da una impresión fals
   instancia de serverless, reiniciado en cada arranque en frío— **ya está
   cerrado**.
 
-## Lo que este documento no puede contestar
+## Con números — 02/10/2026 (lote 16)
+
+Lo que este documento no podía contestar está medido en
+**`docs/qa/carga-2026-10.md`**, contra dev, con `scripts/seed-scale.mjs`. Lo que
+cambia de lo de arriba, resumido:
+
+- **Los arreglos del 25/09 aguantan menos de lo que dicen.** Un filtro
+  `.in("playlist_id", ids)` viaja en la URL y **falla a partir de ~400 ids**
+  (entre 350 y 400). Con ~400 playlists el dashboard se cae, y **el export de datos
+  personales entrega cero temas sin decirlo** — el error se descarta y sólo se leen
+  las filas.
+- **El export se corta en 50.000 filas por tabla sin avisar**: `fetchAllRows`
+  marca `truncated` y el export no lo mira. Tarda 21 s con 30.000 temas.
+- **Hay un quinto punto que este documento no tenía:** `listPlaylists`
+  (`services/playlist-service.ts`), usado en el layout de todas las páginas del
+  dashboard, trae una fila por tema para contarlos. **A partir de 1.000 temas en
+  total los conteos salen mal**, la mayoría en 0.
+- **Reordenar 1.000 temas tarda ~22 s**, correcto.
+
+Nada de esto se arregló en el lote 16: el lote mide, el arreglo es otro PR.
+
+## Lo que este documento no podía contestar (25/09)
 
 - **Cuánto tarda cada cosa.** Hace falta una base con datos de verdad. El seed
   (`supabase/seed.sql`) crea 3 playlists y 19 temas: sirve para desarrollar, no

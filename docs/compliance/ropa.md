@@ -156,12 +156,13 @@ información profesional que un competidor podría querer.
 
 | Encargado | Qué trata | País | DPA |
 |---|---|---|---|
-| Vercel | Hosting, logs | EE.UU. | Por confirmar |
-| Supabase | Base de datos | Por confirmar la región | Por confirmar |
+| Vercel | Hosting, logs | EE.UU. — funciones en `iad1` (verificado 02/10) | Por confirmar |
+| Supabase | Base de datos — **todo el dato de la app** | **EE.UU. — `us-east-2`, Ohio** (consola, 20/09) | Por confirmar |
 | WorkOS | Identidad | EE.UU. | Por confirmar |
 | Stripe | Pagos | EE.UU. | Por confirmar |
 | PostHog | Analítica | **EE.UU.** | Por confirmar |
-| Resend | Mails | EE.UU. | Por confirmar |
+| Resend | Mails | Región por dominio: **sin confirmar** la del dominio de producción | Por confirmar |
+| Sentry | Reportes de error, sin PII | **Sin confirmar** — región por organización, y si está activo en producción | Por confirmar |
 | Anthropic | Ordenamiento con IA | EE.UU. | Por confirmar |
 | GetSongBPM | Lookup por título | EE.UU. | **Sin DPA disponible** |
 | ~~Crisp~~ | ~~Chat de soporte~~ | — | **NO ES ENCARGADO (verificado 11/09/2026).** No hay una sola referencia a Crisp en `app/`, `lib/`, `components/` ni `services/`. Que exista una variable en Vercel no crea un tratamiento: lo crea el código que la usa. Si se activa, entra en el mismo PR que lo activa — `tests/subprocessors-accuracy.test.ts` está escrito para que esa omisión se note |

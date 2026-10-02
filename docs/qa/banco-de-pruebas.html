@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">146</strong>
+      <strong id="tally-total">140</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -501,28 +501,25 @@
 
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
-    <p><strong>Una sola cosa bloquea, y son cinco minutos en el SQL Editor: a la base de dev le faltan migraciones.</strong> Confirmado el 25/09 sondeando el enum en sólo-lectura: <strong>7 de los 12 géneros que ofrece el producto no existen en dev</strong> — <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code> y <code>bounce</code>. Los agrega la <code>0005</code>. Si mañana elegís uno de esos —o dejás la detección automática y lo elige ella— la importación falla con «Something went wrong while saving» y no vas a saber por qué. Eso salió de un E2E que se caía; sin arreglarlo te come la mañana. Aplicá <code>0005</code> y de paso <code>0027</code> a <code>0032</code>, en orden de número. La sesión <strong>DB</strong> tiene los pasos.</p>
-    <p style="margin:9px 0 0"><strong>Lo bueno:</strong> la suite E2E sigue en verde — al 27/09 (lote 14) <strong>927 pasan / 37 saltean / 0 fallan en 5,0 minutos</strong> (lote 13: 911 / 37 / 0; lote 12: 855 / 37 / 0), la suite entera en un solo comando: <code>npm run test:e2e</code> corre cinco shards en paralelo y devuelve un solo resumen. Hasta el lote 10 se corría en dos mitades (13,3 min); ese comando ya no existe. Los 37 saltos son deliberados: 18 del arco de pagos (sin <code>stripe listen</code>), 9 de sitemap (sólo Chromium), 8 del importador (corre una vez, sobre FREE) y 2 del plan free. Las tres cuentas quedaron en <strong>0 playlists</strong>. Y <strong>los tres hallazgos de la auditoría F1 están arreglados</strong> — la sesión AUD pasó de «reproducí el defecto» a «validá el fix», con el commit en cada fila. Las tres suites autenticadas del lote 6 <strong>nunca habían corrido</strong> y no funcionaban: la peor era que el spec hacía clic en el primer botón <code>submit</code> de la página, que es <strong>«Log out»</strong>. Y los ocho fallos que arrastraban cuatro lotes como «preexistentes en main» no eran del producto ni de los tests: el build salía sin <code>.env.local</code> porque un <code>git worktree</code> nuevo no lo hereda. Nada de eso te va a molestar mañana.</p>
+    <p><strong>Ya no hay nada que bloquee el día.</strong> Lo que bloqueaba —las migraciones de dev, la <code>0005</code> y sus siete géneros— está resuelto: el 02/10 <code>scripts/seed-scale.mjs status</code> leyó en dev los doce géneros y las 32 migraciones sin tablas, columnas ni enums faltantes. Sobre REST no se ven índices ni políticas; el chequeo completo sigue esperando <code>MIGRATION_DB_URL</code> (DB.2). Lo que espera algo tuyo, ordenado por lo que destraba, está en <code>docs/pendientes-robertino.md</code>: arriba de todo, un ajuste de dos minutos en PostHog (L16.1).</p>
+    <p style="margin:9px 0 0"><strong>La suite E2E:</strong> al 02/10 (lote 16) <strong>1266 pasan / 46 saltean / 0 fallan en 4,9 minutos</strong>, sin reintentos (lote 14: 927 / 37 / 0). Los saltos son deliberados: el arco de pagos sin <code>stripe listen</code>, el sitemap que corre sólo en Chromium, el importador que corre una vez sobre FREE, el plan free en PRO y PRO+, y el test del request de PostHog, que corre sólo en Chromium. Un solo comando: <code>npm run test:e2e</code> corre los cinco shards en paralelo y devuelve un resumen. Las tres cuentas quedaron en <strong>0 playlists</strong>.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
     <ol style="margin:6px 0 0 18px;padding:0">
-      <li><strong>DB.1 a DB.4 — 25 min.</strong> Aplicá las migraciones y corré el seed. Desbloquea todo lo demás: sin esto, siete géneros rompen y cualquier prueba de importación miente.</li>
-      <li><strong>A1 — ya está hecha.</strong> Las tres cuentas existen y <code>.env.e2e.local</code> está escrito. No la repitas.</li>
-      <li><strong>E2E.1 — 10 min.</strong> Corré <code>npx playwright test</code> con el entorno cargado y confirmá el cero. Es tu línea de base del día: si algo falla acá, lo de abajo no se interpreta.</li>
+      <li><strong>L16 — 40 min.</strong> Los cinco arreglos del lote 16 (H-15, H-17, H-18, H-19, IMP.1) y el botón de login en español, que no tenía fila: arrancan en «Validar fix». L16.1 es la que importa: es una promesa de privacidad publicada.</li>
+      <li><strong>E2E.1 — 10 min.</strong> Corré <code>npm run test:e2e</code> y confirmá el cero. Es tu línea de base del día: si algo falla acá, lo de abajo no se interpreta.</li>
+      <li><strong>DB.2 a DB.4 — 25 min.</strong> El semáforo completo en dev y por primera vez en producción. Necesitan la connection string, que es tuya.</li>
       <li><strong>J y J2 — 70 min.</strong> Lo de Jordi. Necesita tu oído y un NML real, y es lo que ninguna máquina puede contestar.</li>
-      <li><strong>UX — 60 min.</strong> Los cinco casos de borde que esperaban las cuentas. Ahora se pueden correr.</li>
+      <li><strong>UX — 60 min.</strong> Los cinco casos de borde con las cuentas.</li>
       <li><strong>TOOL y TOOL2 — 105 min.</strong> Las herramientas públicas con tu librería de verdad y el teléfono.</li>
-      <li><strong>AUD — 30 min.</strong> Los tres hallazgos de la auditoría F1 ya están <strong>arreglados</strong> (lote 10); lo que queda es validarlos con tus archivos y en tu teléfono. AUD.4 (la cuarta importación en FREE) y AUD.5 (ocho capabilities sin ejercitar) siguen abiertos.</li>
-      <li><strong>ART — 30 min.</strong> Los tres artículos en inglés. Leelos como DJ: la única prueba que ninguna máquina hace es si los firmarías.</li>
-      <li><strong>CMP — 25 min.</strong> Las cuatro páginas de comparación. Lo que hay que juzgar no es un dato sino el tono: si alguna suena a que siempre ganamos nosotros, eso es el hallazgo.</li>
-      <li><strong>F45 — 2 h repartidas.</strong> Lo que cierra las fases 4 y 5 del plan SEO y sólo podés hacer vos: PostHog, los perfiles de entidad, StageLink, las menciones. El código de las dos fases ya se verificó contra producción; ninguna se marcó verificada porque falta esto.</li>
-      <li><strong>ARM — 30 min.</strong> La tabla armónica generada desde la constante. Lo único que ninguna máquina hace es reconocer una tonalidad de oído: ARM.1 es la fila que importa.</li>
-      <li><strong>CMP2 — 30 min.</strong> Las dos comparaciones entre programas de DJ. Lo que hay que juzgar es si alguna fila dice algo que el fabricante no dice, y si el tono aguanta leído desde cada uno de los cinco.</li>
-      <li><strong>A2B — 45 min.</strong> Los cuatro artículos de trayecto (Traktor→Rekordbox, Serato↔Rekordbox, Rekordbox→USB y la gemela en español). Cada paso sale del manual del fabricante y ninguno se probó con el software abierto: A2B.3 es la única verificación que sólo podés hacer vos.</li>
+      <li><strong>AUD — 30 min.</strong> Los tres hallazgos de la auditoría F1 están arreglados; falta validarlos con tus archivos y en tu teléfono. AUD.4 (la cuarta importación en FREE) y AUD.5 (ocho capabilities sin ejercitar) siguen abiertos.</li>
+      <li><strong>ART, GUIA, A2B, ARM, CMP y CMP2 — ~3 h repartidas.</strong> El contenido leído como DJ. A2B.3 es la única que necesita el software abierto.</li>
+      <li><strong>F45 — 2 h repartidas.</strong> Lo externo de las fases 4 y 5 del plan SEO: los perfiles de entidad, StageLink, las menciones. Los key events de PostHog están en SEO4.6.</li>
       <li><strong>PAY — 20 min.</strong> El camino del dinero. Necesita una terminal con <code>stripe listen</code> abierta; sin eso el spec saltea en vez de correr, que es lo correcto pero no te dice nada.</li>
       <li><strong>CONT.4 y CONT.5 — 30 min.</strong> Las 21 definiciones leídas por un DJ, y el validador de Google. Las dos que deciden si el contenido sirve.</li>
-      <li><strong>El resto de SEO</strong> — cuando haya deploy. No dependen de vos hoy.</li>
+      <li><strong>El resto de SEO</strong> — validadores ajenos y Search Console. No dependen de vos hoy.</li>
     </ol>
-    <p style="margin:9px 0 0"><strong>Los cuatro puntos de quiebre están arreglados</strong> — los tres truncamientos silenciosos y el reordenamiento en serie, en <code>67a5a0c</code>. Lo que conviene saber antes de probar: el que los tapaba era el <em>instrumento</em>. El fake de Supabase de los tests no modelaba el techo de mil filas de PostgREST, así que los cuatro defectos pasaban la suite en verde. Ahora corta en mil salvo que haya <code>range()</code> explícito, y cada arreglo se verificó en rojo contra el código viejo antes de pasar a verde. El detalle está en <code>docs/qa/breaking-points-2026-09.md</code>.</p>
+    <p style="margin:9px 0 0"><strong>Los puntos de quiebre ahora tienen número, y aguantan menos de lo que decían.</strong> Medido el 02/10 contra dev con datos sembrados (<code>docs/qa/carga-2026-10.md</code>): un filtro por lista de ids falla a partir de ~400, así que con ~400 playlists el dashboard se cae y el export de datos personales entrega cero temas sin avisar; el export se corta en 50.000 filas sin decirlo; y la lista de playlists del menú lateral cuenta mal desde 1.000 temas en total. El pico objetivo (50 usuarios, 2 s) <strong>no se cumple en un proceso local</strong>: el p95 del dashboard es 1,8 s con un usuario y 56 s con cincuenta. Contra Vercel no se midió. Nada de eso se arregló todavía: el lote 16 medía.</p>
+    <p style="margin:9px 0 0"><strong>Lote 16 retiró 30 filas</strong>, cada una por una de tres razones: la cubre un test automático (SEO.1, SEO.7, SEO.8, SEO.9, SEO3.7, CONT.6, DB.5, E2E.1b), ya se hizo o se resolvió (A1 entera, A2.1–A2.6, A3.1, DB.1, E2E.1c, SEO3.5, SEO3.6, SEO4.4, SEO5.4, y SEO.6, que se dio vuelta: <code>/blog</code> es indexable desde que hay artículos en inglés), o la reemplaza otra fila (CONT.3, CONT.7 e IMP.1 por L16.3, L16.2 y L16.5; F45.2 era SEO4.6 con nombres de eventos que no existen). El detalle está en el handoff, sección del lote 16.</p>
     <p style="margin:9px 0 0">Las sesiones <strong>A4</strong> (backups) y <strong>A6</strong> (consolas) no entran en un día y no bloquean nada: agendalas aparte.</p>
   </div>
 
@@ -553,34 +550,46 @@
 
   var SESSIONS = [
     {
-      code: "A1",
-      title: "Las tres cuentas de prueba",
-      meta: "~40 min · dev + Stripe test",
-      why: "Es el único ítem de la lista que bloquea a otros nueve. Con email y contraseña, no con Google: el E2E tiene que poder loguearse solo y un flujo de SSO no se automatiza sin pelearse con el consentimiento.",
+      code: "L16",
+      title: "Validar los arreglos del lote 16, y uno que quedó suelto",
+      meta: "~40 min · necesita el deploy del lote 16 · L16.5 necesita la cuenta PRO",
+      why: "Cinco hallazgos quedaron arreglados el 02/10, y cada uno tiene un test que falla sin el arreglo — se comprobó sacándolo. Lo que un test no puede afirmar es que producción lo lleve, ni lo que ve una persona con un teclado, un lector de pantalla o la consola de PostHog. Por eso arrancan en «Validar fix» y no en «Pendiente»: pasan a «Pasa» cuando los corrés contra el deploy. Primer paso de todo: confirmar en Vercel que producción sirve el merge del lote 16.",
       tests: [
         {
-          code: "A1.1", title: "Cuenta FREE", sub: "Signup normal en dev",
-          steps: ["Levantá el server: <code>cd ~/Documents/code/energycurve &amp;&amp; npm run dev</code>", "Abrí <code>localhost:3010/signup</code>", "Email <code>e2e-free@energycurve.app</code>, contraseña larga del gestor", "Completá la verificación de mail si la pide"],
-          expect: "Entrás al dashboard y la cuenta dice FREE.",
-          ifNot: "Anotá en qué paso se cortó y el texto exacto de la pantalla."
+          code: "L16.1", initial: "validar", title: "PostHog no guarda tu IP", sub: "H-17 · el código ya no la pone en el evento; el resto es un ajuste tuyo",
+          steps: ["PostHog → Settings → Project → «Discard client IP data»: mirá si está prendido, y si no, prendelo", "En producción, ventana privada: aceptá las cookies y navegá dos páginas", "En PostHog → Activity, abrí uno de esos eventos y buscá la propiedad <code>$ip</code>"],
+          expect: "El ajuste prendido y ningún <code>$ip</code> en el evento. Son dos capas distintas: el código ya no manda <code>$ip</code> dentro del evento (lo afirma <code>e2e/posthog-payload.spec.ts</code> leyendo el request de verdad), pero la IP igual le llega a PostHog en la conexión, y que no la guarde depende <strong>sólo</strong> de este ajuste.",
+          ifNot: "Si el ajuste estaba apagado, el banner y la política dijeron algo falso hasta hoy: prendelo antes que cualquier otra cosa de esta lista. La frase corregida de la política está escrita y sin aplicar, esperando tu OK — no es asesoramiento legal. El cuerpo del request viaja comprimido, así que mirarlo en la pestaña Network no dice nada: para eso está el test."
         },
         {
-          code: "A1.2", title: "Cuenta PRO", sub: "Checkout con tarjeta de prueba",
-          steps: ["Signup con <code>e2e-pro@energycurve.app</code>", "Confirmá arriba en Stripe que estás en <strong>Test mode</strong>", "Pricing → PRO → Checkout", "Tarjeta <code>4242 4242 4242 4242</code>, fecha futura, cualquier CVC"],
-          expect: "Volvés a la app y la cuenta dice PRO.",
-          ifNot: "Si sigue en FREE el webhook no llegó. Stripe → Developers → Webhooks: anotá si salió el evento y con qué código respondió. Eso es un hallazgo real, no un error tuyo."
+          code: "L16.2", initial: "validar", title: "Cada término del glosario, enlazado una vez", sub: "H-18 · los dos artículos que lo repetían",
+          steps: ["Abrí /blog/how-does-a-dj-set-work", "En la consola: <code>['bpm','key','transition'].map(t =&gt; document.querySelectorAll('main a[href$=\"/glossary/' + t + '\"]').length)</code>", "Repetí en /blog/how-djs-prepare-their-sets con <code>warm-up</code>", "Leé los dos de corrido"],
+          expect: "<code>[1, 1, 1]</code> y <code>[1]</code>. El enlace que queda es el que el artículo escribió a mano: el enlazador ahora cuenta los que ya existen y no agrega otro.",
+          ifNot: "Si alguno da 2, producción no tiene el lote 16. Un test recorre los 23 artículos y falla si un término se enlaza dos veces; se verificó en rojo devolviendo exactamente los cuatro duplicados de producción."
         },
         {
-          code: "A1.3", title: "Cuenta PRO+", sub: "Por lista de cortesía, no por pago",
-          steps: ["Signup con <code>e2e-proplus@energycurve.app</code>", "En <code>.env.local</code>: <code>COMP_PRO_PLUS_EMAILS=e2e-proplus@energycurve.app</code>", "Reiniciá el server — la variable se lee del entorno del proceso"],
-          expect: "La cuenta dice PRO+ y el estado es <code>active</code>.",
-          ifNot: "Si ya había otros mails en la lista, confirmá que estén separados por coma sin espacios."
+          code: "L16.3", initial: "validar", title: "El tooltip de término se cierra con Escape", sub: "H-19 · WCAG 1.4.13 · con tu teclado y con voz",
+          steps: ["Abrí /es/blog/esta-bien-el-orden-de-mi-set sin tocar el mouse (en Safari, antes: Ajustes → Avanzado → «Pulsar Tab para resaltar cada ítem»; si no, Tab no entra a los enlaces)", "Tabulá hasta un término subrayado: aparece la definición corta", "Apretá Escape", "Tabulá al siguiente y volvé con Shift+Tab", "Repetí en /blog/how-to-structure-a-dj-set con VoiceOver (Cmd+F5) y escuchá qué anuncia al llegar al término"],
+          expect: "Escape cierra la definición y el foco se queda en el término. Volver a enfocarlo, o pasar el mouse desde afuera, la abre de nuevo. El lector anuncia el término y después la definición corta.",
+          ifNot: "Si Escape no cierra, producción no tiene el lote 16. El E2E lo afirma en los dos idiomas y en los cuatro navegadores, pero enfoca por código: esta fila es el teclado de una persona. Anotá navegador y qué dijo el lector. Reemplaza a la vieja CONT.3."
         },
         {
-          code: "A1.4", title: "Escribir .env.e2e.local", sub: "Lo que lee el scaffolding del PR #221",
-          steps: ["Creá <code>.env.e2e.local</code> en la raíz del repo", "Seis líneas: <code>E2E_FREE_EMAIL</code>, <code>E2E_FREE_PASSWORD</code>, y lo mismo para <code>PRO</code> y <code>PROPLUS</code>"],
-          expect: "Los seis pares cargados. No me pegues las contraseñas en el chat: con el archivo alcanza.",
-          ifNot: "El archivo ya está cubierto por <code>.env*</code> en <code>.gitignore</code>, así que no se te escapa a git."
+          code: "L16.4", initial: "validar", title: "La cita de precios de Lexicon, literal otra vez", sub: "H-15 · releída el 02/10",
+          steps: ["Abrí /compare/lexicon y buscá la cita sobre lo que es gratis", "Abrí lexicondj.com/pricing y buscá «100% free»", "Mirá la fecha de verificación arriba de la página"],
+          expect: "La cita dice «Downloading Lexicon and converting your library between any of the DJ apps we support is 100% free.» y está así en su página. Fecha: 2 de octubre de 2026. De las tres citas que la tanda marcó, sólo esa había cambiado: las otras dos seguían literales y la medición del 30/09 tuvo un error de instrumento (aplanar el HTML rompía «Windows &amp; macOS»).",
+          ifNot: "Si su página cambió otra vez, gana la de ellos: corregí la cita, <code>competitor-facts-2026-09-26.md</code> y la fecha, las tres juntas."
+        },
+        {
+          code: "L16.5", initial: "validar", title: "La playlist recién importada avisa que está llegando", sub: "IMP.1 · la ventana entre el alta y los temas",
+          steps: ["Con la cuenta PRO, importá un set grande (100+ temas) desde la pestaña A", "Apenas aparezca en la lista, abrilo desde la pestaña B", "No recargues: esperá"],
+          expect: "Si llegás en la ventana: «Todavía estamos trayendo tus temas — El set ya existe y los temas están llegando. Esta página se actualiza sola en un momento.», y a los segundos aparecen los temas sin que toques nada. Si no llegás, ves el set completo directamente — también vale anotarlo. Y si guardar los temas falla, la playlist ya no queda vacía: se borra, lo registra y el error sube (eso lo cubre un test).",
+          ifNot: "Si ves cero temas y «Export» deshabilitado sin el aviso, producción no tiene el lote 16. El aviso deja de refrescar a los 60 segundos del alta; un set que siga vacío después de eso no está llegando, está roto, y es otro hallazgo."
+        },
+        {
+          code: "L16.6", initial: "validar", title: "El botón de login dice «Iniciar sesión» en español", sub: "PR #249 · del 20/09, sin fila propia hasta hoy",
+          steps: ["Entrá a <code>/es</code> y elegí español en el selector de idioma", "Cerrá sesión si estabas adentro", "Andá a <code>/login</code> y mirá el botón de enviar"],
+          expect: "«Iniciar sesión», no «Login». Sale de <code>modeCopy.submit[locale]</code>; la tanda 01 lo dejó en «falta validarlo» y ninguna fila del banco lo tenía.",
+          ifNot: "Si dice «Login», mirá primero el idioma del resto de la pantalla: <code>/login</code> no tiene ruta en español y toma el idioma de la cookie que deja el selector. Si toda la pantalla está en inglés, es la cookie y no el botón."
         }
       ]
     },
@@ -625,7 +634,7 @@
     {
       code: "J",
       title: "Lo que salió del feedback de Jordi",
-      meta: "~45 min · necesita A1 y un NML real",
+      meta: "~45 min · necesita las cuentas de prueba y un NML real",
       why: "Ocho cambios que salieron de tres rondas de feedback de un DJ externo. Ninguno tiene test automático que lo cubra de punta a punta: cuatro son de interfaz, dos necesitan un archivo real, y dos sólo se ven comparando dos órdenes a ojo.",
       tests: [
         {
@@ -642,14 +651,14 @@
         },
         {
           code: "J.3", title: "CSV con punto y coma", sub: "Excel en español usa <code>;</code>",
-          steps: ["Abrí el CSV exportado con Excel en español", "Guardalo desde Excel", "Volvé a subirlo"],
-          expect: "También entra.",
+          steps: ["Exportá una playlist como CSV y mirá el nombre del archivo", "Abrí el CSV exportado con Excel en español", "Guardalo desde Excel", "Volvé a subirlo"],
+          expect: "También entra. Y el archivo se llama <code>…-optimized-with-energycurve-app.csv</code>, con guion y un solo punto: es la validación de H-8 (PR #248), que en tu copia está en «Validar fix» sobre esta fila. Pasó la primera ronda; lo que falta es el nombre.",
           ifNot: "Es un caso real y frecuente, no un borde exótico: tratalo como severidad media."
         },
         {
           code: "J.4", title: "Mover tracks después de reordenar", sub: "El callejón sin salida que reportó Jordi",
           steps: ["Corré el análisis", "Aplicá arreglos o el orden inteligente", "Arrastrá un track a otra posición"],
-          expect: "Se mueve, aparece «Deshacer movimiento», y el puntaje se recalcula al instante.",
+          expect: "Se mueve, aparece «Deshacer movimiento», y el puntaje se recalcula al instante. Y mientras la cuenta de Anthropic siga sin crédito, el orden inteligente tiene que decir «El orden con IA no está disponible ahora mismo — esa es de nuestro lado, y reintentar no lo cambia.» y no un error genérico: es la validación de H-10 (PR #246). <strong>Hacela antes de cargar crédito</strong> — después ya no se puede ver.",
           ifNot: "Si volvió, es severidad alta: era exactamente el callejón sin salida que reportó Jordi."
         },
         {
@@ -717,12 +726,6 @@
       why: "El PR #227 se verificó contra un build de producción local y se mergeó <strong>sin deployar</strong>. Todo lo que un test puede afirmar sobre el HTML ya está cubierto por <code>tests/locale-routing.test.ts</code> y <code>tests/blog.test.ts</code>: hreflang, sitemap, JSON-LD, el largo de las descripciones. Lo que queda es lo que sólo se ve contra el sitio servido, en un navegador de verdad, o en un validador ajeno — y eso es esta sesión. Primer paso de todo: confirmar en Vercel qué commit está sirviendo producción, porque si no es <code>dac198b</code> o posterior, todo lo de abajo mide el sitio viejo.",
       tests: [
         {
-          code: "SEO.1", title: "lang=\"es\" en el HTML que llega del servidor", sub: "El arreglo entero del PR, medido donde importa",
-          steps: ["Confirmá primero qué commit sirve producción", "<code>curl -s https://energycurve.app/es | grep -o \'&lt;html[^&gt;]*&gt;\'</code>", "Repetí con <code>/es/blog</code> y con un post cualquiera", "Y con <code>/</code>, que tiene que seguir diciendo <code>en</code>"],
-          expect: "Las tres rutas <code>/es*</code> dicen <code>lang=\"es\"</code> y la home en inglés <code>lang=\"en\"</code>.",
-          ifNot: "Antes era <code>en</code> en todo y un efecto de cliente lo corregía después de hidratar, que es tarde para un crawler. Si sigue en <code>en</code>, mirá si el deploy tiene el commit: es lo más probable, no una regresión."
-        },
-        {
           code: "SEO.2", title: "El navegador deja de ofrecer traducir", sub: "La consecuencia humana del atributo",
           steps: ["Abrí <code>/es</code> en Chrome con la interfaz en inglés", "Fijate si aparece el cartel de «Translate this page»", "Si tenés lector de pantalla a mano, escuchá cómo pronuncia el primer párrafo"],
           expect: "No ofrece traducir una página que ya está en el idioma del lector, y el lector de pantalla la pronuncia en español.",
@@ -742,33 +745,9 @@
         },
         {
           code: "SEO.5", title: "Sitemap en producción y Search Console", sub: "Sólo vos tenés la consola",
-          steps: ["<code>curl -s https://energycurve.app/sitemap.xml | grep -c \'&lt;loc&gt;\'</code>", "Confirmá el número contra el build y que <code>/blog</code> no esté", "Search Console ya está reclamada (19/09): reenviá el sitemap", "Volvé en unos días a mirar cobertura y errores de hreflang"],
-          expect: "El número que devuelva el build del día — eran 24 cuando se escribió esta prueba, 32 tras las herramientas y <strong>78</strong> desde la fundación de contenido — sin <code>/blog</code>, y Search Console lo acepta sin errores de hreflang.",
+          steps: ["<code>curl -s https://energycurve.app/sitemap.xml | grep -c \'&lt;loc&gt;\'</code>", "Confirmá el número contra el build del día", "Search Console ya está reclamada (19/09): reenviá el sitemap", "Volvé en unos días a mirar cobertura y errores de hreflang"],
+          expect: "El número que devuelva el build del día — eran 24 cuando se escribió esta prueba, 78 desde la fundación de contenido y <strong>115</strong> en producción el 02/10 — y Search Console lo acepta sin errores de hreflang. <code>/blog</code> está desde que hay artículos en inglés: dejó de ser <code>noindex</code>, y eso lo vigila <code>tests/locale-routing.test.ts</code>.",
           ifNot: "Los errores de hreflang aparecen días después, no al subirlo. Agendate la vuelta o esta prueba queda a medias."
-        },
-        {
-          code: "SEO.6", title: "El blog en inglés salió del índice", sub: "Tres consecuencias de una sola entrada",
-          steps: ["<code>curl -s https://energycurve.app/blog | grep -i \'name=\\\"robots\\\"\'</code>", "Confirmá que <code>/blog</code> no esté en el sitemap", "En <code>/es/blog</code>, confirmá que ya no declare un alternate <code>hreflang=\"en\"</code>"],
-          expect: "<code>noindex, follow</code>, fuera del sitemap, y sin alternate en inglés desde el español.",
-          ifNot: "Las tres salen de una sola entrada en <code>NOINDEX_PAGES</code>: si una falla y las otras no, es un bug de verdad y no un olvido de configuración."
-        },
-        {
-          code: "SEO.7", title: "El 404 con marca, en los dos grupos de ruta", sub: "Donde el split casi rompe algo",
-          steps: ["Probá <code>/nope</code>, <code>/es/nope</code>, un slug de post inexistente en cada idioma, y un id de dashboard que no exista", "Mirá el código de estado y la página que sale"],
-          expect: "404 en todos (o 307 a auth en el del dashboard), nunca 500, y la página con marca — no la de Next.",
-          ifNot: "Éste es el caso caro: una llamada a <code>cookies()</code> en <code>app/not-found.tsx</code> convierte el 404 en 500 para los posts estáticos. Si ves un 500, avisá antes de seguir."
-        },
-        {
-          code: "SEO.8", title: "«Seguir leyendo» y el CTA al final", sub: "Los cinco posts, uno por uno",
-          steps: ["Abrí cada uno de los 5 posts hasta el final", "Contá los artículos sugeridos y fijate que el que estás leyendo no esté", "Confirmá que estén ordenados del más reciente al más viejo", "Tocá el botón «Analizá tu set gratis»"],
-          expect: "Tres artículos del mismo idioma, sin el actual, más recientes primero; y el botón lleva a <code>/signup</code>.",
-          ifNot: "Con 5 posts publicados, cada uno tiene exactamente 4 candidatos y muestra 3. Si alguno muestra menos, anotá cuál."
-        },
-        {
-          code: "SEO.9", title: "El lastmod de un artículo se mueve solo", sub: "La trampa de .next incluida",
-          steps: ["<strong>Borrá <code>.next</code> primero</strong> — los artículos se leen con <code>readFileSync</code> en build y el bundler no los ve como dependencia", "Cambiá <code>updatedAt</code> en el frontmatter de un post", "Rebuild y mirá el sitemap"],
-          expect: "Sólo se mueve el <code>lastmod</code> de ese post. Los demás quedan en su fecha, y las páginas de marketing en la suya — desde SEO-E09 salen de <code>PAGE_LAST_MODIFIED</code> y ya no del reloj del build.",
-          ifNot: "Si no cambió nada, casi seguro es <code>.next</code> viejo: así fue como el arreglo de las descripciones pareció no aplicar. Reintentá con el borrado antes de anotarlo."
         }
       ]
     },
@@ -815,7 +794,7 @@
           ifNot: "Un evento demasiado detallado es el mismo bug que un fetch: rompe la promesa de la página. Anotá la propiedad exacta."
         },
         {
-          code: "TOOL.7", title: "Accesibilidad de las cuatro páginas nuevas", sub: "Hoy no las mira nadie automáticamente",
+          code: "TOOL.7", title: "Accesibilidad de las cuatro páginas nuevas", sub: "El barrido automático ya las mira; el recorrido y la voz, no",
           steps: ["Recorré la herramienta sólo con teclado: cargar archivo, elegir playlist, llegar al CTA", "Probá el input de archivo con lector de pantalla —es el que tuvo que ganarse un <code>aria-label</code>—", "Repetí en la página en inglés"],
           expect: "Todo alcanzable por teclado, con foco visible, y el input se anuncia con nombre.",
           ifNot: "El barrido de axe ya cubre las ocho páginas de herramientas —se agregaron el 17/09— y da cero violaciones. Lo que axe no ve es justamente esto: que el recorrido por teclado tenga sentido y que el lector de pantalla anuncie algo útil. Un hallazgo acá es real aunque el barrido esté verde."
@@ -892,26 +871,11 @@
     },
     {
       code: "A2",
-      title: "Migraciones, cron y región",
-      meta: "~30 min · consolas",
-      why: "Cuatro de estos son los quince minutos mejor invertidos de toda la auditoría: convierten seis controles escritos en seis que efectivamente corren. La 0029 no la nombra ningún documento — la encontré contando archivos, no leyendo.",
+      title: "Lo que quedó de migraciones, cron y región",
+      meta: "~5 min · consola de Vercel",
+      why: "Eran siete. Seis están resueltas y se retiraron en el lote 16, verificadas ese día: las migraciones de dev están todas (<code>seed-scale.mjs status</code>, 02/10); <code>CRON_SECRET</code> está puesto —<code>/api/cron/retention</code> contesta 401 y no 503—; la región de Supabase es <code>us-east-2</code> (la anotaste el 20/09); y las de producción son DB.3. Queda una.",
       tests: [
-        { code: "A2.1", title: "Aplicar 0027 en dev", sub: "admin_audit_log", steps: ["SQL Editor del proyecto de dev", "Pegá <code>supabase/migrations/0027_admin_audit_log.sql</code>"], expect: "La tabla existe y el panel de admin deja de decir que falta la migración.", ifNot: "Anotá el error del editor tal cual." },
-        { code: "A2.2", title: "Aplicar 0028 en dev", sub: "analysis_blob_retention", steps: ["Mismo editor", "Pegá <code>0028_analysis_blob_retention.sql</code>"], expect: "Aplicada sin error.", ifNot: "Si dice que ya existe, es idempotente a propósito: anotalo y seguí." },
-        { code: "A2.3", title: "Aplicar o confirmar 0029", sub: "rate_limit_buckets — no figura en ningún documento", steps: ["Pegá <code>0029_rate_limit_buckets.sql</code>", "Confirmá si ya estaba aplicada"], expect: "Aplicada o confirmada.", ifNot: "Éste es el hallazgo: G-2 dice «0027 y 0028» y son tres. Anotá cuál era el estado real." },
-        { code: "A2.4", title: "Setear CRON_SECRET en Vercel", sub: "Sin esto ningún barrido corre", steps: ["Vercel → Settings → Environment Variables", "<code>CRON_SECRET</code> con un valor largo y aleatorio", "Redeploy"], expect: "La ruta de retención deja de responder 503.", ifNot: "El 503 es correcto por diseño: un endpoint que borra datos y falla abierto es peor que uno que no corre nunca." },
-        { code: "A2.5", title: "Confirmar 0021 y 0023–0026 en producción", sub: "Tarea abierta en Desarrollo", steps: ["SQL Editor del proyecto de PRODUCCIÓN", "Verificá que cada tabla y columna exista"], expect: "Las cinco confirmadas.", ifNot: "Ojo: el panel de Supabase muestra la insignia verde <code>main PRODUCTION</code> en los DOS proyectos — etiqueta la rama, no el entorno. Ya hizo que una migración se corriera dos veces en dev." },
-        { code: "A2.6", title: "Confirmar la región de Supabase", sub: "Hoy la política puede estar diciendo algo falso", steps: ["Supabase → Settings → General", "Anotá la región exacta"], expect: "Región confirmada.", ifNot: "Si no es UE, hay que corregir la política de privacidad: la frase «Supabase (región UE)» se quitó justamente porque nadie la había verificado." },
         { code: "A2.7", title: "Setear BACKSTAGE_ADMIN_EMAILS", sub: "Hallazgo S-08: no está en producción", steps: ["Vercel → Environment Variables", "Tu mail en <code>BACKSTAGE_ADMIN_EMAILS</code>"], expect: "El allowlist de admin existe en producción.", ifNot: "Anotá si ya estaba y con qué valor." }
-      ]
-    },
-    {
-      code: "A3",
-      title: "El pico objetivo",
-      meta: "~15 min · una decisión",
-      why: "Sin este número una prueba de carga produce un gráfico, no una respuesta. Es lo único que separa «así se comporta hoy» de «alcanza o no alcanza», y no lo puede decidir nadie más que vos.",
-      tests: [
-        { code: "A3.1", title: "Definir el pico", sub: "Alcanza con órdenes de magnitud", steps: ["¿Cuántos usuarios simultáneos en el peor momento?", "¿Cuántos análisis por hora?", "¿Qué latencia en el dashboard ya se siente rota?"], expect: "Tres números, aunque sean aproximados.", ifNot: "Si no tenés intuición, partí del peor viernes que imagines en seis meses y multiplicá por tres." }
       ]
     },
     {
@@ -974,7 +938,7 @@
       code: "UX",
       title: "Casos de borde que esperan las cuentas",
       meta: "~60 min · los 5 que quedaron abiertos",
-      why: "Están catalogados en <code>docs/qa/ux-edge-cases.md</code> y ninguno se declaró verificado. Los cinco dependen de A1 — por eso A1 va primero.",
+      why: "Están catalogados en <code>docs/qa/ux-edge-cases.md</code> y ninguno se declaró verificado. Los cinco usan las cuentas de prueba, que ya existen.",
       tests: [
         { code: "UX.1", title: "Estados vacíos autenticado", sub: "Dashboard recién creado, primer set, primer análisis", steps: ["Con la cuenta FREE recién hecha, recorré el dashboard vacío", "Creá el primer set, corré el primer análisis"], expect: "Cada estado vacío explica qué hacer, en los dos idiomas.", ifNot: "Anotá la ruta y qué decía la pantalla." },
         { code: "UX.2", title: "Errores de Stripe en checkout", sub: "Tarjeta rechazada, sesión expirada", steps: ["Tarjeta de rechazo de Stripe: <code>4000 0000 0000 0002</code>", "Y dejá una sesión de checkout abierta hasta que expire"], expect: "El error dice qué pasó y cómo seguir, sin dejar la cuenta a medias.", ifNot: "Una cuenta que quedó entre planes es severidad alta: toca dinero." },
@@ -987,7 +951,7 @@
       code: "CONT",
       title: "Fundación de contenido: guías y glosario",
       meta: "~50 min · necesita la rama <code>seo/content-foundation</code> mergeada",
-      why: "Ocho pruebas que ningún test automático puede cerrar. Las rutas, el schema y los links rotos ya los vigila CI; lo que queda es lo que necesita un ojo, un oído de DJ, un teléfono de verdad o un validador ajeno. Dos de ellas — CONT.4 y CONT.5 — son las que más valen: una decide si el contenido es <em>cierto</em>, la otra si Google lo entiende.",
+      why: "Cinco pruebas que ningún test automático puede cerrar (eran ocho: el lote 16 retiró la de la guía que no se indexa, que vigilan dos tests, y pasó las del tooltip y los enlaces de glosario a L16.3 y L16.2, porque ya están arregladas). Las rutas, el schema y los links rotos ya los vigila CI; lo que queda es lo que necesita un ojo, un oído de DJ, un teléfono de verdad o un validador ajeno. Dos de ellas — CONT.4 y CONT.5 — son las que más valen: una decide si el contenido es <em>cierto</em>, la otra si Google lo entiende.",
       tests: [
         {
           code: "CONT.1", title: "Los componentes en un teléfono real", sub: "Varias curvas en una misma página",
@@ -1002,12 +966,6 @@
           ifNot: "Éste es el hallazgo más serio posible de esta sesión: significa que la tabla se desprendió de <code>lib/product/strategy.ts</code>. Anotá el tema, su BPM y los dos números."
         },
         {
-          code: "CONT.3", title: "El tooltip de término, con teclado y con voz", sub: "Lo que axe no mira",
-          steps: ["En la guía de prueba, llegá a un <code>&lt;Termino&gt;</code> sólo con Tab", "Abrí el tooltip con teclado y cerralo con Escape", "Repetí con el lector de pantalla encendido (VoiceOver o NVDA)"],
-          expect: "Se llega, se abre, se cierra y se lee la definición corta sin tocar el mouse.",
-          ifNot: "Un barrido verde es un piso, no un certificado: axe encuentra como un tercio de las barreras reales. Anotá qué anunció el lector."
-        },
-        {
           code: "CONT.4", title: "Las 21 definiciones, leídas por un DJ", sub: "La única prueba que decide si el contenido sirve",
           steps: ["Leé las 21 entradas del glosario en español", "Marcá cada una: correcta / discutible / mal", "Mirá especialmente las que Claude dejó marcadas como dudosas en el resumen del PR"],
           expect: "Las 21 con veredicto tuyo.",
@@ -1018,18 +976,6 @@
           steps: ["Pegá la URL de una entrada del glosario en el Rich Results Test de Google", "Repetí con el índice del glosario y con la guía de prueba", "Anotá qué tipos detecta y qué advierte"],
           expect: "<code>DefinedTerm</code> en la entrada, <code>DefinedTermSet</code> en el índice, <code>Article</code> y <code>FAQPage</code> en la guía, y <code>BreadcrumbList</code> en las tres. Sin errores.",
           ifNot: "Nuestros tests validan que el JSON-LD sea JSON válido y tenga los tipos; no validan que Google los acepte. La diferencia entre las dos cosas es esta prueba."
-        },
-        {
-          code: "CONT.6", title: "La guía de prueba no se indexa", sub: "Tres consecuencias de un solo flag",
-          steps: ["Abrí la guía de prueba y mirá el <code>&lt;meta name=\"robots\"&gt;</code> en el HTML del servidor", "Buscala en <code>/sitemap.xml</code>", "Entrá al índice de guías y confirmá que no figura"],
-          expect: "<code>noindex</code>, fuera del sitemap y fuera del índice. Las tres.",
-          ifNot: "Si aparece en alguno de los tres lados, el flag <code>draft</code> no está viajando entero. Es contenido de relleno publicándose con nuestro nombre."
-        },
-        {
-          code: "CONT.7", title: "Los términos enlazados dentro de los 5 artículos", sub: "Que no arruinen la lectura",
-          steps: ["Leé los 5 artículos de corrido, como lector", "Mirá dónde cayeron los links a glosario", "Confirmá que se enlaza sólo la primera aparición de cada término"],
-          expect: "Los links ayudan y no distraen; ningún párrafo quedó sembrado de azul.",
-          ifNot: "Los <code>.md</code> no se tocaron a propósito: el enlazado pasa por <code>lib/blog/link-terms.ts</code>. Si sobra un link, se saca de ahí."
         },
         {
           code: "CONT.8", title: "El glosario en producción y en Search Console", sub: "Después del deploy, no antes",
@@ -1126,24 +1072,6 @@
           ifNot: "Un test ya impide el «Sí.» pelado y exige más de cuatro palabras. Lo que el test no puede juzgar es si la oración <em>responde</em>. Si alguna suena a relleno, anotá cuál y reescribila en <code>site-copy.ts</code>."
         },
         {
-          code: "SEO3.5", title: "El LCP de 5,5 segundos", sub: "Resuelto en el lote 4 — y la causa era otra",
-          steps: ["<strong>Esta prueba quedó obsoleta: la reemplaza <code>SEO4.3</code>.</strong>", "Se deja anotada porque el error vale más que la prueba"],
-          expect: "Nada que probar acá. El lote 4 midió el elemento y no era <code>SectionReveal</code>: es el párrafo del banner de cookies. Con banner 2856 ms, sin banner 1104 ms.",
-          ifNot: "La hipótesis de esta prueba —«si con reduce motion baja, la causa es el revelado»— era razonable y estaba mal. La refutación costaba un campo del reporte (<code>largest-contentful-paint-element</code>) y una observación: <code>/pricing</code> no usa <code>SectionReveal</code> y tenía el mismo LCP. Ver <code>docs/qa/lighthouse-budgets.md</code>."
-        },
-        {
-          code: "SEO3.6", title: "Los presupuestos de Lighthouse en un PR de verdad", sub: "Que el guardián agarre algo que no sea una prueba",
-          steps: ["Abrí un PR cualquiera y mirá el paso «Lighthouse budgets» en CI", "Fijate cuánto tarda y si los números del runner se parecen a los locales", "Bajá el reporte del artifact <code>lighthouse-report</code>"],
-          expect: "El paso corre y pasa. Los números del runner van a ser peores que los locales — por eso el techo de LCP es 7 s y no 5,6 s.",
-          ifNot: "Si falla por varianza y no por una regresión real, anotá los tres valores del runner. El umbral se sube <strong>una vez</strong>, con el número medido escrito al lado; un gate que se afloja dos veces ya no es un gate."
-        },
-        {
-          code: "SEO3.7", title: "El primer par traducido", sub: "Cuando exista. Hoy no hay ninguno",
-          steps: ["Cuando se publique el primer artículo en inglés, poné <code>translationOf</code> en los <strong>dos</strong> archivos", "Mirá el <code>&lt;head&gt;</code> de los dos: tiene que haber <code>hreflang</code> en los dos sentidos más <code>x-default</code>", "Después probá sacarlo de un solo lado y mirá qué pasa"],
-          expect: "Con los dos lados, cada artículo nombra al otro. Con un lado solo, <strong>ninguno de los dos</strong> declara nada — que es lo correcto: un alternate que 404 es peor que no tenerlo.",
-          ifNot: "Ojo con el prefijo: el bug que este lote encontró era justamente que el <code>hreflang</code> español apuntaba a <code>/blog/…</code> en vez de <code>/es/blog/…</code>. Si volvés a ver una URL sin <code>/es</code>, es esa regresión."
-        },
-        {
           code: "SEO3.8", title: "La entrada build-up, leída por un DJ", sub: "La corrección que pidió Robertino",
           steps: ["Leé <code>/es/glosario/build-up</code> entera", "Fijate si después de leerla podés explicar la diferencia con una intro larga", "Comparala con <code>/es/glosario/breakdown</code> y <code>/es/glosario/drop</code>, que la enlazan"],
           expect: "Queda claro que lo que define al build-up es que la energía va dirigida a algún lado y resuelve, no que dure mucho.",
@@ -1176,12 +1104,6 @@
           ifNot: "Si el elemento LCP es otro, cambió algo desde el 19/09 y el diagnóstico hay que rehacerlo — mirando el campo, no infiriéndolo. Es exactamente el error que este lote corrigió."
         },
         {
-          code: "SEO4.4", title: "Acortar el párrafo del banner: tu decisión", sub: "RESUELTA el 19/09 — decidiste acortarlo. El resultado, en SEO5.2",
-          steps: ["Leé el párrafo actual del banner completo", "Decidí si se puede decir lo mismo en menos de la mitad del texto, sin perder las tres promesas (no graba la pantalla, no guarda la IP, no ve tu música)", "Si sí: escribí la versión corta y pasámela", "Si no: decilo y el umbral de LCP se queda en 7 s"],
-          expect: "Una decisión escrita, en cualquiera de los dos sentidos.",
-          ifNot: "No es una tarea de performance disfrazada: el texto es una declaración de privacidad deliberada y acortarlo cambia qué le prometemos a alguien en el primer segundo. Por eso no se tocó sin vos. El link a la política de cookies ya está ahí abajo."
-        },
-        {
           code: "SEO4.5", title: "Los CTAs de contenido y el evento", sub: "SEO-E28, la mitad que sí es código",
           steps: ["Abrí <code>/es/energy-tags</code> y bajá hasta el final: tiene que haber un bloque con borde que ofrece la herramienta gratis", "Repetí en <code>/es/import-formats</code>", "Aceptá las cookies, tocá el CTA y mirá en PostHog que llegue <code>content_cta_click</code>", "Abrí sus propiedades"],
           expect: "El evento llega con <code>page</code>, <code>locale</code> y <code>variant</code>, y con nada más — ni títulos de temas ni nombres de archivo.",
@@ -1189,9 +1111,9 @@
         },
         {
           code: "SEO4.6", title: "El embudo en PostHog", sub: "La mitad que es tuya",
-          steps: ["En PostHog, marcá como key events: <code>content_cta_click</code>, <code>signup</code> y <code>analysis_completed</code>", "Armá el embudo con esos tres pasos, en ese orden", "Mirá si dibuja algo"],
+          steps: ["En PostHog, marcá como key events: <code>content_cta_click</code>, <code>signup</code> y <code>analysis_completed</code>", "Armá el embudo con esos tres pasos, en ese orden", "Mirá si dibuja algo", "Pegá una captura o el enlace en el hilo de Asana de SEO-E28"],
           expect: "El embudo «orgánico → primer análisis» se puede dibujar con los tres.",
-          ifNot: "Ojo con los nombres: el plan los llama <code>signup_completed</code> y <code>first_analysis</code>, pero el repo ya emitía <code>signup</code> y <code>analysis_completed</code> desde antes y se dejaron así a propósito — duplicarlos habría puesto dos eventos con el mismo significado. PostHog cuenta la primera ocurrencia por persona, así que <code>analysis_completed</code> <em>es</em> el paso de primer análisis."
+          ifNot: "Ojo con los nombres: el plan los llama <code>signup_completed</code> y <code>first_analysis</code>, pero el repo ya emitía <code>signup</code> y <code>analysis_completed</code> desde antes y se dejaron así a propósito — duplicarlos habría puesto dos eventos con el mismo significado. PostHog cuenta la primera ocurrencia por persona, así que <code>analysis_completed</code> <em>es</em> el paso de primer análisis. Reemplaza a la vieja F45.2, que pedía marcar los dos nombres que no existen. Si <code>analysis_completed</code> no aparece, no es de PostHog: es que nadie completó un análisis desde que se instrumentó."
         },
         {
           code: "SEO4.7", title: "La entidad en el Rich Results Test", sub: "SEO-E22, la mitad de código",
@@ -1217,7 +1139,7 @@
           code: "SEO5.1", title: "El banner nuevo, leído como declaración de privacidad", sub: "Lo que el visitante ve en el primer segundo",
           steps: ["Abrí <code>/es</code> en una ventana privada para que el banner aparezca", "Leé el párrafo entero, en voz alta si podés", "Repetí en <code>/</code> y leé la versión inglesa", "Preguntate: ¿sigue diciendo las tres cosas — que no graba la pantalla, que no guarda la IP, que no ve tu música — y que decir que no no rompe nada?"],
           expect: "En español, tu texto tal cual lo aprobaste, sin una coma cambiada. En inglés, una versión equivalente escrita para este lote, con las mismas tres promesas y la misma última frase. El link a la política de cookies sigue abajo.",
-          ifNot: "Si el inglés dice algo que el español no dice, o al revés, es un problema de verdad: son la misma promesa legal en dos idiomas. Anotá la frase exacta que sobra o falta."
+          ifNot: "Si el inglés dice algo que el español no dice, o al revés, es un problema de verdad: son la misma promesa legal en dos idiomas. Anotá la frase exacta que sobra o falta. Ojo con «no guarda la IP»: desde el 02/10 se sabe (H-17) que es verdad sólo si el ajuste de PostHog está prendido — es L16.1, y la frase corregida espera tu OK."
         },
         {
           code: "SEO5.2", title: "El LCP después de acortar, en producción", sub: "Una ruta mejoró, dos no — mirá cuál y por qué",
@@ -1230,12 +1152,6 @@
           steps: ["Leé la sección «Qué falta para llegar a 2,5 s» de <code>docs/qa/lighthouse-budgets.md</code>", "Mirá la tabla de líneas: el techo son 744 px de texto, o sea ~95 caracteres", "Tu texto tiene 131", "Decidí entre las tres salidas: recortar ~36 caracteres más, probar la vía de pintar el banner en el primer paint, o dejar el LCP donde está y el umbral en 7 s"],
           expect: "Una decisión escrita, cualquiera de las tres. La tercera es legítima: 5,6 s con un banner honesto puede valer más que 2 s con uno mutilado.",
           ifNot: "Lo que <strong>no</strong> hay que hacer está escrito en el mismo documento: partir el párrafo en dos <code>&lt;p&gt;</code>, bajarle la opacidad o retrasarlo. Las tres bajan el número sin cambiar nada de lo que el visitante ve."
-        },
-        {
-          code: "SEO5.4", title: "El rojo de la verificación de producción", sub: "Una sola cosa falló, era de una línea, y ya está",
-          steps: ["Abrí <code>docs/seo/verificacion-produccion-2026-09.md</code>", "Andá a la sección «Lo que quedó en rojo»", "Abrí <code>docs/roadmap-status.md</code> y buscá una mención a <code>docs/seo/SEO-PLAN.md</code>", "Confirmá que <strong>sí</strong> está — se agregó en un lote posterior al 20/09; hasta entonces este paso decía «confirmá que no está»"],
-          expect: "Las fases 1 y 3 están verdes contra producción con el comando y la salida de cada una. La fase 0 quedó en rojo el 20/09 porque <code>AGENTS.md</code> apuntaba al plan y <code>docs/roadmap-status.md</code> no; hoy los dos lo mencionan (roadmap-status.md:251, con link) y el rojo no tiene por qué seguir.",
-          ifNot: "Si preferís que lo arregle en el próximo lote, decilo. No se arregló acá porque la tarea era verificar, y un rojo listado vale más que un tilde apurado."
         },
         {
           code: "SEO5.5", title: "El mapa de consultas, leído por vos", sub: "La columna de huecos es la lista de qué escribir",
@@ -1260,20 +1176,14 @@
     {
       code: "DB",
       title: "Las migraciones que faltan, y el semáforo que ahora lo dice",
-      meta: "~25 min · dev y producción · la primera es la que importa",
+      meta: "~20 min · dev y producción · las tres necesitan la connection string",
       why: "Hasta este lote no había forma de saber qué migraciones estaban aplicadas en ningún entorno. Eso costó tres veces: la <code>0021</code> nunca corrió en dev —las features espectrales no se persistían y nadie se enteró— y en agosto pasó lo mismo con la <code>0018</code> y la <code>0019</code>, tragadas en la capa de servicio y visibles sólo como un botón que no confirmaba nunca. Ahora <code>scripts/migration-status.mjs</code> lo contesta con un comando. <strong>El script no aplica nada</strong>: es el semáforo, no el auto. Aplicar sigue siendo tuyo, con el comando delante.",
       tests: [
         {
-          code: "DB.1", title: "Aplicá la 0005 — es la que rompe cosas hoy", sub: "Siete géneros que el producto ofrece y la base rechaza",
-          steps: ["SQL Editor del proyecto de <strong>dev</strong>", "Pegá <code>supabase/migrations/0005_expand_genres.sql</code>", "Después, en orden: <code>0027</code>, <code>0028</code>, <code>0029</code>, <code>0030</code>, <code>0031</code>, <code>0032</code>", "Probá importar un set eligiendo el género <strong>Trance</strong>"],
-          expect: "La importación con Trance funciona. Antes fallaba con «Something went wrong while saving» y en el log del servidor decía <code>invalid input value for enum playlist_genre: \"trance\"</code>.",
-          ifNot: "Los siete géneros ausentes, confirmados el 25/09 en sólo-lectura contra dev: <code>deep-house</code>, <code>organic-house</code>, <code>disco-house</code>, <code>tech-house</code>, <code>trance</code>, <code>psy-trance</code>, <code>bounce</code>. Los otros cinco —house, techno, hard-techno, melodic-techno, progressive— vienen de la <code>0001</code> y siempre funcionaron, que es por qué nadie lo había visto."
-        },
-        {
-          code: "DB.2", title: "Aplicá las que faltan, y volvé a correrlo", sub: "El semáforo tiene que cambiar de color",
-          steps: ["Abrí el SQL Editor de dev", "Pegá <code>0027</code> a <code>0031</code> <strong>en orden de número</strong>, una por una", "Volvé a correr <code>npm run db:status</code>"],
-          expect: "«31 applied, 0 missing or partial, 0 unknown» y código de salida 0.",
-          ifNot: "Si alguna tira error, pará y pasame el mensaje completo. <strong>No sigas con las siguientes</strong>: el orden importa y una a medias deja el esquema en un estado que nadie más tiene."
+          code: "DB.2", title: "El semáforo completo en dev", sub: "Lo que REST no ve: índices, RLS y políticas",
+          steps: ["<code>MIGRATION_DB_URL='postgresql://…' npm run db:status</code> con la connection string de <strong>dev</strong>", "Leé el resumen final"],
+          expect: "«32 applied, 0 missing or partial, 0 unknown» y código de salida 0. Lo que ya se sabe, del 02/10 por REST (<code>scripts/seed-scale.mjs status</code>): las 32 sin tablas, columnas ni enums faltantes, incluida la <code>0005</code> con sus doce géneros. Esta fila confirma la otra mitad.",
+          ifNot: "Si alguna sale parcial, pasame la salida entera y no apliques nada en el momento: una a medias deja el esquema en un estado que nadie más tiene."
         },
         {
           code: "DB.3", title: "Correlo contra producción, en lectura", sub: "Nunca se corrió esta pregunta contra prod",
@@ -1286,12 +1196,6 @@
           steps: ["<code>MIGRATION_DB_URL='postgresql://…' npm run db:seed</code>", "Entrá al dashboard con el usuario del seed", "Abrí las tres playlists: «fully tagged», «untagged» y «partially tagged»"],
           expect: "La primera dibuja una curva de datos. La segunda tiene que <strong>decir que no sabe</strong> en vez de dibujar una línea confiada. La tercera es la mezcla, que es lo que se parece a una librería real.",
           ifNot: "Si la segunda muestra un score como si nada, eso es un hallazgo — la regla del producto es decir qué parte es dato y qué parte es estimación. Corré el seed dos veces para confirmar que no duplica nada."
-        },
-        {
-          code: "DB.5", title: "Las 32 aplican dos veces sin error", sub: "Arreglado el 25/09 — confirmalo si querés",
-          steps: ["Contra un Postgres descartable, aplicá las 32 en orden", "Aplicalas otra vez, las 32, sobre la misma base"],
-          expect: "Cero errores en las dos pasadas. Verificado el 25/09 contra un PostgreSQL 16 local. Antes fallaban dos cosas: la <code>0002</code> reventaba al re-correrla (<code>btrim(playlist_context) does not exist</code> — una vez que la columna es enum, <code>trim()</code> no tiene sobrecarga) y la <code>0014</code> no aplicaba a un Postgres común porque declaraba una política con <code>auth.uid()</code> y ahí no existe el esquema <code>auth</code>.",
-          ifNot: "La política era código muerto: las identidades viven en WorkOS, ningún JWT de Supabase llega a Postgres, así que <code>auth.uid()</code> siempre es null y no coincidía con nada (decisión 22). La <code>0032</code> la saca de las bases que ya la tienen. Hay un test que impide que vuelva cualquiera de las dos clases."
         }
       ]
     },
@@ -1299,25 +1203,13 @@
       code: "E2E",
       title: "Las tres suites autenticadas, ya corridas",
       meta: "~15 min · las cuentas ya están · ahora son automáticas",
-      why: "Al 25/09 son <strong>745 pasan, 23 saltean, 0 fallan</strong> sobre 768. Esta sesión cambió de naturaleza el 25/09. Las tres specs del lote 6 se corrieron por primera vez y <strong>no funcionaban</strong>: 43 de 66 fallaban. Cuatro causas, todas reales — el spec hacía clic en el primer botón <code>submit</code>, que es «Log out»; la limpieza al final del archivo hacía que el plan FREE llegara a su tope de 3 playlists y el producto rechazara el resto, correctamente; la página hace streaming y durante el swap conviven dos árboles del DOM, así que un <code>id</code> único resolvía a dos elementos; y los tres proyectos corrían en paralelo contra una sola base. Hoy quedan en <strong>64 pasan, 2 saltean, 0 fallan</strong>. Lo que te queda a vos es confirmarlo y mirar lo que un test no mira.",
+      why: "Al 02/10 (lote 16) son <strong>1266 pasan, 46 saltean, 0 fallan</strong>, la suite entera en 4,9 minutos. Esta sesión cambió de naturaleza el 25/09. Las tres specs del lote 6 se corrieron por primera vez y <strong>no funcionaban</strong>: 43 de 66 fallaban. Cuatro causas, todas reales — el spec hacía clic en el primer botón <code>submit</code>, que es «Log out»; la limpieza al final del archivo hacía que el plan FREE llegara a su tope de 3 playlists y el producto rechazara el resto, correctamente; la página hace streaming y durante el swap conviven dos árboles del DOM, así que un <code>id</code> único resolvía a dos elementos; y los tres proyectos corrían en paralelo contra una sola base. Ese día quedaron en <strong>64 pasan, 2 saltean, 0 fallan</strong>. Lo que te queda a vos es confirmarlo y mirar lo que un test no mira.",
       tests: [
         {
           code: "E2E.1", title: "La suite entera, como línea de base del día", sub: "Es el primer comando de la mañana",
-          steps: ["<code>cd ~/Documents/code/energycurve</code>", "<code>npx playwright test</code>", "Leé sólo el resumen final"],
-          expect: "<strong>745 pasan, 23 saltean, 0 fallan</strong> sobre 768, en 13,3 minutos. Medido el 25/09. Los 23 skips son a propósito: 12 del arco de pagos, que corre una sola vez sobre FREE porque en PRO y PRO+ compraría una segunda suscripción para afirmar lo mismo; 9 de sitemap, que corren sólo en Chromium («HTTP only»); y 2 del test del plan free, que se saltea en PRO y PRO+.",
-          ifNot: "Si falla algo de import o export, lo más probable es que falten las migraciones: mirá primero DB.1. Si fallan las dos de consent y login, el build salió sin <code>.env.local</code> — corré desde el checkout principal, no desde un worktree. Los dos casos ahora te lo dicen en el mensaje del fallo."
-        },
-        {
-          code: "E2E.1b", title: "Ya no hace falta exportar nada — y antes sí", sub: "El paso que faltaba se comió una corrida entera",
-          steps: ["Corré la suite sin exportar ninguna variable", "Al terminar, contá las playlists de la cuenta FREE"],
-          expect: "Cero playlists «Synthetic Set». El <code>set -a; . .env.e2e.local; set +a</code> que decía este paso hasta el 25/09 <strong>estaba de más y era insuficiente al mismo tiempo</strong>: ese archivo tiene las seis variables de cuentas y ninguna de Supabase, que es lo que la limpieza necesita y vive en <code>.env.local</code>. Sin ellas la limpieza tiraba en cada <code>afterEach</code>, sobrevivían tres playlists, la cuenta FREE llegaba a su tope de 3, y un archivo entero de tests se ponía rojo diciendo que importar estaba roto cuando el producto estaba rechazando <em>correctamente</em>. Ahora los helpers leen los dos archivos del disco.",
-          ifNot: "Si aparecen «Synthetic Set», mirá el mensaje: nombra los dos archivos donde busca las credenciales."
-        },
-        {
-          code: "E2E.1c", title: "La cuenta PRO+ está en FREE", sub: "Hallazgo del 25/09 — el proyecto dice PRO+ y no lo es",
-          steps: ["Mirá la fila del perfil de la cuenta PRO+ en <code>profiles</code>", "Fijate en <code>plan</code>, <code>plan_status</code> y <code>stripe_customer_id</code>"],
-          expect: "Debería decir <code>pro_plus</code>. Dice <strong><code>plan=free</code>, <code>plan_status=null</code>, <code>stripe_customer_id=null</code></strong>, confirmado el 25/09 con el service-role client. El paso A1.3 la iba a habilitar «por lista de cortesía» y eso nunca se aplicó — y no hay ningún mecanismo de cortesía en el código: el plan sale de la fila del perfil y nada más lo escribe salvo el webhook de Stripe.",
-          ifNot: "Ninguna prueba está mintiendo hoy: las specs de <code>auth-proPlus</code> no afirman nada específico de PRO+, así que pasan por buenas razones. Lo que no existe es la cobertura que el nombre del proyecto promete. Para arreglarlo: poné la fila en <code>pro_plus</code> a mano, o pagá el checkout con tarjeta de prueba como hace la sesión PAY."
+          steps: ["<code>cd ~/Documents/code/energycurve</code>", "<code>npm run test:e2e</code>", "Leé sólo el resumen final"],
+          expect: "<strong>1266 pasan, 46 saltean, 0 fallan</strong>, en 4,9 minutos, sin reintentos. Medido el 02/10 (lote 16) sobre un build limpio. Los saltos son a propósito: el arco de pagos sin <code>stripe listen</code> (PAY.2), el sitemap que corre sólo en Chromium, el importador que corre una vez sobre FREE, el test del plan free en PRO y PRO+, y el del request de PostHog, sólo en Chromium.",
+          ifNot: "Si falla algo de import o export, mirá primero DB.2: una migración parcial es la causa más probable. Si fallan las dos de consent y login, el build salió sin <code>.env.local</code> — un worktree nuevo no lo hereda. Los dos casos te lo dicen en el mensaje del fallo. Un test que falla no se reintenta: un <code>retry</code> anula justo lo que el test vigila."
         },
         {
           code: "E2E.2", title: "Que la base quede como estaba", sub: "La propiedad que las hace repetibles",
@@ -1358,7 +1250,7 @@
           ifNot: "Nada de esto es un fallo si no lo hacés: es alcance declarado, no alcance perdido."
         },
         {
-          code: "PAY.4", title: "Un botón que el copy llama por un nombre que no existe", sub: "Hallazgo del 25/09, no arreglado",
+          code: "PAY.4", title: "Un botón que el copy llama por un nombre que no existe", sub: "H-16 · hallazgo del 25/09, no arreglado, espera tu decisión",
           steps: ["Entrá a <code>/dashboard/account</code> con una cuenta con suscripción", "Mirá cómo se llama el botón", "Buscá «Manage billing» en el copy de cancelación"],
           expect: "El botón dice <strong>«Manage subscription»</strong>. Dos textos de <code>dashboard-copy.ts</code> le dicen al usuario «use <strong>Manage billing</strong> above instead» y «Open <strong>Manage billing</strong> and cancel it there» — un nombre que ningún control de la pantalla lleva, justo en el momento en que alguien intenta dejar de pagar.",
           ifNot: "Se dejó anotado en vez de arreglado porque es copy de producto y el lote 8 no tocaba billing. Decidilo vos."
@@ -1412,7 +1304,7 @@
         {
           code: "AUD.1", title: "El banner ya no tapa nada — validar el fix", sub: "Hallazgo A2 · arreglado el 26/09 en <code>54517d4</code> (lote 10)",
           steps: ["Cuenta recién creada, o borrá <code>ec.analytics-consent.v1</code> del <code>localStorage</code>", "En el teléfono, a 390 px, abrí <code>/</code> y scrolleá hasta el final", "Tocá el último enlace del pie con el banner todavía visible", "Repetí en <code>/dashboard/playlists</code> con el botón de importar"],
-          expect: "El último enlace del pie queda <strong>por encima</strong> del banner y responde al toque; la página reserva el alto del banner en vez de dejarlo flotar encima. Medido el 26/09 a 390 px: el enlace pasó de y=697–717 (banner en y=638) a y=490–510. El test <code>leaves every control reachable</code> de <code>e2e/consent.spec.ts</code> recorre todos los controles y lo vigila.",
+          expect: "El último enlace del pie queda <strong>por encima</strong> del banner y responde al toque; la página reserva el alto del banner en vez de dejarlo flotar encima. Medido el 26/09 a 390 px: el enlace pasó de y=697–717 (banner en y=638) a y=490–510. <strong>La mitad pública ya pasó</strong>: <code>/</code> a 390 px, confirmado el 01/10. Lo que queda es <code>/dashboard/playlists</code>, que necesita sesión. El test <code>leaves every control reachable</code> de <code>e2e/consent.spec.ts</code> recorre todos los controles y lo vigila.",
           ifNot: "Si algo vuelve a quedar debajo, anotá qué control y a qué ancho: el test corre a escritorio en los cuatro navegadores, y un ancho raro es justo lo que no cubre."
         },
         {
@@ -1614,12 +1506,6 @@
           ifNot: "Si el <code>llms.txt</code> sigue sin comparaciones, producción no tiene el lote 14. Si el evento no llega desde un artículo pero sí desde una referencia, anotá la ruta."
         },
         {
-          code: "F45.2", title: "E28: key events y funnel en PostHog", sub: "La mitad de la fase 5 que vive en tu cuenta",
-          steps: ["En PostHog, marcá <code>signup_completed</code> y <code>first_analysis</code> como key events", "Armá el funnel orgánico → <code>content_cta_click</code> → <code>signup_completed</code> → <code>first_analysis</code>", "Pegá una captura o el enlace del funnel en el hilo de Asana de SEO-E28"],
-          expect: "El funnel existe y muestra al menos el primer paso con datos, aunque sean pocos.",
-          ifNot: "Si <code>first_analysis</code> no aparece como evento, no es de PostHog: es que nadie completó un análisis desde que se instrumentó. Decilo así."
-        },
-        {
           code: "F45.3", title: "E22: los cinco perfiles que faltan", sub: "Hoy <code>sameAs</code> tiene uno: Instagram",
           steps: ["Creá o reclamá: Product Hunt, AlternativeTo (alternativa a Mixed In Key / DJ.Studio), Crunchbase bajo StageLink LLC, X o TikTok, y un ítem de Wikidata", "Mismo nombre («EnergyCurve — DJ set copilot»), misma descripción y mismo logo en todos", "Pasame las URLs: van a <code>ENTITY_PROFILES</code> en <code>lib/seo.ts</code>, que es un array"],
           expect: "Seis perfiles vivos con el mismo nombre. El código tarda un minuto; los perfiles, lo que tarden.",
@@ -1630,20 +1516,6 @@
           steps: ["E26: el enlace desde stagelink.art y el post «cómo planifican sets los DJs» en su blog", "E25: elegí el primer medio; los textos los redacto yo y no sale nada sin tu OK", "E27: la primera corrida de visibilidad en IA (SEO-E04) y la revisión de GSC, con nota de 10 líneas en Asana", "E31: la primera fila de <code>docs/seo/cwv-log.md</code> con PSI para 6 URLs"],
           expect: "Una fila hecha de cada una alcanza para saber que el circuito funciona; las fases se cierran cuando el plan dice (≥3 menciones, 3 corridas, 4 filas).",
           ifNot: "Si alguna no va a hacerse, mejor decirlo y sacarla del plan que dejar el hito abierto indefinidamente."
-        }
-      ]
-    },
-    {
-      code: "IMP",
-      title: "La playlist que aparece vacía un segundo",
-      meta: "~10 min · cuenta PRO · necesita dos pestañas",
-      why: "El test intermitente del export (lotes 12 y 13: «Export» deshabilitado al hacer clic, una de cada tres corridas completas) se caracterizó en el lote 14: <code>createPlaylist</code> inserta la fila de la playlist primero y los temas después, así que hay una ventana en la que el set aparece en la lista y su página se renderiza con cero temas y el botón de exportar deshabilitado — y como la página es de servidor, no se refresca sola. En cinco corridas aisladas del spec no se reprodujo; con los cinco shards en paralelo, sí. El arnés ahora espera la señal real del producto (los temas en la página). Lo que queda es del producto, y es esto.",
-      tests: [
-        {
-          code: "IMP.1", title: "Abrir la playlist en la ventana entre el alta y los temas", sub: "Reproducirlo a mano es difícil; verlo, no",
-          steps: ["Importá un set grande (100+ temas) desde la pestaña A", "Apenas aparezca en la lista, abrilo desde la pestaña B", "Mirá si la página muestra cero temas y «Export» deshabilitado, y si se corrige sola"],
-          expect: "Lo esperable hoy: si llegás en la ventana, ves un set vacío que no se refresca hasta que recargás. Si no llegás, no viste nada, y eso también vale anotarlo.",
-          ifNot: "Si lo ves, es el hallazgo: la creación debería ser una transacción (playlist + temas) o la lista no debería mostrar un set sin temas. Es código del importador, no de scoring, y se decide en su propio PR."
         }
       ]
     }
@@ -1667,9 +1539,16 @@
     return out;
   }
 
+  // A row can start somewhere other than "pending": a fix that shipped starts
+  // in "validar", because what is left is re-running it, not running it.
+  var INITIAL = {};
+  SESSIONS.forEach(function (s) {
+    s.tests.forEach(function (t) { if (t.initial) INITIAL[t.code] = t.initial; });
+  });
+
   function statusOf(code) {
     var row = state[code];
-    return (row && row.status) || "pending";
+    return (row && row.status) || INITIAL[code] || "pending";
   }
 
   function renderTally() {

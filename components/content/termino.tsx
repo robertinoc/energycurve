@@ -15,6 +15,11 @@ import type { SiteLocale } from "@/lib/content/site-copy"
  * there is no state, so there is no controlled input and none of the
  * before-hydration trouble the tool pages had to solve.
  *
+ * The one behaviour CSS cannot give it is Escape. WCAG 1.4.13 asks for it and
+ * this component used to go without (H-19); it now comes from a single
+ * page-level listener, `term-tooltip-dismiss.tsx`, which keeps the only state
+ * there is — a `data-dismissed` attribute — out of this component entirely.
+ *
  * `aria-describedby` is what makes a screen reader announce the definition
  * along with the link, rather than leaving it as decoration only a sighted
  * mouse user gets.

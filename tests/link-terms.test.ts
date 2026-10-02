@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { linkGlossaryTerms } from "@/lib/blog/link-terms"
+import { linkGlossaryTerms, termsLinkedByHand } from "@/lib/blog/link-terms"
 import { listPosts } from "@/lib/blog/posts"
 import { parseMarkdown, type BlogBlock, type InlineNode } from "@/lib/blog/markdown"
 
@@ -29,6 +29,67 @@ function textOf(blocks: BlogBlock[]): string {
     .map((node) => ("text" in node ? node.text : ""))
     .join("")
 }
+
+/** Every href in an article that lands on a glossary entry, manual or automatic. */
+function glossaryHrefs(blocks: BlogBlock[]): string[] {
+  const nodes = blocks.flatMap((block) =>
+    block.kind === "faq"
+      ? block.entries.flatMap((entry) => entry.answer)
+      : inlineNodes([block])
+  )
+
+  return nodes
+    .filter((node) => node.kind === "link" || node.kind === "term")
+    .map((node) => ("href" in node ? node.href : ""))
+    .filter((href) => /\/(glossary|glosario)\//.test(href))
+}
+
+describe("a term the article already links by hand (H-18)", () => {
+  it("is not linked a second time on an earlier mention", () => {
+    // The shape of the bug: the first mention is plain, a later one is a
+    // hand-written link. Before H-18 the first mention got a term link too.
+    const blocks = parseMarkdown(
+      "Every track has a tempo in BPM.\n\nMeasured in [BPM](/glossary/bpm), as ever."
+    )
+
+    const linked = linkGlossaryTerms(blocks, "en")
+
+    expect(termNodes(linked).filter((node) => node.id === "bpm")).toHaveLength(0)
+    expect(glossaryHrefs(linked)).toEqual(["/glossary/bpm"])
+  })
+
+  it("recognises the link in either language, with a trailing slash or a fragment", () => {
+    const blocks = parseMarkdown(
+      "[uno](/es/glosario/bpm/) y [dos](https://energycurve.app/glossary/bpm#tempo)."
+    )
+
+    expect([...termsLinkedByHand(blocks)]).toEqual(["bpm"])
+  })
+
+  it("leaves a link to anything that is not a glossary entry alone", () => {
+    const blocks = parseMarkdown("See the [pricing](/pricing) page. BPM matters.")
+
+    expect(termsLinkedByHand(blocks).size).toBe(0)
+    expect(termNodes(linkGlossaryTerms(blocks, "en")).map((node) => node.id)).toContain(
+      "bpm"
+    )
+  })
+
+  it("holds for every published article: no glossary entry is linked twice", () => {
+    // The e2e check counts `.ec-term` only — the automatic links — which is why
+    // H-18 passed it: the duplicates were one automatic and one hand-written.
+    // This counts both, on every article, so a new `.md` cannot bring it back.
+    const twice = listPosts("en")
+      .concat(listPosts("es"))
+      .flatMap((post) => {
+        const hrefs = glossaryHrefs(linkGlossaryTerms(post.blocks, post.locale))
+        const repeated = [...new Set(hrefs.filter((href, i) => hrefs.indexOf(href) !== i))]
+        return repeated.map((href) => `${post.locale}/${post.slug} → ${href}`)
+      })
+
+    expect(twice).toEqual([])
+  })
+})
 
 describe("linking glossary terms into an article", () => {
   it("links a term the first time it appears and not afterwards", () => {

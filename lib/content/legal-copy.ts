@@ -48,6 +48,16 @@ const UPDATED = {
   es: "Última actualización: septiembre 2026",
 }
 
+/**
+ * Only the subprocessors page changed on 02/10/2026 — Vercel's and Supabase's
+ * regions, verified that day — so only its date moves. Bumping the shared
+ * `UPDATED` would have told readers the terms and the cookie policy changed too.
+ */
+const SUBPROCESSORS_UPDATED = {
+  en: "Last updated: October 2026",
+  es: "Última actualización: octubre 2026",
+}
+
 const en: Record<LegalDocId, LegalDoc> = {
   privacy: {
     title: "Privacy Policy",
@@ -195,15 +205,15 @@ const en: Record<LegalDocId, LegalDoc> = {
   },
   subprocessors: {
     title: "Subprocessors",
-    updated: UPDATED.en,
+    updated: SUBPROCESSORS_UPDATED.en,
     intro:
       `Every third party that processes data on our behalf, what they do with it, and where they are. ${OPERATOR} is the controller; the companies below are processors acting on our instructions. This list is generated from the integrations the application actually uses — a service we stopped using is removed, and one we add appears here in the same change.`,
     sections: [
       {
         heading: "Infrastructure",
         body: [
-          "Vercel Inc. (United States) — application hosting and runtime logs. Every request reaches us through Vercel, so it processes whatever a request contains.",
-          "Supabase Inc. — the application database: your account record, your sets, your tracks, your analyses. Stores everything except payment details and authentication credentials.",
+          "Vercel Inc. (United States; our functions run in Washington, D.C.) — application hosting and runtime logs. Every request reaches us through Vercel, so it processes whatever a request contains.",
+          "Supabase Inc. (United States; the database is in Ohio, region us-east-2) — the application database: your account record, your sets, your tracks, your analyses. Stores everything except payment details and authentication credentials.",
         ],
       },
       {
@@ -421,15 +431,15 @@ const es: Record<LegalDocId, LegalDoc> = {
   },
   subprocessors: {
     title: "Sub-encargados",
-    updated: UPDATED.es,
+    updated: SUBPROCESSORS_UPDATED.es,
     intro:
       `Cada tercero que trata datos por cuenta nuestra, qué hace con ellos y dónde está. ${OPERATOR} es el responsable; las empresas de abajo son encargados que actúan siguiendo nuestras instrucciones. Esta lista se arma a partir de las integraciones que la aplicación realmente usa — un servicio que dejamos de usar se saca, y uno que sumamos aparece acá en el mismo cambio.`,
     sections: [
       {
         heading: "Infraestructura",
         body: [
-          "Vercel Inc. (EE.UU.) — hosting de la aplicación y logs de ejecución. Todo request pasa por Vercel, así que trata lo que ese request contenga.",
-          "Supabase Inc. — la base de datos: tu cuenta, tus sets, tus tracks, tus análisis. Guarda todo excepto los datos de pago y las credenciales de acceso.",
+          "Vercel Inc. (EE.UU.; nuestras funciones corren en Washington D.C.) — hosting de la aplicación y logs de ejecución. Todo request pasa por Vercel, así que trata lo que ese request contenga.",
+          "Supabase Inc. (EE.UU.; la base está en Ohio, región us-east-2) — la base de datos: tu cuenta, tus sets, tus tracks, tus análisis. Guarda todo excepto los datos de pago y las credenciales de acceso.",
         ],
       },
       {

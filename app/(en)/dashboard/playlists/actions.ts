@@ -74,14 +74,13 @@ import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import {
   PlaylistLimitError,
   addTrack,
-  createPlaylist,
+  createPlaylistWithTracks,
   deletePlaylist,
   getOwnedPlaylistWithTracks,
   moveTrack,
   removeTrack,
   reorderTracks,
   reorderTracksAsLockHolder,
-  replaceTracks,
   updatePlaylistDetails,
   updateTrack,
 } from "@/services/playlist-service"
@@ -324,25 +323,23 @@ export async function createPlaylistWithTracksAction(
   let playlistId: string
 
   try {
-    const playlist = await createPlaylist(profile.id, {
-      ...parsed.data,
-      customContextId: contextChoice?.customId ?? null,
-      customGenreId: genreChoice?.customId ?? null,
-    })
+    // Playlist and tracks together, or neither: a failed tracks write no
+    // longer leaves an empty set behind (IMP.1).
+    const playlist = await createPlaylistWithTracks(
+      profile.id,
+      {
+        ...parsed.data,
+        customContextId: contextChoice?.customId ?? null,
+        customGenreId: genreChoice?.customId ?? null,
+      },
+      pastedTracks.map((track) => ({
+        artist: track.artist,
+        name: track.name,
+        bpm: track.bpm,
+        energyScore: null,
+      }))
+    )
     playlistId = playlist.id
-
-    if (pastedTracks.length > 0) {
-      await replaceTracks(
-        profile.id,
-        playlistId,
-        pastedTracks.map((track) => ({
-          artist: track.artist,
-          name: track.name,
-          bpm: track.bpm,
-          energyScore: null,
-        }))
-      )
-    }
   } catch (error) {
     const limited = playlistLimitMessage(error, locale)
     if (limited) {
@@ -725,7 +722,10 @@ export async function importPlaylistAction(
   let playlistId: string
 
   try {
-    const playlist = await createPlaylist(profile.id, {
+    // Playlist and tracks together, or neither (IMP.1).
+    const playlist = await createPlaylistWithTracks(
+      profile.id,
+      {
       name,
       genre,
       context: contextChoice.base,
@@ -733,12 +733,7 @@ export async function importPlaylistAction(
       sourceHeader: parsed.sourceHeader ?? null,
       customContextId: contextChoice.customId,
       customGenreId: genreChoice?.customId ?? null,
-    })
-    playlistId = playlist.id
-
-    await replaceTracks(
-      profile.id,
-      playlistId,
+      },
       tracks.map((track) => ({
         artist: track.artist || "Unknown artist",
         name: track.name || "Untitled",
@@ -755,6 +750,7 @@ export async function importPlaylistAction(
         energySource: track.energySource ?? null,
       }))
     )
+    playlistId = playlist.id
   } catch (error) {
     const limited = playlistLimitMessage(error, locale)
     if (limited) {
@@ -870,19 +866,17 @@ export async function importAudioFilesAction(
   let playlistId: string
 
   try {
-    const playlist = await createPlaylist(profile.id, {
+    // Playlist and tracks together, or neither (IMP.1).
+    const playlist = await createPlaylistWithTracks(
+      profile.id,
+      {
       name,
       genre,
       context: contextChoice.base,
       importSource: "files",
       customContextId: contextChoice.customId,
       customGenreId: genreChoice?.customId ?? null,
-    })
-    playlistId = playlist.id
-
-    await replaceTracks(
-      profile.id,
-      playlistId,
+      },
       tracks.map((track) => ({
         artist: track.artist || "Unknown artist",
         name: track.name || "Untitled",
@@ -897,6 +891,7 @@ export async function importAudioFilesAction(
         audioFeatures: track.audioFeatures ?? null,
       }))
     )
+    playlistId = playlist.id
   } catch (error) {
     const limited = playlistLimitMessage(error, locale)
     if (limited) {

@@ -515,7 +515,7 @@ const LEXICON: Comparison = {
   id: "lexicon",
   competitor: "Lexicon",
   slug: { en: "lexicon", es: "lexicon" },
-  verifiedAt: "2026-09-26",
+  verifiedAt: "2026-10-02",
   sources: [
     { label: "lexicondj.com", url: "https://www.lexicondj.com/" },
     { label: "lexicondj.com/pricing", url: "https://www.lexicondj.com/pricing" },
@@ -537,12 +537,12 @@ const LEXICON: Comparison = {
         {
           kind: "prose",
           markdown: {
-            en: `Lexicon calls itself "a robust music library management tool designed for DJs, by DJs", running "on Windows & macOS" and supporting "Rekordbox, Serato, Traktor, VirtualDJ, Engine DJ and djay Pro". Its pricing page is blunt about the split: "Lexicon is free to download and convert your library to and from any DJ app we support, this is 100% free. For the library management features, you need to upgrade to a paid package."
+            en: `Lexicon calls itself "a robust music library management tool designed for DJs, by DJs", running "on Windows & macOS" and supporting "Rekordbox, Serato, Traktor, VirtualDJ, Engine DJ and djay Pro". Its pricing page is blunt about the split: "Downloading Lexicon and converting your library between any of the DJ apps we support is 100% free. Upgrade to a paid plan when you want the library management tools."
 
 That is a different problem from ours, and a real one. If you have switched controllers twice and your cue points are scattered across three programs, no amount of set analysis helps you; a converter does.
 
 EnergyCurve never looks at your library as a whole. It looks at one playlist, in the order you put it in, and asks what that hour does.`,
-            es: `Lexicon se llama a sí mismo "a robust music library management tool designed for DJs, by DJs", que corre "on Windows & macOS" y soporta "Rekordbox, Serato, Traktor, VirtualDJ, Engine DJ and djay Pro". Su página de precios es clara sobre el corte: "Lexicon is free to download and convert your library to and from any DJ app we support, this is 100% free. For the library management features, you need to upgrade to a paid package."
+            es: `Lexicon se llama a sí mismo "a robust music library management tool designed for DJs, by DJs", que corre "on Windows & macOS" y soporta "Rekordbox, Serato, Traktor, VirtualDJ, Engine DJ and djay Pro". Su página de precios es clara sobre el corte: "Downloading Lexicon and converting your library between any of the DJ apps we support is 100% free. Upgrade to a paid plan when you want the library management tools."
 
 Ése es un problema distinto del nuestro, y es real. Si cambiaste de controladora dos veces y tus cue points quedaron desparramados en tres programas, ninguna cantidad de análisis de set te ayuda; un conversor sí.
 
@@ -552,8 +552,8 @@ EnergyCurve nunca mira tu librería entera. Mira una playlist, en el orden que l
         {
           kind: "comparacion",
           caption: {
-            en: "Read from each product's own pages on 26 September 2026.",
-            es: "Leído de las páginas propias de cada producto el 26 de septiembre de 2026.",
+            en: "Read from each product's own pages on 2 October 2026.",
+            es: "Leído de las páginas propias de cada producto el 2 de octubre de 2026.",
           },
           leftHeading: { en: "EnergyCurve", es: "EnergyCurve" },
           rightHeading: { en: "Lexicon", es: "Lexicon" },
@@ -566,7 +566,7 @@ EnergyCurve nunca mira tu librería entera. Mira una playlist, en el orden que l
             {
               label: { en: "Library conversion between DJ apps", es: "Conversión de librería entre apps de DJ" },
               left: { en: "No", es: "No" },
-              right: { en: "Yes, and free — \"this is 100% free\"", es: "Sí, y gratis — \"this is 100% free\"" },
+              right: { en: "Yes, and free — \"is 100% free\"", es: "Sí, y gratis — \"is 100% free\"" },
             },
             {
               label: { en: "Energy curve of a set", es: "Curva de energía de un set" },

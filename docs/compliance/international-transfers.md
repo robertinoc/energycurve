@@ -1,6 +1,6 @@
 # Transferencias internacionales y encargados
 
-**Proyecto 3 · Privacy & Compliance · F4.** Fecha: 2026-09-11.
+**Proyecto 3 · Privacy & Compliance · F4.** Fecha: 2026-09-11. **Revisado el 2026-10-02 (lote 16):** dónde está cada encargado, verificado; ver §2.
 Documento interno. La versión pública y abreviada es `/subprocessors`.
 
 ---
@@ -24,38 +24,61 @@ omisión se note.
 
 ## 2. Mapa de transferencias
 
-Todos los destinos son fuera del EEE salvo donde se aclare. La columna que
-importa es la última: qué mecanismo ampara la transferencia, y si está
-verificado o asumido.
+Revisado el **02/10/2026**. Cada ubicación dice de dónde salió; donde no se pudo
+leer de una fuente, dice «sin confirmar» y quién puede confirmarlo. Todos los
+destinos son fuera del EEE.
 
-| Encargado | Qué recibe | País | Mecanismo | Estado |
+| Encargado | Qué recibe | Dónde, y cómo se sabe | Mecanismo | Estado del mecanismo |
 |---|---|---|---|---|
-| Vercel | Todo lo que viaje en un request + logs | EE.UU. | DPA propio con SCC | **Sin verificar** |
-| Supabase | Cuenta, sets, tracks, análisis | **Sin confirmar** | DPA propio | **Sin verificar** |
-| WorkOS | Mail, nombre, contraseña | EE.UU. | DPA propio | **Sin verificar** |
-| Stripe | Id de cliente, plan, datos de pago | EE.UU. | DPA propio con SCC | **Sin verificar** |
-| Resend | Dirección de mail y contenido del mensaje | EE.UU. | DPA propio | **Sin verificar** |
-| PostHog | `profileId`, eventos de producto | **EE.UU.** (`us.i.posthog.com`, en el código) | DPA propio | **Sin verificar** |
-| Anthropic | Título, artista, BPM y tonalidad del set | EE.UU. | Términos comerciales | **Sin verificar** |
-| GetSongBPM | Artista y título | EE.UU. | **Ninguno disponible** | Confirmado: no hay |
+| **Supabase** | **Todo el dato de la aplicación:** cuenta, sets, tracks, análisis, versiones, colaboraciones | **EE.UU. — `us-east-2` (Ohio).** Leído en la consola por Robertino el 20/09 (A2.6), y «East US (Ohio) · us-east-2» en la página de regiones de Supabase, leída el 02/10. Dev: región **sin confirmar** | DPA propio | **Sin verificar** |
+| **Vercel** | Todo lo que viaje en un request, y sus logs | **EE.UU. — funciones en `iad1` (Washington D.C.).** Cabecera `x-vercel-id: gru1::iad1::…` de producción, leída el 02/10 sin sesión; `iad1` = «us-east-1, Washington, D.C.» en la doc de Vercel. `gru1` (São Paulo) es el borde de CDN que atendió el request, no donde se procesa | DPA propio con SCC | **Sin verificar** |
+| **PostHog** | `profileId`, eventos de producto, y **la IP de la conexión** (ver H-17) | **EE.UU. — `us.i.posthog.com`** («US Cloud»). Host leído en el código y en el request real del SDK (`e2e/posthog-payload.spec.ts`). Ubicación física del US Cloud según PostHog: **no releída hoy** (la página de la doc no cargó sin JS) | DPA propio | **Sin verificar** |
+| **Sentry** — *no estaba en este mapa* | Reportes de error, sin PII (`tests/sentry-no-pii.test.ts`) | **Sin confirmar.** Sentry tiene región por organización: `us.sentry.io` o `de.sentry.io` (doc de Sentry, leída el 02/10). El host sale del `SENTRY_DSN` de producción, que está en Vercel y no se ve desde el repo. **Tampoco está confirmado que el DSN esté seteado en producción** | Pendiente | **Sin verificar** |
+| **Resend** | Dirección de mail y contenido del mensaje | **Sin confirmar.** Resend tiene región **por dominio** — «North Virginia (us-east-1), Ireland (eu-west-1), São Paulo (sa-east-1), Tokyo (ap-northeast-1)», doc de Resend leída el 02/10 —, así que depende de cómo se dio de alta el dominio de producción. Se ve en Resend → Domains | DPA propio | **Sin verificar** |
+| **WorkOS** | Mail, nombre, contraseña | EE.UU. según la empresa; **ubicación de los datos no releída hoy** (la página de subencargados de WorkOS no cargó sin JS) | DPA propio | **Sin verificar** |
+| **Stripe** | Id de cliente, plan, datos de pago | EE.UU. según la empresa; no releído hoy | DPA propio con SCC | **Sin verificar** |
+| **Anthropic** | Título, artista, BPM y tonalidad del set | EE.UU. según la empresa; no releído hoy | Términos comerciales | **Sin verificar** |
+| **GetSongBPM** | Artista y título | EE.UU. según la empresa | **Ninguno disponible** | Confirmado: no hay |
 
-"Sin verificar" significa exactamente eso: **es plausible que cada uno de esos
-proveedores tenga SCC en sus condiciones estándar, y ninguno fue leído ni
-confirmado.** Un documento de compliance que escribe "SCC ✓" sobre un supuesto
-es peor que uno que deja la celda vacía, porque el vacío se completa y el tilde
-no se vuelve a mirar.
+"Sin verificar" en la columna del mecanismo significa exactamente eso: **es
+plausible que cada uno tenga SCC en sus condiciones estándar, y ninguno fue
+leído ni confirmado.** Un documento de compliance que escribe "SCC ✓" sobre un
+supuesto es peor que uno que deja la celda vacía, porque el vacío se completa y
+el tilde no se vuelve a mirar.
 
-### 2.1 Dos cosas que sí se verificaron contra el código
+### 2.1 Lo que cambió el 02/10, y por qué importa
 
-- **PostHog está en EE.UU.** El host por defecto en el código es
-  `us.i.posthog.com`. La política de privacidad dice "Supabase (región UE)", que
-  es una afirmación sobre Supabase y no sobre analytics — pero un lector puede
-  leerla como si cubriera todo. Anotado como brecha de redacción.
-- **La región de Supabase sigue sin confirmar.** Es lo único que separa la frase
-  "región UE" de la política de ser verdadera o falsa, y solo se confirma en el
-  dashboard.
+- **Supabase dejó de ser una incógnita y pasó a ser el encargado más material.**
+  Hasta el 20/09 este documento decía que la región era lo único que separaba la
+  frase «Supabase (región UE)» de ser verdadera o falsa. Era falsa: la base vive
+  en Ohio. Eso cambia el TIA de §3 en un punto concreto — lo que se transfiere ya
+  no es «metadata de sets» en el peor caso, es **todo** lo que la app guarda.
+- **Vercel y Supabase están en regiones distintas** (`iad1` y `us-east-2`). No
+  cambia el mecanismo, los dos son EE.UU.; está anotado porque explica parte de la
+  latencia medida en `docs/qa/carga-2026-10.md`.
+- **Sentry es un encargado que nadie había listado.** El código lo usa desde el
+  11/09 (`lib/observability/sentry.ts`) y no figura en `/subprocessors`, ni en el
+  RoPA, ni en `tests/subprocessors-accuracy.test.ts` — que compara la página
+  contra una lista escrita a mano, así que no podía notarlo. **No se agregó a la
+  página pública** porque no está confirmado que esté activo en producción; si lo
+  está, entra en el mismo cambio que lo confirme, con su región.
+- **PostHog recibe la IP.** El evento ya no la lleva (H-17), pero la conexión sí,
+  porque el navegador le habla directo. Ver la pregunta 2 de §2.2.
 
----
+### 2.2 Preguntas que son legales, no técnicas
+
+Escritas como preguntas a propósito. Este documento no las contesta y no es
+asesoramiento legal.
+
+1. Con **toda** la base en EE.UU., ¿alcanzan las SCC de los DPA estándar de
+   Supabase y Vercel para el tratamiento principal del producto, o hace falta
+   algo más que un TIA ligero?
+2. Si PostHog **recibe** la IP en la conexión pero la descarta por un ajuste del
+   proyecto, ¿la frase correcta para la política es «no la guarda»? ¿Y eso
+   necesita mencionarse como transferencia de un dato personal aunque no se
+   conserve?
+3. Si Sentry está activo en la región `us`, ¿un reporte de error sin PII es una
+   transferencia de datos personales que hay que declarar, o queda fuera?
 
 ## 3. TIA ligero (Transfer Impact Assessment)
 
@@ -96,10 +119,11 @@ Hacen falta los DPAs firmados y las SCC verificadas, y eso es el punto 4.
 Las cuatro son de Robertino porque requieren entrar a cuentas y aceptar
 contratos. El orden es por lo que desbloquean.
 
-1. **Confirmar la región de Supabase.** Dashboard → Project Settings → General.
-   Si no es UE, la política de privacidad dice algo falso hoy y hay que
-   corregirla; si lo es, hay que decir que eso es sobre la base de datos y no
-   sobre analytics.
+1. ~~**Confirmar la región de Supabase.**~~ **Hecho el 20/09 (A2.6): `us-east-2`,
+   Ohio.** La frase «región UE» ya se había sacado de la política y no vuelve.
+   Quedan para confirmar en consola: la región del dominio de **Resend**, si el
+   `SENTRY_DSN` está seteado en producción y en qué región, y la región de la
+   base de **dev**.
 2. **Aceptar o firmar el DPA de cada proveedor.** Los seis grandes lo tienen
    autoservicio: Vercel (Settings → Legal), Supabase (Settings → Legal),
    Stripe (Settings → Compliance), WorkOS y Resend (soporte), PostHog

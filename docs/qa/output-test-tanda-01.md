@@ -17,6 +17,14 @@ Que estén mergeados no los da por buenos: cada uno deja su prueba en **Validar
 fix** en el Banco hasta que alguien la corra otra vez contra el deploy. Y H-5
 resultó ser un diagnóstico equivocado — ver su ficha.
 
+**Actualizado el 02/10 (lote 16).** H-15, H-18 y H-19 implementados; H-17 en
+su mitad de código (el ajuste de PostHog y la frase de la política son de
+Robertino); la playlist vacía de IMP.1 también. Cada uno tiene un test que
+falla sin el arreglo —verificado sacándolo— y una fila en **Validar fix** en la
+sesión L16 del Banco. Dos hallazgos nuevos salieron del mismo lote: H-20
+(Sentry) y H-21 (`listPlaylists`). Lo que espera algo de Robertino, ordenado,
+está en `docs/pendientes-robertino.md`.
+
 Cada hallazgo tiene severidad, dónde vive, y —donde importa— la trampa que hay
 que resolver **antes** de escribir el arreglo.
 
@@ -35,13 +43,16 @@ que resolver **antes** de escribir el arreglo.
 | H-9 | Sin crédito en la cuenta de Anthropic | Operación | **Robertino** | Pendiente |
 | H-10 | Un problema de facturación se muestra como request mal formado | Bug | — | ✅ PR #246 · validar |
 | — | El botón de login dice «Login» en español | Bug de copy | — | ✅ PR #249 · validar |
-| H-13 | El JSON-LD del artículo no emite `keywords`; el del índice sí | Bug menor | — | PR #267 abierto |
+| H-13 | El JSON-LD del artículo no emite `keywords`; el del índice sí | Bug menor | — | ✅ PR #267 |
 | H-14 | La comparación publica el precio del paquete «+ Cloud Option» como si fuera el plan de Rekordbox | **Bug de contenido** | Claude | Pendiente |
-| H-15 | Tres citas de Lexicon ya no son literales en su sitio | Deriva de fuente | Claude | Pendiente |
+| H-15 | ~~Tres~~ **Una** cita de Lexicon ya no era literal en su sitio | Deriva de fuente | — | ✅ lote 16 · validar (L16.4) |
 | H-16 | Dos textos mandan a un botón «Manage billing» que se llama «Manage subscription» | Bug de copy | Robertino decide | Pendiente |
-| H-17 | La promesa «no guardamos tu IP» se apoya en una opción de PostHog que no hace nada | **Privacidad · alta** | **Robertino** (ajuste) + Claude (copy) | Pendiente |
-| H-18 | Dos artículos en inglés enlazan el mismo término de glosario dos veces | Bug menor | Claude | Pendiente |
-| H-19 | El tooltip de término no se cierra con Escape (WCAG 1.4.13) | Accesibilidad · media | Claude | Pendiente |
+| H-17 | La promesa «no guardamos tu IP» se apoya en una opción de PostHog que no hace nada | **Privacidad · alta** | **Robertino** (ajuste + aprobar la frase) | Código ✅ lote 16 · el resto espera a Robertino (L16.1) |
+| H-18 | Dos artículos en inglés enlazan el mismo término de glosario dos veces | Bug menor | — | ✅ lote 16 · validar (L16.2) |
+| H-19 | El tooltip de término no se cierra con Escape (WCAG 1.4.13) | Accesibilidad · media | — | ✅ lote 16 · validar (L16.3) |
+| — | IMP.1: una playlist recién importada se ve vacía, y si fallan los temas queda vacía | Bug | — | ✅ lote 16 · validar (L16.5) |
+| H-20 | Sentry recibe datos y no figura en la lista pública de subencargados | Compliance | **Robertino** | Pendiente |
+| H-21 | La lista de playlists del menú lateral cuenta mal desde 1.000 temas en total | Bug silencioso | Claude | Pendiente (medido, sin arreglar) |
 
 ---
 
@@ -189,7 +200,7 @@ Afecta a los cinco formatos de export, no sólo al CSV.
 Salió de SEO3.3 el 20/09, con `curl` contra producción. `buildBlogIndexStructuredData`
 (`lib/blog/structured-data.ts:80`) agrega `keywords` a cada `BlogPosting` del
 índice cuando el post tiene tags; `buildArticleStructuredData` (`:119`) no lo
-hacía. **Arreglado en el PR #267** (abierto al 30/09), verificado por mutación
+hacía. **Arreglado en el PR #267** (mergeado), verificado por mutación
 sacando sólo la línea del artículo — la misma expresión aparece dos veces.
 
 ## H-14 · La comparación vende los precios de Rekordbox más caros de lo que son
@@ -223,7 +234,22 @@ comparamos a otros entre sí, a uno le cobramos el doble en su plan de entrada.
 Lo demás de la página sostiene contra los fabricantes (Serato, Traktor,
 VirtualDJ, djay), verificado el mismo día.
 
-## H-15 · Tres citas de Lexicon ya no son literales
+## H-15 · Tres citas de Lexicon ya no son literales — **eran una**
+
+**IMPLEMENTADO — lote 16, 02/10.** Releída la página ese día, sólo la tercera
+había cambiado. Las otras dos seguían literales, y lo que falló fue el
+instrumento del 30/09: aplanar el HTML reemplazando etiquetas por espacios
+rompía «Windows & macOS», que en su hero tiene cada palabra
+en su propio `<span>`; y la de los programas convive en la misma página con
+una segunda redacción en otro orden, que es la que se encontró. La cita nueva,
+literal: «Downloading Lexicon and converting your library between any of the DJ
+apps we support is 100% free.» Cambiaron la página (los dos idiomas), la fila de
+la tabla, `verifiedAt` y su leyenda (2 de octubre de 2026) y
+`competitor-facts-2026-09-26.md`. Precios releídos: sin cambios. Queda en
+**Validar fix** como L16.4.
+
+Lo que sigue es el texto del 30/09, que se deja como estaba porque el error
+también es un dato.
 
 **Severidad baja.** Salió de CMP.2 el 30/09. Las tres siguen siendo verdad en
 sustancia; lo que cambió es la redacción del sitio de ellos, y la página las
@@ -257,6 +283,52 @@ en la cola porque es copy de billing y la regla de esta ronda es no tocar
 billing sin que lo decidas.
 
 ## H-17 · «No guardamos tu IP» se apoya en una opción que no hace nada
+
+**MITAD DE CÓDIGO IMPLEMENTADA — lote 16, 02/10.** El `ip: false` muerto salió
+y en su lugar `before_send: stripClientIp` (`lib/analytics/posthog-privacy.ts`)
+borra `$ip` de las propiedades, de `$set` y de `$set_once` de cada evento.
+**Verificado mirando el request, no la configuración:**
+`e2e/posthog-payload.spec.ts` carga el SDK instalado, captura el cuerpo que
+sale, lo descomprime y afirma que no hay `$ip`; tiene un control sin el hook
+que sí la muestra (con una IP de documentación, 203.0.113.7), así que el test
+no puede pasar por no estar mirando. Ocho tests unitarios más en
+`tests/posthog-privacy.test.ts`.
+
+**Tres capas, que no son lo mismo:**
+
+| Capa | Quién la controla | Estado |
+|---|---|---|
+| `$ip` dentro del evento | El código | ✅ ya no viaja (lote 16) |
+| La IP de la conexión, que PostHog ve igual | El ajuste «Discard client IP data» del proyecto | **Sin confirmar** — Robertino (L16.1) |
+| Que PostHog no vea la IP del visitante en absoluto | Un proxy propio delante de PostHog | No existe. No hace falta si el ajuste está prendido |
+
+**Un cuarto lugar que promete lo mismo**, que la tanda no había visto: el
+export de datos personales dice *«PostHog holds product-usage events keyed to
+your account id, with your IP address disabled»*
+(`services/data-export-service.ts:222`).
+
+**La frase corregida, escrita y no aplicada** (es copy legal; espera el OK de
+Robertino; no es asesoramiento legal). Supone el ajuste **prendido**:
+
+- **Banner** (`lib/content/site-copy.ts:1417-1418`): **no cambia.** «Nunca
+  graba tu IP» es verdad si PostHog la descarta, y alargar el párrafo empeora el
+  LCP (SEO5.3). Si el ajuste está apagado, la salida es prenderlo, no reescribir.
+- **Política** (`lib/content/legal-copy.ts:235` y `:461`; eran `:225`/`:451`
+  antes del lote 16):
+  - en: «Identifies you by an internal account id, never by email. Your IP
+    address reaches PostHog with each request, as it does any website, and
+    PostHog discards it instead of storing it.»
+  - es: «Te identifica con un id interno de cuenta, nunca con tu mail. Tu
+    dirección IP le llega a PostHog con cada pedido, como a cualquier sitio, y
+    PostHog la descarta en vez de guardarla.»
+- **`docs/compliance/privacy-by-design.md:146`**: «No se guarda la IP: no viaja
+  en el evento (`before_send` borra `$ip`) y PostHog descarta la de la conexión
+  (ajuste «Discard client IP data»).»
+- **Export** (`services/data-export-service.ts:222`): «PostHog holds
+  product-usage events keyed to your account id. It does not store your IP
+  address.»
+
+Lo que sigue es la ficha del 02/10 tal como se escribió antes del arreglo.
 
 **Severidad alta — es una promesa de privacidad publicada.** Salió de TOOL.3 el
 02/10, revisando qué manda PostHog.
@@ -301,6 +373,14 @@ hacía lo que dice su nombre.
 
 ## H-18 · Dos artículos en inglés enlazan el mismo término dos veces
 
+**IMPLEMENTADO — lote 16, 02/10.** Se eligió que `link-terms` cuente los
+enlaces que ya existen (`termsLinkedByHand`) en vez de sacar los manuales: los
+enlaces a mano están puestos donde el autor quiso, y el enlazador automático es
+el que no sabía que existían. Además, sacar los manuales dejaba la puerta
+abierta a que el próximo artículo repitiera el problema. Un test recorre los 23
+artículos y falla si un término se enlaza dos veces; sin el arreglo devuelve
+exactamente los cuatro duplicados de producción. Validar: L16.2.
+
 **Severidad baja.** Salió de CONT.7 el 02/10. De 23 artículos, 21 enlazan cada
 término de glosario una sola vez. Los otros dos:
 
@@ -316,6 +396,16 @@ manuales o haciendo que `link-terms` cuente los existentes.
 
 ## H-19 · El tooltip de término no se cierra con Escape
 
+**IMPLEMENTADO — lote 16, 02/10.** Un solo listener por página
+(`components/content/term-tooltip-dismiss.tsx`, montado en
+`components/layout/site-html.tsx`): Escape marca `data-dismissed` en el término
+abierto y el CSS lo oculta sin mover el foco; el próximo foco o pasar el mouse
+desde afuera lo rearman. El tooltip sigue siendo CSS para todo lo demás, así
+que funciona sin JavaScript como antes. E2E en los dos idiomas y cuatro
+navegadores (`e2e/accessibility.spec.ts`); sin el listener, los dos casos
+fallan — verificado con un build sin él. La prueba manual con teclado de
+verdad y VoiceOver es L16.3.
+
 **Severidad media (accesibilidad).** Salió de CONT.3 el 02/10. El término
 (`components/content/termino.tsx`) es un enlace con `aria-describedby`; el
 tooltip aparece al recibir foco, pero **Escape no lo cierra**: es sólo CSS
@@ -326,6 +416,53 @@ Eso choca con WCAG 2.1 · 1.4.13 (nivel AA): lo que aparece al enfocar tiene que
 poder descartarse sin mover el foco, y este tooltip se dibuja encima de la
 línea anterior. Se arregla con un handler de Escape en el componente que oculte
 el tip hasta el próximo foco.
+
+## IMP.1 · La playlist recién importada se ve vacía — y puede quedar vacía
+
+**IMPLEMENTADO — lote 16, 02/10.** Era la fila IMP.1 del banco (lote 14). Dos
+problemas, no uno: la ventana en la que la playlist existe sin temas, y que si
+guardar los temas fallaba la playlist **quedaba** vacía para siempre.
+
+Camino elegido: **compensación + estado «llegando»**, sin migración.
+`createPlaylistWithTracks` (`services/playlist-service.ts`) crea, guarda los
+temas, y si eso falla borra la playlist, lo registra
+(`playlist.create_rolled_back`) y deja subir el error. La página de la playlist,
+si la encuentra sin temas, importada y con menos de 60 s, dice «Todavía estamos
+trayendo tus temas» y se refresca sola (`components/playlists/import-arriving.tsx`).
+
+El camino más correcto es una función de Postgres que haga las dos cosas en una
+transacción: no deja ventana ninguna. Se descartó por ahora por dos razones:
+necesita una migración en los dos proyectos, y las migraciones aplicadas a mano
+son exactamente lo que causó H-11 y H-12; y duplicaría en SQL la lista de
+columnas de `tracks`, que hoy vive en un solo lugar. Si un día se hace, esto se
+reemplaza sin tocar a quien lo llama.
+
+Test: `tests/create-playlist-with-tracks.test.ts`, en rojo sin el arreglo. Suite
+autenticada entera en verde. Validar: L16.5.
+
+## H-20 · Sentry recibe datos y no figura como subencargado
+
+**Compliance, media. Salió del lote 16 (02/10)** al rehacer el mapa de
+transferencias internacionales: el código manda reportes de error a Sentry
+—sin PII, lo vigila `tests/sentry-no-pii.test.ts`—, y Sentry no estaba ni en la
+lista pública de subencargados ni en el RoPA. Este lote lo sumó al RoPA y al
+mapa con dos cosas **sin confirmar**: la región de la cuenta (`us` o `de`, sale
+del `SENTRY_DSN`) y si el DSN está siquiera seteado en producción. Lo que espera
+a Robertino: esas dos, el DPA, y decidir si se agrega a la página pública. La pregunta legal
+está en `docs/compliance/international-transfers.md` §2.2. No es asesoramiento
+legal.
+
+## H-21 · La lista de playlists del menú lateral cuenta mal desde 1.000 temas
+
+**Bug silencioso, medio. Salió del lote 16 (02/10)** al medir los puntos de
+quiebre con datos sembrados. `listPlaylists` (`services/playlist-service.ts`),
+que corre en el layout de **todas** las páginas del dashboard, trae una fila por
+tema para contarlos y choca con el techo de mil filas de PostgREST: con 1.000
+temas en total los conteos suman 1.000 y la mayoría de las playlists muestra 0
+(8 de 25, 96 de 100 y 59 de 60 en los tres niveles medidos). Con 400 playlists, además, falla el filtro por lista de ids. Es el
+quinto punto de quiebre; el detalle y el arreglo propuesto (contar sin traer
+filas, partir la lista de ids) están en `docs/qa/carga-2026-10.md`. **No se
+arregló**: el lote medía.
 
 ## H-9 · Sin crédito en la cuenta de Anthropic
 

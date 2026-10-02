@@ -1,6 +1,7 @@
 import { Manrope, Space_Grotesk, Space_Mono } from "next/font/google"
 
 import { AnalyticsTracker } from "@/components/analytics/analytics-tracker"
+import { TermTooltipDismiss } from "@/components/content/term-tooltip-dismiss"
 import { ConsentBanner } from "@/components/privacy/consent-banner"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
@@ -63,6 +64,8 @@ export function SiteHtml({
           way the dependency runs.
         */}
         <ConsentBanner />
+        {/* Escape for the glossary-term tooltips (WCAG 1.4.13, H-19). */}
+        <TermTooltipDismiss />
       </body>
     </html>
   )

@@ -274,7 +274,7 @@ export const PAGE_LAST_MODIFIED: Record<LocalizedPath, string> = {
   "/privacy": "2026-09-11",
   "/terms": "2026-09-11",
   "/cookie-policy": "2026-09-11",
-  "/subprocessors": "2026-09-11",
+  "/subprocessors": "2026-10-02",
 }
 
 /** The `lastmod` for one page, as a Date. */
