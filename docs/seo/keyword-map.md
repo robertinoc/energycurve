@@ -121,7 +121,7 @@ tienen que ganar.
 | `rueda de camelot saltos` | 1 | [`/es/herramientas/rueda-camelot`](https://energycurve.app/es/herramientas/rueda-camelot) |
 | `como usar la rueda de camelot` | 1 | [`/es/glosario/rueda-camelot`](https://energycurve.app/es/glosario/rueda-camelot) |
 | `mezclar tonalidades` | 1 | [`/es/glosario/tonalidad`](https://energycurve.app/es/glosario/tonalidad) |
-| `como cerrar un set dj` | 1 | sólo glosario — [`/es/glosario/closing-set`](https://energycurve.app/es/glosario/closing-set) |
+| `como cerrar un set dj` | 1 | [`/es/blog/como-cerrar-un-set-de-dj`](https://energycurve.app/es/blog/como-cerrar-un-set-de-dj) — escrito el 06/10/2026 (lote 18); antes la contestaba sólo el glosario, que dice qué es un cierre y no cómo se arma |
 | `warm up dj significado` | 1 | [`/es/glosario/warm-up`](https://energycurve.app/es/glosario/warm-up) |
 | `phrasing dj meaning` | 1 | [`/es/glosario/phrasing`](https://energycurve.app/es/glosario/phrasing) |
 | `como buscar la tonalidad de una cancion` | 1 | [`/es/blog/tus-temas-no-tienen-bpm-ni-tonalidad`](https://energycurve.app/es/blog/tus-temas-no-tienen-bpm-ni-tonalidad) |
