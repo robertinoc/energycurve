@@ -9,6 +9,11 @@ import {
   type BackstageUserRow,
 } from "@/lib/backstage/users"
 import { fetchBackstagePersonFacts } from "@/lib/backstage/posthog-reporting"
+import { buildBrandedEmail } from "@/lib/email/build-email-html"
+import {
+  isEmailDeliveryConfigured,
+  sendTransactionalEmail,
+} from "@/lib/email/send-email"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { recordAdminAction } from "@/services/admin-audit-service"
@@ -21,22 +26,55 @@ export interface BackstageUsersSnapshot {
   kpis: BackstageUserKpis
 }
 
+/**
+ * Names live in WorkOS, not in profiles — fetched live per listing, the way
+ * StageLink's admin panel does it. Password signups carry no name, so this
+ * is best-effort by design, and a WorkOS failure costs the column, not the
+ * table.
+ */
+async function fetchWorkOSNames(): Promise<Map<string, string>> {
+  const names = new Map<string, string>()
+
+  try {
+    const list = await getWorkOS().userManagement.listUsers({ limit: 100 })
+    const workosUsers = await list.autoPagination()
+
+    for (const user of workosUsers) {
+      const name = [user.firstName, user.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+
+      if (name) {
+        names.set(user.id, name)
+      }
+    }
+  } catch (error) {
+    logWarn("backstage.workos_names_unavailable", {
+      reason: error instanceof Error ? error.message : "Unknown WorkOS error",
+    })
+  }
+
+  return names
+}
+
 export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapshot> {
   const supabase = getSupabaseAdminClient()
 
   // Person facts (geoip country + first-touch attribution) ride along in
   // the same Promise.all; fetchBackstagePersonFacts fails open to an empty
   // map, so PostHog being down or unconfigured costs columns, not the page.
-  const [profilesResult, playlistsResult, analysesResult, personFacts] =
+  const [profilesResult, playlistsResult, analysesResult, personFacts, names] =
     await Promise.all([
       supabase
         .from("profiles")
         .select(
-          "id, email, created_at, updated_at, suspended_at, plan, plan_status, last_seen_at, last_seen_country"
+          "id, workos_user_id, email, created_at, updated_at, suspended_at, plan, plan_status, last_seen_at, last_seen_country"
         ),
       supabase.from("playlists").select("user_id"),
       supabase.from("analyses").select("user_id, created_at"),
       fetchBackstagePersonFacts(),
+      fetchWorkOSNames(),
     ])
 
   if (profilesResult.error) {
@@ -61,7 +99,8 @@ export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapsho
     profilesResult.data ?? [],
     playlistsResult.data ?? [],
     analysesResult.data ?? [],
-    personFacts
+    personFacts,
+    names
   )
 
   return { users, kpis: computeUserKpis(users) }
@@ -69,6 +108,7 @@ export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapsho
 
 export interface BackstageRecentAnalysis {
   id: string
+  userId: string
   email: string
   setScore: number
   createdAt: string
@@ -119,6 +159,7 @@ export async function getRecentAnalyses(): Promise<BackstageRecentAnalysis[]> {
 
   return rows.map((row) => ({
     id: row.id,
+    userId: row.user_id,
     email: emailById.get(row.user_id) ?? "unknown",
     setScore: Number(row.set_score),
     createdAt: row.created_at,
@@ -296,4 +337,66 @@ export async function deleteUserEverywhere(
   })
 
   return { email: profile.email }
+}
+
+export type BackstageMessageResult =
+  | { sent: true }
+  | { sent: false; reason: "not_configured" | "not_found" | "send_failed" }
+
+/**
+ * Admin-to-user service email from the Users table. Reply-to is the admin,
+ * so an answer lands in their inbox, not at noreply@. Recorded in the audit
+ * log like the other admin actions; the email body is NOT stored — the log
+ * keeps who/when/subject, which is what an outreach trail needs.
+ */
+export async function sendBackstageMessage(
+  profileId: string,
+  subject: string,
+  body: string,
+  actorEmail: string
+): Promise<BackstageMessageResult> {
+  if (!isEmailDeliveryConfigured()) {
+    return { sent: false, reason: "not_configured" }
+  }
+
+  const profile = await getProfileById(profileId)
+
+  if (!profile) {
+    return { sent: false, reason: "not_found" }
+  }
+
+  const paragraphs = body
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+
+  const { html, text } = buildBrandedEmail({
+    preview: paragraphs[0] ?? subject,
+    heading: subject,
+    paragraphs,
+    footnote:
+      "You're receiving this one-off note because you have an EnergyCurve account. Just reply to reach us.",
+  })
+
+  const delivered = await sendTransactionalEmail({
+    to: profile.email,
+    subject,
+    text,
+    html,
+    replyTo: actorEmail,
+  })
+
+  if (!delivered) {
+    return { sent: false, reason: "send_failed" }
+  }
+
+  await recordAdminAction({
+    action: "user.messaged",
+    actorEmail,
+    targetProfileId: profileId,
+    targetEmail: profile.email,
+    detail: { subject: subject.slice(0, 120) },
+  })
+
+  return { sent: true }
 }

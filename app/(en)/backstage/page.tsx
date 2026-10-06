@@ -20,6 +20,8 @@ export const metadata: Metadata = {
 }
 
 import type { BackstageUserKpis } from "@/lib/backstage/users"
+import { isPostHogReportingConfigured } from "@/lib/backstage/posthog-reporting"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 /** StageLink-style KPI cards: big number, colored, with a one-line footnote. */
 function kpiCards(kpis: BackstageUserKpis): Array<{
@@ -46,6 +48,12 @@ function kpiCards(kpis: BackstageUserKpis): Array<{
       value: kpis.proUsers,
       sub: "entitled today (Stripe)",
       valueClass: "text-ec-violet",
+    },
+    {
+      label: "Never used",
+      value: kpis.neverUsedUsers,
+      sub: `${kpis.totalUsers > 0 ? Math.round((kpis.neverUsedUsers / kpis.totalUsers) * 100) : 0}% of all signups — watch it in "By status" per cohort`,
+      valueClass: "text-[#9CA3AF]",
     },
     {
       label: "New · 30 days",
@@ -80,7 +88,19 @@ export default async function BackstageUsersPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {!isPostHogReportingConfigured() ? (
+        <Alert>
+          <AlertTitle>Country &amp; Source are running blind</AlertTitle>
+          <AlertDescription>
+            Both columns fill from PostHog, and POSTHOG_PERSONAL_API_KEY /
+            POSTHOG_PROJECT_ID are not set in this environment — so they only
+            show countries recorded by visits since migration 0033. The
+            Analytics tab needs the same two variables.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         {kpiCards(kpis).map(({ label, value, sub, valueClass }) => (
           <Bento key={label} tone="panel" className="space-y-1.5 p-4">
             <BentoLabel>{label}</BentoLabel>
@@ -100,18 +120,18 @@ export default async function BackstageUsersPage() {
 
       <UsersDashboard users={users} />
 
-      {/* Above the activity feed on purpose: the feed is a record of what
-          happened, and this is a list of what is owed with a date on it. */}
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <PrivacyRequestQueue requests={privacyRequests} />
-        <PendingDeletions deletions={pendingDeletions} />
-      </div>
-
+      {/* Feed first by request: what just happened is what gets checked daily;
+          the compliance queues below carry their own deadlines and alarms. */}
       <ActivityFeed
         users={users}
         recentAnalyses={recentAnalyses}
         adminActions={adminActions}
       />
+
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <PrivacyRequestQueue requests={privacyRequests} />
+        <PendingDeletions deletions={pendingDeletions} />
+      </div>
     </div>
   )
 }
