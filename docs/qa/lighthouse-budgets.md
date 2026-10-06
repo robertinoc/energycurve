@@ -10,7 +10,83 @@ de LCP **no** es el objetivo que pide el plan.
 
 ---
 
-## Lo medido
+## 06/10/2026 (lote 18): medido otra vez, y las tres salidas con número
+
+**Nada de esto elige una salida.** Elegir es de Robertino (banco SEO5.3,
+`docs/pendientes-robertino.md` fila 16). Lo que faltaba era ponerle número a
+cada una, y eso es esta sección.
+
+### Hoy, las cuatro rutas
+
+Mobile, mediana de 3 corridas, la configuración de `lighthouserc.json`. Dos
+entornos, porque dan números distintos y conviene no mezclarlos:
+
+```bash
+# local: build de main (b375896)
+npm run build && npx @lhci/cli collect
+# producción: la misma configuración, con las URLs de energycurve.app y sin
+# startServerCommand. Lectura pasiva: sin consentimiento no sale ningún evento.
+npx @lhci/cli collect --config=<copia con las URLs de producción>
+```
+
+| Ruta | Local | Producción | Elemento LCP (en los dos) |
+|---|---|---|---|
+| `/` | **5,72 s** (5,14–5,88) | **3,48 s** (3,43–3,60) | el párrafo del banner |
+| `/es` | **5,49 s** (5,05–5,64) | **3,34 s** (3,33–4,56) | el párrafo del banner |
+| `/pricing` | 3,62 s (3,33–3,63) | 4,17 s (2,05–4,19) | `header > p.mt-4` |
+| `/es/blog/antes-de-tocar-no-despues` | 3,61 s (3,32–3,61) | 2,81 s (2,81–4,02) | un párrafo del cuerpo |
+
+Entre paréntesis, el rango de las tres corridas. Accesibilidad 1 en las ocho
+mediciones; TBT entre 8 y 20 ms; CLS 0. Producción respondió desde `iad1`
+(cabecera `x-vercel-id`, 06/10, 17:25 UTC).
+
+**Los 4,8 s que cita `docs/pendientes-robertino.md` (02/10) no se
+reproducen hoy en ninguno de los dos entornos**, y la fila no dice cómo se
+midieron. La variación entre corridas de producción —`/pricing` fue de 2,05
+a 4,19 s en el mismo minuto— es más grande que varias de las diferencias que se
+discuten abajo: una sola corrida no alcanza para afirmar nada.
+
+### Las tres salidas, medidas
+
+Las dos primeras se midieron con un cambio **experimental, no commiteado**,
+sobre un worktree de `main`, construido y medido con la misma configuración
+sólo en `/` y `/es`. Por eso se comparan contra la columna **local** de
+arriba, no contra producción.
+
+| Salida | Cómo se midió | `/` | `/es` | Elemento LCP |
+|---|---|---|---|---|
+| Hoy, sin cambios | build de `main` | 5,72 s | 5,49 s | el párrafo del banner |
+| **A. Recortar el texto a ~95 caracteres** | el párrafo reemplazado por un texto de relleno de 93 caracteres en cada idioma — no es una propuesta de copy, es el largo | **4,09 s** | **3,80 s** | el logo de la portada (`img`) |
+| **B. Pintar el banner en el primer paint** | el banner renderizado en el servidor (se confirmó que el texto está en el HTML), sin el script inline que haría falta para no mostrárselo a quien ya respondió | **4,09 s** | **3,63 s** | el párrafo del banner, igual |
+| **C. Dejarlo y el umbral en 7 s** | — | 5,72 s | 5,49 s | el párrafo del banner |
+
+Lo que esto cambia de lo escrito más abajo:
+
+- **Ninguna de las dos llega a 2,5 s.** Las dos bajan unos 1,6–1,9 s en el
+  entorno local y se quedan en un piso de ~3,6–4,1 s.
+- **La hipótesis de la vía B estaba equivocada en el número.** Este documento
+  decía que con el banner en el primer paint el LCP sería «~1,2 s». Medido, el
+  banner está en el HTML, es el elemento LCP y da 4,09 s: Lighthouse no lo
+  registra en el primer paint. Por qué, **sin confirmar**: lo más probable es la
+  fuente web, porque el texto se registra cuando pinta con la tipografía final y
+  no con la de respaldo. No se midió.
+- **Con A, el que gana es el logo**, a 4,09 s. El «techo sin banner» de 1,1 s
+  de la sección de abajo salió de `PerformanceObserver` en un navegador real, no
+  de Lighthouse simulado: los dos instrumentos no son intercambiables, y el
+  presupuesto lo mide el segundo.
+- **En producción, ninguna está medida.** Hace falta un deploy de cada una.
+  No se estimó cuánto daría allá: con la variación de arriba, un número
+  estimado sería una impresión con decimales.
+- B tiene el costo que ya estaba escrito: un script bloqueante en el `<head>` y
+  los bytes del banner para todo el mundo. A tiene el suyo: un texto un 30 %
+  más corto que el que aprobaste.
+
+Lo prohibido sigue prohibido, y no se probó: partir el párrafo, bajarle la
+opacidad, sacarlo del viewport o retrasarlo con `requestIdleCallback`.
+
+---
+
+## Lo medido (19/09/2026)
 
 Build de producción local (`npx next start`), Lighthouse mobile con throttling
 simulado (4G lento, CPU ×4), **mediana de 3 corridas** por ruta
