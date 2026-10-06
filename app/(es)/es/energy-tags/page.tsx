@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { ContentFooter } from "@/components/marketing/content-footer"
 import { EnergyTagsPage } from "@/components/marketing/energy-tags-page"
 import { buildReferenceStructuredData } from "@/lib/content/reference-structured-data"
 import { marketingMetadata, serializeStructuredData } from "@/lib/seo"
@@ -21,6 +22,7 @@ export default function EnergyTagsRouteEs() {
         }}
       />
       <EnergyTagsPage locale={LOCALE} />
+      <ContentFooter locale={LOCALE} />
     </>
   )
 }

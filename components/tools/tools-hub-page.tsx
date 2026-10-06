@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Activity, ArrowLeftRight, BookOpen, Music4, Scale } from "lucide-react"
 
 import { PageShell } from "@/components/marketing/page-shell"
+import { ContentFooter } from "@/components/marketing/content-footer"
 import { TOOLS_HUB_COPY } from "@/lib/content/tools-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -49,7 +50,7 @@ const TOOLS = [
  */
 export function ToolsHubPage({ locale }: { locale: SiteLocale }) {
   return (
-    <PageShell locale={locale} togglePath="/tools">
+    <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/tools">
       <header className="space-y-2">
         <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
           {TOOLS_HUB_COPY.h1[locale]}

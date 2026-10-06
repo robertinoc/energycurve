@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { ContentBody } from "@/components/content/content-body"
 import { PageShell } from "@/components/marketing/page-shell"
+import { ContentFooter } from "@/components/marketing/content-footer"
 import type { Comparison } from "@/lib/content/compare/comparisons"
 import {
   comparisonAlternates,
@@ -40,6 +41,7 @@ export function ComparisonPage({
   return (
     <PageShell
       locale={locale}
+      footer={<ContentFooter locale={locale} />}
       togglePath={comparisonAlternates(comparison)}
       width="wide"
     >

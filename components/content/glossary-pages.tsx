@@ -4,6 +4,7 @@ import { CTA } from "@/components/content/blocks"
 import { GlossaryFilter } from "@/components/content/glossary-filter"
 import { Prose } from "@/components/content/prose"
 import { PageShell } from "@/components/marketing/page-shell"
+import { ContentFooter } from "@/components/marketing/content-footer"
 import { parseMarkdown } from "@/lib/blog/markdown"
 import { GLOSSARY_COPY } from "@/lib/content/content-copy"
 import {
@@ -31,7 +32,7 @@ export function GlossaryIndexPage({ locale }: { locale: SiteLocale }) {
   }))
 
   return (
-    <PageShell locale={locale} togglePath="/glossary">
+    <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/glossary">
       <header className="flex flex-col gap-3">
         <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-[2.4rem] sm:leading-[1.15]">
           {GLOSSARY_COPY.h1[locale]}
@@ -101,7 +102,7 @@ export function GlossaryTermPage({
     .filter((other): other is GlossaryTerm => Boolean(other))
 
   return (
-    <PageShell locale={locale} togglePath="/glossary">
+    <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/glossary">
       <article className="flex flex-col gap-5">
         <Breadcrumbs term={term} locale={locale} />
 

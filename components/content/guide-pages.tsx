@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { ContentBody } from "@/components/content/content-body"
 import { PageShell } from "@/components/marketing/page-shell"
+import { ContentFooter } from "@/components/marketing/content-footer"
 import { GUIDES_COPY } from "@/lib/content/content-copy"
 import { formatPostDate } from "@/lib/content/blog-copy"
 import { guideIndexPath, guidePath } from "@/lib/content/glossary/paths"
@@ -17,7 +18,7 @@ export function GuideIndexPage({
   locale: SiteLocale
 }) {
   return (
-    <PageShell locale={locale} togglePath="/guide">
+    <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/guide">
       <header className="flex flex-col gap-3">
         <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-[2.4rem] sm:leading-[1.15]">
           {GUIDES_COPY.h1[locale]}
@@ -69,7 +70,7 @@ export function GuidePage({
   locale: SiteLocale
 }) {
   return (
-    <PageShell locale={locale} togglePath="/guide" width="wide">
+    <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/guide" width="wide">
       <article className="flex flex-col gap-6">
         <nav aria-label={GUIDES_COPY.h1[locale]} className="text-xs text-white/50">
           <ol className="flex flex-wrap items-center gap-1.5">

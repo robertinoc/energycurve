@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { EnergyCurveTool } from "@/components/tools/energy-curve-tool"
 import { PageShell } from "@/components/marketing/page-shell"
+import { ContentFooter } from "@/components/marketing/content-footer"
 import { TOOL_COPY } from "@/lib/content/tools-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -68,7 +69,7 @@ const FURTHER_READING: Array<{
 
 export function EnergyCurveToolPage({ locale }: { locale: SiteLocale }) {
   return (
-    <PageShell locale={locale} togglePath="/tools/energy-curve" width="wide">
+    <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/tools/energy-curve" width="wide">
       <header className="space-y-3">
         <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-[2.6rem] sm:leading-[1.12]">
           {TOOL_COPY.h1[locale]}
