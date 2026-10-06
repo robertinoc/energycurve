@@ -39,7 +39,7 @@ instalada tiene una vulnerabilidad crítica publicada** (abajo).
 | Tests E2E | 192, cuatro navegadores, sin login | **ver «La suite E2E» abajo** | `npm run test:e2e` |
 | Vulnerabilidades de dependencias | 18 (0 críticas) | **47 (2 críticas, 30 altas)**; sólo producción: **27 (2 críticas, 16 altas)** | `npm audit --json`, `npm audit --omit=dev --json` |
 | Servicios (`services/*.ts`) | 17 | 27 | `ls services/*.ts` |
-| Filas del banco de pruebas manuales | — | 146 (+ las del lote 18, sin integrar) | `docs/qa/banco-de-pruebas.html` |
+| Filas del banco de pruebas manuales | — | 116 desde el #279, que automatizó 30 (+ 6 del lote 18, sin integrar) | `docs/qa/banco-de-pruebas.html` |
 
 La duplicación de código (0,69% en septiembre) **no se volvió a medir**.
 

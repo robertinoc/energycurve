@@ -29,8 +29,8 @@ está en `docs/pendientes-robertino.md`.
 cuatro puntos de quiebre de `docs/qa/carga-2026-10.md`. Al arreglarlos a
 volumen aparecieron dos hallazgos más: H-22 (seis defectos del mismo origen,
 todos arreglados en el lote) y H-23 (dónde se va la CPU en el pico,
-diagnosticado y sin arreglar). Las filas nuevas están en la sesión L17 del
-Banco.
+diagnosticado y sin arreglar). Las filas nuevas estaban en la sesión L17 del
+Banco; el #279 las automatizó en `e2e/large-library.auth.spec.ts`, contra dev.
 
 Cada hallazgo tiene severidad, dónde vive, y —donde importa— la trampa que hay
 que resolver **antes** de escribir el arreglo.

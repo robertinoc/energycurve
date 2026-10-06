@@ -66,6 +66,9 @@ export function ActivityFeed({
   adminActions: AdminAuditRow[]
 }) {
   const latestSignups = users.slice(0, FEED_LIMIT)
+  const nameById = new Map(
+    users.filter((user) => user.name !== null).map((user) => [user.id, user.name])
+  )
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-3">
@@ -82,7 +85,16 @@ export function ActivityFeed({
                 key={user.id}
                 className="flex items-center justify-between gap-3 text-[13px]"
               >
-                <span className="truncate text-white/80">{user.email}</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-white/80">
+                    {user.name ?? user.email}
+                  </span>
+                  {user.name ? (
+                    <span className="block truncate text-[11px] text-white/40">
+                      {user.email}
+                    </span>
+                  ) : null}
+                </span>
                 <span className="shrink-0 font-mono text-[11px] text-white/40">
                   {formatFeedDate(user.createdAt)}
                 </span>
@@ -105,7 +117,16 @@ export function ActivityFeed({
                 key={analysis.id}
                 className="flex items-center justify-between gap-3 text-[13px]"
               >
-                <span className="truncate text-white/80">{analysis.email}</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-white/80">
+                    {nameById.get(analysis.userId) ?? analysis.email}
+                  </span>
+                  {nameById.get(analysis.userId) ? (
+                    <span className="block truncate text-[11px] text-white/40">
+                      {analysis.email}
+                    </span>
+                  ) : null}
+                </span>
                 <span className="flex shrink-0 items-center gap-2">
                   <span
                     className={`inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[11px] font-bold ${scoreTone(

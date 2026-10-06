@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { expect, test } from "@playwright/test"
 
 import {
@@ -261,17 +264,56 @@ test.describe("the login wall", () => {
       page.locator('a[href^="/signup"]').first()
     ).toBeVisible()
   })
+
+  // Banco L16.6 (PR #249). `/login` has no Spanish route: it takes the
+  // language from the cookie the site's language toggle sets, and before the
+  // fix the button read "Login" in an otherwise Spanish form.
+  test("the login button speaks Spanish when the visitor does", async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    await context.addCookies([
+      { name: "energycurve_locale", value: "es", url: baseURL ?? "" },
+    ])
+
+    await page.goto("/login")
+
+    expect(
+      await isSetupRequiredScreen(page),
+      LOGIN_NOT_CONFIGURED
+    ).toBe(false)
+
+    const submit = page.locator('form button[type="submit"]').first()
+    await expect(submit).toHaveText("Iniciar sesión")
+  })
 })
+
+/**
+ * Articles of one language the blog should list today, read from the files:
+ * a `publishedAt` that is set and not in the future, the rule `listPosts`
+ * (lib/blog/posts.ts) applies. Read here rather than imported, so the test
+ * does not ask the code under test how many it should find.
+ */
+function publishedArticles(locale: "es" | "en"): number {
+  const dir = join(process.cwd(), "content", "blog", locale)
+  const today = new Date().toISOString().slice(0, 10)
+
+  return readdirSync(dir)
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => /^publishedAt:\s*(\S+)/m.exec(readFileSync(join(dir, name), "utf8"))?.[1])
+    .filter((date): date is string => Boolean(date) && date !== "null" && date! <= today).length
+}
 
 test.describe("blog", () => {
   test("the Spanish index lists the articles", async ({ page }) => {
     await page.goto("/es/blog")
 
     await expect(page.locator("html")).toHaveAttribute("lang", "es")
-    // Five seed articles, each written against a measured gap in the AEO
-    // baseline, plus the Spanish twins of the three A→B articles (lotes 12
-    // and 14).
-    await expect(page.locator("main ul li")).toHaveCount(8)
+    // Counted from the corpus, not written down: this said 8 until the lote
+    // 18 article made it 9 and the test red on a correct page. Every new
+    // article would have done the same.
+    await expect(page.locator("main ul li")).toHaveCount(publishedArticles("es"))
   })
 
   test("an article renders its markdown, not its markdown source", async ({

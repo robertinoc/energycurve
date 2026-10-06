@@ -21,6 +21,7 @@ function user(overrides: Partial<BackstageUserRow> = {}): BackstageUserRow {
   return {
     id: overrides.id ?? "u1",
     email: overrides.email ?? "dj@example.com",
+    name: overrides.name ?? null,
     createdAt: overrides.createdAt ?? "2026-09-01T00:00:00Z",
     lastSeenAt: overrides.lastSeenAt ?? "2026-10-01T00:00:00Z",
     lastSeenObserved: overrides.lastSeenObserved ?? true,
@@ -199,5 +200,25 @@ describe("country helpers", () => {
   it("names countries and falls back to the code", () => {
     expect(countryName("AR")).toBe("Argentina")
     expect(countryName("ZZ")).toBeTruthy()
+  })
+})
+
+describe("message templates", () => {
+  it("greets by name when there is one, plainly when there is not", async () => {
+    const { messageGreeting, BACKSTAGE_MESSAGE_TEMPLATES } = await import(
+      "@/lib/backstage/message-templates"
+    )
+
+    expect(messageGreeting("Viva Vinson")).toBe("Hi Viva Vinson,")
+    expect(messageGreeting("  ")).toBe("Hi,")
+    expect(messageGreeting(null)).toBe("Hi,")
+
+    for (const template of BACKSTAGE_MESSAGE_TEMPLATES) {
+      expect(template.body("Hi Ana,").startsWith("Hi Ana,")).toBe(true)
+
+      if (template.id !== "custom") {
+        expect(template.subject.length).toBeGreaterThan(0)
+      }
+    }
   })
 })

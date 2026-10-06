@@ -3,7 +3,7 @@
 **06/10/2026.** El banco (`docs/qa/banco-de-pruebas.html`) era de otra sesión
 durante este lote, así que las filas que generó el lote 18 viven acá, en el
 formato del array `SESSIONS` del banco, listas para pegar. **Quien las integre:**
-copiar el bloque de la sesión `L18` arriba de `L17`, sumar las filas al número
+copiar el bloque de la sesión `L18` arriba de `L16`, que desde el #279 es la primera (L17 se automatizó), sumar las filas al número
 declarado (`tally-total`) y recontar con
 
 ```bash
