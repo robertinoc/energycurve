@@ -33,7 +33,7 @@ información profesional que un competidor podría querer.
 |---|---|
 | **Datos** | Dirección de mail, nombre, credenciales. Y preferencias de interfaz: `preferred_locale` (idioma) y `key_notation` (en qué notación leer las tonalidades) |
 | **Dónde** | WorkOS (identidad y contraseña). Nosotros guardamos `profiles.email`, `profiles.workos_user_id`, `profiles.preferred_locale`, `profiles.key_notation`, `profiles.suspended_at`, `profiles.deletion_requested_at`, `profiles.last_seen_at` y `profiles.last_seen_country` |
-| **Finalidad** | Dar acceso a la cuenta |
+| **Finalidad** | Dar acceso a la cuenta. La dirección también se usa para mensajes de servicio puntuales enviados desde el panel interno vía Resend (p. ej. ofrecer ayuda a una cuenta que no llegó a usar el producto); cada envío queda en el registro de acciones de administración con quién/cuándo/asunto, sin guardar el cuerpo |
 | **Base legal** | Ejecución de un contrato (Art. 6.1.b) |
 | **Encargado** | WorkOS, EE.UU. |
 | **Retención** | Mientras la cuenta exista |

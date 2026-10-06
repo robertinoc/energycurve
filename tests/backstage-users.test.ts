@@ -19,6 +19,7 @@ function profile(
 ) {
   return {
     id,
+    workos_user_id: `wos_${id}`,
     email: overrides.email ?? `${id}@example.com`,
     created_at: overrides.created_at ?? "2026-01-01T00:00:00Z",
     updated_at: overrides.updated_at ?? "2026-07-01T00:00:00Z",
@@ -101,6 +102,7 @@ describe("computeUserKpis", () => {
       suspendedUsers: 1,
       activeUsers30d: 2,
       dormantUsers: 0,
+      neverUsedUsers: 0,
       proUsers: 0,
     })
   })
