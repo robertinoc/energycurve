@@ -32,12 +32,13 @@ información profesional que un competidor podría querer.
 | | |
 |---|---|
 | **Datos** | Dirección de mail, nombre, credenciales. Y preferencias de interfaz: `preferred_locale` (idioma) y `key_notation` (en qué notación leer las tonalidades) |
-| **Dónde** | WorkOS (identidad y contraseña). Nosotros guardamos `profiles.email`, `profiles.workos_user_id`, `profiles.preferred_locale`, `profiles.key_notation`, `profiles.suspended_at` y `profiles.deletion_requested_at` |
+| **Dónde** | WorkOS (identidad y contraseña). Nosotros guardamos `profiles.email`, `profiles.workos_user_id`, `profiles.preferred_locale`, `profiles.key_notation`, `profiles.suspended_at`, `profiles.deletion_requested_at`, `profiles.last_seen_at` y `profiles.last_seen_country` |
 | **Finalidad** | Dar acceso a la cuenta |
 | **Base legal** | Ejecución de un contrato (Art. 6.1.b) |
 | **Encargado** | WorkOS, EE.UU. |
 | **Retención** | Mientras la cuenta exista |
 | **Borrado** | `deleteUserEverywhere` borra el usuario de WorkOS y la fila de `profiles`, que cascadea al resto. Desde el 22/09/2026 lo puede disparar el titular desde `/dashboard/account` — ver abajo |
+| **`last_seen_at` / `last_seen_country`** | Migración 0033. Cuándo fue la última visita al dashboard y el país (código ISO de dos letras) que el edge de Vercel derivó de la IP en esa visita — la IP en sí no se guarda nunca. Un solo valor que se pisa en cada visita (con un throttle de 30 minutos), no un historial de ubicaciones. Finalidad: administración del servicio en el panel interno — distinguir cuentas activas de dormidas y saber desde dónde se usa el producto. Base legal: interés legítimo (Art. 6.1.f); es el mismo dato de país que ya procesa PostHog (T5 · Analítica de producto) con geoip. Se va con la fila al borrar la cuenta |
 | **`deletion_requested_at`** | Migración 0031. Cuándo el titular pidió el borrado. NULL = no pidió nada. La cuenta **sigue funcionando** durante los 30 días de gracia: quien acaba de pedir el borrado es justamente quien más necesita poder exportar sus datos antes, y bloquearlo sería contestar un pedido de supresión sacándole la portabilidad. Se va con la fila cuando el barrido corre |
 
 ### T2 · Playlists y tracks

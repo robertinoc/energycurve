@@ -12,8 +12,12 @@ import { logWorkOSRuntimeError } from "@/lib/auth/workos-runtime"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
 import { getRequestLocale } from "@/lib/server-locale"
+import { visitorCountryCode } from "@/lib/auth/request-country"
 import { getProfileBilling } from "@/services/billing-service"
-import { getProfileByWorkOSUserId } from "@/services/profile-service"
+import {
+  getProfileByWorkOSUserId,
+  recordProfilePresence,
+} from "@/services/profile-service"
 import { listPlaylists } from "@/services/playlist-service"
 
 async function logoutAction() {
@@ -58,6 +62,23 @@ export default async function DashboardLayout({
         suspended = Boolean(profile?.suspended_at)
 
         if (profile && !profile.suspended_at) {
+          // Presence (last seen + country) rides the page view that already
+          // loaded the profile. Awaited rather than void-ed: a fire-and-forget
+          // promise can be frozen with the serverless function (the analysis
+          // snapshot bug all over again), and the write is throttled to one
+          // per half hour anyway. Its own try so telemetry can never take the
+          // shell down.
+          try {
+            await recordProfilePresence(profile, await visitorCountryCode())
+          } catch (presenceError) {
+            logWarn("dashboard.presence_record_skipped", {
+              reason:
+                presenceError instanceof Error
+                  ? presenceError.message
+                  : "Unknown presence error",
+            })
+          }
+
           const rows = await listPlaylists(profile.id)
           playlists = rows.map((p) => ({
             id: p.id,

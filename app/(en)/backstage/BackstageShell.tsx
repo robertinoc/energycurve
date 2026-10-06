@@ -20,7 +20,7 @@ export function BackstageShell({
   return (
     <div className="min-h-screen bg-ec-bg text-ec-text">
       <header className="sticky top-0 z-20 border-b border-ec-border bg-ec-bg/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
             <EnergyCurveLogo tone="light" size="sm" kind="horizontal" />
             <Badge variant="peak">Backstage</Badge>
@@ -42,11 +42,11 @@ export function BackstageShell({
             </form>
           </div>
         </div>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <BackstageNav />
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">{children}</main>
     </div>
   )
 }
