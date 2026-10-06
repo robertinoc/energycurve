@@ -1,6 +1,7 @@
 import "server-only"
 
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
+import { fetchAllRows } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { deleteUserEverywhere } from "@/services/backstage-service"
 import {
@@ -225,14 +226,23 @@ export async function listPendingDeletions(
   now: Date = new Date()
 ): Promise<PendingDeletion[]> {
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, email, deletion_requested_at")
-    .not("deletion_requested_at", "is", null)
-    .order("deletion_requested_at", { ascending: true })
+  // Paged (lote 18 sweep): an unranged select listed the first 1,000 pending
+  // deletions and stopped. Ordered oldest-request first, the cut fell on the
+  // newest requests, and nothing on the panel said the list was partial.
+  const { rows: data, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("profiles")
+      .select("id, email, deletion_requested_at")
+      .not("deletion_requested_at", "is", null)
+      .order("deletion_requested_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
 
   if (error) {
-    logWarn("account_deletion.pending_query_failed", { message: error.message })
+    logWarn("account_deletion.pending_query_failed", {
+      message: String((error as { message?: unknown }).message ?? error),
+    })
 
     return []
   }
@@ -281,6 +291,11 @@ export async function sweepDeletedAccounts(
   ).toISOString()
 
   const supabase = getSupabaseAdminClient()
+  // One page per run, on purpose (lote 18 sweep). Each deletion calls WorkOS
+  // and several tables, so a run that tried to clear more than PostgREST's
+  // 1,000 rows at once would outlive the function's time limit and finish none
+  // of them cleanly. Whatever is left is due again tomorrow, and the pending
+  // panel shows it as overdue — the cap delays, it never hides.
   const { data, error } = await supabase
     .from("profiles")
     .select("id")

@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { FAQ } from "@/components/content/blocks"
 import { PageShell } from "@/components/marketing/page-shell"
+import { ContentFooter } from "@/components/marketing/content-footer"
 import {
   CHEAT_SHEET_COPY,
   CHEAT_SHEET_FAQ,
@@ -114,7 +115,7 @@ export function HarmonicCheatSheetPage({ locale }: { locale: SiteLocale }) {
   const counts = cheatSheetCounts()
 
   return (
-    <PageShell locale={locale} togglePath="/harmonic-mixing-cheat-sheet" width="wide">
+    <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/harmonic-mixing-cheat-sheet" width="wide">
       <header className="space-y-3">
         <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-[2.5rem] sm:leading-[1.14]">
           {t.h1[locale]}

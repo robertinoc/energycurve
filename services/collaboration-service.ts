@@ -13,7 +13,7 @@ import {
   type LockState,
 } from "@/lib/playlists/edit-lock"
 import { can } from "@/lib/product/capabilities"
-import { fetchAllRowsIn } from "@/lib/supabase/paginate"
+import { fetchAllRows, fetchAllRowsIn } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { getProfileBilling } from "@/services/billing-service"
 import { getOwnedPlaylist, getPlaylistWithTracksById } from "@/services/playlist-service"
@@ -130,11 +130,17 @@ export async function listCollaborators(
   }
 
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
-    .from("set_collaborators")
-    .select("id, invited_email, created_at")
-    .eq("playlist_id", playlistId)
-    .order("created_at", { ascending: true })
+  // Paged with a unique tie-breaker (lote 18 sweep): one unranged select
+  // stopped at PostgREST's 1,000 rows without saying so.
+  const { rows: data, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("set_collaborators")
+      .select("id, invited_email, created_at")
+      .eq("playlist_id", playlistId)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
 
   if (error) {
     logError("collaboration.list_failed", error, { playlistId })
@@ -192,13 +198,19 @@ export async function listSharedWithMe(
   }
 
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
-    .from("set_collaborators")
-    .select(
-      "created_at, playlist_id, playlists(id, name), profiles!set_collaborators_invited_by_fkey(email)"
-    )
-    .eq("invited_email", normalized)
-    .order("created_at", { ascending: false })
+  // Paged with a unique tie-breaker (lote 18 sweep): one unranged select
+  // stopped at PostgREST's 1,000 rows without saying so.
+  const { rows: data, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("set_collaborators")
+      .select(
+        "id, created_at, playlist_id, playlists(id, name), profiles!set_collaborators_invited_by_fkey(email)"
+      )
+      .eq("invited_email", normalized)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
 
   if (error) {
     logError("collaboration.shared_list_failed", error, {})
@@ -323,11 +335,17 @@ export async function listSuggestions(
   ownerProfileId: string | null
 ): Promise<Suggestion[]> {
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
-    .from("set_suggestions")
-    .select("id, body, track_id, resolved_at, created_at, author_id, profiles(email)")
-    .eq("playlist_id", playlistId)
-    .order("created_at", { ascending: true })
+  // Paged with a unique tie-breaker (lote 18 sweep): one unranged select
+  // stopped at PostgREST's 1,000 rows without saying so.
+  const { rows: data, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("set_suggestions")
+      .select("id, body, track_id, resolved_at, created_at, author_id, profiles(email)")
+      .eq("playlist_id", playlistId)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
 
   if (error) {
     logError("collaboration.suggestions_failed", error, { playlistId })

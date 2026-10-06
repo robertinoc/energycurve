@@ -1,6 +1,7 @@
 import "server-only"
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
 
+import { fetchAllRows } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import {
   atTaxonomyLimit,
@@ -38,11 +39,17 @@ export async function listUserContexts(
   profileId: string
 ): Promise<UserContext[]> {
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
-    .from("user_contexts")
-    .select("*")
-    .eq("user_id", profileId)
-    .order("created_at", { ascending: true })
+  // Paged with a unique tie-breaker (lote 18 sweep): one unranged select
+  // stopped at PostgREST's 1,000 rows without saying so.
+  const { rows: data, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("user_contexts")
+      .select("*")
+      .eq("user_id", profileId)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
 
   if (error) {
     logError("taxonomy.list_contexts_failed", error, { profileId })
@@ -54,11 +61,17 @@ export async function listUserContexts(
 
 export async function listUserGenres(profileId: string): Promise<UserGenre[]> {
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
-    .from("user_genres")
-    .select("*")
-    .eq("user_id", profileId)
-    .order("created_at", { ascending: true })
+  // Paged with a unique tie-breaker (lote 18 sweep): one unranged select
+  // stopped at PostgREST's 1,000 rows without saying so.
+  const { rows: data, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("user_genres")
+      .select("*")
+      .eq("user_id", profileId)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
 
   if (error) {
     logError("taxonomy.list_genres_failed", error, { profileId })

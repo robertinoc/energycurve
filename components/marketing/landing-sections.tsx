@@ -766,7 +766,22 @@ function FooterColumn({
   )
 }
 
-export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
+export function FooterSection({
+  copy,
+  onLanding = true,
+}: {
+  copy: ResolvedSiteCopy
+  /**
+   * False when the footer sits under a content page (lote 18). The product
+   * column links to sections of the landing — `#features`, `#faq` — and on any
+   * other page a bare `#features` points at nothing, so there they carry the
+   * landing's path in front.
+   */
+  onLanding?: boolean
+}) {
+  const section = (anchor: string) =>
+    onLanding ? anchor : `${localizedPath("/", copy.locale)}${anchor}`
+
   return (
     <footer className="flex flex-col gap-10 border-t border-white/8 pt-8 text-sm text-white/64">
       <div className="flex flex-col gap-10 md:flex-row md:justify-between">
@@ -802,11 +817,11 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
           <FooterColumn
             heading={copy.footer.product}
             links={[
-              { href: "#features", label: copy.nav.features },
-              { href: "#how-it-works", label: copy.nav.how },
-              { href: "#loop", label: copy.loop.navLabel },
-              { href: "#story", label: copy.nav.story },
-              { href: "#contact", label: copy.nav.contact },
+              { href: section("#features"), label: copy.nav.features },
+              { href: section("#how-it-works"), label: copy.nav.how },
+              { href: section("#loop"), label: copy.loop.navLabel },
+              { href: section("#story"), label: copy.nav.story },
+              { href: section("#contact"), label: copy.nav.contact },
             ]}
           />
           {/* A column of their own rather than four more rows under Resources.
@@ -825,7 +840,7 @@ export function FooterSection({ copy }: { copy: ResolvedSiteCopy }) {
           <FooterColumn
             heading={copy.footer.resources}
             links={[
-              { href: "#faq", label: copy.nav.faq },
+              { href: section("#faq"), label: copy.nav.faq },
               {
                 href: localizedPath("/pricing", copy.locale),
                 label: copy.pricing.navLabel,

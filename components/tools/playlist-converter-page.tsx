@@ -7,6 +7,7 @@ import {
 } from "@/components/tools/harmonic-tool-page"
 import { PlaylistConverter } from "@/components/tools/playlist-converter"
 import { PageShell } from "@/components/marketing/page-shell"
+import { ContentFooter } from "@/components/marketing/content-footer"
 import { CONVERTER_COPY } from "@/lib/content/playlist-converter-copy"
 import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -53,6 +54,7 @@ export function PlaylistConverterPage({ locale }: { locale: SiteLocale }) {
   return (
     <PageShell
       locale={locale}
+      footer={<ContentFooter locale={locale} />}
       togglePath="/tools/traktor-rekordbox-converter"
       width="wide"
     >

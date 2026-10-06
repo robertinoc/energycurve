@@ -1,4 +1,5 @@
 import { PageShell } from "@/components/marketing/page-shell"
+import { ContentFooter } from "@/components/marketing/content-footer"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
 /**
@@ -18,7 +19,7 @@ export function BlogShell({
   children: React.ReactNode
 }) {
   return (
-    <PageShell locale={locale} togglePath="/blog">
+    <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/blog">
       {children}
     </PageShell>
   )

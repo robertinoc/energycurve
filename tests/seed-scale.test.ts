@@ -12,6 +12,8 @@ import {
   fingerprint,
   generate,
   parseArgs,
+  seedPlaylistPattern,
+  seedProfilePattern,
   restVerdicts,
   schemaFromOpenApi,
 } from "../scripts/seed-scale.mjs"
@@ -147,5 +149,29 @@ describe("arguments", () => {
       seed: 7,
       playlists: 3,
     })
+  })
+})
+
+describe("clean --seed (lote 18): one seed's rows and nothing else", () => {
+  // Two sessions can seed the same dev database at once; a bare clean deletes
+  // every marked row, including the other session's.
+  it("narrows the playlists to the seed, bracket included, so 16 is not 1610", () => {
+    expect(seedPlaylistPattern(16)).toBe("[scale-seed:16]")
+    expect("[scale-seed:1610] generated".startsWith(seedPlaylistPattern(16))).toBe(false)
+  })
+
+  it("escapes the underscores LIKE would read as any character", () => {
+    // Unescaped, scale_seed_16_ matches scale_seed_1610_0: the "_" after 16
+    // would match the "1".
+    expect(seedProfilePattern(16)).toBe("scale\\_seed\\_16\\_")
+  })
+
+  it("keeps the whole-database patterns when no seed is given", () => {
+    expect(seedPlaylistPattern()).toBe("[scale-seed:")
+    expect(seedProfilePattern()).toBe("scale_seed_")
+  })
+
+  it("accepts --seed on clean", () => {
+    expect(parseArgs(["clean", "--seed", "1610"])).toMatchObject({ command: "clean", seed: 1610 })
   })
 })

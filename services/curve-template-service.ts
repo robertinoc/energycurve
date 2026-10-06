@@ -5,6 +5,7 @@ import {
   parseAnchors,
   type CurveAnchor,
 } from "@/lib/playlists/curve-template"
+import { fetchAllRows } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import type { Json } from "@/types/database"
 
@@ -26,11 +27,17 @@ export async function listCurveTemplates(
 ): Promise<CurveTemplate[]> {
   const supabase = getSupabaseAdminClient()
 
-  const { data, error } = await supabase
-    .from("curve_templates")
-    .select("id, name, anchors")
-    .eq("user_id", profileId)
-    .order("created_at", { ascending: false })
+  // Paged with a unique tie-breaker (lote 18 sweep): one unranged select
+  // stopped at PostgREST's 1,000 rows without saying so.
+  const { rows: data, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("curve_templates")
+      .select("id, name, anchors")
+      .eq("user_id", profileId)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
 
   if (error) {
     logError("curve_template.list_failed", error, { profileId })

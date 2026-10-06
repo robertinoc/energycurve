@@ -4,6 +4,7 @@ import { CamelotWheel } from "@/components/tools/camelot-wheel"
 import { KeyBpmChecker } from "@/components/tools/key-bpm-checker"
 import { KeyTable } from "@/components/tools/key-table"
 import { PageShell } from "@/components/marketing/page-shell"
+import { ContentFooter } from "@/components/marketing/content-footer"
 import {
   CHECKER_COPY,
   spokenKeyName,
@@ -149,7 +150,7 @@ export function CamelotWheelPage({ locale }: { locale: SiteLocale }) {
   )
 
   return (
-    <PageShell locale={locale} togglePath="/tools/camelot-wheel" width="wide">
+    <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/tools/camelot-wheel" width="wide">
       <header className="space-y-3">
         <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-[2.5rem] sm:leading-[1.14]">
           {WHEEL_COPY.h1[locale]}
@@ -182,6 +183,7 @@ export function KeyBpmPage({ locale }: { locale: SiteLocale }) {
   return (
     <PageShell
       locale={locale}
+      footer={<ContentFooter locale={locale} />}
       togglePath="/tools/key-bpm-compatibility"
       width="wide"
     >

@@ -15,6 +15,7 @@ import {
   sendTransactionalEmail,
 } from "@/lib/email/send-email"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
+import { fetchAllRows } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { recordAdminAction } from "@/services/admin-audit-service"
 import { sweepBillingPayloads } from "@/services/retention-service"
@@ -64,18 +65,54 @@ export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapsho
   // Person facts (geoip country + first-touch attribution) ride along in
   // the same Promise.all; fetchBackstagePersonFacts fails open to an empty
   // map, so PostHog being down or unconfigured costs columns, not the page.
+  // Every read pages, ordered by id (lote 18 sweep). These are whole tables —
+  // every user, every playlist, every analysis — and each used to be one
+  // unranged select: past PostgREST's 1,000 rows the user table stopped
+  // listing people and the per-user counts came out of whichever rows made the
+  // first page, with nothing on screen saying so.
   const [profilesResult, playlistsResult, analysesResult, personFacts, names] =
     await Promise.all([
-      supabase
-        .from("profiles")
-        .select(
-          "id, workos_user_id, email, created_at, updated_at, suspended_at, plan, plan_status, last_seen_at, last_seen_country"
-        ),
-      supabase.from("playlists").select("user_id"),
-      supabase.from("analyses").select("user_id, created_at"),
+      fetchAllRows((from, to) =>
+        supabase
+          .from("profiles")
+          .select(
+            "id, workos_user_id, email, created_at, updated_at, suspended_at, plan, plan_status, last_seen_at, last_seen_country"
+          )
+          .order("id", { ascending: true })
+          .range(from, to)
+      ),
+      fetchAllRows((from, to) =>
+        supabase
+          .from("playlists")
+          .select("id, user_id")
+          .order("id", { ascending: true })
+          .range(from, to)
+      ),
+      fetchAllRows((from, to) =>
+        supabase
+          .from("analyses")
+          .select("id, user_id, created_at")
+          .order("id", { ascending: true })
+          .range(from, to)
+      ),
       fetchBackstagePersonFacts(),
       fetchWorkOSNames(),
     ])
+
+  for (const [table, result] of [
+    ["profiles", profilesResult],
+    ["playlists", playlistsResult],
+    ["analyses", analysesResult],
+  ] as const) {
+    if (result.truncated) {
+      // 50,000 rows of one table. Logged as an error: the panel's numbers
+      // describe part of the product from here on.
+      logError("backstage.table_truncated", new Error(`${table} hit the row ceiling`), {
+        table,
+        rows: result.rows.length,
+      })
+    }
+  }
 
   if (profilesResult.error) {
     throw new Error("Unable to load profiles for the backstage panel.")
@@ -85,20 +122,23 @@ export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapsho
   // run a migration yet should still render the user list.
   if (playlistsResult.error) {
     logWarn("backstage.playlist_counts_unavailable", {
-      reason: playlistsResult.error.message,
+      reason: String((playlistsResult.error as { message?: unknown }).message ?? playlistsResult.error),
     })
   }
 
   if (analysesResult.error) {
     logWarn("backstage.analysis_counts_unavailable", {
-      reason: analysesResult.error.message,
+      reason: String((analysesResult.error as { message?: unknown }).message ?? analysesResult.error),
     })
   }
 
+  // A failed page returns the rows read before it. For the counts that would
+  // be a plausible wrong number, so a failed read contributes nothing, as an
+  // unranged failed select did before.
   const users = buildBackstageUsers(
-    profilesResult.data ?? [],
-    playlistsResult.data ?? [],
-    analysesResult.data ?? [],
+    profilesResult.rows,
+    playlistsResult.error ? [] : playlistsResult.rows,
+    analysesResult.error ? [] : analysesResult.rows,
     personFacts,
     names
   )

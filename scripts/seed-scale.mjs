@@ -46,6 +46,7 @@
  *   node scripts/seed-scale.mjs seed  --seed 7 --owner e2e-pro@energycurve.app --playlists 50 --tracks 600
  *   node scripts/seed-scale.mjs fingerprint --seed 7
  *   node scripts/seed-scale.mjs clean
+ *   node scripts/seed-scale.mjs clean --seed 7
  *   node scripts/seed-scale.mjs status
  *
  * Reads SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from the environment or from
@@ -407,8 +408,32 @@ async function ownerIdsFor(db, emails) {
   return ids
 }
 
-async function markedPlaylistIds(db) {
-  const rows = await db.selectAll("playlists", `description=like.${encodeURIComponent(MARKER.descriptionPrefix)}*`, "id")
+/**
+ * The playlists this generator wrote — all of them, or one seed's.
+ *
+ * `clean --seed N` exists because two sessions can be seeding the same dev
+ * database at once (lote 18): a bare `clean` deletes every marked row,
+ * including the other session's, in the middle of its measurement.
+ */
+/**
+ * The `like` pattern for one seed's generated users, or all of them.
+ *
+ * In LIKE an underscore matches any one character, so `scale_seed_16_` would
+ * also match `scale_seed_1610_0` and a clean of seed 16 would take seed 1610's
+ * users with it. Escaped, the underscores mean underscores.
+ */
+export function seedProfilePattern(seed) {
+  if (seed === undefined) return MARKER.workosPrefix
+  return `${MARKER.workosPrefix}${seed}_`.replace(/_/g, "\\_")
+}
+
+/** The `like` pattern for one seed's playlists, or all of them. */
+export function seedPlaylistPattern(seed) {
+  return seed === undefined ? MARKER.descriptionPrefix : `${MARKER.descriptionPrefix}${seed}]`
+}
+
+async function markedPlaylistIds(db, seed) {
+  const rows = await db.selectAll("playlists", `description=like.${encodeURIComponent(seedPlaylistPattern(seed))}*`, "id")
   return rows.map((row) => row.id)
 }
 
@@ -518,7 +543,7 @@ async function main() {
 
   if (args.command === "clean") {
     const before = await counts(db)
-    const ids = await markedPlaylistIds(db)
+    const ids = await markedPlaylistIds(db, args.seed)
     // Children first. Analyses and versions a measurement may have created on
     // these playlists go too: they are as generated as the tracks are.
     for (let i = 0; i < ids.length; i += 100) {
@@ -530,9 +555,11 @@ async function main() {
       }
       await db.request("DELETE", `playlists?id=${list}`)
     }
-    await db.request("DELETE", `profiles?workos_user_id=like.${encodeURIComponent(MARKER.workosPrefix)}*`)
+    // A seed's generated users are `scale_seed_<seed>_…`; `--owner` playlists
+    // belong to a real test account, which is never deleted.
+    await db.request("DELETE", `profiles?workos_user_id=like.${encodeURIComponent(seedProfilePattern(args.seed))}*`)
     const after = await counts(db)
-    console.log(JSON.stringify({ target, removedPlaylists: ids.length, before, after }, null, 2))
+    console.log(JSON.stringify({ target, seed: args.seed ?? "all", removedPlaylists: ids.length, before, after }, null, 2))
     return
   }
 

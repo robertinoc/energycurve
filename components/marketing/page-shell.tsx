@@ -32,42 +32,55 @@ export function PageShell({
   locale,
   togglePath,
   width = "prose",
+  footer,
   children,
 }: {
   locale: SiteLocale
   togglePath: LocaleToggleTarget
   /** `prose` for reading, `wide` for a page with a chart in it. */
   width?: "prose" | "wide"
+  /**
+   * The site footer, rendered by the caller on the server — normally
+   * `<ContentFooter locale={locale} />`. A slot rather than an import because
+   * this is a client component, and importing the footer here would ship the
+   * whole site copy to the browser on every content page.
+   */
+  footer?: React.ReactNode
   children: React.ReactNode
 }) {
   const changeLocale = useSiteLocale(togglePath, locale)
   const backLabel = locale === "es" ? "Volver al inicio" : "Back to home"
 
   return (
-    <main className="min-h-screen bg-[#08050F] text-white">
-      <div
-        className={`mx-auto flex w-full flex-col gap-8 px-6 py-12 lg:px-8 ${
-          width === "wide" ? "max-w-4xl" : "max-w-3xl"
-        }`}
-      >
-        <div className="flex items-center justify-between gap-4">
-          <Link href={localizedPath("/", locale)} aria-label="EnergyCurve home">
-            <EnergyCurveLogo tone="light" size="sm" kind="horizontal" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <LanguageToggle locale={locale} onChange={changeLocale} />
-            <Link
-              href={localizedPath("/", locale)}
-              className="inline-flex items-center gap-1.5 text-sm text-white/60 transition hover:text-white"
-            >
-              <ArrowLeft className="size-3.5" />
-              {backLabel}
+    <>
+      <main className="min-h-screen bg-[#08050F] text-white">
+        <div
+          className={`mx-auto flex w-full flex-col gap-8 px-6 py-12 lg:px-8 ${
+            width === "wide" ? "max-w-4xl" : "max-w-3xl"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <Link href={localizedPath("/", locale)} aria-label="EnergyCurve home">
+              <EnergyCurveLogo tone="light" size="sm" kind="horizontal" />
             </Link>
+            <div className="flex items-center gap-3">
+              <LanguageToggle locale={locale} onChange={changeLocale} />
+              <Link
+                href={localizedPath("/", locale)}
+                className="inline-flex items-center gap-1.5 text-sm text-white/60 transition hover:text-white"
+              >
+                <ArrowLeft className="size-3.5" />
+                {backLabel}
+              </Link>
+            </div>
           </div>
-        </div>
 
-        {children}
-      </div>
-    </main>
+          {children}
+        </div>
+      </main>
+      {/* Outside <main>, so it is the page's one contentinfo landmark and not
+          a footer of the article. */}
+      {footer}
+    </>
   )
 }
