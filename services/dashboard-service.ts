@@ -43,6 +43,9 @@ export async function getDashboardSnapshot(
       )
       .eq("user_id", profile.id)
       .order("updated_at", { ascending: false })
+      // A unique tie-breaker (lote 18 sweep): `updated_at` repeats, and offset
+      // paging over a repeated key can show one set twice and skip another.
+      .order("id", { ascending: true })
       .range(from, to) as never
   )
 
@@ -109,14 +112,24 @@ export async function getDashboardSnapshot(
   const scoreHistories = new Map<string, number[]>()
 
   if (latestRows.length > 0) {
-    const { data: analysisRows, error: analysesError } = await supabase
-      .from("analyses")
-      .select("playlist_id, set_score, created_at")
-      .in(
-        "playlist_id",
-        latestRows.map((playlist) => playlist.id)
+    // The newest SCORE_HISTORY_LIMIT per set, asked per set (lote 18 sweep).
+    // This was one ascending, unranged read over the five sets: past 1,000
+    // analyses between them PostgREST returned the *oldest* thousand, and the
+    // sparkline drew a history that had stopped months ago.
+    const perSet = await Promise.all(
+      latestRows.map((playlist) =>
+        supabase
+          .from("analyses")
+          .select("playlist_id, set_score, created_at")
+          .eq("playlist_id", playlist.id)
+          .order("created_at", { ascending: false })
+          .limit(SCORE_HISTORY_LIMIT)
       )
-      .order("created_at", { ascending: true })
+    )
+    const analysesError = perSet.find((result) => result.error)?.error ?? null
+    const analysisRows = perSet
+      .flatMap((result) => result.data ?? [])
+      .sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0))
 
     if (analysesError) {
       // Score history is decoration — never fail the dashboard over it

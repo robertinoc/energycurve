@@ -10,6 +10,7 @@ import {
   type ResidencyTrack,
 } from "@/lib/playlists/residency"
 import { can } from "@/lib/product/capabilities"
+import { chunkIds, fetchAllRows } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { getProfileBilling } from "./billing-service"
 
@@ -33,11 +34,16 @@ async function playedSetsAtVenue(
   // the same normalisation the pure module uses, so the candidate set is fetched by
   // owner and filtered here. Scoped by user_id and indexed on (user_id, venue), so
   // this reads a handful of rows rather than a table.
-  const { data: playlists, error } = await supabase
-    .from("playlists")
-    .select("id, name, venue")
-    .eq("user_id", profileId)
-    .not("venue", "is", null)
+  // Paged (lote 18 sweep): every set with a venue, not the first 1,000.
+  const { rows: playlists, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("playlists")
+      .select("id, name, venue")
+      .eq("user_id", profileId)
+      .not("venue", "is", null)
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
 
   if (error) {
     logError("residency.playlists_failed", error, { profileId })
@@ -55,16 +61,26 @@ async function playedSetsAtVenue(
 
   const names = new Map(candidates.map((row) => [row.id, row.name]))
 
-  const { data: versions, error: versionsError } = await supabase
-    .from("playlist_versions")
-    .select("playlist_id, tracks, created_at")
-    .in(
-      "playlist_id",
-      candidates.map((row) => row.id)
+  // The newest `limit` played versions across the candidate sets. The id list
+  // is split (lote 18 sweep): an `in()` of more than ~350 ids fails, and this
+  // one is every set at the venue. Each chunk returns its own newest `limit`,
+  // and the newest `limit` of those is the answer for the whole list.
+  const perChunk = await Promise.all(
+    chunkIds(candidates.map((row) => row.id)).map((chunk) =>
+      supabase
+        .from("playlist_versions")
+        .select("playlist_id, tracks, created_at")
+        .in("playlist_id", chunk)
+        .eq("kind", "played")
+        .order("created_at", { ascending: false })
+        .limit(limit)
     )
-    .eq("kind", "played")
-    .order("created_at", { ascending: false })
-    .limit(limit)
+  )
+  const versionsError = perChunk.find((result) => result.error)?.error ?? null
+  const versions = perChunk
+    .flatMap((result) => result.data ?? [])
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0))
+    .slice(0, limit)
 
   if (versionsError) {
     logError("residency.versions_failed", versionsError, { profileId })
