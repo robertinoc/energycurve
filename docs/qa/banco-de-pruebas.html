@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">146</strong>
+      <strong id="tally-total">116</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -501,27 +501,25 @@
 
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
-    <p><strong>Ya no hay nada que bloquee el día.</strong> Lo que bloqueaba —las migraciones de dev, la <code>0005</code> y sus siete géneros— está resuelto: el 02/10 <code>scripts/seed-scale.mjs status</code> leyó en dev los doce géneros y las 32 migraciones sin tablas, columnas ni enums faltantes. Sobre REST no se ven índices ni políticas; el chequeo completo sigue esperando <code>MIGRATION_DB_URL</code> (DB.2). Lo que espera algo tuyo, ordenado por lo que destraba, está en <code>docs/pendientes-robertino.md</code>: arriba de todo, un ajuste de dos minutos en PostHog (L16.1).</p>
-    <p style="margin:9px 0 0"><strong>La suite E2E:</strong> al 06/10 (lote 17) <strong>1266 pasan / 46 saltean / 0 fallan en 11,3 minutos</strong>, sin reintentos (lote 16: los mismos 1266 / 46 / 0 en 4,9 minutos; la diferencia de tiempo es el shard de Firefox, y su causa no se investigó). Los saltos son deliberados: el arco de pagos sin <code>stripe listen</code>, el sitemap que corre sólo en Chromium, el importador que corre una vez sobre FREE, el plan free en PRO y PRO+, y el test del request de PostHog, que corre sólo en Chromium. Un solo comando: <code>npm run test:e2e</code> corre los cinco shards en paralelo y devuelve un resumen. Las tres cuentas quedaron en <strong>0 playlists</strong>.</p>
+    <p><strong>Esta página es, desde el 06/10, sólo lo que necesita una persona.</strong> La sesión de automatización sacó 30 filas: 18 pasaron a ser tests de Playwright y 12 ya los tenían sin que el banco lo dijera. Quedan 116, y cada una necesita un oído, un teléfono en la mano, un lector de pantalla, una consola tuya o un juicio. Qué test reemplazó a cada fila, y por qué cada una de las que quedan no se puede automatizar, está en <code>docs/qa/automatizacion-banco-2026-10.md</code>.</p>
+    <p style="margin:9px 0 0"><strong>Lo que antes eran filas de validación es ahora una sola pregunta:</strong> ¿qué commit sirve producción? Los arreglos de los lotes 16 y 17 los prueba la suite contra un build de ese commit. Si Vercel sirve el merge y la suite está en cero, están validados; ya no hace falta contarlos a mano.</p>
+    <p style="margin:9px 0 0"><strong>La suite E2E:</strong> al 06/10 (sesión de automatización del banco) <strong>1336 pasan / 67 saltean / 0 fallan, tres corridas seguidas iguales</strong>, de 6,1 a 6,3 minutos cada una, sin reintentos. Los saltos son deliberados y dicen por qué: los 46 de siempre (el arco de pagos sin <code>stripe listen</code>, el sitemap sólo en Chromium, el importador una vez sobre FREE, el plan free en PRO y PRO+, el request de PostHog sólo en Chromium) y 21 de los specs nuevos, que corren en un solo proyecto o en escritorio. Un solo comando: <code>npm run test:e2e</code> corre los cinco shards en paralelo y devuelve un resumen. Los tests de volumen siembran dev con <code>scripts/seed-scale.mjs</code>, borran sólo lo suyo y terminan afirmando que las cuentas quedaron como estaban.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
     <ol style="margin:6px 0 0 18px;padding:0">
-      <li><strong>L17 — 45 min.</strong> Los arreglos del lote 17, que eran casi todos silenciosos: L17.1 es exportar tus datos y contar los temas del archivo, y es la que importa. L17.6 se corre en tu máquina contra dev.</li>
-      <li><strong>L16 — 40 min.</strong> Los cinco arreglos del lote 16 (H-15, H-17, H-18, H-19, IMP.1) y el botón de login en español, que no tenía fila: arrancan en «Validar fix». L16.1 es la que importa: es una promesa de privacidad publicada.</li>
-      <li><strong>E2E.1 — 10 min.</strong> Corré <code>npm run test:e2e</code> y confirmá el cero. Es tu línea de base del día: si algo falla acá, lo de abajo no se interpreta.</li>
+      <li><strong>Vercel y la suite — 15 min.</strong> Mirá qué commit sirve producción, y corré <code>npm run test:e2e</code> con <code>.env.local</code> y <code>.env.e2e.local</code> en su lugar. Es tu línea de base: si algo falla acá, lo de abajo no se interpreta.</li>
+      <li><strong>L16 — 15 min.</strong> Lo que quedó: el ajuste de PostHog (L16.1, una promesa de privacidad publicada, y la que importa), el tooltip escuchado con VoiceOver y la cita de Lexicon contra su página.</li>
       <li><strong>DB.2 a DB.4 — 25 min.</strong> El semáforo completo en dev y por primera vez en producción. Necesitan la connection string, que es tuya.</li>
-      <li><strong>J y J2 — 70 min.</strong> Lo de Jordi. Necesita tu oído y un NML real, y es lo que ninguna máquina puede contestar.</li>
+      <li><strong>J y J2 — 60 min.</strong> Lo de Jordi. Necesita tu oído, tu Excel y un NML real.</li>
       <li><strong>UX — 60 min.</strong> Los cinco casos de borde con las cuentas.</li>
-      <li><strong>TOOL y TOOL2 — 105 min.</strong> Las herramientas públicas con tu librería de verdad y el teléfono.</li>
-      <li><strong>AUD — 30 min.</strong> Los tres hallazgos de la auditoría F1 están arreglados; falta validarlos con tus archivos y en tu teléfono. AUD.4 (la cuarta importación en FREE) y AUD.5 (ocho capabilities sin ejercitar) siguen abiertos.</li>
+      <li><strong>TOOL y TOOL2 — 90 min.</strong> Las herramientas públicas con tu librería de verdad, el teléfono y un deck.</li>
+      <li><strong>AUD — 15 min.</strong> AUD.3 (la cuota de IA vista antes del clic) y AUD.5 (decidir si las ocho capabilities sin ejercitar valen un lote). AUD.4, la cuarta importación en FREE que la auditoría dejó «sin confirmar», ahora la contesta un test.</li>
       <li><strong>ART, GUIA, A2B, ARM, CMP y CMP2 — ~3 h repartidas.</strong> El contenido leído como DJ. A2B.3 es la única que necesita el software abierto.</li>
       <li><strong>F45 — 2 h repartidas.</strong> Lo externo de las fases 4 y 5 del plan SEO: los perfiles de entidad, StageLink, las menciones. Los key events de PostHog están en SEO4.6.</li>
       <li><strong>PAY — 20 min.</strong> El camino del dinero. Necesita una terminal con <code>stripe listen</code> abierta; sin eso el spec saltea en vez de correr, que es lo correcto pero no te dice nada.</li>
       <li><strong>CONT.4 y CONT.5 — 30 min.</strong> Las 21 definiciones leídas por un DJ, y el validador de Google. Las dos que deciden si el contenido sirve.</li>
       <li><strong>El resto de SEO</strong> — validadores ajenos y Search Console. No dependen de vos hoy.</li>
     </ol>
-    <p style="margin:9px 0 0"><strong>Los puntos de quiebre están arreglados (lote 17, 06/10), y el pico sigue sin cumplirse.</strong> Medido contra dev al mismo volumen en que fallaban (<code>docs/qa/carga-2026-10.md</code>): con 400 playlists el dashboard carga y el export trae todos los temas; con 60.000 temas el export trae los 60.000 sin repetir ninguno; la lista del menú lateral cuenta bien; reordenar ya no traba el set. Lo que <strong>no</strong> cambió es el pico: con 10 usuarios en la mezcla el dashboard sigue en ~11 s de p95, porque la CPU se va en el orden sugerido que la página de análisis calcula en cada render (H-23, 89 % de la CPU ocupada). El dashboard solo, con 10 usuarios, da 1,5 s. Contra Vercel no se midió.</p>
-    <p style="margin:9px 0 0"><strong>Lote 17 agregó 6 filas y no retiró ninguna</strong>: 140 → 146. Ninguna fila vieja verificaba lo que este lote arregló — nadie había probado a mano exportar una librería grande, que es justamente por qué los defectos eran silenciosos.</p>
-    <p style="margin:9px 0 0"><strong>Lote 16 retiró 30 filas</strong>, cada una por una de tres razones: la cubre un test automático (SEO.1, SEO.7, SEO.8, SEO.9, SEO3.7, CONT.6, DB.5, E2E.1b), ya se hizo o se resolvió (A1 entera, A2.1–A2.6, A3.1, DB.1, E2E.1c, SEO3.5, SEO3.6, SEO4.4, SEO5.4, y SEO.6, que se dio vuelta: <code>/blog</code> es indexable desde que hay artículos en inglés), o la reemplaza otra fila (CONT.3, CONT.7 e IMP.1 por L16.3, L16.2 y L16.5; F45.2 era SEO4.6 con nombres de eventos que no existen). El detalle está en el handoff, sección del lote 16.</p>
+    <p style="margin:9px 0 0"><strong>Los puntos de quiebre están arreglados (lote 17, 06/10), y el pico sigue sin cumplirse.</strong> Medido contra dev al mismo volumen en que fallaban (<code>docs/qa/carga-2026-10.md</code>): con 400 playlists el dashboard carga y el export trae todos los temas; con 60.000 temas el export trae los 60.000 sin repetir ninguno; la lista del menú lateral cuenta bien; reordenar ya no traba el set. Desde el 06/10 eso lo vuelve a contar la suite en cada corrida (<code>e2e/large-library.auth.spec.ts</code>). Lo que <strong>no</strong> cambió es el pico: con 10 usuarios en la mezcla el dashboard sigue en ~11 s de p95, porque la CPU se va en el orden sugerido que la página de análisis calcula en cada render (H-23, 89 % de la CPU ocupada). Contra Vercel no se midió.</p>
     <p style="margin:9px 0 0">Las sesiones <strong>A4</strong> (backups) y <strong>A6</strong> (consolas) no entran en un día y no bloquean nada: agendalas aparte.</p>
   </div>
 
@@ -552,54 +550,10 @@
 
   var SESSIONS = [
     {
-      code: "L17",
-      title: "Validar los arreglos del lote 17: lo que fallaba con una librería grande",
-      meta: "~45 min · necesita el deploy del lote 17 · L17.1 y L17.2 con tu cuenta, L17.6 en tu máquina contra dev",
-      why: "El lote 17 arregló los cinco puntos de quiebre de <code>docs/qa/carga-2026-10.md</code> y seis defectos más del mismo origen (H-21 y H-22). Cada uno se probó contra dev con el volumen en que fallaba y tiene un test que falla sin el arreglo. Casi todos eran <strong>silenciosos</strong>: el producto mostraba un número creíble y equivocado, o un archivo de «tus datos» incompleto. Nadie los nota usando el producto, y por eso cada uno tiene su fila. Primer paso: confirmar en Vercel que producción sirve el merge del lote 17.",
-      tests: [
-        {
-          code: "L17.1", initial: "validar", title: "Exportá tus datos y contá los temas del archivo", sub: "Punto 2 · un derecho del GDPR · H-22.1 y H-22.2",
-          steps: ["Con la cuenta que más playlists tenga, Mi cuenta → «Descargar mis datos»", "Abrí el JSON y mirá el bloque <code>counts</code> del principio", "En la consola del navegador, con el archivo pegado en <code>d</code>: <code>[d.tracks.length, new Set(d.tracks.map(t =&gt; t.id)).size, d.counts.tracks]</code>", "Compará con la cantidad de temas que dice el dashboard"],
-          expect: "Los tres números iguales entre sí y al total del dashboard. Antes del lote 17, con ~400 playlists el archivo traía <strong>cero</strong> temas y con más de 50.000 se cortaba y repetía filas, siempre con un 200. Ahora trae todo o responde un error que dice que no mandó una copia parcial.",
-          ifNot: "Si el archivo trae menos temas que el dashboard, es el defecto más grave del repo: anotá cuántas playlists y temas tiene la cuenta. Si la descarga falla con un 413, es el límite de 4,5 MB de Vercel: el export ahora sale en streaming, pero eso <strong>no se pudo verificar fuera de producción</strong> (los previews usan la misma <code>SUPABASE_URL</code>). Hace falta una cuenta con más de ~7.000 temas para verlo; si no hay ninguna, anotalo así."
-        },
-        {
-          code: "L17.2", initial: "validar", title: "El conteo de temas de cada playlist en el menú lateral", sub: "H-21 · punto 5 · en todas las páginas del dashboard",
-          steps: ["En una cuenta con más de 1.000 temas en total, abrí el dashboard", "Elegí tres playlists del menú lateral y anotá su conteo", "Abrí cada una y contá sus temas en la tabla"],
-          expect: "El conteo del menú es el de la tabla, en las tres. Antes, con más de 1.000 temas sumando todas, la mayoría mostraba 0 (96 de 100 en la medición con 30.000).",
-          ifNot: "Si alguna dice 0 y tiene temas, producción no tiene el lote 17. Si no hay ninguna cuenta con más de 1.000 temas, esta fila no se puede correr en producción: dejala en «Bloqueada» con esa nota."
-        },
-        {
-          code: "L17.3", initial: "validar", title: "La librería global con muchas playlists", sub: "H-22.3 · la cuarta copia del filtro por lista de ids",
-          steps: ["En la cuenta con más playlists, abrí la librería global", "Mirá el total de discos y si dice que está incompleta", "Buscá un tema que sepas que está en una playlist vieja"],
-          expect: "La librería muestra discos y el tema aparece. Con 400 playlists se mostraba vacía, y a 30.000 temas perdía algunos por paginar sin orden. A más de 50.000 filas dice que está incompleta: eso es a propósito.",
-          ifNot: "Si está vacía teniendo playlists, anotá cuántas playlists tiene la cuenta."
-        },
-        {
-          code: "L17.4", initial: "validar", title: "Los sets compartidos con vos muestran su cantidad de temas", sub: "H-22.4 · la tercera copia del conteo",
-          steps: ["Con la cuenta PRO+, compartí un set de más de 100 temas con la cuenta PRO", "Con la PRO, abrí «Compartidos conmigo»"],
-          expect: "El set con su cantidad de temas real delante de «compartido por». Si el conteo no se puede leer, no aparece número: antes aparecía 0.",
-          ifNot: "Si dice 0 con temas, producción no tiene el lote 17."
-        },
-        {
-          code: "L17.5", initial: "validar", title: "Reordenar y volver a reordenar un set grande", sub: "H-22.6 · punto 4 · un fallo trababa el set para siempre",
-          steps: ["Con la cuenta PRO, importá un set de 500 temas (el máximo de una importación)", "Arrastrá un tema diez lugares y guardá", "Arrastrá el último al principio y guardá", "Recargá la página y confirmá el orden"],
-          expect: "Los dos guardados terminan, el orden es el que dejaste y sobrevive a la recarga. Un arrastre corto escribe sólo los temas que se mueven. Medido contra dev desde la Mac: 3,3 s un arrastre de diez lugares en un set de 1.000, y 16 a 18 s una inversión completa de 1.000.",
-          ifNot: "Si un guardado falla y el siguiente también, anotá el set: antes del lote 17 un fallo dejaba temas en posiciones temporales y ese set no se podía volver a guardar nunca. Ahora el siguiente guardado lo repara."
-        },
-        {
-          code: "L17.6", initial: "validar", title: "Un set de más de 1.000 temas se ve entero", sub: "H-22.5 · en tu máquina contra dev, porque ninguna importación llega a 1.000",
-          steps: ["En tu máquina, con <code>.env.local</code> apuntando a dev: <code>node scripts/seed-scale.mjs seed --seed 1606 --owner TU_EMAIL_DE_PRUEBA --playlists 1 --tracks 1200</code>", "<code>npm run dev</code> y abrí ese set", "Fijate el número del último tema de la tabla", "Al terminar: <code>node scripts/seed-scale.mjs clean</code>"],
-          expect: "El último tema es el 1.200. Antes la página mostraba 1.000 sin avisar, y un reordenamiento se validaba contra esos 1.000.",
-          ifNot: "Si se ve el 1.000, la rama no tiene el lote 17. El generador se niega a correr contra producción por nombre, así que esto no puede tocarla."
-        }
-      ]
-    },
-    {
       code: "L16",
-      title: "Validar los arreglos del lote 16, y uno que quedó suelto",
-      meta: "~40 min · necesita el deploy del lote 16 · L16.5 necesita la cuenta PRO",
-      why: "Cinco hallazgos quedaron arreglados el 02/10, y cada uno tiene un test que falla sin el arreglo — se comprobó sacándolo. Lo que un test no puede afirmar es que producción lo lleve, ni lo que ve una persona con un teclado, un lector de pantalla o la consola de PostHog. Por eso arrancan en «Validar fix» y no en «Pendiente»: pasan a «Pasa» cuando los corrés contra el deploy. Primer paso de todo: confirmar en Vercel que producción sirve el merge del lote 16.",
+      title: "Lo que quedó del lote 16: una consola, una voz y una página ajena",
+      meta: "~15 min · L16.1 en tu cuenta de PostHog · L16.3 con VoiceOver",
+      why: "El lote 16 dejó seis filas en «Validar fix». Tres las contesta ahora la suite contra un build del mismo commit —los enlaces del glosario una sola vez (L16.2), la playlist que avisa que está llegando (L16.5) y el login en español (L16.6)— y salieron el 06/10. Quedan las tres que un test no puede hacer: un ajuste en la consola de PostHog, cómo suena un tooltip en un lector de pantalla, y una cita contra la página de otra empresa.",
       tests: [
         {
           code: "L16.1", initial: "validar", title: "PostHog no guarda tu IP", sub: "H-17 · el código ya no la pone en el evento; el resto es un ajuste tuyo",
@@ -608,72 +562,30 @@
           ifNot: "Si el ajuste estaba apagado, el banner y la política dijeron algo falso hasta hoy: prendelo antes que cualquier otra cosa de esta lista. La frase corregida de la política está escrita y sin aplicar, esperando tu OK — no es asesoramiento legal. El cuerpo del request viaja comprimido, así que mirarlo en la pestaña Network no dice nada: para eso está el test."
         },
         {
-          code: "L16.2", initial: "validar", title: "Cada término del glosario, enlazado una vez", sub: "H-18 · los dos artículos que lo repetían",
-          steps: ["Abrí /blog/how-does-a-dj-set-work", "En la consola: <code>['bpm','key','transition'].map(t =&gt; document.querySelectorAll('main a[href$=\"/glossary/' + t + '\"]').length)</code>", "Repetí en /blog/how-djs-prepare-their-sets con <code>warm-up</code>", "Leé los dos de corrido"],
-          expect: "<code>[1, 1, 1]</code> y <code>[1]</code>. El enlace que queda es el que el artículo escribió a mano: el enlazador ahora cuenta los que ya existen y no agrega otro.",
-          ifNot: "Si alguno da 2, producción no tiene el lote 16. Un test recorre los 23 artículos y falla si un término se enlaza dos veces; se verificó en rojo devolviendo exactamente los cuatro duplicados de producción."
-        },
-        {
-          code: "L16.3", initial: "validar", title: "El tooltip de término se cierra con Escape", sub: "H-19 · WCAG 1.4.13 · con tu teclado y con voz",
-          steps: ["Abrí /es/blog/esta-bien-el-orden-de-mi-set sin tocar el mouse (en Safari, antes: Ajustes → Avanzado → «Pulsar Tab para resaltar cada ítem»; si no, Tab no entra a los enlaces)", "Tabulá hasta un término subrayado: aparece la definición corta", "Apretá Escape", "Tabulá al siguiente y volvé con Shift+Tab", "Repetí en /blog/how-to-structure-a-dj-set con VoiceOver (Cmd+F5) y escuchá qué anuncia al llegar al término"],
-          expect: "Escape cierra la definición y el foco se queda en el término. Volver a enfocarlo, o pasar el mouse desde afuera, la abre de nuevo. El lector anuncia el término y después la definición corta.",
-          ifNot: "Si Escape no cierra, producción no tiene el lote 16. El E2E lo afirma en los dos idiomas y en los cuatro navegadores, pero enfoca por código: esta fila es el teclado de una persona. Anotá navegador y qué dijo el lector. Reemplaza a la vieja CONT.3."
+          code: "L16.3", initial: "validar", title: "El tooltip de término, escuchado", sub: "H-19 · WCAG 1.4.13 · lo que queda es la voz",
+          steps: ["Encendé VoiceOver (Cmd+F5) y abrí /blog/how-to-structure-a-dj-set", "Navegá con VO+→ hasta un término subrayado del primer párrafo", "Escuchá qué anuncia, y apretá Escape", "Repetí en /es/blog/esta-bien-el-orden-de-mi-set"],
+          expect: "El lector anuncia el término y después su definición corta, en el idioma de la página. Escape cierra la definición sin sacarte del término.",
+          ifNot: "Anotá la frase exacta que dijo. El teclado ya no es tuyo: Escape, el foco que se queda y la definición que vuelve los afirma <code>e2e/accessibility.spec.ts</code> en los dos idiomas y los cuatro navegadores. Reemplaza a la vieja CONT.3."
         },
         {
           code: "L16.4", initial: "validar", title: "La cita de precios de Lexicon, literal otra vez", sub: "H-15 · releída el 02/10",
           steps: ["Abrí /compare/lexicon y buscá la cita sobre lo que es gratis", "Abrí lexicondj.com/pricing y buscá «100% free»", "Mirá la fecha de verificación arriba de la página"],
           expect: "La cita dice «Downloading Lexicon and converting your library between any of the DJ apps we support is 100% free.» y está así en su página. Fecha: 2 de octubre de 2026. De las tres citas que la tanda marcó, sólo esa había cambiado: las otras dos seguían literales y la medición del 30/09 tuvo un error de instrumento (aplanar el HTML rompía «Windows &amp; macOS»).",
           ifNot: "Si su página cambió otra vez, gana la de ellos: corregí la cita, <code>competitor-facts-2026-09-26.md</code> y la fecha, las tres juntas."
-        },
-        {
-          code: "L16.5", initial: "validar", title: "La playlist recién importada avisa que está llegando", sub: "IMP.1 · la ventana entre el alta y los temas",
-          steps: ["Con la cuenta PRO, importá un set grande (100+ temas) desde la pestaña A", "Apenas aparezca en la lista, abrilo desde la pestaña B", "No recargues: esperá"],
-          expect: "Si llegás en la ventana: «Todavía estamos trayendo tus temas — El set ya existe y los temas están llegando. Esta página se actualiza sola en un momento.», y a los segundos aparecen los temas sin que toques nada. Si no llegás, ves el set completo directamente — también vale anotarlo. Y si guardar los temas falla, la playlist ya no queda vacía: se borra, lo registra y el error sube (eso lo cubre un test).",
-          ifNot: "Si ves cero temas y «Export» deshabilitado sin el aviso, producción no tiene el lote 16. El aviso deja de refrescar a los 60 segundos del alta; un set que siga vacío después de eso no está llegando, está roto, y es otro hallazgo."
-        },
-        {
-          code: "L16.6", initial: "validar", title: "El botón de login dice «Iniciar sesión» en español", sub: "PR #249 · del 20/09, sin fila propia hasta hoy",
-          steps: ["Entrá a <code>/es</code> y elegí español en el selector de idioma", "Cerrá sesión si estabas adentro", "Andá a <code>/login</code> y mirá el botón de enviar"],
-          expect: "«Iniciar sesión», no «Login». Sale de <code>modeCopy.submit[locale]</code>; la tanda 01 lo dejó en «falta validarlo» y ninguna fila del banco lo tenía.",
-          ifNot: "Si dice «Login», mirá primero el idioma del resto de la pantalla: <code>/login</code> no tiene ruta en español y toma el idioma de la cookie que deja el selector. Si toda la pantalla está en inglés, es la cookie y no el botón."
         }
       ]
     },
     {
       code: "N",
       title: "El menú Recursos, después de agruparlo",
-      meta: "~10 min · sin cuenta · los dos idiomas",
-      why: "El desplegable pasó de cinco items sueltos a un panel de cuatro grupos, y sumó las tres herramientas gratis que no se alcanzaban desde ningún menú. Lo automático cubre accesibilidad e hidratación; acá queda lo que una máquina no juzga: si se lee, si entra en pantalla, y si el copy dice algo.",
+      meta: "~5 min · sin cuenta · los dos idiomas",
+      why: "El desplegable pasó de cinco items sueltos a un panel de cuatro grupos, y sumó las tres herramientas gratis que no se alcanzaban desde ningún menú. Desde el 06/10 el teclado, que el panel entre en una laptop, el teléfono a 390 px y que las herramientas caigan en su ruta en español los prueba <code>e2e/banco-public.spec.ts</code> (eran N.1, N.2, N.3 y N.5). Queda lo que una máquina no juzga: si el copy dice algo.",
       tests: [
-        {
-          code: "N.1", title: "Teclado, de punta a punta", sub: "Abrir, recorrer, cerrar, y el foco de vuelta",
-          steps: ["Cargá la landing sin tocar el mouse", "Tabulá hasta <code>Recursos</code>", "Abrilo con Enter", "Seguí tabulando: tenés que entrar al panel", "Cerrá con Escape"],
-          expect: "Abre con Enter, el primer Tab cae en el primer item, Escape cierra y el foco vuelve al botón — no al principio de la página.",
-          ifNot: "Si el foco se pierde, el siguiente Tab arranca desde el logo. Ese es el síntoma."
-        },
-        {
-          code: "N.2", title: "El panel entra en una laptop", sub: "Dos columnas, cuatro grupos",
-          steps: ["Abrí <code>Recursos</code> a 1440 de ancho", "Mirá que los cuatro encabezados se lean", "Repetí a 1280"],
-          expect: "Queda dentro de la pantalla y no se corta por abajo. Los encabezados en cian se distinguen de los items.",
-          ifNot: "Anotá el ancho exacto donde se corta."
-        },
-        {
-          code: "N.3", title: "Mobile a 390 px", sub: "Lista, no dos columnas apretadas",
-          steps: ["Poné el navegador en 390 px", "Abrí la hamburguesa", "Recorré hasta abajo"],
-          expect: "Una columna con encabezados. Nada se sale a lo ancho y no aparece scroll horizontal.",
-          ifNot: "Si hay scroll horizontal, decime en qué item empieza."
-        },
         {
           code: "N.4", title: "El copy dice algo, en los dos idiomas", sub: "Era la mitad del trabajo",
           steps: ["Abrí el panel en inglés y leé los once items como si no conocieras el producto", "Cambiá a español y repetí"],
           expect: "Cada item dice qué ganás entrando, no cómo se llama el archivo. En español, voseo: «Mirá la curva de tu set», «Fijate si dos temas mezclan».",
           ifNot: "Si alguno suena a nota técnica, marcámelo: ése es el que hay que reescribir."
-        },
-        {
-          code: "N.5", title: "Las tres herramientas llegan a donde dicen", sub: "Eran las que no se alcanzaban",
-          steps: ["Entrá a las cuatro de «Probalo gratis»", "Volvé y repetí en español"],
-          expect: "Las cuatro abren, y en español caen en <code>/es/herramientas/...</code>, no en la ruta en inglés.",
-          ifNot: "Una ruta en inglés bajo <code>/es</code> significa que se escribió a mano en vez de pasar por <code>localizedPath()</code>."
         }
       ]
     },
@@ -697,8 +609,8 @@
         },
         {
           code: "J.3", title: "CSV con punto y coma", sub: "Excel en español usa <code>;</code>",
-          steps: ["Exportá una playlist como CSV y mirá el nombre del archivo", "Abrí el CSV exportado con Excel en español", "Guardalo desde Excel", "Volvé a subirlo"],
-          expect: "También entra. Y el archivo se llama <code>…-optimized-with-energycurve-app.csv</code>, con guion y un solo punto: es la validación de H-8 (PR #248), que en tu copia está en «Validar fix» sobre esta fila. Pasó la primera ronda; lo que falta es el nombre.",
+          steps: ["Exportá una playlist como CSV", "Abrí el archivo con Excel en español", "Guardalo desde Excel, como CSV", "Volvé a subirlo"],
+          expect: "También entra. Lo que esta fila tiene y ningún test tiene es Excel: el separador <code>;</code> ya lo lee <code>tests/parse-csv.test.ts</code>, y el nombre del archivo (H-8, <code>…-optimized-with-energycurve-app.csv</code>) lo afirma <code>e2e/playlist-export.auth.spec.ts</code>. Si en tu copia esta fila sigue en «Validar fix» por H-8, ese cierre ya no depende de vos.",
           ifNot: "Es un caso real y frecuente, no un borde exótico: tratalo como severidad media."
         },
         {
@@ -736,32 +648,14 @@
     {
       code: "J2",
       title: "La tabla armónica de Jordi",
-      meta: "~25 min · necesita PRO+ y un set con keys",
+      meta: "~10 min · necesita el archivo de Jordi",
       why: "Mergeado el 16/09 en el PR #225. La tabla de transiciones que mandó Jordi reemplazó la heurística de distancia en la rueda, que marcaba como choque a la mitad de los movimientos válidos del círculo. Cambia qué órdenes propone el optimizador, así que lo que hay que mirar es si las mezclas que ahora aprueba suenan bien de verdad.",
       tests: [
-        {
-          code: "J2.1", title: "El diagonal dejó de ser un choque", sub: "La minor a Sol mayor, el caso que destapó el bug",
-          steps: ["Armá un set con <code>8A</code> seguido de <code>9B</code>", "Corré el análisis y abrí la lista de transiciones"],
-          expect: "Esa transición ya no aparece marcada. Antes decía «las tonalidades chocan».",
-          ifNot: "Si todavía la marca, el deploy no tiene el #225. Confirmá en Vercel qué commit está sirviendo antes de anotarlo como fallo."
-        },
         {
           code: "J2.2", title: "Los nombres de los ocho niveles", sub: "Contra la tabla 2.2 del archivo de Jordi",
           steps: ["Usá un set que tenga varias de estas: <code>8A→5A</code>, <code>8A→11B</code>, <code>8A→3A</code>", "Leé el motivo de cada fila"],
           expect: "«Energy Boost ++» para 8A→5A, «Cambio de mood» para 8A→11B, y «Energy Boost +++ (segunda opción)» para 8A→3A.",
           ifNot: "Pegame la fila entera. Los nombres salen de su tabla, así que si uno no coincide es un error de transcripción nuestro y se arregla en un renglón."
-        },
-        {
-          code: "J2.3", title: "El margen de ±7% de BPM", sub: "Su sección 2.3 — se reporta, no puntúa",
-          steps: ["Poné dos tracks con la misma key y BPM lejanos: 124 y 136", "Mirá la lista de transiciones"],
-          expect: "La fila aparece con la etiqueta <strong>Tempo</strong> (no «Áspera») y dice «diferencia de BPM de +9.7% (margen ±7%)».",
-          ifNot: "Si no aparece, fijate que los dos tracks tengan BPM: sin BPM de un lado no hay lectura de tempo, y eso es a propósito."
-        },
-        {
-          code: "J2.4", title: "Mitad de tiempo no es un salto del 50%", sub: "174 contra 87",
-          steps: ["Dos tracks a 174 y 87 BPM", "Mirá si la transición se marca por tempo"],
-          expect: "No se marca. Es un beat contra dos, y la fila lo dice: «a mitad de tiempo».",
-          ifNot: "Si la marca como fuera de margen, es un falso positivo y arruina justo los sets de drum and bass. Severidad media."
         }
       ]
     },
@@ -790,9 +684,9 @@
           ifNot: "Un test puede afirmar que la etiqueta existe; que la imagen resuelva y tenga el tamaño correcto sólo lo dice un scraper. Si falta la imagen, anotá en cuál de los tres."
         },
         {
-          code: "SEO.5", title: "Sitemap en producción y Search Console", sub: "Sólo vos tenés la consola",
-          steps: ["<code>curl -s https://energycurve.app/sitemap.xml | grep -c \'&lt;loc&gt;\'</code>", "Confirmá el número contra el build del día", "Search Console ya está reclamada (19/09): reenviá el sitemap", "Volvé en unos días a mirar cobertura y errores de hreflang"],
-          expect: "El número que devuelva el build del día — eran 24 cuando se escribió esta prueba, 78 desde la fundación de contenido y <strong>115</strong> en producción el 02/10 — y Search Console lo acepta sin errores de hreflang. <code>/blog</code> está desde que hay artículos en inglés: dejó de ser <code>noindex</code>, y eso lo vigila <code>tests/locale-routing.test.ts</code>.",
+          code: "SEO.5", title: "El sitemap en Search Console", sub: "Sólo vos tenés la consola",
+          steps: ["Search Console: reenviá el sitemap", "Volvé en unos días a mirar cobertura y errores de hreflang"],
+          expect: "Search Console lo acepta sin errores de hreflang. Que el sitemap liste las rutas públicas y que cada una responda 200 ya lo hacen <code>e2e/public-surface.spec.ts</code> y <code>e2e/sitemap-links.spec.ts</code> en cada corrida.",
           ifNot: "Los errores de hreflang aparecen días después, no al subirlo. Agendate la vuelta o esta prueba queda a medias."
         }
       ]
@@ -846,12 +740,6 @@
           ifNot: "El barrido de axe ya cubre las ocho páginas de herramientas —se agregaron el 17/09— y da cero violaciones. Lo que axe no ve es justamente esto: que el recorrido por teclado tenga sentido y que el lector de pantalla anuncie algo útil. Un hallazgo acá es real aunque el barrido esté verde."
         },
         {
-          code: "TOOL.8", title: "Lo que la herramienta rechaza", sub: "Un error que explica sirve; uno genérico no",
-          steps: ["Probá un set de dos temas", "Un archivo corrupto a propósito", "Un formato que no soporta, un PDF por ejemplo"],
-          expect: "Cada uno dice qué pasó y cómo seguir, sin dejar la página a medias.",
-          ifNot: "Ésta es la primera página del producto que ve alguien que llegó de Google. Un mensaje genérico acá cuesta más que adentro."
-        },
-        {
           code: "TOOL.9", title: "Que Google la encuentre", sub: "Semanas de calendario, no de esfuerzo",
           steps: ["Confirmá que las 4 URLs nuevas estén en el sitemap y devuelvan 200", "Subilas en Search Console", "Volvé en unos días: indexación, y si aparece el rich result de FAQ"],
           expect: "Las cuatro indexadas, y el FAQ mostrándose como rich result en la página de la herramienta.",
@@ -872,12 +760,6 @@
           ifNot: "Si falta o sobra una, el problema puede estar en la tabla misma y no en la rueda: eso toca también el reordenamiento. Anotá la clave de origen y la que sobra o falta."
         },
         {
-          code: "TOOL2.2", title: "La tabla de equivalencias, contra su sección 2.1", sub: "La que él tenía mal en 10 de 24 filas",
-          steps: ["Abrí la tabla de equivalencias de la rueda", "Compará Camelot ↔ Open Key ↔ tonalidad contra la sección 2.1 del archivo de Jordi", "Prestá atención a las filas 3A a 7B, que son las que él tiene mal"],
-          expect: "Nuestra tabla dice <code>3A = 8m = Bb menor</code>, no C menor. Donde discrepe con la de él, la correcta es la nuestra.",
-          ifNot: "Si discrepa en una fila fuera de ese rango, entonces sí es nuestra y hay que mirarla."
-        },
-        {
           code: "TOOL2.3", title: "El pitch sin key lock, contra un deck real", sub: "Lo único de esta lista que necesita hardware",
           steps: ["En el chequeador poné dos temas con BPM distintos y key lock apagado", "Anotá en qué clave dice que cae el tema entrante", "Hacé lo mismo en el CDJ o el controlador: mismo pitch, y mirá qué clave reporta el equipo"],
           expect: "Coinciden. Y cuando el corrimiento cae entre dos claves, la herramienta lo dice en vez de inventar una.",
@@ -888,12 +770,6 @@
           steps: ["Mismo par de temas, key lock encendido en los dos lados"],
           expect: "La herramienta dice que la clave no se mueve, y el equipo tampoco la mueve.",
           ifNot: "Si el equipo sí la corre con key lock puesto, es del equipo — pero anotalo igual, porque cambia el consejo."
-        },
-        {
-          code: "TOOL2.5", title: "Mitad y doble tiempo con temas reales", sub: "174 contra 87, en serio",
-          steps: ["Cargá un tema de 174 y uno de 87 en el chequeador", "Después probá 128 contra 64"],
-          expect: "Los lee como tempos emparejados, no como saltos del 50%, y lo dice.",
-          ifNot: "Un falso positivo acá arruina justo los sets de drum and bass, que es donde más se usa."
         },
         {
           code: "TOOL2.6", title: "La rueda en el teléfono", sub: "Es un canvas, y se toca con el dedo",
@@ -1132,12 +1008,6 @@
       why: "El lote 4 tiene un resultado incómodo y vale leerlo antes de probar: <strong>el diagnóstico del LCP que traía el repo era incorrecto</strong>. No era <code>SectionReveal</code>: el elemento que Lighthouse mide es el párrafo del banner de cookies, y la prueba más barata estaba a mano — <code>/pricing</code> no usa <code>SectionReveal</code> y tenía el mismo LCP. Medido aparte: con banner 2856 ms, sin banner 1104 ms. Así que el umbral de 7 s <strong>no se bajó</strong> y lo que falta es una decisión de copy, no de código. Todo en <code>docs/qa/lighthouse-budgets.md</code>. El resto del lote son los CTAs de contenido, la entidad de la organización y los dos artículos que contradecían la tabla armónica desde el #237.",
       tests: [
         {
-          code: "SEO4.1", title: "La primera pantalla sin JavaScript", sub: "Lo que el arreglo de SectionReveal sí arregla",
-          steps: ["Abrí <code>/</code> en el navegador con JavaScript deshabilitado (DevTools → Settings → Debugger → Disable JavaScript)", "Mirá si el hero se ve entero: logo, la frase de la capa, las tres tarjetas", "Repetí en <code>/es</code>", "Volvé a habilitar JS y recargá"],
-          expect: "El hero se ve completo y nítido sin JavaScript. Antes de este lote quedaba invisible — estaba en el HTML pero dentro de un <code>opacity: 0</code> hasta que React atachaba.",
-          ifNot: "Si algo de la primera pantalla sigue en blanco sin JS, quedó un <code>SectionReveal</code> sin <code>eager</code> arriba del pliegue. Anotá qué bloque."
-        },
-        {
           code: "SEO4.2", title: "El revelado de abajo del pliegue sigue andando", sub: "Que el arreglo no haya matado la animación",
           steps: ["Con JS habilitado, abrí <code>/</code> arriba de todo", "Bajá despacio y mirá cómo entran las secciones (features, cómo funciona, loop, story…)", "Repetí con <code>prefers-reduced-motion: reduce</code> activado en el sistema"],
           expect: "Las secciones de abajo siguen apareciendo con su fade-up al entrar. Sólo el hero cambió: ahora nace visible porque ya lo estás mirando. Con reduce motion no hay animación, igual que antes.",
@@ -1212,10 +1082,10 @@
           ifNot: "No lo pude hacer yo: la API de Reddit devuelve 403 sin OAuth y el dominio está bloqueado en el entorno donde corro. Está anotado como pase faltante en el mapa, junto con Search Console, que no tiene datos todavía porque el sitio se registró el 19/09."
         },
         {
-          code: "SEO5.7", title: "El banner con teclado y lector de pantalla", sub: "Cambió el texto, no la estructura — pero confirmalo",
-          steps: ["En una ventana privada, abrí <code>/es</code> y navegá al banner sólo con Tab", "Escuchá cómo lee el párrafo un lector de pantalla", "Tabulá hasta los dos botones y el link de la política", "Elegí «No, gracias» y confirmá que el banner se va y no vuelve al recargar"],
-          expect: "El párrafo se lee entero y de corrido, los dos botones tienen el mismo peso, y el link a la política es alcanzable con teclado. La barrida de accesibilidad automática sigue en 100 — pero eso no escucha, y esta prueba sí.",
-          ifNot: "Si el rechazo no persiste al recargar, mirá <code>localStorage</code>: la clave es <code>ec.analytics-consent.v1</code> y guarda el string pelado <code>denied</code>, no un JSON."
+          code: "SEO5.7", title: "El banner, escuchado", sub: "Lo que queda es la voz",
+          steps: ["En una ventana privada, abrí <code>/es</code> con VoiceOver encendido", "Llegá al banner y escuchá cómo lee el párrafo", "Seguí hasta los dos botones y el link de la política"],
+          expect: "El párrafo se lee entero y de corrido, y los dos botones se anuncian como botones, con su texto.",
+          ifNot: "Anotá qué leyó. Lo demás ya es automático en <code>e2e/consent.spec.ts</code>: que rechazar sea tan fácil como aceptar, que el rechazo persista al recargar y que el banner no tape ningún control."
         }
       ]
     },
@@ -1246,32 +1116,6 @@
       ]
     },
     {
-      code: "E2E",
-      title: "Las tres suites autenticadas, ya corridas",
-      meta: "~15 min · las cuentas ya están · ahora son automáticas",
-      why: "Al 02/10 (lote 16) son <strong>1266 pasan, 46 saltean, 0 fallan</strong>, la suite entera en 4,9 minutos. Esta sesión cambió de naturaleza el 25/09. Las tres specs del lote 6 se corrieron por primera vez y <strong>no funcionaban</strong>: 43 de 66 fallaban. Cuatro causas, todas reales — el spec hacía clic en el primer botón <code>submit</code>, que es «Log out»; la limpieza al final del archivo hacía que el plan FREE llegara a su tope de 3 playlists y el producto rechazara el resto, correctamente; la página hace streaming y durante el swap conviven dos árboles del DOM, así que un <code>id</code> único resolvía a dos elementos; y los tres proyectos corrían en paralelo contra una sola base. Ese día quedaron en <strong>64 pasan, 2 saltean, 0 fallan</strong>. Lo que te queda a vos es confirmarlo y mirar lo que un test no mira.",
-      tests: [
-        {
-          code: "E2E.1", title: "La suite entera, como línea de base del día", sub: "Es el primer comando de la mañana",
-          steps: ["<code>cd ~/Documents/code/energycurve</code>", "<code>npm run test:e2e</code>", "Leé sólo el resumen final"],
-          expect: "<strong>1266 pasan, 46 saltean, 0 fallan</strong>, en 4,9 minutos, sin reintentos. Medido el 02/10 (lote 16) sobre un build limpio. Los saltos son a propósito: el arco de pagos sin <code>stripe listen</code> (PAY.2), el sitemap que corre sólo en Chromium, el importador que corre una vez sobre FREE, el test del plan free en PRO y PRO+, y el del request de PostHog, sólo en Chromium.",
-          ifNot: "Si falla algo de import o export, mirá primero DB.2: una migración parcial es la causa más probable. Si fallan las dos de consent y login, el build salió sin <code>.env.local</code> — un worktree nuevo no lo hereda. Los dos casos te lo dicen en el mensaje del fallo. Un test que falla no se reintenta: un <code>retry</code> anula justo lo que el test vigila."
-        },
-        {
-          code: "E2E.2", title: "Que la base quede como estaba", sub: "La propiedad que las hace repetibles",
-          steps: ["Antes de correr, contá las playlists de dev", "Corré la suite entera", "Volvé a contar"],
-          expect: "El mismo número. Verificado el 25/09: 1 antes, 1 después, y la que queda es «Warehouse Opening Test», de julio. Las specs borran lo que crearon después de <strong>cada</strong> test, y borran por dueño y ventana de tiempo — no sólo por los ids que alcanzaron a registrar.",
-          ifNot: "Si quedan playlists «Synthetic Set», la limpieza no corrió. Importa más de lo que parece: dos huérfanas alcanzan para llenar el tope de 3 de la cuenta FREE y hacer fallar la corrida siguiente entera."
-        },
-        {
-          code: "E2E.3", title: "Lo que el E2E ahora cubre y vos ya no tenés que hacer a mano", sub: "Para que no repitas trabajo",
-          steps: ["Leé esta lista antes de planificar el día"],
-          expect: "Automático desde hoy: importar en los <strong>cuatro formatos</strong> (Rekordbox XML, Traktor NML, M3U8, CSV) y ver los temas; que se dibuje la curva; que el set siga ahí después de recargar; que la página de comparación abra; <strong>los cinco formatos de export</strong> con el nombre de archivo exacto y un solo punto; y que <code>CUE_V2</code> y <code>AUDIO_ID</code> sobrevivan el viaje de ida y vuelta — el P0 del 07/09 visto desde afuera.",
-          ifNot: "Lo que sigue siendo tuyo: si la curva <em>se ve</em> bien, si el orden que propone <em>suena</em> bien, y el export abierto en Rekordbox o Traktor de verdad. Un test confirma que el archivo tiene los cues; sólo Traktor dice qué hace Traktor al importarlo."
-        }
-      ]
-    },
-    {
       code: "PAY",
       title: "El camino del dinero, ahora automático",
       meta: "~20 min · necesita el CLI de Stripe · modo test siempre",
@@ -1282,12 +1126,6 @@
           steps: ["En una terminal aparte: <code>stripe listen --forward-to http://127.0.0.1:3010/api/billing/webhook</code>", "Confirmá que dice <code>Ready!</code> y dejala abierta", "<code>npx playwright test e2e/subscription-billing.auth.spec.ts --project=auth-free</code>"],
           expect: "<strong>9 pasan, 0 fallan</strong> (3 son el login de las tres cuentas). Corrido dos veces seguidas el 25/09 con el mismo resultado, y dejando <strong>0 suscripciones vivas</strong> las dos veces.",
           ifNot: "Si el webhook contesta algo que no sea 200 en la terminal del listener, el secreto de firma del CLI no coincide con <code>STRIPE_WEBHOOK_SECRET</code> de <code>.env.local</code>. El CLI imprime el suyo al arrancar."
-        },
-        {
-          code: "PAY.2", title: "Que sin listener saltee en vez de mentir", sub: "Un verde sobre algo que no corrió es peor que un rojo",
-          steps: ["Cortá el <code>stripe listen</code>", "Corré el mismo comando de PAY.1", "Leé el motivo del skip"],
-          expect: "<strong>6 saltean, 0 fallan</strong>, y el motivo nombra el comando exacto a levantar. No dice «Stripe no configurado»: distingue entre no haber clave, no tener el CLI y no tener listener, porque dos de cada tres veces eso te mandaría al archivo equivocado.",
-          ifNot: "Si en vez de saltear falla, el que se rompió es el detector y no el producto."
         },
         {
           code: "PAY.3", title: "Lo que el test no puede contestar y sigue siendo tuyo", sub: "Leelo antes de planificar el día",
@@ -1332,44 +1170,20 @@
           steps: ["Con el deploy hecho, abrí el Rich Results Test de Google", "Pegá la URL de una comparación", "Repetí con la gemela en español"],
           expect: "Detecta <code>FAQPage</code> y <code>BreadcrumbList</code> sin errores. El <code>WebPage</code> lleva <code>lastReviewed</code> y las fuentes como <code>citation</code>.",
           ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa — anotá el campo exacto que nombre."
-        },
-        {
-          code: "CMP.5", title: "El toggle de idioma va a la gemela, no a un índice", sub: "Estas páginas no tienen índice",
-          steps: ["En <code>/compare/lexicon</code> cambiá el idioma", "Fijate dónde caés"],
-          expect: "En <code>/es/comparar/lexicon</code>. No hay <code>/compare</code>: cuatro páginas no necesitan una lista, y el lote 8 gastó una tarea sacando exactamente esa forma. <code>/compare</code> es un 404 con marca, a propósito.",
-          ifNot: "Si caés en la home, el toggle volvió a resolver contra un <code>LocalizedPath</code>."
         }
       ]
     },
     {
       code: "AUD",
       title: "Lo que la auditoría F1 dejó para verificar a mano",
-      meta: "~30 min · necesita las tres cuentas",
-      why: "La auditoría autenticada del 26/09 está entera en <code>docs/qa/auditoria-f1-autenticada-2026-09-26.md</code>: cuatro hallazgos, dos resultados negativos y una lista de lo que no cubre. <strong>No se arregló nada</strong> — el catálogo era el entregable. Estas filas son las que necesitan tu ojo o tu decisión.",
+      meta: "~15 min · necesita la cuenta FREE",
+      why: "La auditoría autenticada del 26/09 está entera en <code>docs/qa/auditoria-f1-autenticada-2026-09-26.md</code>: cuatro hallazgos, dos resultados negativos y una lista de lo que no cubre. <strong>No se arregló nada</strong> — el catálogo era el entregable. Estas filas son las que necesitan tu ojo o tu decisión. Desde el 06/10 la suite contesta tres: el banner en el dashboard a 390 px (AUD.1), el importador que lee antes de decir «listo» (AUD.2, que ya lo hacía <code>e2e/import-readiness.auth.spec.ts</code>) y la cuarta importación en FREE (AUD.4).",
       tests: [
-        {
-          code: "AUD.1", title: "El banner ya no tapa nada — validar el fix", sub: "Hallazgo A2 · arreglado el 26/09 en <code>54517d4</code> (lote 10)",
-          steps: ["Cuenta recién creada, o borrá <code>ec.analytics-consent.v1</code> del <code>localStorage</code>", "En el teléfono, a 390 px, abrí <code>/</code> y scrolleá hasta el final", "Tocá el último enlace del pie con el banner todavía visible", "Repetí en <code>/dashboard/playlists</code> con el botón de importar"],
-          expect: "El último enlace del pie queda <strong>por encima</strong> del banner y responde al toque; la página reserva el alto del banner en vez de dejarlo flotar encima. Medido el 26/09 a 390 px: el enlace pasó de y=697–717 (banner en y=638) a y=490–510. <strong>La mitad pública ya pasó</strong>: <code>/</code> a 390 px, confirmado el 01/10. Lo que queda es <code>/dashboard/playlists</code>, que necesita sesión. El test <code>leaves every control reachable</code> de <code>e2e/consent.spec.ts</code> recorre todos los controles y lo vigila.",
-          ifNot: "Si algo vuelve a quedar debajo, anotá qué control y a qué ancho: el test corre a escritorio en los cuatro navegadores, y un ancho raro es justo lo que no cubre."
-        },
-        {
-          code: "AUD.2", title: "El importador lee el archivo antes de decir «listo» — validar el fix", sub: "Hallazgo A3 · arreglado el 26/09 en <code>95db80a</code> (lote 10)",
-          steps: ["Elegí un <code>.txt</code> con dos líneas que no sean temas", "Elegí un XML de Rekordbox al que le hayas borrado la mitad", "Elegí un export válido de una playlist vacía", "Y como control, un export válido de temas <strong>sin BPM ni tonalidad</strong>"],
-          expect: "Los tres primeros dicen qué pasó —«doesn't look like a playlist», «cut off or damaged», «has no tracks in it»— y el botón Importar queda apagado. El cuarto dice <strong>«Ready to import · N tracks»</strong> con la cantidad y entra: la vara es un tema utilizable, a propósito baja. Lo que el lote 10 encontró al abrirlo: el formulario no parseaba nada, y el servidor tampoco chequeaba cero temas — un export vacío guardaba una playlist vacía.",
-          ifNot: "Si un archivo válido de tu software real dice que no lo reconoce, guardalo: los lectores cubren XML/TXT/M3U8 de Rekordbox, NML de Traktor y CSV con columna de título, y un export real que no entre es el mejor insumo para ampliarlos."
-        },
         {
           code: "AUD.3", title: "La cuota de IA se ve antes del clic — validar el fix", sub: "Hallazgo A4 · arreglado el 26/09 en <code>7066c64</code> (lote 10)",
           steps: ["Con la cuenta FREE (1 por mes), abrí el análisis de un set y mirá debajo del botón de Smart ordering", "Si todavía no usaste el del mes, usalo", "Importá otro set y abrí su análisis"],
           expect: "Antes de usarlo dice cuántos quedan. Después, el botón está <strong>apagado</strong>, dice «You've used this month's AI ordering» y al lado hay un enlace «More on PRO» a <code>/pricing</code>. El límite no se movió: sigue saliendo de <code>PLAN_LIMITS</code> y el servidor sigue decidiendo — esto sólo lo hace visible antes.",
           ifNot: "Si el botón aparece habilitado con la cuota en cero, mirá si la página se cargó antes de gastarla: la cuota se lee al renderizar, y una pestaña vieja la muestra vieja. Al apretar, el 402 ahora tiene su propia frase."
-        },
-        {
-          code: "AUD.4", title: "La cuarta importación en FREE", sub: "El hueco declarado de la auditoría",
-          steps: ["Con FREE en 3 playlists, intentá importar una cuarta", "Mirá qué pasa"],
-          expect: "Sin confirmar. El control de importación sigue presente en el tope; no se determinó si el intento se rechaza con un mensaje útil o si falla de otra forma.",
-          ifNot: "Si falla sin explicar, es severidad media: el producto está rechazando correctamente y pareciendo roto."
         },
         {
           code: "AUD.5", title: "Las ocho capabilities que quedaron sin ejercitar", sub: "Decidí si valen un lote",
@@ -1428,12 +1242,6 @@
           steps: ["Con el deploy hecho, pegá la URL de la guía en el Rich Results Test de Google", "Repetí con la gemela en inglés"],
           expect: "Detecta <code>TechArticle</code>, <code>BreadcrumbList</code> y <code>FAQPage</code> con las cuatro preguntas, sin errores.",
           ifNot: "Nuestros tests verifican que el JSON parsea y que los tipos están. Que Google lo acepte es otra cosa: anotá el campo exacto que nombre."
-        },
-        {
-          code: "GUIA.4", title: "El índice de guías volvió solo", sub: "La lógica del lote 8, verificada en la dirección que importa",
-          steps: ["Abrí <code>/es/guia</code> y <code>/guide</code>", "Mirá el footer de la home en los dos idiomas"],
-          expect: "El índice lista la guía, está indexable (sin <code>noindex</code>), está en el sitemap y el footer lo enlaza — sin que nadie tocara <code>isIndexable</code> ni <code>isEmptyIndex</code>. Los tests que afirmaban el estado vacío se dieron vuelta y el vacío quedó cubierto con un mock.",
-          ifNot: "Si el índice no aparece, el bug es de esa lógica y no de la guía: ése era el hallazgo posible, y no ocurrió."
         }
       ]
     },
@@ -1486,12 +1294,6 @@
           steps: ["Abrí <code>/es/tabla-de-mezcla-armonica</code>", "Tomá cinco filas al azar de la primera tabla — incluí alguna entre 3A y 7B, que son las que el archivo de Jordi tiene mal — y confirmá con tu oído, un piano o el propio Rekordbox que el código corresponde a esa tonalidad", "Repetí con la rueda SVG descargada"],
           expect: "Las cinco coinciden. 8B es Do mayor, 8A es La menor, 3A es Si♭ menor, 7B es Fa mayor. Si conocés una tabla que diga otra cosa, la que está mal es esa tabla.",
           ifNot: "Anotá el código y la tonalidad que ves. Un error acá es de <code>lib/music/camelot.ts</code>, no de la página, y toca al producto entero."
-        },
-        {
-          code: "ARM.2", title: "Una fila de movimientos contra la rueda interactiva", sub: "Que la tabla y la herramienta digan lo mismo",
-          steps: ["En la segunda tabla, leé la fila de <code>8A</code>", "Abrí <code>/es/herramientas/rueda-camelot</code> y elegí 8A", "Compará: las tonalidades iluminadas en la rueda tienen que ser exactamente las de la fila, con los mismos nombres de movimiento"],
-          expect: "Coinciden, porque las dos leen la misma constante. Los paréntesis de la tabla son la segunda opción de un nivel.",
-          ifNot: "Si difieren, una de las dos dejó de leer la constante. Anotá cuál."
         },
         {
           code: "ARM.3", title: "La descarga", sub: "Un archivo, no una captura",
