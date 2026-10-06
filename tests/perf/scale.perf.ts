@@ -38,6 +38,8 @@ const { listPlaylists, reorderTracks, getOwnedPlaylistWithTracks } = await impor
   "@/services/playlist-service"
 )
 const { buildAccountExport } = await import("@/services/data-export-service")
+const { getGlobalLibrary } = await import("@/services/library-service")
+const { trackKey } = await import("@/lib/playlists/set-comparison")
 
 export const LEVELS = [
   { seed: 1601, playlists: 10, tracks: 50 },
@@ -106,6 +108,38 @@ describe("breaking points, with numbers", () => {
       const list = await safe(() => listPlaylists(profileId))
       const listed = list.value ? list.value.reduce((sum, p) => sum + p.trackCount, 0) : null
       const exported = await safe(() => buildAccountExport(profileId), 1)
+      const library = await safe(() => getGlobalLibrary(profileId), 1)
+
+      // Lote 17: a length can be right and the file still wrong — offset paging
+      // over a non-unique order can repeat one row and drop another. So the
+      // export is checked by distinct ids, and its size is recorded against
+      // Vercel's 4.5 MB ceiling on an unstreamed function response.
+      const exportedTracks = exported.value?.tracks ?? []
+      const distinctTrackIds = new Set(exportedTracks.map((track) => track.id)).size
+      const exportBytes = exported.value
+        ? Buffer.byteLength(JSON.stringify(exported.value, null, 2))
+        : null
+      // The library's truth is the distinct records among every track the
+      // user owns, read from the database directly rather than from a service.
+      const { data: allTracks } = await supabase
+        .from("playlists")
+        .select("id")
+        .eq("user_id", profileId)
+      const ownedIds = (allTracks ?? []).map((row) => row.id as string)
+      const truthKeys = new Set<string>()
+      for (let start = 0; start < ownedIds.length; start += 300) {
+        const chunk = ownedIds.slice(start, start + 300)
+        for (let from = 0; ; from += 1000) {
+          const { data } = await supabase
+            .from("tracks")
+            .select("artist, name")
+            .in("playlist_id", chunk)
+            .order("id")
+            .range(from, from + 999)
+          for (const row of data ?? []) truthKeys.add(trackKey(row.artist as string, row.name as string))
+          if (!data || data.length < 1000) break
+        }
+      }
 
       results[`level_${level.playlists}x${level.tracks}`] = {
         truth: { playlists: level.playlists, tracks: truthTracks },
@@ -127,6 +161,9 @@ describe("breaking points, with numbers", () => {
               sumOfTrackCounts: listed,
               correct: listed === truthTracks && list.value!.length === level.playlists,
               playlistsShowingZero: list.value!.filter((p) => p.trackCount === 0).length,
+              // Every set's own count, not only the sum: a sum can come out
+              // right while two sets trade numbers.
+              everySetExact: list.value!.every((p) => p.trackCount === level.tracks),
             },
         export: exported.error
           ? { error: exported.error }
@@ -134,9 +171,21 @@ describe("breaking points, with numbers", () => {
               ms: exported.ms,
               playlists: exported.value?.playlists.length ?? null,
               tracks: exported.value?.tracks.length ?? null,
+              distinctTrackIds,
+              bytes: exportBytes,
               correct:
                 exported.value?.tracks.length === truthTracks &&
+                distinctTrackIds === truthTracks &&
                 exported.value?.playlists.length === level.playlists,
+            },
+        library: library.error
+          ? { error: library.error }
+          : {
+              ms: library.ms,
+              recordCount: library.value!.recordCount,
+              truthRecords: truthKeys.size,
+              truncated: library.value!.truncated,
+              correct: library.value!.recordCount === truthKeys.size && !library.value!.truncated,
             },
       }
     })

@@ -13,6 +13,7 @@ import {
   type LockState,
 } from "@/lib/playlists/edit-lock"
 import { can } from "@/lib/product/capabilities"
+import { fetchAllRowsIn } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { getProfileBilling } from "@/services/billing-service"
 import { getOwnedPlaylist, getPlaylistWithTracksById } from "@/services/playlist-service"
@@ -37,7 +38,8 @@ export interface Suggestion {
 export interface SharedSetSummary {
   playlistId: string
   name: string
-  trackCount: number
+  /** Null when the count could not be read: shown as nothing, never as 0. */
+  trackCount: number | null
   ownerEmail: string
   sharedAt: string
 }
@@ -224,28 +226,49 @@ export async function listSharedWithMe(
   return live.map((row) => ({
     playlistId: row.playlist_id,
     name: row.playlists!.name,
-    trackCount: counts.get(row.playlist_id) ?? 0,
+    trackCount: counts?.get(row.playlist_id) ?? null,
     ownerEmail: row.profiles?.email ?? "",
     sharedAt: row.created_at,
   }))
 }
 
-async function trackCounts(playlistIds: string[]): Promise<Map<string, number>> {
+/**
+ * Track counts for the sets shared with someone.
+ *
+ * The third copy of the counting defect of docs/qa/carga-2026-10.md (point 5,
+ * H-21): it fetched one `tracks` row per track to tally them, so past 1,000
+ * tracks across the shared sets the counts came out of whichever rows made the
+ * first page, and an `in()` of every shared set id would fail from ~400 sets.
+ * On any error it returned an empty map, and every set rendered as 0.
+ *
+ * Now each set's count comes from the database (`tracks(count)`, no track rows
+ * in the body), the id list is split by `fetchAllRowsIn`, and a failed read
+ * returns null so the page shows no number rather than a wrong one.
+ */
+async function trackCounts(playlistIds: string[]): Promise<Map<string, number> | null> {
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
-    .from("tracks")
-    .select("playlist_id")
-    .in("playlist_id", playlistIds)
+  const { rows, error } = await fetchAllRowsIn<
+    { id: string; tracks: Array<{ count: number }> | null },
+    string
+  >(playlistIds, (chunk, from, to) =>
+    supabase
+      .from("playlists")
+      .select("id, tracks(count)")
+      .in("id", chunk)
+      .order("id", { ascending: true })
+      .range(from, to) as never
+  )
 
   if (error) {
-    return new Map()
+    logError("collaboration.track_counts_failed", error, {})
+    return null
   }
 
   const counts = new Map<string, number>()
 
-  for (const row of data ?? []) {
-    const id = row.playlist_id as string
-    counts.set(id, (counts.get(id) ?? 0) + 1)
+  for (const row of rows) {
+    const count = row.tracks?.[0]?.count
+    if (typeof count === "number") counts.set(row.id, count)
   }
 
   return counts

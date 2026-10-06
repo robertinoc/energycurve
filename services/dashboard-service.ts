@@ -1,5 +1,5 @@
 import "server-only"
-import { fetchAllRows } from "@/lib/supabase/paginate"
+import { countRowsIn, fetchAllRows } from "@/lib/supabase/paginate"
 
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
@@ -72,15 +72,21 @@ export async function getDashboardSnapshot(
      * `head: true` asks the same question and brings back no body at all.
      *
      * The per-set counts are only rendered for the five most recent sets
-     * (`LATEST_PLAYLISTS_LIMIT`), so this is six bodiless queries whatever the
-     * library holds — not one per playlist.
+     * (`LATEST_PLAYLISTS_LIMIT`), so this is a handful of bodiless queries
+     * whatever the library holds — not one per playlist.
+     *
+     * The total goes through `countRowsIn`, which splits the id list: an `in()`
+     * travels in the URL, and from ~400 playlists the request failed and the
+     * whole dashboard with it (docs/qa/carga-2026-10.md, point 1).
      */
     const [{ count: total, error: tracksError }, ...perPlaylist] =
       await Promise.all([
-        supabase
-          .from("tracks")
-          .select("id", { count: "exact", head: true })
-          .in("playlist_id", playlistIds),
+        countRowsIn(playlistIds, (chunk) =>
+          supabase
+            .from("tracks")
+            .select("id", { count: "exact", head: true })
+            .in("playlist_id", chunk)
+        ),
         ...latestRows.map((playlist) =>
           supabase
             .from("tracks")
@@ -94,7 +100,7 @@ export async function getDashboardSnapshot(
       throw new Error("Unable to load tracks for the dashboard.")
     }
 
-    trackCount = total ?? 0
+    trackCount = total
 
     for (const result of perPlaylist) {
       trackCounts.set(result.id, result.count ?? 0)

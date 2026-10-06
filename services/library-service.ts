@@ -4,7 +4,7 @@ import { logError } from "@/lib/observability/logger"
 import { buildLibrary, type LibrarySummary } from "@/lib/playlists/library"
 import { trackKey } from "@/lib/playlists/set-comparison"
 import { parseSnapshot } from "@/lib/playlists/versions"
-import { fetchAllRows } from "@/lib/supabase/paginate"
+import { fetchAllRows, fetchAllRowsIn } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 
 /**
@@ -26,6 +26,7 @@ export async function getGlobalLibrary(
         .from("playlists")
         .select("id, name")
         .eq("user_id", profileId)
+        .order("id", { ascending: true })
         .range(from, to)
   )
 
@@ -42,22 +43,33 @@ export async function getGlobalLibrary(
     playlists.map((playlist) => [playlist.id, playlist.name])
   )
 
+  /**
+   * Both reads split the id list and order by a unique key.
+   *
+   * Split, because an `in()` of every playlist id travels in the URL and fails
+   * from ~400 sets; this page then logged the error and showed an empty library
+   * (docs/qa/carga-2026-10.md). Ordered, because offset paging without an order
+   * is free to repeat one row and skip another between pages.
+   */
   const [tracksResult, versionsResult] = await Promise.all([
-    fetchAllRows((from, to) =>
+    fetchAllRowsIn(playlistIds, (chunk, from, to) =>
       supabase
         .from("tracks")
         .select("artist, name, bpm, musical_key, playlist_id")
-        .in("playlist_id", playlistIds)
+        .in("playlist_id", chunk)
+        .order("playlist_id", { ascending: true })
+        .order("position", { ascending: true })
         .range(from, to)
     ),
     // Only 'played' versions: the question is what actually got played, and a
     // curated order is a plan, not a night.
-    fetchAllRows((from, to) =>
+    fetchAllRowsIn(playlistIds, (chunk, from, to) =>
       supabase
         .from("playlist_versions")
         .select("tracks")
-        .in("playlist_id", playlistIds)
+        .in("playlist_id", chunk)
         .eq("kind", "played")
+        .order("id", { ascending: true })
         .range(from, to)
     ),
   ])

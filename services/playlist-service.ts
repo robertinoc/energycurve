@@ -1,6 +1,7 @@
 import "server-only"
 
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
+import { fetchAllRows } from "@/lib/supabase/paginate"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
 import { finalPositions, isValidReorder } from "@/lib/tracklist/reorder"
@@ -213,53 +214,67 @@ export async function createPlaylistWithTracks(
   return playlist
 }
 
+/**
+ * Every set the user owns, each with its track count.
+ *
+ * Runs in the dashboard layout, so on every dashboard page. It used to fetch one
+ * `tracks` row per track and tally them, which broke twice
+ * (docs/qa/carga-2026-10.md, point 5, H-21):
+ *
+ * - **Silently from 1,000 tracks in total.** PostgREST stops at 1,000 rows
+ *   without saying so; the tally then counted whichever tracks made the first
+ *   page. At 30,000 tracks, 96 of 100 sets showed 0.
+ * - **Loudly from ~400 sets.** The tracks were filtered with an `in()` of every
+ *   playlist id, which travels in the URL and stops fitting around 400.
+ *
+ * Now the database counts: `tracks(count)` is PostgREST's per-row count of a
+ * related table, one number per set and no track rows in the body, with no id
+ * list at all. One request per thousand sets. The sets themselves page, so a
+ * user with more than a thousand of them gets all of them.
+ */
 export async function listPlaylists(
   profileId: string
 ): Promise<PlaylistWithTrackCount[]> {
   const supabase = getSupabaseAdminClient()
 
-  const { data: playlists, error } = await supabase
-    .from("playlists")
-    .select(PLAYLIST_WITH_NAMES_SELECT)
-    .eq("user_id", profileId)
-    .order("updated_at", { ascending: false })
+  const { rows: playlists, error, truncated } = await fetchAllRows<
+    Playlist & PlaylistNameJoins & { tracks: Array<{ count: number }> | null }
+  >(
+    (from, to) =>
+      supabase
+        .from("playlists")
+        .select(`${PLAYLIST_WITH_NAMES_SELECT}, tracks(count)`)
+        .eq("user_id", profileId)
+        .order("updated_at", { ascending: false })
+        .order("id", { ascending: true })
+        .range(from, to) as never
+  )
 
   if (error) {
     logError("playlist.list_failed", error, { profileId })
     throw new Error("Unable to load your playlists.")
   }
 
-  const rows = ((playlists ?? []) as unknown as Array<
-    Playlist & PlaylistNameJoins
-  >).map(flattenTaxonomyNames)
-
-  if (rows.length === 0) {
-    return []
+  if (truncated) {
+    // 50,000 sets. Logged rather than thrown: a list that stops there is still
+    // every set anyone could scroll to, and the log says the ceiling was met.
+    logWarn("playlist.list_truncated", { profileId, rows: playlists.length })
   }
 
-  const { data: trackRows, error: tracksError } = await supabase
-    .from("tracks")
-    .select("playlist_id")
-    .in(
-      "playlist_id",
-      rows.map((playlist) => playlist.id)
-    )
+  return playlists.map(({ tracks, ...playlist }) => {
+    const count = tracks?.[0]?.count
 
-  if (tracksError) {
-    logError("playlist.track_counts_failed", tracksError, { profileId })
-    throw new Error("Unable to load your playlists.")
-  }
+    if (typeof count !== "number") {
+      // A missing count is not a zero. Refusing beats a dashboard of empty sets.
+      logError("playlist.track_counts_failed", new Error("track count missing"), {
+        profileId,
+        playlistId: playlist.id,
+      })
+      throw new Error("Unable to load your playlists.")
+    }
 
-  const counts = new Map<string, number>()
-
-  for (const row of trackRows ?? []) {
-    counts.set(row.playlist_id, (counts.get(row.playlist_id) ?? 0) + 1)
-  }
-
-  return rows.map((playlist) => ({
-    ...playlist,
-    trackCount: counts.get(playlist.id) ?? 0,
-  }))
+    return { ...flattenTaxonomyNames(playlist), trackCount: count }
+  })
 }
 
 export async function getOwnedPlaylist(

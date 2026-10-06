@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { fetchAllRows } from "@/lib/supabase/paginate"
+import {
+  chunkIds,
+  countRowsIn,
+  fetchAllRows,
+  fetchAllRowsIn,
+  IN_FILTER_CHUNK,
+} from "@/lib/supabase/paginate"
 
 /** A fake table of `total` rows that answers range requests like PostgREST. */
 function table(total: number, pageSize: number) {
@@ -103,5 +109,84 @@ describe("fetchAllRows", () => {
 
     expect(result.rows).toEqual([])
     expect(result.error).toBeNull()
+  })
+})
+
+describe("splitting an in() list (lote 17)", () => {
+  it("drops repeated ids before splitting, so chunk counts can be summed", () => {
+    expect(chunkIds(["a", "b", "a", "c"], 2)).toEqual([["a", "b"], ["c"]])
+  })
+
+  it("refuses a chunk size that would loop forever or split nothing", () => {
+    expect(() => chunkIds(["a"], 0)).toThrow()
+    expect(() => chunkIds(["a"], 1.5)).toThrow()
+  })
+
+  it("asks once per chunk and returns every row, in chunk order", async () => {
+    const ids = Array.from({ length: IN_FILTER_CHUNK * 2 + 1 }, (_, index) => index)
+    const fetchPage = vi.fn(async (chunk: number[], from: number) => ({
+      data: from === 0 ? chunk.map((id) => ({ id })) : [],
+      error: null,
+    }))
+
+    const result = await fetchAllRowsIn(ids, fetchPage, { pageSize: 1000 })
+
+    expect(fetchPage.mock.calls.map(([chunk]) => chunk.length)).toEqual([
+      IN_FILTER_CHUNK,
+      IN_FILTER_CHUNK,
+      1,
+    ])
+    expect(result.rows.map((row) => row.id)).toEqual(ids)
+    expect(result).toMatchObject({ truncated: false, error: null })
+  })
+
+  it("holds the ceiling across chunks, not per chunk", async () => {
+    // Splitting the list must not multiply what one call may read: three
+    // chunks of 100 under a ceiling of 150 stop at 150 and say so.
+    const ids = Array.from({ length: 300 }, (_, index) => index)
+    const fetchPage = vi.fn(async (chunk: number[], from: number, to: number) => ({
+      data: chunk.slice(from, to + 1).map((id) => ({ id })),
+      error: null,
+    }))
+
+    const result = await fetchAllRowsIn(ids, fetchPage, {
+      chunkSize: 100,
+      pageSize: 50,
+      maxRows: 150,
+    })
+
+    expect(result.rows).toHaveLength(150)
+    expect(result.truncated).toBe(true)
+  })
+
+  it("stops at the first error and hands it back with the rows so far", async () => {
+    const fetchPage = vi
+      .fn()
+      .mockResolvedValueOnce({ data: [{ id: 1 }], error: null })
+      .mockResolvedValueOnce({ data: null, error: new Error("boom") })
+
+    const result = await fetchAllRowsIn([1, 2], fetchPage, { chunkSize: 1 })
+
+    expect(result.rows).toEqual([{ id: 1 }])
+    expect(result.error).toBeInstanceOf(Error)
+  })
+})
+
+describe("counting over a split in() list (lote 17)", () => {
+  it("sums the chunks", async () => {
+    const result = await countRowsIn(
+      Array.from({ length: 701 }, (_, index) => index),
+      async (chunk) => ({ count: chunk.length * 2, error: null })
+    )
+
+    expect(result).toEqual({ count: 1402, error: null })
+  })
+
+  it("treats a missing count as an error, never as zero", async () => {
+    const result = await countRowsIn([1, 2], async () => ({ count: null, error: null }), {
+      chunkSize: 1,
+    })
+
+    expect(result.error).toBeInstanceOf(Error)
   })
 })
