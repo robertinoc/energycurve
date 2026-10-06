@@ -335,6 +335,18 @@ interface StructuredDataOptions {
  */
 const ENTITY_PROFILES: readonly string[] = [
   "https://www.instagram.com/energycurve.app/",
+  // SEO-E22, the rest — NOT applied (lote 18, 06/10/2026). Uncomment a line
+  // only the day its profile exists, with the URL it really ended up at: the
+  // handles below are proposals, unchecked. A `sameAs` to a profile that does
+  // not exist is a broken entity signal, worse than no line at all. What to
+  // paste into each profile is in docs/seo/entidad-perfiles.md.
+  //
+  // "https://www.producthunt.com/products/energycurve",
+  // "https://alternativeto.net/software/energycurve/",
+  // "https://www.crunchbase.com/organization/stagelink-llc", // the operating company's profile, EnergyCurve as its product
+  // "https://x.com/energycurveapp",
+  // "https://www.tiktok.com/@energycurve.app",
+  // "https://www.wikidata.org/wiki/Q…", // the item id is assigned on creation
 ]
 
 export function buildOrganization(locale: SiteLocale = "en") {
