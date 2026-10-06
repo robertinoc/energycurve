@@ -24,6 +24,46 @@ import { getProfileBilling } from "./billing-service"
 
 const MOVE_TEMP_POSITION_OFFSET = 100000
 
+/**
+ * Updates in flight at once while saving a reorder.
+ *
+ * Each phase used to fire one update per track all together. At a thousand
+ * tracks that is a thousand simultaneous requests from one process, and against
+ * dev one of them failed with `TypeError: fetch failed` in the second of four
+ * consecutive saves (docs/qa/carga-2026-10.md, lote 17). Bounded, the same
+ * writes go out in waves and none of them is the one that drops.
+ */
+const REORDER_WRITE_CONCURRENCY = 32
+
+/**
+ * Every track of one set, in order, past PostgREST's 1,000-row ceiling.
+ *
+ * The three readers below used a single unranged select. A set of 1,200 tracks
+ * then rendered as 1,000 on its own page, with nothing saying so, and a reorder
+ * of it was validated against the 1,000 it could see. `(playlist_id, position)`
+ * is unique, so ordering by position pages stably.
+ */
+async function readSetTracks(
+  playlistId: string
+): Promise<{ tracks: Track[]; error: unknown }> {
+  const supabase = getSupabaseAdminClient()
+  const { rows, error, truncated } = await fetchAllRows<Track>((from, to) =>
+    supabase
+      .from("tracks")
+      .select("*")
+      .eq("playlist_id", playlistId)
+      .order("position", { ascending: true })
+      .range(from, to) as never
+  )
+
+  if (truncated) {
+    // 50,000 tracks in one set: refuse rather than show part of it as all.
+    return { tracks: rows, error: new Error("set exceeds the row ceiling") }
+  }
+
+  return { tracks: rows, error }
+}
+
 export interface PlaylistCreateData {
   name: string
   genre: SupportedGenre
@@ -310,20 +350,14 @@ export async function getOwnedPlaylistWithTracks(
     return null
   }
 
-  const supabase = getSupabaseAdminClient()
-
-  const { data: tracks, error } = await supabase
-    .from("tracks")
-    .select("*")
-    .eq("playlist_id", playlistId)
-    .order("position", { ascending: true })
+  const { tracks, error } = await readSetTracks(playlistId)
 
   if (error) {
     logError("playlist.tracks_load_failed", error, { profileId, playlistId })
     throw new Error("Unable to load the playlist tracks.")
   }
 
-  return { ...playlist, tracks: tracks ?? [] }
+  return { ...playlist, tracks }
 }
 
 /**
@@ -362,18 +396,14 @@ export async function getPlaylistWithTracksById(
     return null
   }
 
-  const { data: tracks, error: tracksError } = await supabase
-    .from("tracks")
-    .select("*")
-    .eq("playlist_id", playlistId)
-    .order("position", { ascending: true })
+  const { tracks, error: tracksError } = await readSetTracks(playlistId)
 
   if (tracksError) {
     logError("playlist.public_tracks_load_failed", tracksError, { playlistId })
     return null
   }
 
-  return { ...(playlist as unknown as PlaylistWithTracks), tracks: tracks ?? [] }
+  return { ...(playlist as unknown as PlaylistWithTracks), tracks }
 }
 
 /** Renames a playlist and sets its optional description (V3 feedback). */
@@ -465,20 +495,14 @@ export async function deletePlaylist(
 }
 
 async function getOrderedTracks(playlistId: string): Promise<Track[]> {
-  const supabase = getSupabaseAdminClient()
-
-  const { data, error } = await supabase
-    .from("tracks")
-    .select("*")
-    .eq("playlist_id", playlistId)
-    .order("position", { ascending: true })
+  const { tracks, error } = await readSetTracks(playlistId)
 
   if (error) {
     logError("track.list_failed", error, { playlistId })
     throw new Error("Unable to load the playlist tracks.")
   }
 
-  return data ?? []
+  return tracks
 }
 
 export async function addTrack(
@@ -916,61 +940,90 @@ async function reorderAuthorized(
   const supabase = getSupabaseAdminClient()
 
   /**
-   * Two phases still, issued together within each.
+   * Two phases, and only the tracks that move.
    *
    * The phases are not an implementation detail to tidy away: `tracks` carries
-   * `unique (playlist_id, position)`, so parking every track 100,000 clear of
-   * the real range is what stops the new order colliding with the old one part
-   * way through. **Phase one must finish before phase two starts**, and
-   * collapsing them into a single `Promise.all` would look faster and violate
-   * the constraint.
+   * `unique (playlist_id, position)`, so parking the moving tracks clear of the
+   * real range is what stops the new order colliding with the old one part way
+   * through. **Phase one must finish before phase two starts.**
    *
-   * Inside a phase there is nothing to serialise. The positions written by one
-   * phase are distinct from each other and cannot collide with anything the
-   * other phase has touched, so the updates were only ever sequential because
-   * they were written with `await` inside a `for`. A hundred-track set took two
-   * hundred round trips end to end; it now takes two waits.
+   * Three changes from the version that wrote every track twice, all about how
+   * many writes a save makes and none about the order it saves
+   * (docs/qa/carga-2026-10.md, point 4):
+   *
+   * - **Only the tracks whose position changes are written.** The unchanged
+   *   ones already hold their final position, and the moving ones' final
+   *   positions are exactly the positions they leave, so nothing collides. A
+   *   drag of ten places on a 1,000-track set is 22 writes, not 2,000.
+   * - **Writes go out `REORDER_WRITE_CONCURRENCY` at a time**, not all at once
+   *   (see the constant).
+   * - **Parking starts above the highest position the set holds now**, not at
+   *   a fixed 100,000. A save that failed between the phases used to leave
+   *   tracks parked at exactly the positions the next save parks to, so every
+   *   later save collided and the set could not be reordered again. Starting
+   *   above whatever is there makes the next save repair it.
    */
+  const currentPosition = new Map(current.map((track) => [track.id, track.position]))
+  const moving = finalPositions(orderedTrackIds).filter(
+    ({ id, position }) => currentPosition.get(id) !== position
+  )
+  const parkBase = current.reduce(
+    (highest, track) => Math.max(highest, track.position),
+    MOVE_TEMP_POSITION_OFFSET
+  )
+
   const applyPhase = async (
     writes: { id: string; position: number }[],
     event: "track.reorder_park_failed" | "track.reorder_assign_failed"
   ) => {
-    const results = await Promise.all(
-      writes.map(({ id, position }) =>
-        supabase
+    let next = 0
+    let failure: unknown = null
+
+    // A fixed pool of workers pulling from one queue. On the first failure no
+    // new write starts, and every write already in flight is awaited before
+    // the failure is raised — so nothing is still landing against a set
+    // somebody is about to be told failed to save.
+    const worker = async () => {
+      while (failure === null && next < writes.length) {
+        const { id, position } = writes[next++]
+        const { error } = await supabase
           .from("tracks")
           .update({ position })
           .eq("id", id)
           .eq("playlist_id", playlistId)
+
+        if (error && failure === null) {
+          failure = error
+        }
+      }
+    }
+
+    await Promise.all(
+      Array.from(
+        { length: Math.min(REORDER_WRITE_CONCURRENCY, writes.length) },
+        worker
       )
     )
 
-    // Every write is awaited before any failure is raised, so a rejection
-    // cannot leave later writes in flight against a set somebody is about to
-    // be told failed to save.
-    const failure = results.find((result) => result.error)
-
-    if (failure?.error) {
-      logError(event, failure.error, { profileId, playlistId })
+    if (failure !== null) {
+      logError(event, failure, { profileId, playlistId, writes: writes.length })
       throw new Error("Unable to save the new order.")
     }
   }
 
-  // Phase 1: park every track at a unique temp position above the real range.
+  // Phase 1: park the moving tracks above everything the set holds.
   await applyPhase(
-    orderedTrackIds.map((id, index) => ({
-      id,
-      position: MOVE_TEMP_POSITION_OFFSET + index + 1,
-    })),
+    moving.map(({ id }, index) => ({ id, position: parkBase + index + 1 })),
     "track.reorder_park_failed"
   )
 
-  // Phase 2: assign the final contiguous 1..n positions in the requested order.
-  await applyPhase(finalPositions(orderedTrackIds), "track.reorder_assign_failed")
+  // Phase 2: each moving track to its final place in 1..n.
+  await applyPhase(moving, "track.reorder_assign_failed")
 
   logInfo("tracks.reordered", {
     profileId,
     playlistId,
     count: orderedTrackIds.length,
+    moved: moving.length,
   })
 }

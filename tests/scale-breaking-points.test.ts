@@ -241,3 +241,15 @@ describe("the shared helper", () => {
     ])
   })
 })
+
+describe("one set past 1,000 tracks: what its own page shows", () => {
+  it("shows all 1,200 tracks of a 1,200-track set, not the first 1,000", async () => {
+    const { getOwnedPlaylistWithTracks } = await import("@/services/playlist-service")
+    seed(1, 1200)
+
+    const playlist = await getOwnedPlaylistWithTracks(MINE, "p-0000")
+
+    expect(playlist?.tracks).toHaveLength(1200)
+    expect(playlist?.tracks.at(-1)?.position).toBe(1200)
+  })
+})

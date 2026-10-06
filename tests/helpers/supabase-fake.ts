@@ -322,6 +322,34 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
     }
 
     if (this.op === "update") {
+      // `unique (playlist_id, position)` on tracks, checked the way Postgres
+      // checks it: per row, at the moment of the update, against every other
+      // row of the set. Without it a reorder that parks two tracks on the same
+      // position passed here and failed against the database — which is how a
+      // set left half-parked by one failed save could not be saved again.
+      if (this.table === "tracks" && this.payload && "position" in this.payload) {
+        const position = (this.payload as Row).position
+        const clash = selected.some((row) =>
+          this.rows.some(
+            (other) =>
+              other !== row &&
+              other.playlist_id === row.playlist_id &&
+              other.position === position
+          )
+        ) || (selected.length > 1 && new Set(selected.map((row) => row.playlist_id)).size < selected.length)
+
+        if (clash) {
+          this.record(0)
+          return {
+            data: null,
+            error: {
+              code: "23505",
+              message: 'duplicate key value violates unique constraint "tracks_playlist_id_position_key"',
+            },
+          }
+        }
+      }
+
       for (const row of selected) Object.assign(row, this.payload)
       this.record(selected.length)
       return this.shape(selected)
