@@ -61,7 +61,7 @@ describe("every content page passes it", () => {
   for (const file of CONTENT) {
     it(file, () => {
       const source = readFileSync(join(process.cwd(), file), "utf8")
-      const shells = source.match(/<PageShell\b[^>]*>/gs) ?? []
+      const shells = source.match(/<PageShell\b[^>]*>/g) ?? []
 
       expect(shells.length, "PageShell usages").toBeGreaterThan(0)
       for (const shell of shells) {

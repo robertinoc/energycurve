@@ -285,6 +285,57 @@ describe("breaking points, with numbers", () => {
     results.reorderDrags = drags
   })
 
+  it("the suggested order: computed cold, then remembered (lote 18, H-23)", async () => {
+    // The analysis page asks for this on every render. Level 2's first set
+    // (60 tracks) — under REORDER_MAX_TRACKS, so the optimizer really runs.
+    const { resolveTrackEnergies } = await import("@/lib/engine/energy-score")
+    const { analyzePlaylist } = await import("@/lib/engine/analysis")
+    const { suggestReorder } = await import("@/lib/engine/recommendations")
+    const { suggestReorderRemembered, clearSuggestionCache } = await import(
+      "@/services/reorder-suggestion-cache"
+    )
+
+    const level = LEVELS[1]
+    const profileId = stableUuid(level.seed, "profile:0")
+    const playlistId = stableUuid(level.seed, `playlist:${profileId}:0`)
+    const playlist = await getOwnedPlaylistWithTracks(profileId, playlistId)
+    expect(playlist, `seed ${level.seed} first`).toBeTruthy()
+
+    const energies = resolveTrackEnergies(playlist!.tracks, playlist!.context!, playlist!.genre!)
+    const score = analyzePlaylist({
+      curve: energies.map((entry) => entry.score),
+      genre: playlist!.genre!,
+      context: playlist!.context!,
+      trackMeta: energies.map((entry) => ({ source: entry.source, bpm: entry.bpm })),
+    }).setScore
+
+    const time = (fn: () => unknown) => {
+      const started = performance.now()
+      fn()
+      return Math.round(performance.now() - started)
+    }
+
+    const direct = [0, 1, 2].map(() =>
+      time(() => suggestReorder(energies, playlist!.genre!, playlist!.context!, score, "en", null))
+    )
+    clearSuggestionCache()
+    const cold = time(() =>
+      suggestReorderRemembered(energies, playlist!.genre!, playlist!.context!, score, "en", null)
+    )
+    const warm = [0, 1, 2].map(() =>
+      time(() =>
+        suggestReorderRemembered(energies, playlist!.genre!, playlist!.context!, score, "en", null)
+      )
+    )
+
+    results.suggestedOrder = {
+      tracks: energies.length,
+      directMs: direct,
+      rememberedColdMs: cold,
+      rememberedWarmMs: warm,
+    }
+  })
+
   it("writes the numbers down", () => {
     writeFileSync("tests/perf/.last-run.json", JSON.stringify(results, null, 2))
     console.log(JSON.stringify(results, null, 2))

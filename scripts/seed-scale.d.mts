@@ -45,3 +45,7 @@ export function parseArgs(argv: string[]): {
   playlists?: number
   tracks?: number
 }
+/** The `like` pattern for one seed's generated users, underscores escaped; all of them without a seed. */
+export function seedProfilePattern(seed?: number): string
+/** The `like` pattern for one seed's playlists; all of them without a seed. */
+export function seedPlaylistPattern(seed?: number): string

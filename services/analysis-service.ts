@@ -16,10 +16,10 @@ import {
 } from "@/lib/engine/energy-score"
 import {
   buildRecommendations,
-  suggestReorder,
   type Recommendation,
   type ReorderSuggestion,
 } from "@/lib/engine/recommendations"
+import { suggestReorderRemembered } from "@/services/reorder-suggestion-cache"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { resolveSlot } from "@/lib/engine/slot"
 import { getCurveTemplate } from "@/services/curve-template-service"
@@ -130,7 +130,9 @@ export async function getPlaylistAnalysis(
     targetAnchors: template?.anchors ?? null,
   })
   const recommendations = buildRecommendations(analysis, locale)
-  const reorder = suggestReorder(
+  // Remembered, not recomputed per render (H-23): the same set gets the same
+  // answer, and any edit to it changes the key. See reorder-suggestion-cache.ts.
+  const reorder = suggestReorderRemembered(
     energies,
     playlist.genre,
     playlist.context,
