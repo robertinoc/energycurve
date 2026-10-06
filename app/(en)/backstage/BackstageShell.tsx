@@ -1,5 +1,7 @@
 import Link from "next/link"
 
+import { resolveMainOrigin } from "@/lib/backstage/hosts"
+
 import { EnergyCurveLogo } from "@/components/brand/energycurve-logo"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -29,8 +31,10 @@ export function BackstageShell({
             <span className="hidden text-xs text-ec-text-dim sm:inline">
               {email}
             </span>
+            {/* Absolute on purpose: on backstage.energycurve.app a relative
+                /dashboard gets rewritten to /backstage/dashboard (404). */}
             <Link
-              href="/dashboard"
+              href={`${resolveMainOrigin() ?? ""}/dashboard`}
               className="text-xs font-bold text-ec-cyan hover:underline"
             >
               Open app
