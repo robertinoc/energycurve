@@ -61,7 +61,7 @@ que resolver **antes** de escribir el arreglo.
 | H-20 | Sentry recibe datos y no figura en la lista pública de subencargados | Compliance | **Robertino** | Pendiente |
 | H-21 | La lista de playlists del menú lateral cuenta mal desde 1.000 temas en total | Bug silencioso | — | ✅ lote 17 · validar (L17.2) |
 | H-22 | Seis defectos más del mismo origen, encontrados al arreglar: el export repetía temas y no entraba en una respuesta de Vercel, la librería y los sets compartidos, sets de más de 1.000 temas, y un reordenamiento que falla y traba el set | Bugs silenciosos y uno ruidoso | — | ✅ lote 17 · validar (L17.1, L17.3–L17.6) |
-| H-23 | En el pico, la CPU se va en el orden sugerido de la página de análisis, calculado en cada render | Rendimiento | Claude propone · **Robertino decide** | Diagnosticado, sin arreglar |
+| H-23 | En el pico, la CPU se va en el orden sugerido de la página de análisis, calculado en cada render | Rendimiento | Claude propone · **Robertino decide** | La mitad sin decisión ✅ lote 18 (memorizada) · sacarla del render espera a Robertino (L18.2) |
 
 ---
 
@@ -523,6 +523,18 @@ Arreglar los otros cuatro puntos **no** bajó el p95 de la mezcla (11,4 s en
 con su costo, están en `docs/qa/carga-2026-10.md`. La que más cambia sin
 tocar el motor —sacar la sugerencia del render y calcularla cuando se pide— es
 una decisión de producto, de Robertino.
+
+**La mitad sin decisión, implementada — lote 18, 06/10.** La sugerencia se
+memoriza por proceso con una clave SHA-256 de todo lo que la determina —cada
+campo de la energía de cada tema en su orden, el género, el contexto, el puntaje
+del set, la forma, el idioma y la versión del motor— así que editar un set
+cambia la clave y no hay invalidación a mano (`services/reorder-suggestion-cache.ts`).
+Medido contra dev con la misma mezcla de 10 usuarios: el dashboard pasó de
+**15,0 s a 1,4 s** de p95 y la CPU media de 94 % a 38 %. **Es el mejor caso**:
+los diez pedían el mismo set. La primera vista de cada set sigue costando el
+cálculo entero (911 ms en el arnés para 60 temas), así que sacarla del render
+sigue siendo lo que resolvería el caso general, y sigue siendo decisión de
+Robertino. Validar: L18.2, en `docs/qa/pendiente-banco-lote-18.md`.
 
 ## H-9 · Sin crédito en la cuenta de Anthropic
 
