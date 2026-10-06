@@ -383,5 +383,5 @@ tiene superficie servida.
 | 4 | E25 | el programa de menciones: textos aprobados por Robertino antes de enviar nada | Robertino |
 | 4 | E26 | el enlace desde stagelink.art y el post en su blog | Robertino |
 | 4 | E27 | la corrida mensual de visibilidad en IA y la revisión de GSC | Robertino |
-| 5 | E28 | deploy del arreglo; marcar `signup_completed` y `first_analysis` como key events y armar el funnel en PostHog | Robertino (cuenta de PostHog) |
+| 5 | E28 | deploy del arreglo; marcar `content_cta_click`, `signup` y `analysis_completed` como key events y armar el funnel en PostHog. *Corregido el 06/10 (lote 18): decía `signup_completed` y `first_analysis`, que el código nunca emitió* | Robertino (cuenta de PostHog) |
 | 5 | E31 | el log semanal de PSI para 6 URLs (`docs/seo/cwv-log.md`, 4 filas) | Robertino |
