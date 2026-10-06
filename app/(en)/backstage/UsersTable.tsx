@@ -5,11 +5,17 @@ import { useRouter } from "next/navigation"
 import { MoreVertical } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { NativeSelect } from "@/components/ui/native-select"
+import { Textarea } from "@/components/ui/textarea"
 import { countryFlagEmoji, countryName } from "@/lib/backstage/country"
+import {
+  BACKSTAGE_MESSAGE_TEMPLATES,
+  messageGreeting,
+} from "@/lib/backstage/message-templates"
 import {
   ACTIVITY_STATUSES,
   ACTIVITY_STATUS_META,
@@ -98,6 +104,27 @@ const PLAN_LABELS: Record<Plan, string> = {
   pro_plus: "PRO+",
 }
 
+/** Free = amber (brand --ec-amber), PRO = violet, PRO+ = gold that stands out. */
+const PLAN_PILL_CLASS: Record<Plan, string> = {
+  free: "border-ec-amber/40 bg-ec-amber/[0.13] text-[#FFC96B]",
+  pro: "border-ec-violet/40 bg-ec-violet/[0.13] text-[#CDA2F1]",
+  pro_plus:
+    "border-[#F5C542]/55 bg-[linear-gradient(135deg,rgba(245,197,66,0.28),rgba(245,165,36,0.10))] text-[#FFE18A] shadow-[0_0_12px_rgba(245,197,66,0.25)]",
+}
+
+function PlanPill({ plan }: { plan: Plan }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-[20px] border px-2.5 py-0.5 font-mono text-[11px] font-bold tracking-[0.08em] uppercase",
+        PLAN_PILL_CLASS[plan]
+      )}
+    >
+      {PLAN_LABELS[plan]}
+    </span>
+  )
+}
+
 function FilterGroup<T extends string>({
   label,
   options,
@@ -140,7 +167,7 @@ const COLUMNS: Array<{
   key: SortKey | null
   align?: "right"
 }> = [
-  { label: "Email", key: "email" },
+  { label: "User", key: "email" },
   { label: "Joined", key: "joined" },
   { label: "Last seen", key: "lastSeen" },
   { label: "Country", key: "country" },
@@ -149,7 +176,7 @@ const COLUMNS: Array<{
   { label: "Playlists", key: "playlists", align: "right" },
   { label: "Analyses", key: "analyses", align: "right" },
   { label: "Status", key: null },
-  { label: "", key: null },
+  { label: "Actions", key: null },
 ]
 
 function SortIndicator({ sort, column }: { sort: SortState; column: SortKey }) {
@@ -196,6 +223,7 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
   })
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
   const [pending, setPending] = useState<PendingAction | null>(null)
+  const [messageUser, setMessageUser] = useState<BackstageUserRow | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -246,6 +274,7 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
 
       return (
         user.email.toLowerCase().includes(needle) ||
+        (user.name !== null && user.name.toLowerCase().includes(needle)) ||
         channel.includes(needle) ||
         (user.countryCode !== null &&
           countryName(user.countryCode).toLowerCase().includes(needle))
@@ -371,7 +400,7 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
               <tr className="border-b border-ec-border font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-ec-text-dim">
                 {COLUMNS.map((column) => (
                   <th
-                    key={column.label || "actions"}
+                    key={column.label}
                     className={cn(
                       "px-2.5 py-2.5",
                       column.align === "right" && "text-right"
@@ -418,11 +447,18 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
                           className="flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold text-white"
                           style={{ background: avatarGradient(user.email) }}
                         >
-                          {user.email[0]?.toUpperCase()}
+                          {(user.name ?? user.email)[0]?.toUpperCase()}
                         </span>
-                        <span className="truncate font-medium text-ec-text">
-                          {user.email}
-                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-ec-text">
+                            {user.name ?? user.email}
+                          </p>
+                          {user.name ? (
+                            <p className="truncate text-[12px] text-ec-text-dim">
+                              {user.email}
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
                     </td>
                     <td className="px-2.5 py-2.5 whitespace-nowrap text-ec-text-muted">
@@ -483,11 +519,7 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
                       )}
                     </td>
                     <td className="px-2.5 py-2.5">
-                      <Badge
-                        variant={user.plan === "free" ? "outline" : "default"}
-                      >
-                        {PLAN_LABELS[user.plan]}
-                      </Badge>
+                      <PlanPill plan={user.plan} />
                     </td>
                     <td className="px-2.5 py-2.5 text-right font-mono text-ec-text-muted">
                       {user.playlistCount}
@@ -515,6 +547,16 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
                           onClick={(event) => event.stopPropagation()}
                           className="absolute top-10 right-2.5 z-40 w-44 rounded-xl border border-ec-border bg-ec-surface p-1.5 text-left shadow-[0_12px_32px_rgba(0,0,0,0.5)]"
                         >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMenuOpenId(null)
+                              setMessageUser(user)
+                            }}
+                            className="block w-full rounded-lg px-3 py-2 text-[13px] text-ec-text hover:bg-white/[0.06]"
+                          >
+                            Send email…
+                          </button>
                           <button
                             type="button"
                             onClick={() => {
@@ -628,6 +670,13 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
         </div>
       </CardContent>
 
+      {messageUser ? (
+        <MessageModal
+          user={messageUser}
+          onClose={() => setMessageUser(null)}
+        />
+      ) : null}
+
       {pending ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <Card className="w-full max-w-md">
@@ -675,5 +724,159 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
         </div>
       ) : null}
     </Card>
+  )
+}
+
+function MessageModal({
+  user,
+  onClose,
+}: {
+  user: BackstageUserRow
+  onClose: () => void
+}) {
+  const greeting = messageGreeting(user.name)
+  const initial = BACKSTAGE_MESSAGE_TEMPLATES[0]
+  const [templateId, setTemplateId] = useState(initial.id)
+  const [subject, setSubject] = useState(initial.subject)
+  const [body, setBody] = useState(initial.body(greeting))
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function applyTemplate(id: string) {
+    const template = BACKSTAGE_MESSAGE_TEMPLATES.find((t) => t.id === id)
+
+    if (!template) {
+      return
+    }
+
+    setTemplateId(id)
+    setSubject(template.subject)
+    setBody(template.body(greeting))
+  }
+
+  async function send() {
+    setSending(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/backstage/users/${user.id}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, body }),
+      })
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as {
+          error?: string
+        } | null
+
+        throw new Error(payload?.error ?? `Request failed (${response.status})`)
+      }
+
+      setSent(true)
+    } catch (sendError) {
+      setError(
+        sendError instanceof Error
+          ? sendError.message
+          : "The message could not be sent."
+      )
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <Card className="w-full max-w-lg">
+        <CardHeader>
+          <CardTitle>
+            Email {user.name ?? user.email}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {sent ? (
+            <>
+              <p className="text-sm text-ec-text-muted">
+                Sent to{" "}
+                <span className="font-bold text-ec-text">{user.email}</span>.
+                Replies land in your inbox, and the send is in the admin
+                actions feed.
+              </p>
+              <div className="flex justify-end">
+                <Button variant="secondary" size="sm" onClick={onClose}>
+                  Done
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-ec-text-dim">
+                To{" "}
+                <span className="font-medium text-ec-text-muted">
+                  {user.email}
+                </span>{" "}
+                — sent from the product address, reply-to goes to you.
+              </p>
+              <div className="space-y-1.5">
+                <Label htmlFor="backstage-message-template">Template</Label>
+                <NativeSelect
+                  id="backstage-message-template"
+                  value={templateId}
+                  onChange={(event) => applyTemplate(event.target.value)}
+                >
+                  {BACKSTAGE_MESSAGE_TEMPLATES.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.label}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="backstage-message-subject">Subject</Label>
+                <Input
+                  id="backstage-message-subject"
+                  value={subject}
+                  onChange={(event) => setSubject(event.target.value)}
+                  placeholder="Subject…"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="backstage-message-body">Message</Label>
+                <Textarea
+                  id="backstage-message-body"
+                  value={body}
+                  onChange={(event) => setBody(event.target.value)}
+                  rows={9}
+                />
+              </div>
+              {error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              ) : null}
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={sending}
+                  onClick={onClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={sending || !subject.trim() || !body.trim()}
+                  onClick={send}
+                >
+                  {sending ? "Sending…" : "Send email"}
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }

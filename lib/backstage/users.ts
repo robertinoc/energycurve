@@ -12,6 +12,7 @@ import { effectivePlan, type Plan, type PlanStatus } from "@/lib/product/plans"
 
 export interface BackstageProfileInput {
   id: string
+  workos_user_id: string
   email: string
   created_at: string
   updated_at: string
@@ -41,6 +42,8 @@ export interface BackstagePersonFacts {
 export interface BackstageUserRow {
   id: string
   email: string
+  /** First + last name from WorkOS when known; password signups have none. */
+  name: string | null
   createdAt: string
   /**
    * profiles.last_seen_at when the presence write has observed the user
@@ -70,6 +73,7 @@ export interface BackstageUserKpis {
   /** Active window (30d) over lastSeenAt, suspended excluded. */
   activeUsers30d: number
   dormantUsers: number
+  neverUsedUsers: number
   proUsers: number
 }
 
@@ -84,7 +88,8 @@ export function buildBackstageUsers(
   profiles: BackstageProfileInput[],
   playlistOwners: BackstageOwnedRowInput[],
   analyses: BackstageAnalysisInput[],
-  personFacts: Map<string, BackstagePersonFacts> = new Map()
+  personFacts: Map<string, BackstagePersonFacts> = new Map(),
+  namesByWorkOSId: Map<string, string> = new Map()
 ): BackstageUserRow[] {
   const playlistCounts = new Map<string, number>()
 
@@ -113,6 +118,7 @@ export function buildBackstageUsers(
       return {
         id: profile.id,
         email: profile.email,
+        name: namesByWorkOSId.get(profile.workos_user_id) ?? null,
         createdAt: profile.created_at,
         lastSeenAt: profile.last_seen_at ?? profile.updated_at,
         lastSeenObserved: profile.last_seen_at !== null,
@@ -490,6 +496,7 @@ export function buildUsersCsv(
 ): string {
   const header = [
     "email",
+    "name",
     "joined",
     "last_seen",
     "country",
@@ -503,6 +510,7 @@ export function buildUsersCsv(
   const lines = users.map((user) =>
     [
       csvCell(user.email),
+      csvCell(user.name),
       csvCell(user.createdAt),
       csvCell(user.lastSeenAt),
       csvCell(user.countryCode),
@@ -540,6 +548,7 @@ export function computeUserKpis(
     dormantUsers: statuses.filter(
       (status) => status === "inactive" || status === "never"
     ).length,
+    neverUsedUsers: statuses.filter((status) => status === "never").length,
     proUsers: users.filter((user) => user.plan !== "free").length,
   }
 }

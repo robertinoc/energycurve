@@ -25,6 +25,9 @@ export type AdminAuditAction =
   // which is the other thing this table is for.
   | "privacy_request.answered"
   | "privacy_request.refused"
+  // An admin-sent service email from the Users table. Recorded so outreach
+  // is visible in the same place as the actions it usually precedes.
+  | "user.messaged"
 
 export interface AdminAuditEntry {
   actorEmail: string
