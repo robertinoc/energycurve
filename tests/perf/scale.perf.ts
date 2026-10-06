@@ -38,6 +38,8 @@ const { listPlaylists, reorderTracks, getOwnedPlaylistWithTracks } = await impor
   "@/services/playlist-service"
 )
 const { buildAccountExport } = await import("@/services/data-export-service")
+const { getGlobalLibrary } = await import("@/services/library-service")
+const { trackKey } = await import("@/lib/playlists/set-comparison")
 
 export const LEVELS = [
   { seed: 1601, playlists: 10, tracks: 50 },
@@ -106,6 +108,38 @@ describe("breaking points, with numbers", () => {
       const list = await safe(() => listPlaylists(profileId))
       const listed = list.value ? list.value.reduce((sum, p) => sum + p.trackCount, 0) : null
       const exported = await safe(() => buildAccountExport(profileId), 1)
+      const library = await safe(() => getGlobalLibrary(profileId), 1)
+
+      // Lote 17: a length can be right and the file still wrong — offset paging
+      // over a non-unique order can repeat one row and drop another. So the
+      // export is checked by distinct ids, and its size is recorded against
+      // Vercel's 4.5 MB ceiling on an unstreamed function response.
+      const exportedTracks = exported.value?.tracks ?? []
+      const distinctTrackIds = new Set(exportedTracks.map((track) => track.id)).size
+      const exportBytes = exported.value
+        ? Buffer.byteLength(JSON.stringify(exported.value, null, 2))
+        : null
+      // The library's truth is the distinct records among every track the
+      // user owns, read from the database directly rather than from a service.
+      const { data: allTracks } = await supabase
+        .from("playlists")
+        .select("id")
+        .eq("user_id", profileId)
+      const ownedIds = (allTracks ?? []).map((row) => row.id as string)
+      const truthKeys = new Set<string>()
+      for (let start = 0; start < ownedIds.length; start += 300) {
+        const chunk = ownedIds.slice(start, start + 300)
+        for (let from = 0; ; from += 1000) {
+          const { data } = await supabase
+            .from("tracks")
+            .select("artist, name")
+            .in("playlist_id", chunk)
+            .order("id")
+            .range(from, from + 999)
+          for (const row of data ?? []) truthKeys.add(trackKey(row.artist as string, row.name as string))
+          if (!data || data.length < 1000) break
+        }
+      }
 
       results[`level_${level.playlists}x${level.tracks}`] = {
         truth: { playlists: level.playlists, tracks: truthTracks },
@@ -127,6 +161,9 @@ describe("breaking points, with numbers", () => {
               sumOfTrackCounts: listed,
               correct: listed === truthTracks && list.value!.length === level.playlists,
               playlistsShowingZero: list.value!.filter((p) => p.trackCount === 0).length,
+              // Every set's own count, not only the sum: a sum can come out
+              // right while two sets trade numbers.
+              everySetExact: list.value!.every((p) => p.trackCount === level.tracks),
             },
         export: exported.error
           ? { error: exported.error }
@@ -134,9 +171,21 @@ describe("breaking points, with numbers", () => {
               ms: exported.ms,
               playlists: exported.value?.playlists.length ?? null,
               tracks: exported.value?.tracks.length ?? null,
+              distinctTrackIds,
+              bytes: exportBytes,
               correct:
                 exported.value?.tracks.length === truthTracks &&
+                distinctTrackIds === truthTracks &&
                 exported.value?.playlists.length === level.playlists,
+            },
+        library: library.error
+          ? { error: library.error }
+          : {
+              ms: library.ms,
+              recordCount: library.value!.recordCount,
+              truthRecords: truthKeys.size,
+              truncated: library.value!.truncated,
+              correct: library.value!.recordCount === truthKeys.size && !library.value!.truncated,
             },
       }
     })
@@ -165,6 +214,75 @@ describe("breaking points, with numbers", () => {
       }
     }
     results.reorder = reorder
+  })
+
+  it("a set over 1,000 tracks: what the detail page shows, and whether it reorders", async () => {
+    // Lote 17. Level 5 has exactly 1,000 tracks per set, which is the one size
+    // that hides PostgREST's 1,000-row ceiling on a single set's read. Seeded
+    // separately: node scripts/seed-scale.mjs seed --seed 1606 --users 1 --playlists 1 --tracks 1200
+    const OVER = { seed: 1606, tracks: 1200 }
+    const profileId = stableUuid(OVER.seed, "profile:0")
+    const playlistId = stableUuid(OVER.seed, `playlist:${profileId}:0`)
+    const before = await getOwnedPlaylistWithTracks(profileId, playlistId)
+    expect(before, `seed ${OVER.seed} first`).toBeTruthy()
+
+    const { count: truth } = await getSupabaseAdminClient()
+      .from("tracks")
+      .select("id", { count: "exact", head: true })
+      .eq("playlist_id", playlistId)
+
+    // One drag: the last track to the top. Every position shifts by one.
+    const ids = before!.tracks.map((track) => track.id)
+    const dragged = [ids[ids.length - 1], ...ids.slice(0, -1)]
+    const started = performance.now()
+    let error: string | null = null
+    try {
+      await reorderTracks(profileId, playlistId, dragged)
+    } catch (caught) {
+      error = String((caught as Error).message)
+    }
+    const ms = Math.round(performance.now() - started)
+    const after = await getOwnedPlaylistWithTracks(profileId, playlistId)
+
+    results.overOneThousand = {
+      truth,
+      detailShows: before!.tracks.length,
+      detailComplete: before!.tracks.length === truth,
+      reorderOneDrag: {
+        ms,
+        error,
+        correct: JSON.stringify(after!.tracks.map((t) => t.id)) === JSON.stringify(dragged),
+      },
+    }
+  })
+
+  it("reorder: one drag across a 1,000-track set, and one short drag", async () => {
+    // Lote 17. What a manual save usually is: a track moved some way, not the
+    // whole set reversed. Level 5's first set.
+    const level = LEVELS[4]
+    const profileId = stableUuid(level.seed, "profile:0")
+    const playlistId = stableUuid(level.seed, `playlist:${profileId}:1`)
+    const drags: Record<string, unknown> = {}
+    for (const [label, from, to] of [
+      ["last to first (every position moves)", level.tracks - 1, 0],
+      ["10 places (11 positions move)", 500, 490],
+    ] as const) {
+      const current = (await getOwnedPlaylistWithTracks(profileId, playlistId))!.tracks.map((t) => t.id)
+      const next = [...current]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
+      const started = performance.now()
+      let error: string | null = null
+      try {
+        await reorderTracks(profileId, playlistId, next)
+      } catch (caught) {
+        error = String((caught as Error).message)
+      }
+      const ms = Math.round(performance.now() - started)
+      const after = (await getOwnedPlaylistWithTracks(profileId, playlistId))!.tracks.map((t) => t.id)
+      drags[label] = { ms, error, correct: JSON.stringify(after) === JSON.stringify(next) }
+    }
+    results.reorderDrags = drags
   })
 
   it("writes the numbers down", () => {

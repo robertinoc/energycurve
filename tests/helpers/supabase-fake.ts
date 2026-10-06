@@ -19,6 +19,20 @@
  */
 export const MAX_ROWS_PER_RESPONSE = 1000
 
+/**
+ * The longest `in()` list the fake lets through: the largest that passed when
+ * probed against the dev project on 02/10/2026 (`tests/perf/scale.perf.ts`,
+ * docs/qa/carga-2026-10.md). 350 ids worked; 400 failed with `fetch failed`,
+ * because PostgREST carries the list in the URL of a GET.
+ *
+ * Before this the fake took any list, so a service filtering by every playlist
+ * a user owns passed every test and failed for a real user with 400 playlists —
+ * the dashboard threw and the data export delivered zero tracks. The edge is
+ * somewhere between 350 and 400; the fake fails above the last number known to
+ * pass, which is the side that cannot let a real failure through.
+ */
+export const MAX_IN_LIST = 350
+
 export type Row = Record<string, unknown>
 export type Tables = Record<string, Row[]>
 
@@ -91,7 +105,10 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
   private single_ = false
   private maybe = false
   private wantsReturn = true
-  private orderBy: { column: string; ascending: boolean } | null = null
+  /** Every `.order()` in call order: the first is the primary key of the sort. */
+  private orderBy: Array<{ column: string; ascending: boolean }> = []
+  /** Embedded `<table>(count)` asked for in the select list. */
+  private embeddedCounts: string[] = []
   private limitTo: number | null = null
   private rangeFrom: number | null = null
   private rangeTo: number | null = null
@@ -111,7 +128,14 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
     return this.db[this.table]
   }
 
-  select(_columns?: string, options?: { count?: string; head?: boolean }) {
+  select(columns?: string, options?: { count?: string; head?: boolean }) {
+    // `tracks(count)` in a select list is PostgREST's per-row count of a
+    // related table: one number per parent row, no child rows in the body. The
+    // other embeds (`alias:table(name)`) are not modelled, as before.
+    for (const match of (columns ?? "").matchAll(/(?:^|[\s,])(\w+)\(count\)/g)) {
+      this.embeddedCounts.push(match[1])
+    }
+
     // A select() after insert/update/delete asks PostgREST to return the
     // affected rows; it does not turn the statement into a read.
     if (this.op === "select") this.op = "select"
@@ -187,7 +211,7 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
   }
 
   order(column: string, options?: { ascending?: boolean }) {
-    this.orderBy = { column, ascending: options?.ascending ?? true }
+    this.orderBy.push({ column, ascending: options?.ascending ?? true })
     return this
   }
 
@@ -246,6 +270,23 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
       return { data: null, error: { message: forced, code: "FORCED" } }
     }
 
+    const tooLong = this.filters.find(
+      ([, op, value]) => op === "in" && (value as unknown[]).length > MAX_IN_LIST
+    )
+
+    if (tooLong) {
+      // What supabase-js hands back when the request never completes: an error
+      // and no rows. The real message is `TypeError: fetch failed`.
+      this.record(0)
+      return {
+        data: null,
+        error: {
+          message: `TypeError: fetch failed (in() with ${(tooLong[2] as unknown[]).length} values)`,
+          code: "",
+        },
+      }
+    }
+
     const selected = this.rows.filter((row) => matches(row, this.filters))
 
     if (this.op === "insert") {
@@ -281,6 +322,34 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
     }
 
     if (this.op === "update") {
+      // `unique (playlist_id, position)` on tracks, checked the way Postgres
+      // checks it: per row, at the moment of the update, against every other
+      // row of the set. Without it a reorder that parks two tracks on the same
+      // position passed here and failed against the database — which is how a
+      // set left half-parked by one failed save could not be saved again.
+      if (this.table === "tracks" && this.payload && "position" in this.payload) {
+        const position = (this.payload as Row).position
+        const clash = selected.some((row) =>
+          this.rows.some(
+            (other) =>
+              other !== row &&
+              other.playlist_id === row.playlist_id &&
+              other.position === position
+          )
+        ) || (selected.length > 1 && new Set(selected.map((row) => row.playlist_id)).size < selected.length)
+
+        if (clash) {
+          this.record(0)
+          return {
+            data: null,
+            error: {
+              code: "23505",
+              message: 'duplicate key value violates unique constraint "tracks_playlist_id_position_key"',
+            },
+          }
+        }
+      }
+
       for (const row of selected) Object.assign(row, this.payload)
       this.record(selected.length)
       return this.shape(selected)
@@ -294,13 +363,32 @@ class Builder implements PromiseLike<{ data: unknown; error: unknown }> {
 
     let result = [...selected]
 
-    if (this.orderBy) {
-      const { column, ascending } = this.orderBy
+    if (this.orderBy.length > 0) {
       result.sort((a, b) => {
-        const left = a[column] as number | string
-        const right = b[column] as number | string
-        if (left === right) return 0
-        return (left < right ? -1 : 1) * (ascending ? 1 : -1)
+        for (const { column, ascending } of this.orderBy) {
+          const left = a[column] as number | string
+          const right = b[column] as number | string
+          if (left === right) continue
+          return (left < right ? -1 : 1) * (ascending ? 1 : -1)
+        }
+        return 0
+      })
+    }
+
+    if (this.embeddedCounts.length > 0) {
+      // The foreign key is the parent's singular name plus `_id` —
+      // playlists → tracks.playlist_id — which is the only shape `services/`
+      // embeds a count over.
+      const foreignKey = `${this.table.replace(/s$/, "")}_id`
+      result = result.map((row) => {
+        const withCounts: Row = { ...row }
+        for (const child of this.embeddedCounts) {
+          const count = (this.db[child] ?? []).filter(
+            (candidate) => candidate[foreignKey] === row.id
+          ).length
+          withCounts[child] = [{ count }]
+        }
+        return withCounts
       })
     }
 

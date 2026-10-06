@@ -25,6 +25,13 @@ sesión L16 del Banco. Dos hallazgos nuevos salieron del mismo lote: H-20
 (Sentry) y H-21 (`listPlaylists`). Lo que espera algo de Robertino, ordenado,
 está en `docs/pendientes-robertino.md`.
 
+**Actualizado el 06/10 (lote 17).** H-21 implementado, junto con los otros
+cuatro puntos de quiebre de `docs/qa/carga-2026-10.md`. Al arreglarlos a
+volumen aparecieron dos hallazgos más: H-22 (seis defectos del mismo origen,
+todos arreglados en el lote) y H-23 (dónde se va la CPU en el pico,
+diagnosticado y sin arreglar). Las filas nuevas están en la sesión L17 del
+Banco.
+
 Cada hallazgo tiene severidad, dónde vive, y —donde importa— la trampa que hay
 que resolver **antes** de escribir el arreglo.
 
@@ -52,7 +59,9 @@ que resolver **antes** de escribir el arreglo.
 | H-19 | El tooltip de término no se cierra con Escape (WCAG 1.4.13) | Accesibilidad · media | — | ✅ lote 16 · validar (L16.3) |
 | — | IMP.1: una playlist recién importada se ve vacía, y si fallan los temas queda vacía | Bug | — | ✅ lote 16 · validar (L16.5) |
 | H-20 | Sentry recibe datos y no figura en la lista pública de subencargados | Compliance | **Robertino** | Pendiente |
-| H-21 | La lista de playlists del menú lateral cuenta mal desde 1.000 temas en total | Bug silencioso | Claude | Pendiente (medido, sin arreglar) |
+| H-21 | La lista de playlists del menú lateral cuenta mal desde 1.000 temas en total | Bug silencioso | — | ✅ lote 17 · validar (L17.2) |
+| H-22 | Seis defectos más del mismo origen, encontrados al arreglar: el export repetía temas y no entraba en una respuesta de Vercel, la librería y los sets compartidos, sets de más de 1.000 temas, y un reordenamiento que falla y traba el set | Bugs silenciosos y uno ruidoso | — | ✅ lote 17 · validar (L17.1, L17.3–L17.6) |
+| H-23 | En el pico, la CPU se va en el orden sugerido de la página de análisis, calculado en cada render | Rendimiento | Claude propone · **Robertino decide** | Diagnosticado, sin arreglar |
 
 ---
 
@@ -463,6 +472,57 @@ temas en total los conteos suman 1.000 y la mayoría de las playlists muestra 0
 quinto punto de quiebre; el detalle y el arreglo propuesto (contar sin traer
 filas, partir la lista de ids) están en `docs/qa/carga-2026-10.md`. **No se
 arregló**: el lote medía.
+
+**IMPLEMENTADO — lote 17, 06/10.** `listPlaylists` cuenta con `tracks(count)`,
+el conteo embebido de PostgREST: un número por playlist, ninguna fila de temas
+y ninguna lista de ids en la URL. Las playlists paginan. Medido contra dev en
+los cinco niveles: conteos exactos en cada playlist, incluidas 400. Test:
+`tests/scale-breaking-points.test.ts`, en rojo sin el arreglo. Validar: L17.2.
+
+## H-22 · Seis defectos más del mismo origen
+
+**Implementados — lote 17, 06/10.** Salieron de arreglar los puntos de quiebre
+**al volumen en que fallaban**, con el arnés extendido. Detalle y números en
+`docs/qa/carga-2026-10.md`, sección del lote 17.
+
+1. **El export repetía temas.** Paginaba ordenando por `position`, que se repite
+   una vez por playlist. Con 60.000 temas, el archivo de `main` traía 50.000
+   filas y 49.635 ids distintos (bajado por HTTP). Ahora: orden único, y cada
+   tabla comparada con un conteo de la base; si no coinciden, el export no se
+   entrega.
+2. **El export no entraba en una respuesta de Vercel.** Vercel corta en 4,5 MB
+   un cuerpo que no es stream; el export pesa ~600 bytes por tema (18,5 MB con
+   30.000). Ahora sale en streaming. **Sin verificar en producción.**
+3. **La librería global** se mostraba vacía con 400 playlists y perdía discos a
+   30.000 temas (paginaba sin orden).
+4. **Los sets compartidos conmigo** contaban sus temas trayendo filas, y ante
+   un error mostraban todo en 0. Ahora un conteo que no se pudo leer no se
+   muestra.
+5. **Un set de más de 1.000 temas** se veía con 1.000 en su propia página.
+6. **Reordenar fallaba desde ~1.000 temas, y después ese set no se podía
+   volver a guardar nunca**: el fallo dejaba temas estacionados justo donde el
+   próximo guardado estaciona. Pasó con dos sets en esta sesión. Ahora se
+   escriben sólo los temas que cambian, 32 a la vez, y el estacionamiento
+   arranca arriba de lo que el set ya tiene.
+
+Tests en rojo sin cada arreglo: `tests/scale-breaking-points.test.ts`,
+`tests/reorder-round-trips.test.ts`, `tests/api-account-export.test.ts`.
+
+## H-23 · En el pico, la CPU se va en el orden sugerido
+
+**Rendimiento. Diagnosticado en el lote 17 (06/10), sin arreglar.** Perfilado
+con `node --cpu-prof` bajo la mezcla de 10 usuarios: el **89,4 %** de la CPU
+ocupada es una sola llamada, `suggestReorder` desde
+`services/analysis-service.ts`, que la página de análisis hace en cada render.
+Cada análisis de 80 temas cuesta unos 2,6 s de CPU; el render de React, 0,9 %
+del total. El dashboard solo, con 10 usuarios, da p95 por debajo de 2 s: en la
+mezcla espera detrás del análisis.
+
+Arreglar los otros cuatro puntos **no** bajó el p95 de la mezcla (11,4 s en
+`main`, 10,8 s en la rama, una corrida cada uno: ruido). Las cuatro opciones,
+con su costo, están en `docs/qa/carga-2026-10.md`. La que más cambia sin
+tocar el motor —sacar la sugerencia del render y calcularla cuando se pide— es
+una decisión de producto, de Robertino.
 
 ## H-9 · Sin crédito en la cuenta de Anthropic
 

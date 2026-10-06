@@ -60,7 +60,8 @@ export default async function SharedWithMePage() {
                   {set.name}
                 </p>
                 <p className="mt-0.5 text-[13px] text-white/50">
-                  {set.trackCount} · {formatTemplate(COPY.sharedBy[locale], {
+                  {set.trackCount !== null && `${set.trackCount} · `}
+                  {formatTemplate(COPY.sharedBy[locale], {
                     email: set.ownerEmail,
                   })}
                 </p>

@@ -1,8 +1,16 @@
 import "server-only"
-import { fetchAllRows } from "@/lib/supabase/paginate"
+import {
+  countRowsIn,
+  fetchAllRows,
+  fetchAllRowsIn,
+  type PaginatedResult,
+} from "@/lib/supabase/paginate"
 
 import { logInfo } from "@/lib/observability/logger"
+import { ExportIncompleteError } from "@/lib/privacy/export-incomplete"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
+
+export { ExportIncompleteError }
 
 /**
  * "Download my data" — the portability half of a data-subject request.
@@ -44,6 +52,12 @@ export interface AccountExport {
     currentPeriodEnd: string | null
     cancelAt: string | null
   }
+  /**
+   * How many rows of each kind the file holds, counted by the database and
+   * checked against what was read before the file was built. A reader can hold
+   * the file to it; a mismatch never reaches them, because it fails the export.
+   */
+  counts: ExportCounts
   playlists: Array<Record<string, unknown>>
   tracks: Array<Record<string, unknown>>
   analyses: Array<Record<string, unknown>>
@@ -92,92 +106,224 @@ function clean<T extends Record<string, unknown>>(rows: T[]): Array<Record<strin
   })
 }
 
+export interface ExportCounts {
+  playlists: number
+  tracks: number
+  analyses: number
+  versions: number
+  curveTemplates: number
+  customGenres: number
+  customContexts: number
+  featureUsage: number
+  collaborationsShared: number
+  suggestionsAuthored: number
+}
+
+/**
+ * Per table, far past any library we have seen — the alpha user's 30,000 tracks
+ * is a thirty-third of it — and still a bound on what one request may hold in
+ * memory. Reaching it fails the export rather than cutting it: the general
+ * ceiling in `paginate.ts` is 50,000, and an export used to stop there and say
+ * nothing (docs/qa/carga-2026-10.md, level 5: 50,000 of 60,000 tracks).
+ */
+export const EXPORT_MAX_ROWS = 1_000_000
+
+/** Rows or a loud failure. Never rows plus a flag somebody may not read. */
+function complete<T>(table: string, result: PaginatedResult<T>): T[] {
+  if (result.error) {
+    throw new ExportIncompleteError(table, "read_failed", {
+      rowsRead: result.rows.length,
+      error: errorMessage(result.error),
+    })
+  }
+
+  if (result.truncated) {
+    throw new ExportIncompleteError(table, "ceiling_reached", {
+      rowsRead: result.rows.length,
+    })
+  }
+
+  return result.rows
+}
+
+function errorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as { message: unknown }).message)
+  }
+
+  return String(error)
+}
+
+/**
+ * The database's count against the rows in hand.
+ *
+ * Paging is only as good as its ordering, and a short read can look exactly
+ * like a complete one. Counting the same filter with `head: true` costs no rows
+ * and turns "we think we read it all" into "we read what the database says is
+ * there". A row written or deleted while the export runs makes them disagree;
+ * that fails this export, and the next one is consistent.
+ */
+function checkCount(
+  table: string,
+  rows: unknown[],
+  counted: { count: number | null; error: unknown }
+): void {
+  if (counted.error || counted.count === null) {
+    throw new ExportIncompleteError(table, "count_failed", {
+      error: errorMessage(counted.error ?? "no count"),
+    })
+  }
+
+  if (counted.count !== rows.length) {
+    throw new ExportIncompleteError(table, "count_mismatch", {
+      rowsRead: rows.length,
+      counted: counted.count,
+    })
+  }
+}
+
 export async function buildAccountExport(
   profileId: string
 ): Promise<AccountExport | null> {
   const supabase = getSupabaseAdminClient()
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", profileId)
     .maybeSingle()
+
+  if (profileError) {
+    // Not "no such account": that would answer a failed read with a 404.
+    throw new ExportIncompleteError("profiles", "read_failed", {
+      error: errorMessage(profileError),
+    })
+  }
 
   if (!profile) {
     return null
   }
 
   /**
-   * Every one of the reads below pages, and that is the difference between an
-   * export and a sample.
+   * Every read below pages, splits its id list, orders by a unique key, and is
+   * counted against the database. Each of those closed a way this export used
+   * to come out short and look whole:
    *
-   * PostgREST caps a response at 1000 rows without erroring and without
-   * flagging it, so the nine queries this function used to make each returned a
-   * first page and stopped. The file still got a name, a date and a "your data"
-   * label on it. Article 20 asks for the data; an unannounced truncation is a
-   * wrong answer to a right the user cannot audit — they have no way to know
-   * that 1000 tracks was not all of them.
+   * - **Paging.** PostgREST caps a response at 1000 rows without saying so.
+   * - **Splitting.** A filter on the person's playlist ids carries the list in
+   *   the URL, and from ~400 ids the request fails. The export read the error's
+   *   empty rows and delivered **zero tracks** (docs/qa/carga-2026-10.md).
+   * - **A unique order.** Offset paging over a non-unique order can repeat a
+   *   row on one page and skip another on the next — `position` repeats once
+   *   per playlist, so it is never ordered by `position` alone.
+   * - **No ceiling that cuts.** `EXPORT_MAX_ROWS`, and reaching it fails.
    *
-   * `fetchAllRows` is the same helper `library-service.ts` already uses. Its
-   * `truncated` flag is deliberately not consulted here: its ceiling is 50,000
-   * rows per table, and an export that large is a different conversation than
-   * this fix. What matters is that the 1000 is gone.
+   * Article 20 asks for the data. The rule here is that an incomplete export is
+   * never delivered as a complete one: it brings everything or it fails, and
+   * the route says so.
    */
-  const { rows: playlists } = await fetchAllRows((from, to) =>
-    supabase
-      .from("playlists")
-      .select("*")
-      .eq("user_id", profileId)
-      .order("created_at", { ascending: true })
-      .range(from, to)
+  const playlists = complete(
+    "playlists",
+    await fetchAllRows(
+      (from, to) =>
+        supabase
+          .from("playlists")
+          .select("*")
+          .eq("user_id", profileId)
+          .order("created_at", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, to),
+      { maxRows: EXPORT_MAX_ROWS }
+    )
   )
 
   const playlistIds = playlists.map((row) => row.id as string)
 
-  /** Pages one table that hangs off the playlists. */
-  const byPlaylist = async (table: string, order?: string) => {
-    // `in` with an empty list is a query that matches nothing, which is what we
-    // want — but some drivers treat it as a syntax error, so short-circuit.
+  /** One table that hangs off the playlists, in playlist order then `order`. */
+  const byPlaylist = async (table: string, order: string[]) => {
+    // An empty `in()` matches nothing, and some drivers reject it outright.
     if (playlistIds.length === 0) {
       return []
     }
 
-    const { rows } = await fetchAllRows((from, to) => {
-      const query = supabase
-        .from(table)
-        .select("*")
-        .in("playlist_id", playlistIds)
-
-      return (order ? query.order(order, { ascending: true }) : query).range(
-        from,
-        to
+    const rows = complete(
+      table,
+      await fetchAllRowsIn(
+        playlistIds,
+        (chunk, from, to) => {
+          let query = supabase.from(table).select("*").in("playlist_id", chunk)
+          for (const column of ["playlist_id", ...order]) {
+            query = query.order(column, { ascending: true })
+          }
+          return query.range(from, to)
+        },
+        { maxRows: EXPORT_MAX_ROWS }
       )
-    })
+    )
 
-    return rows
-  }
-
-  /** Pages one table that hangs off the profile. */
-  const byProfile = async (table: string, column: string) => {
-    const { rows } = await fetchAllRows((from, to) =>
-      supabase.from(table).select("*").eq(column, profileId).range(from, to)
+    checkCount(
+      table,
+      rows,
+      await countRowsIn(playlistIds, (chunk) =>
+        supabase
+          .from(table)
+          .select("*", { count: "exact", head: true })
+          .in("playlist_id", chunk)
+      )
     )
 
     return rows
   }
 
-  const tracks = await byPlaylist("tracks", "position")
-  const versions = await byPlaylist("playlist_versions")
-  const collaborators = await byPlaylist("set_collaborators")
+  /** One table that hangs off the profile. */
+  const byProfile = async (table: string, column: string) => {
+    const rows = complete(
+      table,
+      await fetchAllRows(
+        (from, to) =>
+          supabase
+            .from(table)
+            .select("*")
+            .eq(column, profileId)
+            .order("id", { ascending: true })
+            .range(from, to),
+        { maxRows: EXPORT_MAX_ROWS }
+      )
+    )
 
-  const [analyses, templates, genres, contexts, usage, authored] = await Promise.all([
-    byProfile("analyses", "user_id"),
-    byProfile("curve_templates", "user_id"),
-    byProfile("user_genres", "user_id"),
-    byProfile("user_contexts", "user_id"),
-    byProfile("feature_usage", "profile_id"),
-    byProfile("set_suggestions", "author_id"),
-  ])
+    checkCount(
+      table,
+      rows,
+      await supabase
+        .from(table)
+        .select("*", { count: "exact", head: true })
+        .eq(column, profileId)
+    )
+
+    return rows
+  }
+
+  checkCount(
+    "playlists",
+    playlists,
+    await supabase
+      .from("playlists")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", profileId)
+  )
+
+  const [tracks, versions, collaborators, analyses, templates, genres, contexts, usage, authored] =
+    await Promise.all([
+      byPlaylist("tracks", ["position"]),
+      byPlaylist("playlist_versions", ["id"]),
+      byPlaylist("set_collaborators", ["id"]),
+      byProfile("analyses", "user_id"),
+      byProfile("curve_templates", "user_id"),
+      byProfile("user_genres", "user_id"),
+      byProfile("user_contexts", "user_id"),
+      byProfile("feature_usage", "profile_id"),
+      byProfile("set_suggestions", "author_id"),
+    ])
 
   logInfo("account.data_exported", {
     profileId,
@@ -200,7 +346,19 @@ export async function buildAccountExport(
       currentPeriodEnd: (profile.plan_current_period_end as string | null) ?? null,
       cancelAt: (profile.plan_cancel_at as string | null) ?? null,
     },
-    playlists: clean(playlists ?? []),
+    counts: {
+      playlists: playlists.length,
+      tracks: tracks.length,
+      analyses: analyses.length,
+      versions: versions.length,
+      curveTemplates: templates.length,
+      customGenres: genres.length,
+      customContexts: contexts.length,
+      featureUsage: usage.length,
+      collaborationsShared: collaborators.length,
+      suggestionsAuthored: authored.length,
+    },
+    playlists: clean(playlists),
     tracks: clean(tracks),
     analyses: clean(analyses),
     versions: clean(versions),

@@ -154,6 +154,48 @@ describe("when building it fails", () => {
   })
 })
 
+describe("an export bigger than one function response (lote 17)", () => {
+  it("is streamed in slices, so Vercel's 4.5 MB body limit does not apply", async () => {
+    // A 30,000-track export measured 18 MB against dev. Sent as one string,
+    // Vercel answers 413 FUNCTION_PAYLOAD_TOO_LARGE; a streamed body is exempt.
+    buildAccountExport.mockResolvedValue({
+      format: "energycurve.account-export.v1",
+      tracks: Array.from({ length: 2000 }, (_, index) => ({ id: `t-${index}`, name: "x".repeat(100) })),
+    })
+
+    const response = await GET()
+    const reader = response.body!.getReader()
+    const slices: number[] = []
+
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      slices.push(value.byteLength)
+    }
+
+    expect(slices.length).toBeGreaterThan(1)
+    expect(Math.max(...slices)).toBeLessThanOrEqual(64 * 1024)
+    expect(response.headers.get("Content-Length")).toBeNull()
+  })
+
+  it("is not delivered when incomplete, and says so instead of failing vaguely", async () => {
+    const { ExportIncompleteError } = await import("@/lib/privacy/export-incomplete")
+    buildAccountExport.mockRejectedValue(
+      new ExportIncompleteError("tracks", "read_failed", { rowsRead: 0 })
+    )
+
+    const response = await GET()
+    const body = await response.json()
+
+    expect(response.status).toBe(503)
+    expect(response.headers.get("Retry-After")).toBeTruthy()
+    expect(body.error).toBe("export_incomplete")
+    expect(body.message).toMatch(/did not send a partial copy/)
+    // The table and reason are for the log, not the caller.
+    expect(JSON.stringify(body)).not.toContain("read_failed")
+  })
+})
+
 describe("a suspended account", () => {
   it("is refused with 403, and nothing is assembled", async () => {
     // Suspension used to be a page gate only: the browser bounced to
