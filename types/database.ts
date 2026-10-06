@@ -54,6 +54,10 @@ export interface Database {
           // Migration 0031. NULL = active. A timestamp means the grace period
           // is running; it does NOT mean the account is locked.
           deletion_requested_at: string | null
+          // Migration 0033: presence. last_seen_at is written on dashboard
+          // visits (updated_at also bumps on Stripe webhooks, so it lies).
+          last_seen_at: string | null
+          last_seen_country: string | null
           plan: string
           plan_status: string | null
           plan_current_period_end: string | null
@@ -72,6 +76,8 @@ export interface Database {
           key_notation?: string | null
           suspended_at?: string | null
           deletion_requested_at?: string | null
+          last_seen_at?: string | null
+          last_seen_country?: string | null
           plan?: string
           plan_status?: string | null
           plan_current_period_end?: string | null
@@ -90,6 +96,8 @@ export interface Database {
           key_notation?: string | null
           suspended_at?: string | null
           deletion_requested_at?: string | null
+          last_seen_at?: string | null
+          last_seen_country?: string | null
           plan?: string
           plan_status?: string | null
           plan_current_period_end?: string | null

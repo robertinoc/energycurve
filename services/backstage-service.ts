@@ -8,6 +8,7 @@ import {
   type BackstageUserKpis,
   type BackstageUserRow,
 } from "@/lib/backstage/users"
+import { fetchBackstagePersonFacts } from "@/lib/backstage/posthog-reporting"
 import { logError, logInfo, logWarn } from "@/lib/observability/logger"
 import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { recordAdminAction } from "@/services/admin-audit-service"
@@ -23,13 +24,20 @@ export interface BackstageUsersSnapshot {
 export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapshot> {
   const supabase = getSupabaseAdminClient()
 
-  const [profilesResult, playlistsResult, analysesResult] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, email, created_at, updated_at, suspended_at"),
-    supabase.from("playlists").select("user_id"),
-    supabase.from("analyses").select("user_id, created_at"),
-  ])
+  // Person facts (geoip country + first-touch attribution) ride along in
+  // the same Promise.all; fetchBackstagePersonFacts fails open to an empty
+  // map, so PostHog being down or unconfigured costs columns, not the page.
+  const [profilesResult, playlistsResult, analysesResult, personFacts] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select(
+          "id, email, created_at, updated_at, suspended_at, plan, plan_status, last_seen_at, last_seen_country"
+        ),
+      supabase.from("playlists").select("user_id"),
+      supabase.from("analyses").select("user_id, created_at"),
+      fetchBackstagePersonFacts(),
+    ])
 
   if (profilesResult.error) {
     throw new Error("Unable to load profiles for the backstage panel.")
@@ -52,7 +60,8 @@ export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapsho
   const users = buildBackstageUsers(
     profilesResult.data ?? [],
     playlistsResult.data ?? [],
-    analysesResult.data ?? []
+    analysesResult.data ?? [],
+    personFacts
   )
 
   return { users, kpis: computeUserKpis(users) }

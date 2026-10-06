@@ -12,22 +12,49 @@ import { ActivityFeed } from "./ActivityFeed"
 import { Bento, BentoLabel } from "./BackstagePrimitives"
 import { PendingDeletions } from "./PendingDeletions"
 import { PrivacyRequestQueue } from "./PrivacyRequestQueue"
+import { UsersDashboard } from "./UsersDashboard"
 import { UsersTable } from "./UsersTable"
 
 export const metadata: Metadata = {
   title: "Users",
 }
 
-const KPI_LABELS: Array<{
-  key: "totalUsers" | "newUsers30d" | "usersWithAnalyses" | "totalAnalyses" | "suspendedUsers"
+import type { BackstageUserKpis } from "@/lib/backstage/users"
+
+/** StageLink-style KPI cards: big number, colored, with a one-line footnote. */
+function kpiCards(kpis: BackstageUserKpis): Array<{
   label: string
-}> = [
-  { key: "totalUsers", label: "Total users" },
-  { key: "newUsers30d", label: "New · 30d" },
-  { key: "usersWithAnalyses", label: "Ran ≥1 analysis" },
-  { key: "totalAnalyses", label: "Analyses total" },
-  { key: "suspendedUsers", label: "Suspended" },
-]
+  value: number
+  sub: string
+  valueClass: string
+}> {
+  return [
+    {
+      label: "Total users",
+      value: kpis.totalUsers,
+      sub: `${kpis.suspendedUsers} suspended`,
+      valueClass: "ec-gradient-text",
+    },
+    {
+      label: "Active · 30 days",
+      value: kpis.activeUsers30d,
+      sub: `${kpis.dormantUsers} dormant`,
+      valueClass: "text-[#4ADE80]",
+    },
+    {
+      label: "Paid plans",
+      value: kpis.proUsers,
+      sub: "entitled today (Stripe)",
+      valueClass: "text-ec-violet",
+    },
+    {
+      label: "New · 30 days",
+      value: kpis.newUsers30d,
+      sub: `${kpis.usersWithAnalyses} of all users ran ≥1 analysis`,
+      valueClass: "text-ec-cyan",
+    },
+  ]
+}
 
 export default async function BackstageUsersPage() {
   const [
@@ -53,13 +80,16 @@ export default async function BackstageUsersPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {KPI_LABELS.map(({ key, label }) => (
-          <Bento key={key} tone="panel" className="space-y-1.5 p-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {kpiCards(kpis).map(({ label, value, sub, valueClass }) => (
+          <Bento key={label} tone="panel" className="space-y-1.5 p-4">
             <BentoLabel>{label}</BentoLabel>
-            <p className="font-heading text-2xl font-bold text-white">
-              {kpis[key]}
+            <p
+              className={`font-heading text-3xl font-bold leading-none ${valueClass}`}
+            >
+              {value}
             </p>
+            <p className="font-mono text-[10.5px] text-ec-text-dim">{sub}</p>
           </Bento>
         ))}
       </div>
@@ -67,6 +97,8 @@ export default async function BackstageUsersPage() {
       {/* Full width on purpose: with a side column the 8-column table forced
           horizontal scroll at desktop widths. */}
       <UsersTable users={users} />
+
+      <UsersDashboard users={users} />
 
       {/* Above the activity feed on purpose: the feed is a record of what
           happened, and this is a list of what is owed with a date on it. */}

@@ -199,3 +199,45 @@ export async function updateDisplayName(
 
   logInfo("profile.name_rectified", { workosUserId })
 }
+
+/** Presence writes are throttled: one per profile per half hour is plenty. */
+const PRESENCE_THROTTLE_MS = 30 * 60 * 1000
+
+/**
+ * Records that this profile is using the app right now, and from where.
+ * StageLink's recordLastSeen pattern: skip the write while the last one is
+ * fresh, EXCEPT when this request would teach us a country we don't have or
+ * a change of country — and never erase a known country on a request that
+ * carries none. Callers treat failures as non-fatal (presence is telemetry,
+ * not product state).
+ */
+export async function recordProfilePresence(
+  profile: Profile,
+  countryCode: string | null
+): Promise<void> {
+  const now = Date.now()
+  const lastSeenMs = profile.last_seen_at
+    ? new Date(profile.last_seen_at).getTime()
+    : null
+  const fresh =
+    lastSeenMs !== null && now - lastSeenMs < PRESENCE_THROTTLE_MS
+  const learnsCountry =
+    countryCode !== null && countryCode !== profile.last_seen_country
+
+  if (fresh && !learnsCountry) {
+    return
+  }
+
+  const supabase = getSupabaseAdminClient()
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      last_seen_at: new Date(now).toISOString(),
+      ...(countryCode !== null ? { last_seen_country: countryCode } : {}),
+    })
+    .eq("id", profile.id)
+
+  if (error) {
+    throw new Error("Unable to record profile presence.")
+  }
+}

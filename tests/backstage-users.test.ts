@@ -11,6 +11,10 @@ function profile(
     created_at: string
     updated_at: string
     suspended_at: string | null
+    plan: string
+    plan_status: string | null
+    last_seen_at: string | null
+    last_seen_country: string | null
   }> = {}
 ) {
   return {
@@ -19,6 +23,10 @@ function profile(
     created_at: overrides.created_at ?? "2026-01-01T00:00:00Z",
     updated_at: overrides.updated_at ?? "2026-07-01T00:00:00Z",
     suspended_at: overrides.suspended_at ?? null,
+    plan: overrides.plan ?? "free",
+    plan_status: overrides.plan_status ?? null,
+    last_seen_at: overrides.last_seen_at ?? null,
+    last_seen_country: overrides.last_seen_country ?? null,
   }
 }
 
@@ -91,6 +99,9 @@ describe("computeUserKpis", () => {
       usersWithAnalyses: 2,
       totalAnalyses: 3,
       suspendedUsers: 1,
+      activeUsers30d: 2,
+      dormantUsers: 0,
+      proUsers: 0,
     })
   })
 })

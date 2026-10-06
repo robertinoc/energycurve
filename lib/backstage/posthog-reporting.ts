@@ -223,3 +223,70 @@ export async function getBackstageAnalyticsSummary(
     )
   }
 }
+
+/**
+ * Read-side enrichment for the Users table: last geoip country and
+ * first-touch attribution per identified person. Keyed by distinct_id,
+ * which equals the profile id once the dashboard identify() has run — the
+ * UUID filter drops anonymous device ids. Fails open to an empty map:
+ * the Users table must render without PostHog.
+ */
+export interface BackstagePersonFactsRow {
+  countryCode: string | null
+  utmSource: string | null
+  referrerDomain: string | null
+}
+
+const UUID_LIKE = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
+function cleanFact(value: unknown): string | null {
+  const text = String(value ?? "").trim()
+
+  return text === "" || text === "null" ? null : text
+}
+
+export async function fetchBackstagePersonFacts(): Promise<
+  Map<string, BackstagePersonFactsRow>
+> {
+  const config = getConfig()
+  const facts = new Map<string, BackstagePersonFactsRow>()
+
+  if (!config) {
+    return facts
+  }
+
+  const query = `
+    SELECT
+      distinct_id,
+      argMaxIf(
+        toString(properties.$geoip_country_code),
+        timestamp,
+        isNotNull(properties.$geoip_country_code)
+      ) AS country,
+      any(toString(person.properties.$initial_utm_source)) AS utm_source,
+      any(toString(person.properties.$initial_referring_domain)) AS referrer
+    FROM events
+    WHERE timestamp >= now() - INTERVAL 365 DAY
+      AND match(distinct_id, '${UUID_LIKE}')
+    GROUP BY distinct_id
+  `
+
+  try {
+    const rows = await runHogQLQuery(config, query)
+
+    for (const row of rows) {
+      const id = String(row[0] ?? "")
+      const country = cleanFact(row[1])?.toUpperCase() ?? null
+
+      facts.set(id, {
+        countryCode: country && /^[A-Z]{2}$/.test(country) ? country : null,
+        utmSource: cleanFact(row[2]),
+        referrerDomain: cleanFact(row[3]),
+      })
+    }
+  } catch (error) {
+    logError("backstage.person_facts_failed", error, {})
+  }
+
+  return facts
+}
