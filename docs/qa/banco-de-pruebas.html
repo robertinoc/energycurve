@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">140</strong>
+      <strong id="tally-total">146</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -502,9 +502,10 @@
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
     <p><strong>Ya no hay nada que bloquee el día.</strong> Lo que bloqueaba —las migraciones de dev, la <code>0005</code> y sus siete géneros— está resuelto: el 02/10 <code>scripts/seed-scale.mjs status</code> leyó en dev los doce géneros y las 32 migraciones sin tablas, columnas ni enums faltantes. Sobre REST no se ven índices ni políticas; el chequeo completo sigue esperando <code>MIGRATION_DB_URL</code> (DB.2). Lo que espera algo tuyo, ordenado por lo que destraba, está en <code>docs/pendientes-robertino.md</code>: arriba de todo, un ajuste de dos minutos en PostHog (L16.1).</p>
-    <p style="margin:9px 0 0"><strong>La suite E2E:</strong> al 02/10 (lote 16) <strong>1266 pasan / 46 saltean / 0 fallan en 4,9 minutos</strong>, sin reintentos (lote 14: 927 / 37 / 0). Los saltos son deliberados: el arco de pagos sin <code>stripe listen</code>, el sitemap que corre sólo en Chromium, el importador que corre una vez sobre FREE, el plan free en PRO y PRO+, y el test del request de PostHog, que corre sólo en Chromium. Un solo comando: <code>npm run test:e2e</code> corre los cinco shards en paralelo y devuelve un resumen. Las tres cuentas quedaron en <strong>0 playlists</strong>.</p>
+    <p style="margin:9px 0 0"><strong>La suite E2E:</strong> al 06/10 (lote 17) <strong>1266 pasan / 46 saltean / 0 fallan en 11,3 minutos</strong>, sin reintentos (lote 16: los mismos 1266 / 46 / 0 en 4,9 minutos; la diferencia de tiempo es el shard de Firefox, y su causa no se investigó). Los saltos son deliberados: el arco de pagos sin <code>stripe listen</code>, el sitemap que corre sólo en Chromium, el importador que corre una vez sobre FREE, el plan free en PRO y PRO+, y el test del request de PostHog, que corre sólo en Chromium. Un solo comando: <code>npm run test:e2e</code> corre los cinco shards en paralelo y devuelve un resumen. Las tres cuentas quedaron en <strong>0 playlists</strong>.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
     <ol style="margin:6px 0 0 18px;padding:0">
+      <li><strong>L17 — 45 min.</strong> Los arreglos del lote 17, que eran casi todos silenciosos: L17.1 es exportar tus datos y contar los temas del archivo, y es la que importa. L17.6 se corre en tu máquina contra dev.</li>
       <li><strong>L16 — 40 min.</strong> Los cinco arreglos del lote 16 (H-15, H-17, H-18, H-19, IMP.1) y el botón de login en español, que no tenía fila: arrancan en «Validar fix». L16.1 es la que importa: es una promesa de privacidad publicada.</li>
       <li><strong>E2E.1 — 10 min.</strong> Corré <code>npm run test:e2e</code> y confirmá el cero. Es tu línea de base del día: si algo falla acá, lo de abajo no se interpreta.</li>
       <li><strong>DB.2 a DB.4 — 25 min.</strong> El semáforo completo en dev y por primera vez en producción. Necesitan la connection string, que es tuya.</li>
@@ -518,7 +519,8 @@
       <li><strong>CONT.4 y CONT.5 — 30 min.</strong> Las 21 definiciones leídas por un DJ, y el validador de Google. Las dos que deciden si el contenido sirve.</li>
       <li><strong>El resto de SEO</strong> — validadores ajenos y Search Console. No dependen de vos hoy.</li>
     </ol>
-    <p style="margin:9px 0 0"><strong>Los puntos de quiebre ahora tienen número, y aguantan menos de lo que decían.</strong> Medido el 02/10 contra dev con datos sembrados (<code>docs/qa/carga-2026-10.md</code>): un filtro por lista de ids falla a partir de ~400, así que con ~400 playlists el dashboard se cae y el export de datos personales entrega cero temas sin avisar; el export se corta en 50.000 filas sin decirlo; y la lista de playlists del menú lateral cuenta mal desde 1.000 temas en total. El pico objetivo (50 usuarios, 2 s) <strong>no se cumple en un proceso local</strong>: el p95 del dashboard es 1,8 s con un usuario y 56 s con cincuenta. Contra Vercel no se midió. Nada de eso se arregló todavía: el lote 16 medía.</p>
+    <p style="margin:9px 0 0"><strong>Los puntos de quiebre están arreglados (lote 17, 06/10), y el pico sigue sin cumplirse.</strong> Medido contra dev al mismo volumen en que fallaban (<code>docs/qa/carga-2026-10.md</code>): con 400 playlists el dashboard carga y el export trae todos los temas; con 60.000 temas el export trae los 60.000 sin repetir ninguno; la lista del menú lateral cuenta bien; reordenar ya no traba el set. Lo que <strong>no</strong> cambió es el pico: con 10 usuarios en la mezcla el dashboard sigue en ~11 s de p95, porque la CPU se va en el orden sugerido que la página de análisis calcula en cada render (H-23, 89 % de la CPU ocupada). El dashboard solo, con 10 usuarios, da 1,5 s. Contra Vercel no se midió.</p>
+    <p style="margin:9px 0 0"><strong>Lote 17 agregó 6 filas y no retiró ninguna</strong>: 140 → 146. Ninguna fila vieja verificaba lo que este lote arregló — nadie había probado a mano exportar una librería grande, que es justamente por qué los defectos eran silenciosos.</p>
     <p style="margin:9px 0 0"><strong>Lote 16 retiró 30 filas</strong>, cada una por una de tres razones: la cubre un test automático (SEO.1, SEO.7, SEO.8, SEO.9, SEO3.7, CONT.6, DB.5, E2E.1b), ya se hizo o se resolvió (A1 entera, A2.1–A2.6, A3.1, DB.1, E2E.1c, SEO3.5, SEO3.6, SEO4.4, SEO5.4, y SEO.6, que se dio vuelta: <code>/blog</code> es indexable desde que hay artículos en inglés), o la reemplaza otra fila (CONT.3, CONT.7 e IMP.1 por L16.3, L16.2 y L16.5; F45.2 era SEO4.6 con nombres de eventos que no existen). El detalle está en el handoff, sección del lote 16.</p>
     <p style="margin:9px 0 0">Las sesiones <strong>A4</strong> (backups) y <strong>A6</strong> (consolas) no entran en un día y no bloquean nada: agendalas aparte.</p>
   </div>
@@ -549,6 +551,50 @@
   ];
 
   var SESSIONS = [
+    {
+      code: "L17",
+      title: "Validar los arreglos del lote 17: lo que fallaba con una librería grande",
+      meta: "~45 min · necesita el deploy del lote 17 · L17.1 y L17.2 con tu cuenta, L17.6 en tu máquina contra dev",
+      why: "El lote 17 arregló los cinco puntos de quiebre de <code>docs/qa/carga-2026-10.md</code> y seis defectos más del mismo origen (H-21 y H-22). Cada uno se probó contra dev con el volumen en que fallaba y tiene un test que falla sin el arreglo. Casi todos eran <strong>silenciosos</strong>: el producto mostraba un número creíble y equivocado, o un archivo de «tus datos» incompleto. Nadie los nota usando el producto, y por eso cada uno tiene su fila. Primer paso: confirmar en Vercel que producción sirve el merge del lote 17.",
+      tests: [
+        {
+          code: "L17.1", initial: "validar", title: "Exportá tus datos y contá los temas del archivo", sub: "Punto 2 · un derecho del GDPR · H-22.1 y H-22.2",
+          steps: ["Con la cuenta que más playlists tenga, Mi cuenta → «Descargar mis datos»", "Abrí el JSON y mirá el bloque <code>counts</code> del principio", "En la consola del navegador, con el archivo pegado en <code>d</code>: <code>[d.tracks.length, new Set(d.tracks.map(t =&gt; t.id)).size, d.counts.tracks]</code>", "Compará con la cantidad de temas que dice el dashboard"],
+          expect: "Los tres números iguales entre sí y al total del dashboard. Antes del lote 17, con ~400 playlists el archivo traía <strong>cero</strong> temas y con más de 50.000 se cortaba y repetía filas, siempre con un 200. Ahora trae todo o responde un error que dice que no mandó una copia parcial.",
+          ifNot: "Si el archivo trae menos temas que el dashboard, es el defecto más grave del repo: anotá cuántas playlists y temas tiene la cuenta. Si la descarga falla con un 413, es el límite de 4,5 MB de Vercel: el export ahora sale en streaming, pero eso <strong>no se pudo verificar fuera de producción</strong> (los previews usan la misma <code>SUPABASE_URL</code>). Hace falta una cuenta con más de ~7.000 temas para verlo; si no hay ninguna, anotalo así."
+        },
+        {
+          code: "L17.2", initial: "validar", title: "El conteo de temas de cada playlist en el menú lateral", sub: "H-21 · punto 5 · en todas las páginas del dashboard",
+          steps: ["En una cuenta con más de 1.000 temas en total, abrí el dashboard", "Elegí tres playlists del menú lateral y anotá su conteo", "Abrí cada una y contá sus temas en la tabla"],
+          expect: "El conteo del menú es el de la tabla, en las tres. Antes, con más de 1.000 temas sumando todas, la mayoría mostraba 0 (96 de 100 en la medición con 30.000).",
+          ifNot: "Si alguna dice 0 y tiene temas, producción no tiene el lote 17. Si no hay ninguna cuenta con más de 1.000 temas, esta fila no se puede correr en producción: dejala en «Bloqueada» con esa nota."
+        },
+        {
+          code: "L17.3", initial: "validar", title: "La librería global con muchas playlists", sub: "H-22.3 · la cuarta copia del filtro por lista de ids",
+          steps: ["En la cuenta con más playlists, abrí la librería global", "Mirá el total de discos y si dice que está incompleta", "Buscá un tema que sepas que está en una playlist vieja"],
+          expect: "La librería muestra discos y el tema aparece. Con 400 playlists se mostraba vacía, y a 30.000 temas perdía algunos por paginar sin orden. A más de 50.000 filas dice que está incompleta: eso es a propósito.",
+          ifNot: "Si está vacía teniendo playlists, anotá cuántas playlists tiene la cuenta."
+        },
+        {
+          code: "L17.4", initial: "validar", title: "Los sets compartidos con vos muestran su cantidad de temas", sub: "H-22.4 · la tercera copia del conteo",
+          steps: ["Con la cuenta PRO+, compartí un set de más de 100 temas con la cuenta PRO", "Con la PRO, abrí «Compartidos conmigo»"],
+          expect: "El set con su cantidad de temas real delante de «compartido por». Si el conteo no se puede leer, no aparece número: antes aparecía 0.",
+          ifNot: "Si dice 0 con temas, producción no tiene el lote 17."
+        },
+        {
+          code: "L17.5", initial: "validar", title: "Reordenar y volver a reordenar un set grande", sub: "H-22.6 · punto 4 · un fallo trababa el set para siempre",
+          steps: ["Con la cuenta PRO, importá un set de 500 temas (el máximo de una importación)", "Arrastrá un tema diez lugares y guardá", "Arrastrá el último al principio y guardá", "Recargá la página y confirmá el orden"],
+          expect: "Los dos guardados terminan, el orden es el que dejaste y sobrevive a la recarga. Un arrastre corto escribe sólo los temas que se mueven. Medido contra dev desde la Mac: 3,3 s un arrastre de diez lugares en un set de 1.000, y 16 a 18 s una inversión completa de 1.000.",
+          ifNot: "Si un guardado falla y el siguiente también, anotá el set: antes del lote 17 un fallo dejaba temas en posiciones temporales y ese set no se podía volver a guardar nunca. Ahora el siguiente guardado lo repara."
+        },
+        {
+          code: "L17.6", initial: "validar", title: "Un set de más de 1.000 temas se ve entero", sub: "H-22.5 · en tu máquina contra dev, porque ninguna importación llega a 1.000",
+          steps: ["En tu máquina, con <code>.env.local</code> apuntando a dev: <code>node scripts/seed-scale.mjs seed --seed 1606 --owner TU_EMAIL_DE_PRUEBA --playlists 1 --tracks 1200</code>", "<code>npm run dev</code> y abrí ese set", "Fijate el número del último tema de la tabla", "Al terminar: <code>node scripts/seed-scale.mjs clean</code>"],
+          expect: "El último tema es el 1.200. Antes la página mostraba 1.000 sin avisar, y un reordenamiento se validaba contra esos 1.000.",
+          ifNot: "Si se ve el 1.000, la rama no tiene el lote 17. El generador se niega a correr contra producción por nombre, así que esto no puede tocarla."
+        }
+      ]
+    },
     {
       code: "L16",
       title: "Validar los arreglos del lote 16, y uno que quedó suelto",
