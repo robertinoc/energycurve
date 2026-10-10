@@ -48,9 +48,10 @@ import {
  * - It runs only in `auth-proPlus`, inside the authenticated shard, which is
  *   one worker by design (playwright.config.ts): no other authenticated test
  *   runs while these rows exist.
- * - It seeds in `beforeAll` and deletes **its own seeds** in `afterAll`, by
- *   seed number — never with `seed-scale.mjs clean`, which deletes every marked
- *   row in dev whoever wrote it (see `deleteSeeds` for the day that mattered).
+ * - It seeds in `beforeAll` and deletes **its own seeds** in `afterAll`, with
+ *   `seed-scale.mjs clean --seed N` — never a bare `clean`, which deletes every
+ *   marked row in dev whoever wrote it (see `deleteSeeds` for the day that
+ *   mattered).
  *   The seeded rows carry `created_at` in September, so the `since`-based
  *   cleanup of the other specs never sees them, and this file never has to
  *   trust theirs.

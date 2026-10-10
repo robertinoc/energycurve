@@ -163,23 +163,22 @@ export async function seededPlaylistIds(seed: number): Promise<string[]> {
 /**
  * Deletes what these seeds wrote, and nothing else.
  *
- * Not `seed-scale.mjs clean`, and the reason cost another session its
- * measurement: `clean` deletes every marked row in dev, whoever seeded it. On
- * 06/10/2026 a debugging run of this file cleaned 31 playlists where it had
- * seeded one; the other 30 belonged to the lote 18 session, which was
- * measuring against them. Every foreign key to `playlists` is `on delete
- * cascade`, so deleting a seed's playlists takes its tracks, analyses,
- * versions and shares with it.
+ * Through `seed-scale.mjs clean --seed N`, one seed at a time — never a bare
+ * `clean`, and the reason cost another session its measurement: a bare `clean`
+ * deletes every marked row in dev, whoever seeded it. On 06/10/2026 a
+ * debugging run of this file cleaned 31 playlists where it had seeded one; the
+ * other 30 belonged to the lote 18 session, which was measuring against them.
+ *
+ * This used to be a delete of its own, written here before `--seed` existed.
+ * Now the generator that writes the rows is the only thing that removes them,
+ * so the marker, the escaping of the seed number and the children it clears
+ * live in one place. `seededPlaylistIds` stays as the independent read the
+ * spec closes with: it checks the generator's work by a path that is not the
+ * generator.
  */
 export async function deleteSeeds(seeds: readonly number[]): Promise<void> {
   for (const seed of seeds) {
-    const ids = await seededPlaylistIds(seed)
-
-    for (let i = 0; i < ids.length; i += 200) {
-      const { error } = await devDb().from("playlists").delete().in("id", ids.slice(i, i + 200))
-
-      if (error) throw new Error(`Deleting seed ${seed}: ${error.message}`)
-    }
+    seedScale(["clean", "--seed", String(seed)])
   }
 }
 
