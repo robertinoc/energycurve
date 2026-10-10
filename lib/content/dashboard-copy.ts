@@ -1412,6 +1412,19 @@ export const DASHBOARD_COPY = {
       en: "Write something first.",
       es: "Escribí algo primero.",
     },
+    // `no_access` from the collaboration service. Before this it fell through to
+    // genericError, which told a collaborator whose share had just been revoked
+    // to "try again" — the one thing that could never work (banco UX.4).
+    // Worded to be true for an id that was never shared too, so it confirms
+    // nothing about which sets exist, the same stance as the shared page's 404.
+    suggestionNoAccess: {
+      en: "This set isn't shared with you anymore, so nothing was sent. Ask the owner to share it again.",
+      es: "Este set ya no está compartido con vos, así que no se envió nada. Pedile al dueño que te lo vuelva a compartir.",
+    },
+    turnNoAccess: {
+      en: "This set isn't shared with you anymore, so you can't take the turn. Ask the owner to share it again.",
+      es: "Este set ya no está compartido con vos, así que no podés tomar el turno. Pedile al dueño que te lo vuelva a compartir.",
+    },
     importedSetName: {
       en: "Imported {source} set",
       es: "Set importado de {source}",

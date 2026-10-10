@@ -1321,7 +1321,9 @@ export async function addSuggestionAction(
       message:
         result.reason === "bad_body"
           ? ACTION_COPY.suggestionEmpty[locale]
-          : ACTION_COPY.genericError[locale],
+          : result.reason === "no_access"
+            ? ACTION_COPY.suggestionNoAccess[locale]
+            : ACTION_COPY.genericError[locale],
     }
   }
 
@@ -1447,7 +1449,9 @@ export async function takeEditTurnAction(
       message:
         result.reason === "held"
           ? ACTION_COPY.turnHeld[locale]
-          : ACTION_COPY.genericError[locale],
+          : result.reason === "no_access"
+            ? ACTION_COPY.turnNoAccess[locale]
+            : ACTION_COPY.genericError[locale],
     }
   }
 
