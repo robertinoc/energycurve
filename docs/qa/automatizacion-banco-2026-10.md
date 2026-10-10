@@ -155,8 +155,8 @@ vacía, como L17 o E2E, libera la sesión.
 | TOOL.3 | Un build con clave de PostHog y su filtro de navegadores automatizados apagado |
 | UX.2 | El listener de Stripe, como el spec de pagos |
 | UX.3 | Confirmar que el service worker de Gig Mode se registra en el build de prueba |
-| UX.4 | Escribirlo: dos sesiones a la vez, compartir y revocar. Lo que hay alcanza |
-| UX.5 | Escribir la cuota gastada en `feature_usage` y devolverla al terminar |
+| UX.4 | Escrito el 10/10 (`e2e/share-revoke-live.auth.spec.ts`); falta verlo en rojo y en verde con las cuentas. Ver «Seguimiento 10/10» |
+| UX.5 | Escrito el 10/10 (`e2e/quota-mid-flow.auth.spec.ts`); falta verlo en rojo y en verde con las cuentas. Ver «Seguimiento 10/10» |
 | SEO3.1 | Retener el JavaScript en la red de forma determinística |
 | SEO4.2 | Medir una animación sin depender del tiempo |
 | PAY.1 | El `stripe listen` logueado con la cuenta de Robertino |
@@ -202,6 +202,45 @@ siempre; el límite se descubre al intentar.
 - `scripts/seed-scale.mjs clean` borra todas las filas marcadas de dev, de
   quien sean. Le costó una medición al lote 18 (ver «La base de dev»). El lote
   18 le agregó `--seed` en su rama.
+
+## Seguimiento 10/10: UX.4 y UX.5, escritos y sin correr
+
+Escritos en un contenedor sin `.env.local` ni `.env.e2e.local`, así que **no
+corrieron nunca**: un spec que no corrió es un borrador (lo dice
+`e2e/helpers/import-playlist.ts`, con el costo). Las dos filas siguen en el
+banco hasta que se vean en rojo y en verde.
+
+| Fila | Spec | Proyecto | Qué afirma |
+|---|---|---|---|
+| UX.4 | `e2e/share-revoke-live.auth.spec.ts` | `auth-proPlus` (usa también la sesión de `pro`) | PRO+ comparte por el panel, PRO abre el set y se queda; PRO+ revoca con el botón «Remove». La sugerencia que PRO manda desde la página vieja no se guarda (cuenta `set_suggestions` en la base), la página no se rompe, al recargar sale el 404 del dashboard y el set deja la lista de «compartidos conmigo» |
+| UX.5 | `e2e/quota-mid-flow.auth.spec.ts` | `auth-free` | Con 1 ordenamiento disponible, la página lo dice; la persona mueve un tema a mano; la cuota se gasta por la base; el clic recibe 402, la frase propia de la cuota, el orden a mano sigue y el contador no sube. Recargada, el botón sale deshabilitado con «More on PRO» a `/pricing`. Devuelve la fila de `feature_usage` como estaba |
+
+**Cómo verlos en rojo** (en un worktree descartable, nunca en la rama):
+
+- UX.4: en `services/collaboration-service.ts`, que `addSuggestion` no corte
+  con `no_access` (borrar ese `return`). Tiene que ponerse en rojo: la
+  sugerencia se guarda y no aparece ningún mensaje.
+- UX.5: en `app/api/playlists/[id]/smart-order/route.ts`, cambiar
+  `if (!quota.allowed)` por `if (false)`. Tiene que fallar el 402.
+
+**Un hallazgo que salió de escribirlo, sin confirmar a mano.** Cuando a un
+colaborador le revocan el acceso con la página abierta y manda una
+sugerencia, `addSuggestionAction` traduce `no_access` al error genérico:
+«Something went wrong while saving. Please try again.» Es honesto en que no se
+guardó nada y falso en que reintentar sirva. La fila del banco pide «un
+mensaje claro». El test no afirma la frase, para no ponerse en rojo por copy:
+la adjunta al reporte («message B saw after the revocation»). Arreglarlo es
+una frase nueva en `ACTION_COPY` y un caso más en la acción; es producto, no
+de esta sesión.
+
+**Dos supuestos que la primera corrida tiene que confirmar:**
+
+- El arrastre de UX.5 usa `dragTo` sobre `li[draggable]` (drag and drop HTML5).
+  Chromium lo soporta en Playwright; si el contador «1 moved by hand» no
+  aparece, el problema es el instrumento.
+- UX.4 no afirma el status 404 del recargado: el dashboard transmite en
+  streaming y un `notFound()` puede llegar después de un 200. Afirma el
+  título del 404 del dashboard y adjunta el status.
 
 ## La base de dev, que es compartida
 
@@ -388,8 +427,8 @@ Destino: **Sale** — un test la cubre (nombrado); **Queda** — sigue en el ban
 | UX.1 | Estados vacíos autenticado | No automatizable | Que cada estado vacío *explique* es un juicio. Que exista ya lo cubren `e2e/onboarding-activation.auth.spec.ts` («shows a way to bring a set in, before there is any set») y `e2e/import-and-visualise.auth.spec.ts`. | Queda |
 | UX.2 | Errores de Stripe en checkout | Automatizable con trabajo | Tarjeta de rechazo y sesión vencida de Stripe: necesita el listener del CLI de Stripe, como `e2e/subscription-billing.auth.spec.ts`. | Queda |
 | UX.3 | Gig Mode sin conexión | Automatizable con trabajo | El service worker de Gig Mode con la red cortada (`context.setOffline`). Falta saber si el SW se registra en el build de prueba. | Queda |
-| UX.4 | Revocación de acceso en vivo | Automatizable con trabajo | Dos sesiones a la vez (PRO+ y PRO), compartir, revocar mientras la otra mira. Las dos sesiones existen; falta escribirlo. | Queda |
-| UX.5 | Cuota agotada a mitad de flujo | Automatizable con trabajo | Gastar la cuota de FREE escribiendo `feature_usage` desde la base, y devolverla al terminar. | Queda |
+| UX.4 | Revocación de acceso en vivo | Automatizable con trabajo | Dos sesiones a la vez (PRO+ y PRO), compartir, revocar mientras la otra mira. Escrito el 10/10, sin correr todavía. | Queda hasta verlo en rojo |
+| UX.5 | Cuota agotada a mitad de flujo | Automatizable con trabajo | Gastar la cuota de FREE escribiendo `feature_usage` desde la base, y devolverla al terminar. Escrito el 10/10, sin correr todavía. | Queda hasta verlo en rojo |
 | CONT.1 | Los componentes en un teléfono real | No automatizable | Un teléfono real, girado. | Queda |
 | CONT.2 | La escala de energía contra el score real | No automatizable | Contrastar con un set tuyo analizado. Que la tabla y el motor no se separen ya está garantizado por construcción: `components/content/escala-energia.tsx` dibuja desde `ENERGY_SCORE_BPM_BANDS` de `lib/product/strategy.ts`. | Queda |
 | CONT.4 | Las 21 definiciones, leídas por un DJ | No automatizable | Un DJ leyendo 21 definiciones. | Queda |
