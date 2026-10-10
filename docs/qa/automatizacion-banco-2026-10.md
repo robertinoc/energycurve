@@ -152,7 +152,7 @@ vacía, como L17 o E2E, libera la sesión.
 | J.1 | Un buzón de prueba que el test pueda leer. En dev Resend sólo entrega a una dirección |
 | J.4 | La mitad del arrastre se puede ya; la de H-10 necesita la cuenta de Anthropic sin crédito, un estado que el test no controla |
 | J.7 | Un CSV con tonalidades importado en PRO+ (una hora). Los nombres ya los cubren unitarios |
-| TOOL.3 | Hecho el 10/10: el build de CI ya tiene clave; el filtro se esquiva desde el test (user agent y `navigator.webdriver`), sin tocar el init del producto |
+| TOOL.3 | Hecho el 10/10: el build de CI ya tiene clave; el filtro se esquiva desde el test (user agent, client hints y `navigator.webdriver`), sin tocar el init del producto |
 | UX.2 | El listener de Stripe, como el spec de pagos |
 | UX.3 | Confirmar que el service worker de Gig Mode se registra en el build de prueba |
 | UX.4 | Escrito el 10/10 (`e2e/share-revoke-live.auth.spec.ts`); falta verlo en rojo y en verde con las cuentas. Ver «Seguimiento 10/10» |
@@ -301,9 +301,13 @@ La herramienta real, con consentimiento dado y PostHog corriendo. El build de
 CI ya trae una clave de PostHog (`phc_ci_placeholder`) con el host en el puerto
 9; el test contesta ese host con un PostHog falso, así el SDK sigue mandando y
 cada cuerpo se puede leer. Lo que faltaba era el filtro de navegadores
-automatizados de `posthog-js` (`headlesschrome` en el user agent y
-`navigator.webdriver`): el test se presenta como un Chrome común con un
-`addInitScript`, **sin tocar el init del producto**, que sigue filtrando bots.
+automatizados de `posthog-js` (`headlesschrome` en el user agent, en
+`navigator.userAgentData.brands` y `navigator.webdriver`): el test se presenta
+como un Chrome común con un `addInitScript`, **sin tocar el init del
+producto**, que sigue filtrando bots. Las *client hints* se agregaron después
+de la primera corrida de CI: el Chromium fijado de CI dice «HeadlessChrome» en
+`brands` y el del contenedor no, así que la primera versión pasaba acá y
+fallaba allá. Se reprodujo inyectando esa marca y se vio verde con el arreglo.
 
 Afirma dos cosas, y la segunda es la que impide que el test pase en vacío:
 ningún request (decodificando el gzip y la forma base64 que usa el SDK) lleva

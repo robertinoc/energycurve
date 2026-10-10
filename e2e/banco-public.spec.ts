@@ -424,6 +424,14 @@ test.describe("the energy tool with analytics on (banco TOOL.3)", () => {
   }) => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, "webdriver", { get: () => false })
+      // The newer headless Chromium also announces itself in the client hints
+      // (`userAgentData.brands` includes "HeadlessChrome"), and the SDK checks
+      // those too. CI's pinned build does; the container's older one did not,
+      // which is why the first version passed locally and failed in CI.
+      Object.defineProperty(navigator, "userAgentData", {
+        get: () => undefined,
+        configurable: true,
+      })
     })
 
     // The analytics host of the test build (NEXT_PUBLIC_POSTHOG_HOST in CI is
