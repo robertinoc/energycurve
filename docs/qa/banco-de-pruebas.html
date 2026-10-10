@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">116</strong>
+      <strong id="tally-total">120</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -501,7 +501,7 @@
 
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
-    <p><strong>Esta página es, desde el 06/10, sólo lo que necesita una persona.</strong> La sesión de automatización sacó 30 filas: 18 pasaron a ser tests de Playwright y 12 ya los tenían sin que el banco lo dijera. Quedan 116, y cada una necesita un oído, un teléfono en la mano, un lector de pantalla, una consola tuya o un juicio. Qué test reemplazó a cada fila, y por qué cada una de las que quedan no se puede automatizar, está en <code>docs/qa/automatizacion-banco-2026-10.md</code>.</p>
+    <p><strong>Esta página es, desde el 06/10, sólo lo que necesita una persona.</strong> La sesión de automatización sacó 30 filas: 18 pasaron a ser tests de Playwright y 12 ya los tenían sin que el banco lo dijera. Quedan 116 —y el lote 19 sumó cuatro, la sesión L19—, y cada una necesita un oído, un teléfono en la mano, un lector de pantalla, una consola tuya o un juicio. Qué test reemplazó a cada fila, y por qué cada una de las que quedan no se puede automatizar, está en <code>docs/qa/automatizacion-banco-2026-10.md</code>.</p>
     <p style="margin:9px 0 0"><strong>Lo que antes eran filas de validación es ahora una sola pregunta:</strong> ¿qué commit sirve producción? Los arreglos de los lotes 16 y 17 los prueba la suite contra un build de ese commit. Si Vercel sirve el merge y la suite está en cero, están validados; ya no hace falta contarlos a mano.</p>
     <p style="margin:9px 0 0"><strong>La suite E2E:</strong> al 06/10 (sesión de automatización del banco) <strong>1336 pasan / 67 saltean / 0 fallan, tres corridas seguidas iguales</strong>, de 6,1 a 6,3 minutos cada una, sin reintentos. Los saltos son deliberados y dicen por qué: los 46 de siempre (el arco de pagos sin <code>stripe listen</code>, el sitemap sólo en Chromium, el importador una vez sobre FREE, el plan free en PRO y PRO+, el request de PostHog sólo en Chromium) y 21 de los specs nuevos, que corren en un solo proyecto o en escritorio. Un solo comando: <code>npm run test:e2e</code> corre los cinco shards en paralelo y devuelve un resumen. Los tests de volumen siembran dev con <code>scripts/seed-scale.mjs</code>, borran sólo lo suyo y terminan afirmando que las cuentas quedaron como estaban.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
@@ -1361,9 +1361,41 @@
         },
         {
           code: "F45.4", title: "E25, E26, E27 y E31: lo externo", sub: "Menciones, StageLink, la corrida mensual, el log de PSI",
-          steps: ["E26: el enlace desde stagelink.art y el post «cómo planifican sets los DJs» en su blog", "E25: elegí el primer medio; los textos los redacto yo y no sale nada sin tu OK", "E27: la primera corrida de visibilidad en IA (SEO-E04) y la revisión de GSC, con nota de 10 líneas en Asana", "E31: la primera fila de <code>docs/seo/cwv-log.md</code> con PSI para 6 URLs"],
+          steps: ["E26: el enlace desde stagelink.art y el post «cómo planifican sets los DJs» en su blog", "E25: elegí el primer medio; los textos los redacto yo y no sale nada sin tu OK", "E27: el primer lunes del mes, <code>docs/seo/runbook-revision-mensual.md</code> de punta a punta — Search Console en ocho pantallas y la corrida de <code>docs/seo/ai-visibility-tracker.md</code> (SEO-E04) — y la nota de 10 líneas en Asana", "E31: ya no es manual desde el lote 19 — ver L19.2"],
           expect: "Una fila hecha de cada una alcanza para saber que el circuito funciona; las fases se cierran cuando el plan dice (≥3 menciones, 3 corridas, 4 filas).",
           ifNot: "Si alguna no va a hacerse, mejor decirlo y sacarla del plan que dejar el hito abierto indefinidamente."
+        }
+      ]
+    },
+    {
+      code: "L19",
+      title: "Lote 19: la RCE en producción, el registro de Core Web Vitals y el nombre del sitio",
+      meta: "~40 min · necesita el deploy (L19.1, L19.3, L19.4) · L19.2 necesita GitHub y Google Cloud",
+      why: "El lote 19 subió <code>next</code> a 16.3.8 por una ejecución remota de código crítica en <code>next/og</code> (commit <code>f59cf52</code>, solo, para deployarlo sin el resto). La suite prueba la rama; <strong>la vulnerabilidad sigue viva en producción hasta el deploy</strong>, y eso sólo se ve contra el dominio. Lo demás de esta sesión es lo que el lote construyó y un test no puede cerrar: el workflow semanal de PSI con su secret, el nombre del sitio en Google, y cómo se ven los 25 enlaces que antes salían como markdown.",
+      tests: [
+        {
+          code: "L19.1", title: "La tarjeta social después del deploy de la RCE", sub: "<code>next</code> 16.3.8, la que dibuja <code>ImageResponse</code>",
+          steps: ["En Vercel, confirmá que el deploy de producción incluye <code>f59cf52</code>", "<code>curl -sI https://energycurve.app/opengraph-image</code> y lo mismo para <code>/opengraph-image/energy-curve</code> y un artículo: <code>/opengraph-image/blog/es/como-cerrar-un-set-de-dj</code>", "Abrí cada una en el navegador", "Pegá <code>https://energycurve.app/tools/energy-curve</code> en un chat (WhatsApp o X) y mirá la vista previa"],
+          expect: "<code>200</code> y <code>content-type: image/png</code> en las tres; imágenes de 1200×630 con el texto entero y las tildes; la vista previa del chat muestra la tarjeta de la herramienta. Recién con esto la tarea «🔴 Next.js 16.3.4 → 16.3.6 o más» de Asana se cierra.",
+          ifNot: "Un 500 o un <code>text/html</code> en una tarjeta es que el salto rompió el render en el entorno de Vercel y no en el local: anotá la URL y el cuerpo de la respuesta. Si el deploy no incluye el commit, la RCE sigue expuesta: es lo primero."
+        },
+        {
+          code: "L19.2", title: "Cargar la key de PageSpeed y correr el registro una vez", sub: "SEO-E31, automatizado",
+          steps: ["Google Cloud → APIs y servicios: habilitá «PageSpeed Insights API» y creá una API key (restringila a esa API)", "GitHub → Settings → Secrets and variables → Actions → <strong>New repository secret</strong>, nombre exacto <code>PAGESPEED_API_KEY</code>", "Actions → «Core Web Vitals log» → <strong>Run workflow</strong>", "Mirá <code>docs/seo/cwv-log.md</code> en <code>main</code>"],
+          expect: "Los dos jobs en verde y un commit de <code>github-actions[bot]</code> con una fila nueva: fecha, versión de Lighthouse y seis celdas con números o con el error que dio la API para esa URL.",
+          ifNot: "Si <code>measure</code> falla con «Falta PAGESPEED_API_KEY», el secret no tiene ese nombre exacto. Si <code>commit</code> falla en el push, <code>main</code> tiene una protección que no deja escribir al bot: anotá el mensaje — la salida es permitirle a <code>github-actions</code> o cambiar el workflow a abrir un PR."
+        },
+        {
+          code: "L19.3", title: "El nombre del sitio en Google", sub: "<code>WebSite</code> en la portada, desde el lote 19",
+          steps: ["Después del deploy, pasá <code>https://energycurve.app/</code> por la Prueba de resultados enriquecidos de Google", "Unas semanas después, buscá <code>energycurve dj</code> y mirá el nombre que aparece arriba del resultado"],
+          expect: "La prueba lee el <code>WebSite</code> sin errores. En los resultados, el sitio figura como «EnergyCurve» (o «EnergyCurve DJ»), no como <code>energycurve.app</code> pelado.",
+          ifNot: "Google elige el nombre y puede tardar; si después de un mes sigue mostrando el dominio, anotalo con la fecha. No es un bug nuestro mientras la prueba lo lea sin errores."
+        },
+        {
+          code: "L19.4", title: "Los enlaces que antes salían como markdown", sub: "Negrita con enlace, y los bloques de la guía",
+          steps: ["Abrí <code>/blog/what-is-a-dj-set</code> y bajá a la lista de tipos de set", "Abrí <code>/guide/energy-curve-in-a-dj-set</code> y <code>/es/guia/curva-de-energia-en-un-set-de-dj</code>: el recuadro de «sin etiquetas», los cuatro pasos y la primera pregunta del FAQ", "Con VoiceOver o NVDA, recorré los enlaces de la lista del artículo"],
+          expect: "Ningún corchete a la vista. Los enlaces en negrita se ven como el resto de los enlaces del texto y siguen en negrita; el lector los anuncia como enlace con su texto («warm-up», «b2b»).",
+          ifNot: "Si un enlace en negrita no se distingue del texto (sin color ni subrayado), es un detalle de estilo de <code>.ec-prose a strong</code>: anotá la página y una captura."
         }
       ]
     }
