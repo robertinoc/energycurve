@@ -152,7 +152,7 @@ vacía, como L17 o E2E, libera la sesión.
 | J.1 | Un buzón de prueba que el test pueda leer. En dev Resend sólo entrega a una dirección |
 | J.4 | La mitad del arrastre se puede ya; la de H-10 necesita la cuenta de Anthropic sin crédito, un estado que el test no controla |
 | J.7 | Un CSV con tonalidades importado en PRO+ (una hora). Los nombres ya los cubren unitarios |
-| TOOL.3 | Un build con clave de PostHog y su filtro de navegadores automatizados apagado |
+| TOOL.3 | Hecho el 10/10: el build de CI ya tiene clave; el filtro se esquiva desde el test (user agent, client hints y `navigator.webdriver`), sin tocar el init del producto |
 | UX.2 | El listener de Stripe, como el spec de pagos |
 | UX.3 | Confirmar que el service worker de Gig Mode se registra en el build de prueba |
 | UX.4 | Escrito el 10/10 (`e2e/share-revoke-live.auth.spec.ts`); falta verlo en rojo y en verde con las cuentas. Ver «Seguimiento 10/10» |
@@ -294,6 +294,33 @@ Una trampa del instrumento, anotada: con el Chromium del contenedor,
 El test usa `page.emulateMedia` y afirma que `matchMedia` da `true` antes de
 seguir, para que un test de movimiento reducido no pueda pasar sin movimiento
 reducido.
+
+## Seguimiento 10/10: TOOL.3
+
+La herramienta real, con consentimiento dado y PostHog corriendo. El build de
+CI ya trae una clave de PostHog (`phc_ci_placeholder`) con el host en el puerto
+9; el test contesta ese host con un PostHog falso, así el SDK sigue mandando y
+cada cuerpo se puede leer. Lo que faltaba era el filtro de navegadores
+automatizados de `posthog-js` (`headlesschrome` en el user agent, en
+`navigator.userAgentData.brands` y `navigator.webdriver`): el test se presenta
+como un Chrome común con un `addInitScript`, **sin tocar el init del
+producto**, que sigue filtrando bots. Las *client hints* se agregaron después
+de la primera corrida de CI: el Chromium fijado de CI dice «HeadlessChrome» en
+`brands` y el del contenedor no, así que la primera versión pasaba acá y
+fallaba allá. Se reprodujo inyectando esa marca y se vio verde con el arreglo.
+
+Afirma dos cosas, y la segunda es la que impide que el test pase en vacío:
+ningún request (decodificando el gzip y la forma base64 que usa el SDK) lleva
+un título, un artista ni el nombre del set; y PostHog efectivamente mandó
+`tool_result_shown`. Visto en rojo agregándole al evento el nombre de la
+playlist: el test lo encontró adentro del payload comprimido. Verde tres
+corridas seguidas, sólo en Chromium (el user agent es de Chromium y el SDK es
+el mismo en los cuatro motores).
+
+Un detalle que salió de escribirlo, no un defecto: `e2e/tools.spec.ts` revisa
+`request.postData()` en crudo, que no ve lo que va comprimido. Hoy no importa
+porque ahí no hay consentimiento y PostHog no manda nada; si alguna vez ese
+test acepta las cookies, tendría que decodificar como lo hace este.
 
 ## La base de dev, que es compartida
 
@@ -451,7 +478,7 @@ Destino: **Sale** — un test la cubre (nombrado); **Queda** — sigue en el ban
 | SEO.5 | Sitemap en producción y Search Console | No automatizable | Search Console. El conteo y las rutas ya los afirman `e2e/public-surface.spec.ts` («sitemap.xml lists the public routes») y `e2e/sitemap-links.spec.ts`. | Queda, **recortada** a la mitad que necesita una persona |
 | TOOL.1 | Tu colección entera, y el selector de playlist | No automatizable | Tu colección real. El caso que la fila protege (leer sólo la primera playlist) ya lo cubre `tests/tool-energy-curve.test.ts`, «lists every playlist in a Rekordbox export, not just the first». | Queda |
 | TOOL.2 | Los otros formatos, con archivos tuyos | No automatizable | Archivos tuyos: los casos raros son justamente los que ningún fixture tiene. | Queda |
-| TOOL.3 | Nada del archivo sale por red — en producción | Automatizable con trabajo | Sin PostHog ya lo afirma `e2e/tools.spec.ts`, «no request carries a track title or an artist». Con PostHog cargado haría falta un build con clave y desactivar su filtro de navegadores automatizados, que descarta todo lo que sale de Playwright. | Queda |
+| TOOL.3 | Nada del archivo sale por red — en producción | Automatizable con trabajo | Sin PostHog ya lo afirma `e2e/tools.spec.ts`, «no request carries a track title or an artist». Con PostHog cargado haría falta un build con clave y desactivar su filtro de navegadores automatizados, que descarta todo lo que sale de Playwright. | **Sale el 10/10.** `e2e/banco-public.spec.ts` · «TOOL.3 · with consent given and PostHog sending…». Ver «Seguimiento 10/10: TOOL.3» |
 | TOOL.4 | El pase a signup, de punta a punta | No automatizable | Necesita registrar una cuenta nueva: el signup es de WorkOS, con verificación de mail en el medio. | Queda |
 | TOOL.5 | En el teléfono, con datos móviles | No automatizable | Un teléfono con datos móviles y Lighthouse contra producción. | Queda |
 | TOOL.6 | Los cuatro eventos en PostHog | No automatizable | La consola de PostHog. | Queda |

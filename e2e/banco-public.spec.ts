@@ -1,3 +1,5 @@
+import { gunzipSync } from "node:zlib"
+
 import { expect, test, type Page } from "@playwright/test"
 
 /**
@@ -260,7 +262,11 @@ test.describe("the blog filter before hydration (banco SEO3.1)", () => {
     // throttle shortens the race, this removes it.
     let release!: () => void
     const gate = new Promise<void>((resolve) => (release = resolve))
-    await page.route("**/_next/static/chunks/**", async (route) => {
+    // Scripts only. The same folder holds the stylesheets, and holding those
+    // too left Firefox with no layout at all: the select was in the DOM with
+    // no box, which Playwright reports as hidden (seen once in CI on #286).
+    // The window this test needs is the JavaScript one, not the CSS one.
+    await page.route(/\/_next\/static\/chunks\/.*\.js(\?.*)?$/, async (route) => {
       await gate
       await route.continue()
     })
@@ -360,5 +366,130 @@ test.describe("the below-the-fold reveal (banco SEO4.2)", () => {
         )
       }
     })
+  })
+})
+
+// --- TOOL.3 · nothing from the file leaves, with PostHog running --------------
+
+/** The same small Rekordbox export `e2e/tools.spec.ts` uses, with its own names. */
+const TOOL3_TRACKS = [
+  ["Tool Three Opener", "Leakcheck Alpha", 122, "8A"],
+  ["Tool Three Builder", "Leakcheck Bravo", 126, "9A"],
+  ["Tool Three Peak", "Leakcheck Charlie", 132, "10A"],
+  ["Tool Three Closer", "Leakcheck Delta", 124, "11A"],
+] as const
+
+const TOOL3_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<DJ_PLAYLISTS Version="1.0.0">
+  <PRODUCT Name="rekordbox" Version="6.7.7" Company="AlphaTheta"/>
+  <COLLECTION Entries="${TOOL3_TRACKS.length}">
+${TOOL3_TRACKS.map(
+  ([name, artist, bpm, key], index) =>
+    `    <TRACK TrackID="${index + 1}" Name="${name}" Artist="${artist}" AverageBpm="${bpm}.00" Tonality="${key}" TotalTime="360"/>`
+).join("\n")}
+  </COLLECTION>
+  <PLAYLISTS>
+    <NODE Type="0" Name="ROOT" Count="1">
+      <NODE Name="Tool Three Secret Set" Type="1" KeyType="0" Entries="${TOOL3_TRACKS.length}">
+${TOOL3_TRACKS.map((_, index) => `        <TRACK Key="${index + 1}"/>`).join("\n")}
+      </NODE>
+    </NODE>
+  </PLAYLISTS>
+</DJ_PLAYLISTS>`
+
+/** A request body as PostHog's SDK writes it: gzip, base64 form, or plain. */
+function readableBody(body: Buffer | null): string {
+  if (!body) return ""
+  if (body[0] === 0x1f && body[1] === 0x8b) return gunzipSync(body).toString("utf8")
+  const text = body.toString("utf8")
+  try {
+    return `${text} ${Buffer.from(decodeURIComponent(text.replace(/^data=/, "")), "base64").toString("utf8")}`
+  } catch {
+    return text
+  }
+}
+
+test.describe("the energy tool with analytics on (banco TOOL.3)", () => {
+  // The SDK and the page are the same code in every engine, and the user-agent
+  // override below is a Chromium string. One engine answers the row.
+  test.skip(({ browserName }) => browserName !== "chromium", "chromium only")
+
+  // PostHog drops automated browsers by default (`headlesschrome` in its UA
+  // list, and `navigator.webdriver`), which is right for the product and would
+  // leave this test reading an empty network. So the page is made to look like
+  // the browser a DJ actually has. The product's own init is not touched.
+  test.use({
+    userAgent:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+  })
+
+  test("TOOL.3 · with consent given and PostHog sending, no request carries a title, an artist or the set name", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "webdriver", { get: () => false })
+      // The newer headless Chromium also announces itself in the client hints
+      // (`userAgentData.brands` includes "HeadlessChrome"), and the SDK checks
+      // those too. CI's pinned build does; the container's older one did not,
+      // which is why the first version passed locally and failed in CI.
+      Object.defineProperty(navigator, "userAgentData", {
+        get: () => undefined,
+        configurable: true,
+      })
+    })
+
+    // The analytics host of the test build (NEXT_PUBLIC_POSTHOG_HOST in CI is
+    // port 9, discard). Answered here so the SDK sees a working PostHog and
+    // keeps sending, and so every body it writes can be read.
+    const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "http://127.0.0.1:9"
+    const events: string[] = []
+    await page.route(`${posthogHost}/**`, async (route) => {
+      const request = route.request()
+      if (request.method() === "POST") {
+        events.push(`${request.url()} ${readableBody(request.postDataBuffer())}`)
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: '{"status":1}',
+      })
+    })
+
+    const needles = [
+      ...TOOL3_TRACKS.flatMap(([name, artist]) => [name, artist]),
+      "Tool Three Secret Set",
+    ]
+    const leaks: string[] = []
+    page.on("request", (request) => {
+      const haystack = `${request.url()} ${readableBody(request.postDataBuffer())}`
+      for (const needle of needles) {
+        if (haystack.includes(needle) || haystack.includes(encodeURIComponent(needle))) {
+          leaks.push(`${needle} in ${request.method()} ${request.url()}`)
+        }
+      }
+    })
+
+    await page.goto("/tools/energy-curve")
+    await page.getByRole("button", { name: /^(Yes, count it|Sí, contála)$/ }).click()
+
+    await page.setInputFiles('[data-testid="tool-file-input"]', {
+      name: "collection.xml",
+      mimeType: "text/xml",
+      buffer: Buffer.from(TOOL3_XML, "utf8"),
+    })
+    await expect(page.getByTestId("tool-result")).toBeVisible()
+
+    // Not vacuous: PostHog really ran and really sent the tool's events. A
+    // check for leaks over a network with no analytics on it is the check
+    // e2e/tools.spec.ts already makes; this row exists for the other case.
+    await expect
+      .poll(() => events.some((body) => body.includes("tool_result_shown")), {
+        message: "PostHog sent tool_result_shown",
+        timeout: 15_000,
+      })
+      .toBe(true)
+
+    expect(leaks).toEqual([])
   })
 })
