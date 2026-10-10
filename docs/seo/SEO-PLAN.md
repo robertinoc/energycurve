@@ -81,7 +81,7 @@ Task ID `SEO-E##`. Effort: S ≤ 2h · M ≤ 1 day · L ≤ 3 days. Tags: `[code
 | SEO-E01 | **Claim Search Console** for `energycurve.app` (Domain property via DNS TXT at the registrar; fallback: set `GOOGLE_SITE_VERIFICATION` in Vercel prod so `app/layout.tsx` emits the meta). Submit `/sitemap.xml`. Request indexing for `/`, `/es`, `/pricing`, `/es/pricing`, `/energy-tags`, `/import-formats`, `/es/blog` + 5 posts. | external | S | Property verified; sitemap "Success"; 13 URLs requested |
 | SEO-E02 | Bing Webmaster Tools (import from GSC), submit sitemap. | external | S | Verified |
 | SEO-E03 | **Re-run the baseline** (`docs/seo-aeo-baseline-2026-08.md` method) → `docs/seo-aeo-baseline-2026-09.md`: 10 target queries, indexed status, competitor URLs (SetFlow, Mixgraph, HarmonySet, Phaso, DJ.Studio) ranking for each. | external | M | Dated file committed |
-| SEO-E04 | **AI-visibility tracker** `docs/seo/ai-visibility.md`: 10 prompts (5 EN: "how to order a DJ set by energy", "tool to analyze DJ set energy", "DJ set energy curve", "opening DJ set structure", "Mixed In Key alternative for set structure"; 5 ES equivalents). Engines: ChatGPT, Perplexity, Google AI Overviews/AI Mode, Claude, Gemini. | external | S | 10 × 5 table |
+| SEO-E04 | **AI-visibility tracker** `docs/seo/ai-visibility-tracker.md`: 10 prompts (5 EN: "how to order a DJ set by energy", "tool to analyze DJ set energy", "DJ set energy curve", "opening DJ set structure", "Mixed In Key alternative for set structure"; 5 ES equivalents). Engines: ChatGPT, Perplexity, Google AI Overviews/AI Mode, Claude, Gemini. | external | S | 10 × 5 table |
 | SEO-E05 | Keyword map without paid tools: GSC (once data arrives), Google/YouTube autocomplete, r/DJs & r/Beatmatch questions, DJ TechTools / Digital DJ Tips comment threads → `docs/seo/keyword-map.md` grouped EN/ES × intent (learn / compare / import / tool). | external | M | ≥60 queries mapped |
 | SEO-E06 | Fix stale `AGENTS.md` line (PreOrder → InStock reality) and add a `## SEO` pointer to this plan in `AGENTS.md` + `docs/roadmap-status.md`. | code | S | PR merged |
 
@@ -173,7 +173,7 @@ Task ID `SEO-E##`. Effort: S ≤ 2h · M ≤ 1 day · L ≤ 3 days. Tags: `[code
 | GSC property live / indexed URLs | none / unknown (not indexed in Aug) | ≥30 indexed | GSC |
 | Baseline queries with an EnergyCurve URL in top 20 (of 10) | 0 | ≥6 | `docs/seo-aeo-baseline-2026-09.md` re-run in Dec |
 | Non-brand organic clicks / month | 0 | ≥150 | GSC |
-| AI prompts citing EnergyCurve (of 10) | 0 (to confirm) | ≥3 | `docs/seo/ai-visibility.md` |
+| AI prompts citing EnergyCurve (of 10) | 0 (to confirm) | ≥3 | `docs/seo/ai-visibility-tracker.md` |
 | Blog posts live | 5 ES / 0 EN | ≥10 ES / ≥11 EN | sitemap |
 | Public URLs with valid JSON-LD | 4 | 100% | Rich Results Test |
 | Organic → first analysis | unknown | measured, ≥25 | PostHog |

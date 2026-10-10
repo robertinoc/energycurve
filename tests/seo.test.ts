@@ -32,6 +32,21 @@ describe("landing structured data", () => {
     expect(nodeOfType(graph, "FAQPage")).toBeDefined()
   })
 
+  // Lote 19. Google takes the site name shown above a result from `WebSite`
+  // on the domain's home page, and only there: `/es` is a subdirectory.
+  it("declares the site name on the root home page, and only there", () => {
+    const website = nodeOfType(buildLandingStructuredData({ locale: "en" })["@graph"], "WebSite")
+    expect(website).toMatchObject({
+      name: "EnergyCurve",
+      alternateName: "EnergyCurve DJ",
+      url: `${SITE_URL}/`,
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    })
+
+    const spanish = buildLandingStructuredData({ locale: "es" })["@graph"]
+    expect(spanish.some((node) => (node as { "@type": string })["@type"] === "WebSite")).toBe(false)
+  })
+
   it("names StageLink LLC as the parent organization", () => {
     const organization = nodeOfType(
       buildLandingStructuredData()["@graph"],

@@ -106,13 +106,55 @@ describe("least privilege", () => {
     expect(missing).toEqual([])
   })
 
-  it("never grants write to contents", () => {
+  /**
+   * One exception, by name (lote 19): the Core Web Vitals log has to commit
+   * its row, or SEO-E31 is a manual weekly task again. The rule exists so a
+   * write token never sits where third-party code runs — the install scripts
+   * of the dependency tree above all — and the exception is held to exactly
+   * that, below, rather than trusted.
+   */
+  const WRITERS = new Map([["cwv-log.yml", "commit"]])
+
+  it("never grants write to contents, outside the named exception", () => {
     const writers = workflows
       .filter(({ code }) => /contents:\s*write/.test(code))
       .map(({ file }) => file)
 
-    expect(writers).toEqual([])
+    expect(writers.filter((file) => !WRITERS.has(file))).toEqual([])
   })
+
+  /** One job's block: from `  <job>:` to the next two-space key. */
+  function jobBlock(code: string, job: string): string {
+    const start = code.search(new RegExp(`^  ${job}:\\s*$`, "m"))
+    if (start === -1) return ""
+    const rest = code.slice(start + 1)
+    const end = rest.search(/^ {2}\S/m)
+    return end === -1 ? rest : rest.slice(0, end)
+  }
+
+  for (const [file, job] of WRITERS) {
+    describe(`the exception, ${file}`, () => {
+      const workflow = workflows.find((entry) => entry.file === file)
+      const block = workflow ? jobBlock(workflow.code, job) : ""
+
+      it("grants write in that one job and nowhere else in the file", () => {
+        expect(workflow, file).toBeDefined()
+        expect(block).toMatch(/contents:\s*write/)
+        expect(workflow!.code.match(/contents:\s*write/g)).toHaveLength(1)
+      })
+
+      it("runs no node, npm, npx or third-party action but checkout in the writing job", () => {
+        expect(block).not.toMatch(/\b(node|npm|npx|yarn|pnpm)\b/)
+        const actions = [...block.matchAll(/uses:\s*(\S+)@/g)].map((m) => m[1])
+        expect(actions).toEqual(["actions/checkout"])
+      })
+
+      it("hands the token to one command, not to the checkout", () => {
+        expect(block).toMatch(/persist-credentials:\s*false/)
+        expect(block.match(/github\.token|secrets\.GITHUB_TOKEN/g)).toHaveLength(1)
+      })
+    })
+  }
 
   it("does not leave the token in .git/config before installing dependencies", () => {
     // checkout persists the token by default. The step after it is `npm ci`,

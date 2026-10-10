@@ -1,4 +1,5 @@
 import type { FaqEntry } from "@/lib/content/content-nodes"
+import { faqAnswerText } from "@/lib/blog/markdown"
 import { ENERGY_TAGS_FAQ } from "@/lib/content/energy-tags-copy"
 import { CHEAT_SHEET_FAQ } from "@/lib/content/harmonic-cheat-sheet-copy"
 import { IMPORT_FORMATS_FAQ } from "@/lib/content/import-formats-copy"
@@ -82,7 +83,7 @@ export function buildReferenceStructuredData(
           inLanguage: locale,
           entries: FAQS[path].map((item) => ({
             question: item.question[locale],
-            answer: item.answer[locale],
+            answer: faqAnswerText(item.answer[locale]),
           })),
         }),
       },

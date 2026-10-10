@@ -8,6 +8,7 @@
  * the landing page's FAQ, applied to the one new place that has questions.
  */
 
+import { faqAnswerText } from "@/lib/blog/markdown"
 import {
   glossaryIndexPath,
   glossaryTermPath,
@@ -195,7 +196,7 @@ export function buildGuideStructuredData(guide: Guide, locale: SiteLocale) {
         id: url,
         entries: faqEntries.map((entry) => ({
           question: entry.question[locale],
-          answer: entry.answer[locale],
+          answer: faqAnswerText(entry.answer[locale]),
         })),
       }),
     })
@@ -264,7 +265,7 @@ export function buildComparisonStructuredData(
         id: url,
         entries: faqEntries.map((entry) => ({
           question: entry.question[locale],
-          answer: entry.answer[locale],
+          answer: faqAnswerText(entry.answer[locale]),
         })),
       }),
     })

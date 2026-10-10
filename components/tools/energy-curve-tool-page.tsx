@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { ArticleLink } from "@/components/content/article-link"
 import { EnergyCurveTool } from "@/components/tools/energy-curve-tool"
 import { PageShell } from "@/components/marketing/page-shell"
 import { ContentFooter } from "@/components/marketing/content-footer"
@@ -22,9 +23,9 @@ import type { SiteLocale } from "@/lib/content/site-copy"
  * The five Spanish articles, linked where each one actually follows on from
  * something the page just said.
  *
- * Spanish slugs under both locales because that is where the articles are; an
- * English reader following one lands on Spanish, which is better than a link
- * that 404s and is what the blog index already tells them.
+ * Listed by Spanish slug; `<ArticleLink>` sends an English reader to the
+ * English twin. Until lote 19 every one of them went to Spanish under an
+ * English title, although all five have a translation.
  */
 const FURTHER_READING: Array<{
   slug: string
@@ -122,12 +123,12 @@ export function EnergyCurveToolPage({ locale }: { locale: SiteLocale }) {
         <ul className="flex flex-col gap-2">
           {FURTHER_READING.map((entry) => (
             <li key={entry.slug}>
-              <Link
-                href={localizedPath(`/blog/${entry.slug}`, "es")}
+              <ArticleLink
+                slug={entry.slug}
+                label={entry.label[locale]}
+                locale={locale}
                 className="text-sm text-ec-cyan underline-offset-4 hover:underline"
-              >
-                {entry.label[locale]}
-              </Link>
+              />
             </li>
           ))}
         </ul>

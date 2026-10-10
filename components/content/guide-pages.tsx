@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { ArticleLink } from "@/components/content/article-link"
 import { ContentBody } from "@/components/content/content-body"
 import { PageShell } from "@/components/marketing/page-shell"
 import { ContentFooter } from "@/components/marketing/content-footer"
@@ -174,16 +175,12 @@ export function GuidePage({
               ))}
               {guide.articles?.map((article) => (
                 <li key={article.slug}>
-                  <Link
-                    href={localizedPath(`/blog/${article.slug}`, "es")}
-                    hrefLang="es"
+                  <ArticleLink
+                    slug={article.slug}
+                    label={article.label[locale]}
+                    locale={locale}
                     className="text-ec-cyan underline-offset-4 hover:underline"
-                  >
-                    {article.label[locale]}
-                    {locale === "en" ? (
-                      <span className="text-white/50"> (en español)</span>
-                    ) : null}
-                  </Link>
+                  />
                 </li>
               ))}
             </ul>

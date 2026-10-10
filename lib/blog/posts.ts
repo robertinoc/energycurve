@@ -302,6 +302,33 @@ export function allPublishedPosts(): BlogPost[] {
   return localeDirs().flatMap((locale) => listPosts(locale))
 }
 
+/**
+ * Where a link to a Spanish article should take a reader of `locale` (lote 19).
+ *
+ * The glossary, the guides and the energy-curve tool list "further reading" by
+ * Spanish slug, from when every article was Spanish. Fifteen are English now,
+ * and every one the tool listed has an English twin — yet the English tool page
+ * sent its readers to Spanish under an English title, with no word that the
+ * page they were about to open was in another language. So: the translation
+ * when the pair is declared both ways (the same test `resolveTranslation`
+ * applies to the hreflang), and the Spanish original otherwise, which the
+ * caller marks as Spanish.
+ */
+export function articleLinkFor(
+  spanishSlug: string,
+  locale: SiteLocale
+): { href: string; locale: SiteLocale } {
+  const original = { href: localizedPath(`/blog/${spanishSlug}`, "es"), locale: "es" as const }
+  if (locale === "es") return original
+
+  const post = getPost("es", spanishSlug)
+  const twin = post ? resolveTranslation(post, listPosts(locale)) : null
+
+  return twin
+    ? { href: localizedPath(`/blog/${twin.slug}`, locale), locale }
+    : original
+}
+
 /** The other language. Two locales, so this is a flip. */
 function otherLocale(locale: SiteLocale): SiteLocale {
   return locale === "en" ? "es" : "en"
