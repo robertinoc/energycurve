@@ -262,7 +262,11 @@ test.describe("the blog filter before hydration (banco SEO3.1)", () => {
     // throttle shortens the race, this removes it.
     let release!: () => void
     const gate = new Promise<void>((resolve) => (release = resolve))
-    await page.route("**/_next/static/chunks/**", async (route) => {
+    // Scripts only. The same folder holds the stylesheets, and holding those
+    // too left Firefox with no layout at all: the select was in the DOM with
+    // no box, which Playwright reports as hidden (seen once in CI on #286).
+    // The window this test needs is the JavaScript one, not the CSS one.
+    await page.route(/\/_next\/static\/chunks\/.*\.js(\?.*)?$/, async (route) => {
       await gate
       await route.continue()
     })
