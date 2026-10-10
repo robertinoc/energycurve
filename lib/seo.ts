@@ -433,6 +433,31 @@ export function socialImages(locale: SiteLocale) {
   return [socialImage(locale)]
 }
 
+/**
+ * `WebSite`, for the site name Google shows above a result (lote 19).
+ *
+ * The one schema type the audit found missing with a concrete use: Google
+ * takes a site's display name from `WebSite` on the domain's home page, and
+ * without it falls back to guessing — from the title, or showing the bare
+ * domain. With energycurve.com (the agritech company) on the same word, the
+ * name and its "DJ" disambiguator are worth stating rather than leaving to a
+ * guess. Same two strings as `buildOrganization`.
+ *
+ * Home page of the domain only. Google reads site names at domain and
+ * subdomain level, not for a subdirectory, so `/es` gets none — emitting it
+ * there would be a second, competing declaration for the same domain.
+ */
+export function buildWebSite() {
+  return {
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
+    name: "EnergyCurve",
+    alternateName: "EnergyCurve DJ",
+    url: `${SITE_URL}/`,
+    publisher: { "@id": `${SITE_URL}/#organization` },
+  }
+}
+
 export function buildLandingStructuredData({
   locale = "en",
 }: StructuredDataOptions = {}) {
@@ -466,7 +491,12 @@ export function buildLandingStructuredData({
 
   return {
     "@context": "https://schema.org",
-    "@graph": [organization, application, faq],
+    // English is the root, `/`; Spanish is `/es`, a subdirectory (see
+    // `buildWebSite`).
+    "@graph":
+      locale === "en"
+        ? [buildWebSite(), organization, application, faq]
+        : [organization, application, faq],
   }
 }
 
