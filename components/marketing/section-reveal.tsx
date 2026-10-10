@@ -32,17 +32,17 @@ export function SectionReveal({
   eager = false,
 }: SectionRevealProps) {
   const ref = useRef<HTMLDivElement | null>(null)
-  const [visible, setVisible] = useState(() => {
-    if (eager) {
-      return true
-    }
-
-    if (typeof window === "undefined") {
-      return false
-    }
-
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  })
+  // Starts the same on the server and the client, always. It used to read
+  // `prefers-reduced-motion` in this initializer, which made the first client
+  // render disagree with the server's HTML: React 19 keeps the server's
+  // attributes on a hydration mismatch, so the DOM stayed at `opacity-0` while
+  // state said visible, and the effect below — seeing `visible` already true —
+  // never set up the observer. Every section under the hero stayed invisible
+  // for good, scroll or no scroll, for exactly the people who asked for less
+  // motion (banco SEO4.2, 10/10/2026). The preference is now CSS's job alone
+  // (`motion-reduce:opacity-100` below): no JavaScript reads it, so there is
+  // nothing for the server and the client to disagree about.
+  const [visible, setVisible] = useState(eager)
 
   useEffect(() => {
     if (visible) {
@@ -88,7 +88,7 @@ export function SectionReveal({
     <div
       ref={ref}
       className={cn(
-        "transition-[opacity,transform] duration-500 ease-out motion-reduce:transform-none motion-reduce:transition-none",
+        "transition-[opacity,transform] duration-500 ease-out motion-reduce:transform-none motion-reduce:opacity-100 motion-reduce:transition-none",
         visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
         className
       )}

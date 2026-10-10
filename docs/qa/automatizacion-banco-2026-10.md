@@ -157,8 +157,8 @@ vacía, como L17 o E2E, libera la sesión.
 | UX.3 | Confirmar que el service worker de Gig Mode se registra en el build de prueba |
 | UX.4 | Escrito el 10/10 (`e2e/share-revoke-live.auth.spec.ts`); falta verlo en rojo y en verde con las cuentas. Ver «Seguimiento 10/10» |
 | UX.5 | Escrito el 10/10 (`e2e/quota-mid-flow.auth.spec.ts`); falta verlo en rojo y en verde con las cuentas. Ver «Seguimiento 10/10» |
-| SEO3.1 | Retener el JavaScript en la red de forma determinística |
-| SEO4.2 | Medir una animación sin depender del tiempo |
+| SEO3.1 | Hecho el 10/10: `page.route` retiene los chunks hasta después de elegir |
+| SEO4.2 | Hecho el 10/10: se espera la opacidad final, sin dormir |
 | PAY.1 | El `stripe listen` logueado con la cuenta de Robertino |
 | AUD.3 | La cuota de IA del mes de FREE escrita en la base, y devuelta |
 
@@ -252,6 +252,48 @@ lo lleva a `turnNoAccess`, que ahora sí dice la verdad.
 - UX.4 no afirma el status 404 del recargado: el dashboard transmite en
   streaming y un `notFound()` puede llegar después de un 200. Afirma el
   título del 404 del dashboard y adjunta el status.
+
+## Seguimiento 10/10: SEO3.1 y SEO4.2, y lo que encontró SEO4.2
+
+Las dos estaban en «automatizables con trabajo» porque, escritas de la forma
+obvia, dependen de la velocidad de la máquina. Ahora no:
+
+- **SEO3.1** retiene **todos** los chunks de JavaScript en la red
+  (`page.route("**/_next/static/chunks/**")`) hasta que se eligió el tema, y
+  afirma que la página todavía no hidrató antes de elegir. No es un throttle,
+  que acorta la carrera: la saca. Después suelta los chunks, espera a que React
+  se pegue al `<select>` y afirma que la lista quedó filtrada.
+- **SEO4.2** espera estados, nunca tiempo: la opacidad final de cada sección,
+  que Playwright sondea. Afirma que el hero nace visible, que la sección de más
+  abajo sigue oculta después de hidratar (no aparecieron todas de golpe), que al
+  llegar con el scroll aparece, y que con movimiento reducido todas se ven sin
+  scroll.
+
+Los tres tests se vieron en rojo por la razón correcta: SEO3.1 sacándole el
+`<select>` a `useTypedBeforeHydration` («the list is filtered by it» falla), el
+SEO4.2 normal haciendo que todas las secciones nazcan visibles («a section far
+down waits for the scroll» falla), y el de movimiento reducido contra `main`
+sin tocar nada, que es el defecto de abajo. En verde, tres corridas seguidas
+sólo con Chromium (el contenedor no tiene los otros navegadores; CI los corre).
+
+**El defecto, confirmado en un build de producción local: con «reducir
+movimiento» activado, todas las secciones de la landing debajo del hero
+quedaban invisibles para siempre**, con o sin scroll. `SectionReveal` leía
+`prefers-reduced-motion` en el inicializador de `useState`: el servidor
+renderizaba `opacity-0`, el cliente arrancaba en `visible = true`, React 19
+conserva los atributos del servidor ante un desajuste de hidratación, y el
+efecto, viendo `visible` ya en `true`, nunca armaba el observer. Afectaba a `/`
+y `/es` (es el único uso de `SectionReveal`), para quien tiene activado
+«Reducir movimiento» en iOS, macOS, Windows o Android. Arreglado en el mismo
+PR: el estado arranca igual en servidor y cliente, y la preferencia la resuelve
+sólo el CSS (`motion-reduce:opacity-100`), así que no hay nada en qué
+desacordar. **Desde cuándo estaba en producción: sin confirmar.**
+
+Una trampa del instrumento, anotada: con el Chromium del contenedor,
+`test.use({ reducedMotion: "reduce" })` no llegó a `matchMedia` (dio `false`).
+El test usa `page.emulateMedia` y afirma que `matchMedia` da `true` antes de
+seguir, para que un test de movimiento reducido no pueda pasar sin movimiento
+reducido.
 
 ## La base de dev, que es compartida
 
@@ -459,13 +501,13 @@ Destino: **Sale** — un test la cubre (nombrado); **Queda** — sigue en el ban
 | SEO2.6 | Lighthouse mobile de las dos páginas de referencia | No automatizable | Lighthouse contra producción. | Queda |
 | SEO2.7 | /llms.txt leído por un modelo | No automatizable | Un modelo leyendo el archivo: juicio. | Queda |
 | SEO2.8 | El lastmod nuevo, en Search Console | No automatizable | Search Console. | Queda |
-| SEO3.1 | El filtro del índice antes de que hidrate | Automatizable con trabajo | Elegir en el desplegable antes de hidratar: hay que retener el JavaScript en la red de forma determinística para que el test no dependa de la velocidad de la máquina. | Queda |
+| SEO3.1 | El filtro del índice antes de que hidrate | Automatizable con trabajo | Elegir en el desplegable antes de hidratar: hay que retener el JavaScript en la red de forma determinística para que el test no dependa de la velocidad de la máquina. | **Sale el 10/10.** `e2e/banco-public.spec.ts` · «SEO3.1 · a topic picked before the JavaScript arrives survives hydration» |
 | SEO3.2 | El desplegable con teclado y lector de pantalla | No automatizable | El lector de pantalla. | Queda |
 | SEO3.3 | Rich Results Test sobre el índice y un artículo | No automatizable | Rich Results Test. | Queda |
 | SEO3.4 | Las respuestas de la FAQ, arrancadas de contexto | No automatizable | Si la oración responde es un juicio; el «Sí.» pelado ya lo prohíbe un unitario. | Queda |
 | SEO3.8 | La entrada build-up, leída por un DJ | No automatizable | Un DJ leyendo una definición. | Queda |
 | SEO4.1 | La primera pantalla sin JavaScript | Automatizable ya | Un contexto con JavaScript apagado: el hero entero visible en `/` y `/es`. | **Sale.** `e2e/banco-public.spec.ts` · «SEO4.1 · / and /es show their whole hero with scripts off» |
-| SEO4.2 | El revelado de abajo del pliegue sigue andando | Automatizable con trabajo | Medir una animación al hacer scroll sin que el test dependa del tiempo; con `reducedMotion: reduce` es fácil, la otra mitad no. | Queda |
+| SEO4.2 | El revelado de abajo del pliegue sigue andando | Automatizable con trabajo | Medir una animación al hacer scroll sin que el test dependa del tiempo; con `reducedMotion: reduce` es fácil, la otra mitad no. | **Sale el 10/10.** `e2e/banco-public.spec.ts` · «SEO4.2 · the hero is painted at once…» y «SEO4.2 · with reduced motion…». Encontró un defecto: ver «Seguimiento 10/10: SEO3.1 y SEO4.2» |
 | SEO4.3 | Lighthouse mobile y el elemento LCP | No automatizable | Lighthouse contra producción. | Queda |
 | SEO4.5 | Los CTAs de contenido y el evento | No automatizable | El evento en la consola de PostHog. | Queda |
 | SEO4.6 | El embudo en PostHog | No automatizable | Configurar PostHog. | Queda |

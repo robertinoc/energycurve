@@ -232,3 +232,133 @@ test.describe("the landing without JavaScript (banco SEO4.1)", () => {
     })
   }
 })
+
+// --- SEO3.1 and SEO4.2 · with the clock taken out ----------------------------
+//
+// Both were "automatable with work" for the same reason: written naively, each
+// depends on how fast the machine is. SEO3.1 needs a choice made *before*
+// hydration, and on a fast machine that window is too short to hit; SEO4.2
+// needs an animation measured, and a sleep long enough to be safe on CI is a
+// guess. So neither waits on time: SEO3.1 holds every JavaScript chunk at the
+// network until the choice is made, and SEO4.2 waits on the opacity a section
+// ends at, polled by Playwright.
+
+/** True once React has attached to this element — the hydration signal. */
+async function waitForHydration(page: Page, selector: string) {
+  await page.waitForFunction(
+    (sel) => {
+      const el = document.querySelector(sel)
+      return el !== null && Object.keys(el).some((key) => key.startsWith("__react"))
+    },
+    selector
+  )
+}
+
+test.describe("the blog filter before hydration (banco SEO3.1)", () => {
+  test("SEO3.1 · a topic picked before the JavaScript arrives survives hydration", async ({ page }) => {
+    // Every chunk waits here until the choice is made. Not a throttle: a
+    // throttle shortens the race, this removes it.
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => (release = resolve))
+    await page.route("**/_next/static/chunks/**", async (route) => {
+      await gate
+      await route.continue()
+    })
+
+    await page.goto("/es/blog", { waitUntil: "commit" })
+
+    const select = page.getByTestId("blog-tag-filter")
+    await expect(select).toBeVisible()
+
+    // Nothing has hydrated: the control is the server's HTML and nothing else.
+    const hydratedEarly = await select.evaluate((el) =>
+      Object.keys(el).some((key) => key.startsWith("__react"))
+    )
+    expect(hydratedEarly, "the gate held the JavaScript back").toBe(false)
+
+    // The least-used topic, so the filtered list is a strict subset.
+    const options = await select.locator("option").evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        value: (node as HTMLOptionElement).value,
+        label: node.textContent ?? "",
+      }))
+    )
+    const topic = options.filter((option) => option.value !== "").at(-1)
+    expect(topic, "the index offers at least one topic").toBeDefined()
+
+    const items = page.locator("main ul > li")
+    const total = await items.count()
+    const expected = await items
+      .filter({ has: page.locator("span", { hasText: new RegExp(`^${topic!.label}$`) }) })
+      .count()
+    expect(expected, "the chosen topic is a strict subset").toBeLessThan(total)
+    expect(expected).toBeGreaterThan(0)
+
+    await select.selectOption(topic!.value)
+
+    release()
+    await waitForHydration(page, '[data-testid="blog-tag-filter"]')
+
+    await expect(select, "the choice is still in the control").toHaveValue(topic!.value)
+    await expect(items, "the list is filtered by it, not showing everything").toHaveCount(expected)
+  })
+})
+
+test.describe("the below-the-fold reveal (banco SEO4.2)", () => {
+  /** The animated sections; an eager one carries no transition at all. */
+  const REVEAL = 'main div[class*="transition-[opacity,transform]"]'
+
+  test("SEO4.2 · the hero is painted at once, the rest waits for the scroll and then appears", async ({
+    page,
+  }) => {
+    await page.goto("/")
+    await waitForHydration(page, "main h1")
+
+    // Above the fold: born visible, nothing to animate.
+    await expect(page.locator("main h1").first()).toHaveCSS("opacity", "1")
+
+    const reveals = page.locator(REVEAL)
+    expect(await reveals.count(), "the landing still has sections to reveal").toBeGreaterThan(3)
+
+    // Hydrated and settled, and the far sections are still hidden: they did not
+    // all appear at once on load.
+    const last = reveals.last()
+    await expect(last, "a section far down waits for the scroll").toHaveCSS("opacity", "0")
+
+    // Scroll to it; it reveals. Polled on the state, not slept on.
+    await last.scrollIntoViewIfNeeded()
+    await expect(last, "reaching it reveals it").toHaveCSS("opacity", "1")
+  })
+
+  test.describe("with reduced motion", () => {
+    // Found by this test, on 10/10/2026: with reduced motion on, every section
+    // under the hero stayed at opacity 0 for good, scroll or no scroll — a
+    // hydration mismatch in SectionReveal (see the comment there).
+    test("SEO4.2 · with reduced motion nothing waits to be revealed, and nothing stays hidden", async ({ page }) => {
+      // `emulateMedia` rather than `test.use({ reducedMotion })`: the option
+      // did not reach `matchMedia` with the container's Chromium, and a test
+      // of reduced motion that runs without it would pass for the wrong
+      // reason. The check right after makes that impossible to miss.
+      await page.emulateMedia({ reducedMotion: "reduce" })
+      expect(
+        await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches),
+        "the page really sees reduced motion"
+      ).toBe(true)
+
+      await page.goto("/")
+      await waitForHydration(page, "main h1")
+
+      const reveals = page.locator(REVEAL)
+      const count = await reveals.count()
+      expect(count).toBeGreaterThan(3)
+
+      // Without scrolling to any of them.
+      for (let i = 0; i < count; i += 1) {
+        await expect(reveals.nth(i), `section ${i + 1} is visible without a scroll`).toHaveCSS(
+          "opacity",
+          "1"
+        )
+      }
+    })
+  })
+})

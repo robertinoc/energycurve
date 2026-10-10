@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">120</strong>
+      <strong id="tally-total">118</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -501,7 +501,7 @@
 
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
-    <p><strong>Esta página es, desde el 06/10, sólo lo que necesita una persona.</strong> La sesión de automatización sacó 30 filas: 18 pasaron a ser tests de Playwright y 12 ya los tenían sin que el banco lo dijera. Quedan 116 —y el lote 19 sumó cuatro, la sesión L19—, y cada una necesita un oído, un teléfono en la mano, un lector de pantalla, una consola tuya o un juicio. Qué test reemplazó a cada fila, y por qué cada una de las que quedan no se puede automatizar, está en <code>docs/qa/automatizacion-banco-2026-10.md</code>.</p>
+    <p><strong>Esta página es, desde el 06/10, sólo lo que necesita una persona.</strong> La sesión de automatización sacó 30 filas: 18 pasaron a ser tests de Playwright y 12 ya los tenían sin que el banco lo dijera. Quedan 116 —el lote 19 sumó cuatro, la sesión L19, y el 10/10 salieron SEO3.1 y SEO4.2, que ahora corre <code>e2e/banco-public.spec.ts</code>—, y cada una necesita un oído, un teléfono en la mano, un lector de pantalla, una consola tuya o un juicio. Qué test reemplazó a cada fila, y por qué cada una de las que quedan no se puede automatizar, está en <code>docs/qa/automatizacion-banco-2026-10.md</code>.</p>
     <p style="margin:9px 0 0"><strong>Lo que antes eran filas de validación es ahora una sola pregunta:</strong> ¿qué commit sirve producción? Los arreglos de los lotes 16 y 17 los prueba la suite contra un build de ese commit. Si Vercel sirve el merge y la suite está en cero, están validados; ya no hace falta contarlos a mano.</p>
     <p style="margin:9px 0 0"><strong>La suite E2E:</strong> al 06/10 (sesión de automatización del banco) <strong>1336 pasan / 67 saltean / 0 fallan, tres corridas seguidas iguales</strong>, de 6,1 a 6,3 minutos cada una, sin reintentos. Los saltos son deliberados y dicen por qué: los 46 de siempre (el arco de pagos sin <code>stripe listen</code>, el sitemap sólo en Chromium, el importador una vez sobre FREE, el plan free en PRO y PRO+, el request de PostHog sólo en Chromium) y 21 de los specs nuevos, que corren en un solo proyecto o en escritorio. Un solo comando: <code>npm run test:e2e</code> corre los cinco shards en paralelo y devuelve un resumen. Los tests de volumen siembran dev con <code>scripts/seed-scale.mjs</code>, borran sólo lo suyo y terminan afirmando que las cuentas quedaron como estaban.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
@@ -970,12 +970,6 @@
       why: "El lote 3 le dio modelo al blog: <code>tags</code>, <code>author</code>, <code>translationOf</code> e <code>image</code> en el frontmatter, relacionados por tag, índice con filtro y <code>Blog</code> JSON-LD, las 13 respuestas de la FAQ reescritas para que la primera oración se sostenga sola, y presupuestos de Lighthouse en CI. Todo eso está verificado contra un build de producción local: 2421 tests, los tipos de JSON-LD, 12–14 enlaces salientes por artículo. Lo que no se puede verificar desde acá es lo que necesita un validador ajeno, un teléfono, un lector de pantalla o un motor de respuestas. Y hay un hallazgo abierto que sólo se cierra mirándolo: el LCP.",
       tests: [
         {
-          code: "SEO3.1", title: "El filtro del índice antes de que hidrate", sub: "El bug del #232, en un control nuevo",
-          steps: ["Abrí <code>/es/blog</code> en un teléfono con la red throttleada (DevTools → Slow 4G)", "<strong>Apenas aparezca el desplegable, elegí un tema</strong> — antes de que termine de cargar el JS", "Esperá a que la página termine de hidratar", "Mirá si la lista quedó filtrada por lo que elegiste"],
-          expect: "La elección sobrevive: la lista muestra sólo los artículos de ese tema, no todos.",
-          ifNot: "Si la lista vuelve a mostrarlos todos, <code>useTypedBeforeHydration</code> no está adoptando el valor del <code>&lt;select&gt;</code>. Es exactamente el bug del #232 en otro control. Anotá el tema que elegiste y cuánto tardó en hidratar."
-        },
-        {
           code: "SEO3.2", title: "El desplegable con teclado y lector de pantalla", sub: "Un control nativo, pero igual hay que escucharlo",
           steps: ["Llegá al filtro sólo con Tab", "Abrilo y elegí con las flechas, sin mouse", "Encendé VoiceOver o NVDA y escuchá cómo anuncia la etiqueta y el conteo de artículos"],
           expect: "Se llega, se abre y se elige sin mouse, y el lector anuncia «Filtrar por tema» y después cuántos artículos quedaron.",
@@ -1007,12 +1001,6 @@
       meta: "~35 min · necesita el deploy · una prueba es una decisión tuya",
       why: "El lote 4 tiene un resultado incómodo y vale leerlo antes de probar: <strong>el diagnóstico del LCP que traía el repo era incorrecto</strong>. No era <code>SectionReveal</code>: el elemento que Lighthouse mide es el párrafo del banner de cookies, y la prueba más barata estaba a mano — <code>/pricing</code> no usa <code>SectionReveal</code> y tenía el mismo LCP. Medido aparte: con banner 2856 ms, sin banner 1104 ms. Así que el umbral de 7 s <strong>no se bajó</strong> y lo que falta es una decisión de copy, no de código. Todo en <code>docs/qa/lighthouse-budgets.md</code>. El resto del lote son los CTAs de contenido, la entidad de la organización y los dos artículos que contradecían la tabla armónica desde el #237.",
       tests: [
-        {
-          code: "SEO4.2", title: "El revelado de abajo del pliegue sigue andando", sub: "Que el arreglo no haya matado la animación",
-          steps: ["Con JS habilitado, abrí <code>/</code> arriba de todo", "Bajá despacio y mirá cómo entran las secciones (features, cómo funciona, loop, story…)", "Repetí con <code>prefers-reduced-motion: reduce</code> activado en el sistema"],
-          expect: "Las secciones de abajo siguen apareciendo con su fade-up al entrar. Sólo el hero cambió: ahora nace visible porque ya lo estás mirando. Con reduce motion no hay animación, igual que antes.",
-          ifNot: "Si el revelado desapareció en todo el resto de la página, el <code>eager</code> se aplicó de más. Si ahora aparecen todas de golpe al cargar, también."
-        },
         {
           code: "SEO4.3", title: "Lighthouse mobile y el elemento LCP", sub: "Mirá el elemento, no sólo el número",
           steps: ["Lighthouse mobile sobre <code>/</code> en producción", "Abrí «Largest Contentful Paint element» y leé <strong>qué elemento</strong> es", "Repetí después de aceptar o rechazar las cookies y recargar", "Anotá los dos LCP"],
