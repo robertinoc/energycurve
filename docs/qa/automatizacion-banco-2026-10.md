@@ -223,15 +223,26 @@ banco hasta que se vean en rojo y en verde.
 - UX.5: en `app/api/playlists/[id]/smart-order/route.ts`, cambiar
   `if (!quota.allowed)` por `if (false)`. Tiene que fallar el 402.
 
-**Un hallazgo que salió de escribirlo, sin confirmar a mano.** Cuando a un
-colaborador le revocan el acceso con la página abierta y manda una
-sugerencia, `addSuggestionAction` traduce `no_access` al error genérico:
-«Something went wrong while saving. Please try again.» Es honesto en que no se
-guardó nada y falso en que reintentar sirva. La fila del banco pide «un
-mensaje claro». El test no afirma la frase, para no ponerse en rojo por copy:
-la adjunta al reporte («message B saw after the revocation»). Arreglarlo es
-una frase nueva en `ACTION_COPY` y un caso más en la acción; es producto, no
-de esta sesión.
+**Un hallazgo que salió de escribirlo, arreglado el mismo 10/10.** Cuando a
+un colaborador le revocan el acceso con la página abierta y manda una
+sugerencia, `addSuggestionAction` traducía `no_access` al error genérico:
+«Something went wrong while saving. Please try again.» Era honesto en que no
+se guardó nada y falso en que reintentar sirviera. Lo mismo pasaba al tomar
+el turno de edición (`takeEditTurnAction`). Ahora `no_access` tiene frase
+propia en las dos acciones (`suggestionNoAccess`, `turnNoAccess`): el set ya
+no está compartido, no se envió nada, pedile al dueño que lo vuelva a
+compartir. La frase es verdadera también para un id que nunca se compartió, así
+que no confirma que el set exista. Lo cubre
+`tests/collaboration-action-messages.test.ts` (visto en rojo contra el código
+sin el arreglo: fallan justo los tres casos de `no_access`), y UX.4 ahora
+afirma la frase en vez de adjuntarla. **Sin confirmar a mano.**
+
+`reorderSharedTracksAction` no se tocó a propósito: responde `turnLost` («se te
+terminó el turno») igual para quien perdió el turno y para quien no tiene
+acceso, y el comentario de la acción dice por qué: un tercero no tiene que
+poder distinguir una cosa de la otra. Para un colaborador revocado con el turno
+en la mano, esa frase es engañosa («tomalo de nuevo»), pero tomarlo de nuevo
+lo lleva a `turnNoAccess`, que ahora sí dice la verdad.
 
 **Dos supuestos que la primera corrida tiene que confirmar:**
 

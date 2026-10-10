@@ -26,13 +26,11 @@ import { importPlaylist } from "./helpers/import-playlist"
  *    does not exist (on purpose — see `getSharedPlaylist`), and it leaves the
  *    "shared with me" list.
  *
- * The *wording* of the message in (2) is not asserted. Today a revoked
- * collaborator is told "Something went wrong while saving. Please try again."
- * — `addSuggestionAction` maps `no_access` to the generic error — which is
- * honest that nothing was saved and wrong that trying again could help. That
- * is written down as a finding (docs/qa/automatizacion-banco-2026-10.md) and
- * the text B saw is attached to this test's report, so whoever reads it can
- * see the gap without re-running anything.
+ * The message in (2) is the one for `no_access`: the set isn't shared with
+ * them anymore and nothing was sent. Until 10/10 it was the generic "Something
+ * went wrong while saving. Please try again." — honest that nothing was saved,
+ * wrong that trying again could help. The unit side of that fix is
+ * tests/collaboration-action-messages.test.ts; this asserts it end to end.
  */
 
 const owner = accountFor("proPlus")
@@ -100,10 +98,9 @@ test("UX.4 · a share revoked while the collaborator watches: nothing lands, the
     // Not getByRole("alert"): Next's route announcer carries that role too (§5).
     const message = thread.locator('p[role="alert"]')
     await expect(message, "B is told something, rather than nothing").toBeVisible({ timeout: 15_000 })
-    await testInfo.attach("message B saw after the revocation", {
-      body: await message.innerText(),
-      contentType: "text/plain",
-    })
+    await expect(message, "B is told why, not asked to try again").toHaveText(
+      /isn't shared with you anymore|ya no está compartido con vos/
+    )
     await expect(heading, "the page did not break under B").toBeVisible()
 
     const { count: written } = await devDb()
