@@ -257,11 +257,12 @@ corrida a otro spec, o a otra sesión. La decisión, y por qué:
 - **Sembrar y limpiar en el mismo archivo.** Siembra en `beforeAll` y borra en
   `afterAll`. Las filas sembradas llevan `created_at` de septiembre, así que la
   limpieza por fecha de los otros specs nunca las ve.
-- **Borrar sólo lo propio.** No usa `seed-scale.mjs clean`, que borra **todas**
-  las filas marcadas de dev, sean de quien sean. Borra las playlists de sus tres
-  semillas (1701–1703) con un delete directo; todas las claves foráneas a
-  `playlists` son `on delete cascade`, así que se van los temas, análisis,
-  versiones y la fila de compartir.
+- **Borrar sólo lo propio.** No usa `seed-scale.mjs clean` a secas, que borra
+  **todas** las filas marcadas de dev, sean de quien sean. Borra sus tres
+  semillas (1701–1703) con `clean --seed N`, una por una (desde el 10/10; antes
+  era un delete directo, ver abajo); todas las claves foráneas a `playlists`
+  son `on delete cascade`, así que se van los temas, análisis, versiones y la
+  fila de compartir.
 - **No arrancar si hay filas marcadas.** Si al empezar dev tiene filas de
   cualquier semilla, el spec se saltea con el motivo escrito. Sembradas por
   otro, podrían caer en las mismas cuentas y cambiar los números que afirma.
@@ -279,8 +280,13 @@ Una corrida de depuración de esta sesión llamó a `clean` y borró 31 playlist
 marcadas donde había sembrado una: las otras 30 eran de la sesión del lote 18,
 que estaba midiendo contra ellas. Se le avisó en el momento y rehízo la
 medición. Desde entonces el spec no llama a `clean`, y el lote 18 agregó
-`clean --seed N` al generador en su rama. Cuando eso llegue a `main`, el delete
-directo de `e2e/helpers/dev-db.ts` se puede cambiar por `clean --seed`.
+`clean --seed N` al generador en su rama. Ya está en `main` (lote 18), y el
+10/10 el delete directo de `e2e/helpers/dev-db.ts` se cambió por
+`clean --seed`: el generador que escribe las filas es el único que las borra.
+El cierre del spec sigue leyendo las semillas por su cuenta
+(`seededPlaylistIds`), así que un `clean --seed` que no borre lo suyo pone el
+`afterAll` en rojo. **Ese cambio no corrió todavía con la base de dev**: se
+hizo en un contenedor sin `.env.local`.
 
 ## Lo que aprendió el instrumento
 
