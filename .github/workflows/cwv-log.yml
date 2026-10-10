@@ -1,0 +1,87 @@
+# SEO-E31: the weekly Core Web Vitals log (lote 19).
+#
+# Six URLs against the PageSpeed Insights API, one row appended to
+# docs/seo/cwv-log.md, committed back to main. The script is
+# scripts/psi-log.mjs; everything about the row is explained there.
+#
+# Needs one repository secret, PAGESPEED_API_KEY (Settings -> Secrets and
+# variables -> Actions). Without it the script exits 1 with a message that
+# names it, and nothing is committed: a run that measured nothing must not look
+# like one that measured and found nothing.
+#
+# Two jobs, because this is the one workflow in the repository that writes, and
+# tests/workflow-integrity.test.ts holds it to that shape:
+#
+# - `measure` runs our code (the script) with a read-only token.
+# - `commit` holds the write token and runs no node and no npm: a checkout
+#   that does not keep the token, a printf of the row from an environment
+#   variable, and a push that gets the token only on its own command line.
+name: Core Web Vitals log
+
+on:
+  schedule:
+    # Mondays 07:23 UTC, an odd minute for the same reason as
+    # keep-supabase-alive.yml: GitHub delays or drops top-of-hour runs.
+    - cron: "23 7 * * 1"
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: cwv-log
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      row: ${{ steps.psi.outputs.row }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      # No dependency install: the script has none.
+      - name: Measure the six URLs
+        id: psi
+        env:
+          PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
+        run: |
+          row="$(node scripts/psi-log.mjs --dry-run)"
+          printf 'row=%s\n' "$row" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$row" >> "$GITHUB_STEP_SUMMARY"
+
+  commit:
+    needs: measure
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Append the row
+        env:
+          ROW: ${{ needs.measure.outputs.row }}
+        run: |
+          test -n "$ROW"
+          printf '%s\n' "$ROW" >> docs/seo/cwv-log.md
+
+      - name: Commit and push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/seo/cwv-log.md
+          git commit -m "docs(seo): Core Web Vitals $(date -u +%F) [skip ci]"
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push origin HEAD:main
