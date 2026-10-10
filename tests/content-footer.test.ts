@@ -40,6 +40,14 @@ describe("the footer under a content page", () => {
     expect(render("es")).toContain('href="/es/pricing"')
     expect(render("es")).toContain('href="/es/herramientas/curva-de-energia"')
   })
+
+  // Lote 19. Linking the tool and not the index left `/tools` and
+  // `/es/herramientas` with one inbound page each — the landing — after the
+  // footer reached every content page.
+  it("links the tools index, not only one tool, in each language", () => {
+    expect(render("en")).toContain('href="/tools"')
+    expect(render("es")).toContain('href="/es/herramientas"')
+  })
 })
 
 describe("every content page passes it", () => {

@@ -852,6 +852,15 @@ export function FooterSection({
                 href: localizedPath("/tools/energy-curve", copy.locale),
                 label: copy.footer.freeTool,
               },
+              // The index the four tools hang off (lote 19). Lote 18 put this
+              // footer under every content page and `/tools` stayed at one
+              // inbound page — the landing's menu — because this column linked
+              // the tool and never the hub. Measured with
+              // scripts/inbound-links.mjs; docs/seo/enlazado-interno-2026-10.md.
+              {
+                href: localizedPath("/tools", copy.locale),
+                label: copy.footer.toolsHub,
+              },
               // Without this the blog is orphaned: only the sitemap reaches it.
               { href: localizedPath("/blog", copy.locale), label: copy.footer.blog },
               // Same reason as the blog. The glossary is forty-two pages that
