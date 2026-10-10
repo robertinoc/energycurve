@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { ArticleLink } from "@/components/content/article-link"
 import { CTA } from "@/components/content/blocks"
 import { GlossaryFilter } from "@/components/content/glossary-filter"
 import { Prose } from "@/components/content/prose"
@@ -164,16 +165,12 @@ export function GlossaryTermPage({
                   not exist. Saying which language it is in is the honest part. */}
               {term.articles?.map((article) => (
                 <li key={article.slug}>
-                  <Link
-                    href={localizedPath(`/blog/${article.slug}`, "es")}
-                    hrefLang="es"
+                  <ArticleLink
+                    slug={article.slug}
+                    label={article.label[locale]}
+                    locale={locale}
                     className="text-ec-cyan underline-offset-4 hover:underline"
-                  >
-                    {article.label[locale]}
-                    {locale === "en" ? (
-                      <span className="text-white/50"> (en español)</span>
-                    ) : null}
-                  </Link>
+                  />
                 </li>
               ))}
             </ul>

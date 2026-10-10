@@ -62,3 +62,42 @@ describe("the energy-curve entry links the energy-curve guide", () => {
     expect(html).toContain(`href="${href}"`)
   })
 })
+
+describe("further reading in the reader's language", () => {
+  it("sends an English reader to the English twin", async () => {
+    const { articleLinkFor } = await import("@/lib/blog/posts")
+    expect(articleLinkFor("esta-bien-el-orden-de-mi-set", "en")).toEqual({
+      href: "/blog/is-my-dj-set-in-the-right-order",
+      locale: "en",
+    })
+  })
+
+  it("keeps the Spanish original when there is no twin, and says it is Spanish", async () => {
+    const { articleLinkFor } = await import("@/lib/blog/posts")
+    // `como-cerrar-un-set-de-dj` (lote 18) has no English translation.
+    expect(articleLinkFor("como-cerrar-un-set-de-dj", "en")).toEqual({
+      href: "/es/blog/como-cerrar-un-set-de-dj",
+      locale: "es",
+    })
+  })
+
+  it("leaves a Spanish reader on the Spanish article", async () => {
+    const { articleLinkFor } = await import("@/lib/blog/posts")
+    expect(articleLinkFor("esta-bien-el-orden-de-mi-set", "es")).toEqual({
+      href: "/es/blog/esta-bien-el-orden-de-mi-set",
+      locale: "es",
+    })
+  })
+
+  it("the English energy-curve entry links the English article, unmarked", () => {
+    const html = renderToStaticMarkup(
+      createElement(GlossaryTermPage, {
+        term: GLOSSARY_BY_ID.get("curva-de-energia")!,
+        locale: "en",
+      })
+    )
+    expect(html).toContain('href="/blog/is-my-dj-set-in-the-right-order"')
+    expect(html).not.toContain('href="/es/blog/esta-bien-el-orden-de-mi-set"')
+    expect(html).not.toContain("(en español)")
+  })
+})
