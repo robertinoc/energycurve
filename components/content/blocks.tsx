@@ -1,4 +1,6 @@
 import { ContentCtaLink } from "@/components/content/cta-link"
+import { Inline } from "@/components/content/prose"
+import { parseInline } from "@/lib/blog/markdown"
 import { COMPONENT_COPY, CTA_COPY } from "@/lib/content/content-copy"
 import type {
   Bilingual,
@@ -13,6 +15,13 @@ import type { SiteLocale } from "@/lib/content/site-copy"
  *
  * All server components, all rendering their text into the HTML. The FAQ is the
  * one with a rule attached — see below.
+ *
+ * Callout bodies, step bodies and FAQ answers go through `parseInline`, the
+ * same inline markdown the prose uses. They used to be printed as strings, and
+ * the guide writes links in them: until lote 19 a reader of
+ * `/guide/energy-curve-in-a-dj-set` saw `[free tool](/tools/energy-curve)`
+ * instead of a link. No other text in these blocks carries `*` or `[`, so for
+ * them nothing changes.
  */
 
 export function Callout({
@@ -38,7 +47,9 @@ export function Callout({
       <p className="font-heading text-sm font-semibold text-white">
         {title[locale]}
       </p>
-      <p className="text-sm leading-6 text-white/64">{body[locale]}</p>
+      <p className="text-sm leading-6 text-white/64">
+        <Inline nodes={parseInline(body[locale])} />
+      </p>
     </aside>
   )
 }
@@ -68,7 +79,7 @@ export function Pasos({
               {step.title[locale]}
             </p>
             <p className="text-sm leading-6 text-white/64">
-              {step.body[locale]}
+              <Inline nodes={parseInline(step.body[locale])} />
             </p>
           </div>
         </li>
@@ -189,7 +200,7 @@ export function FAQ({
             {entry.question[locale]}
           </summary>
           <p className="mt-2 text-sm leading-6 text-white/64">
-            {entry.answer[locale]}
+            <Inline nodes={parseInline(entry.answer[locale])} />
           </p>
         </details>
       ))}

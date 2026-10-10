@@ -35,7 +35,12 @@ export type InlineNode =
   | { kind: "text"; text: string }
   | { kind: "strong"; text: string }
   | { kind: "em"; text: string }
-  | { kind: "link"; text: string; href: string }
+  /**
+   * `strong` is set when the link sat inside `**…**` — see `parseStrong`. The
+   * renderer wraps the anchor's text in `<strong>`, so the line reads exactly
+   * as written.
+   */
+  | { kind: "link"; text: string; href: string; strong?: true }
   /**
    * A glossary term, with the definition that goes in its tooltip.
    *
@@ -106,6 +111,50 @@ function normalizeHref(href: string): string {
  * can't be eaten as two `*` and turned into emphasis around an empty string —
  * which is what happens when italic is applied first.
  */
+const LINK = /\[([^\]]+)\]\(([^)]+)\)/g
+
+function linkNode(text: string, rawHref: string, lineNumber: number) {
+  const href = normalizeHref(rawHref)
+
+  // Refused rather than silently downgraded to plain text: losing a link
+  // quietly is the kind of thing nobody re-reads a published page to catch.
+  if (!/^(https?:\/\/|\/)/.test(href)) {
+    throw new UnsupportedMarkdownError(`link to ${rawHref}`, lineNumber)
+  }
+
+  return { kind: "link" as const, text, href }
+}
+
+/**
+ * `**…**`, which may carry a link: `**The [b2b](/glossary/b2b) set**`.
+ *
+ * Until lote 19 the bold span was taken as plain text, link and all, so the
+ * page printed `[b2b](/glossary/b2b)` to the reader and the anchor never
+ * existed — thirteen links: four in `what-is-a-dj-set`, three in
+ * `how-to-structure-a-dj-set` and three in each language of the guide. That is
+ * what left `/glossary/b2b` with one inbound page. Split into bold runs and a
+ * link flagged bold rather than nesting nodes: every consumer of the tree
+ * (`inlineToText`, `link-terms`, the renderer) keeps working on a flat list.
+ */
+function parseStrong(text: string, lineNumber: number): InlineNode[] {
+  const nodes: InlineNode[] = []
+  let last = 0
+
+  for (const match of text.matchAll(LINK)) {
+    if (match.index > last) {
+      nodes.push({ kind: "strong", text: text.slice(last, match.index) })
+    }
+    nodes.push({ ...linkNode(match[1], match[2], lineNumber), strong: true })
+    last = match.index + match[0].length
+  }
+
+  if (last < text.length) {
+    nodes.push({ kind: "strong", text: text.slice(last) })
+  }
+
+  return nodes
+}
+
 export function parseInline(text: string, lineNumber = 0): InlineNode[] {
   const nodes: InlineNode[] = []
   const pattern = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*/g
@@ -117,17 +166,9 @@ export function parseInline(text: string, lineNumber = 0): InlineNode[] {
     }
 
     if (match[1] !== undefined) {
-      const href = normalizeHref(match[2])
-
-      // Refused rather than silently downgraded to plain text: losing a link
-      // quietly is the kind of thing nobody re-reads a published page to catch.
-      if (!/^(https?:\/\/|\/)/.test(href)) {
-        throw new UnsupportedMarkdownError(`link to ${match[2]}`, lineNumber)
-      }
-
-      nodes.push({ kind: "link", text: match[1], href })
+      nodes.push(linkNode(match[1], match[2], lineNumber))
     } else if (match[3] !== undefined) {
-      nodes.push({ kind: "strong", text: match[3] })
+      nodes.push(...parseStrong(match[3], lineNumber))
     } else {
       nodes.push({ kind: "em", text: match[4] })
     }
@@ -153,6 +194,17 @@ export function parseInline(text: string, lineNumber = 0): InlineNode[] {
  */
 export function inlineToText(nodes: InlineNode[]): string {
   return nodes.map((node) => node.text).join("")
+}
+
+/**
+ * An FAQ answer written as inline markdown, as the text `acceptedAnswer` takes.
+ *
+ * The `<FAQ>` block renders these answers through `parseInline`; the markup
+ * has to read the same nodes, or a linked answer reaches schema.org as
+ * `[here](/compare/mixed-in-key)` — which is what the guide's did until lote 19.
+ */
+export function faqAnswerText(markdown: string): string {
+  return inlineToText(parseInline(markdown))
 }
 
 /**

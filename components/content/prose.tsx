@@ -55,7 +55,7 @@ export function Inline({ nodes }: { nodes: InlineNode[] }) {
             // external ones are plain anchors with the usual safety attributes.
             return node.href.startsWith("/") ? (
               <Link key={index} href={node.href}>
-                {node.text}
+                {node.strong ? <strong>{node.text}</strong> : node.text}
               </Link>
             ) : (
               <a
@@ -64,7 +64,7 @@ export function Inline({ nodes }: { nodes: InlineNode[] }) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {node.text}
+                {node.strong ? <strong>{node.text}</strong> : node.text}
               </a>
             );
           default:

@@ -50,6 +50,12 @@ export interface GlossaryTerm {
   links?: ContentLink[]
   /** Articles from the blog. Spanish only — that is where they exist. */
   articles?: ArticleLink[]
+  /**
+   * Guides that go deeper on this entry, by guide id (lote 19). An id and not
+   * a `ContentLink`, because a guide's URL is not a `LocalizedPath`: it comes
+   * from `guidePath()`, like every other link to a guide.
+   */
+  guides?: string[]
   /** Other entries in this glossary. */
   see?: string[]
   /**
@@ -94,6 +100,9 @@ Which shape is right depends on the slot. A [warm-up](/glossary/warm-up) that op
 What the curve does **not** tell you is whether the set sounds good. Two tracks can share a number and clash on [key](/glossary/key), or fit perfectly and bore. The curve is one layer, and it is the layer you can read without listening.`,
     },
     links: [{ path: "/tools/energy-curve", label: { es: "Analizá tu set gratis", en: "Analyse your set for free" } }],
+    // The guide on exactly this, which until lote 19 had one inbound page in
+    // English (the guides index) and two in Spanish.
+    guides: ["curva-de-energia"],
     articles: [
       { slug: "esta-bien-el-orden-de-mi-set", label: { es: "¿Está bien el orden de mi set?", en: "Is my set in the right order?" } },
     ],
@@ -472,7 +481,7 @@ A good warm-up is measured by what it hands over, not by what it sounded like: a
 In EnergyCurve this is not marketing copy: when you mark a set as an opening slot, the engine judges it against the energy range for that context rather than a [peak time](/glossary/peak-time) one. The same set can be right for one slot and wrong for the other, and showing that is the point — a score that ignores context only rewards the loudest set, which is not the best set.`,
     },
     links: [{ path: "/tools/energy-curve", label: { es: "Probá tu set de apertura", en: "Try your opening set" } }],
-    see: ["peak-time", "closing-set", "curva-de-energia"],
+    see: ["peak-time", "closing-set", "curva-de-energia", "leer-la-pista"],
     match: { es: ["warm-up", "warmup"], en: ["warm-up", "warmup"] },
   },
   {

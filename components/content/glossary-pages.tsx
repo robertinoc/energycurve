@@ -10,12 +10,14 @@ import { GLOSSARY_COPY } from "@/lib/content/content-copy"
 import {
   glossaryIndexPath,
   glossaryTermPath,
+  guidePath,
 } from "@/lib/content/glossary/paths"
 import {
   GLOSSARY_BY_ID,
   groupedByLetter,
   type GlossaryTerm,
 } from "@/lib/content/glossary/terms"
+import { publishedGuides } from "@/lib/content/guides/guides"
 import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
 
@@ -100,6 +102,11 @@ export function GlossaryTermPage({
   const seeAlso = (term.see ?? [])
     .map((id) => GLOSSARY_BY_ID.get(id))
     .filter((other): other is GlossaryTerm => Boolean(other))
+  // Published only: a draft guide is reachable by URL and kept out of every
+  // list, and a glossary entry is a list.
+  const guides = publishedGuides().filter((guide) =>
+    term.guides?.includes(guide.id)
+  )
 
   return (
     <PageShell locale={locale} footer={<ContentFooter locale={locale} />} togglePath="/glossary">
@@ -126,12 +133,22 @@ export function GlossaryTermPage({
 
         <Prose blocks={parseMarkdown(term.body[locale])} />
 
-        {(term.links?.length || term.articles?.length) && (
+        {(term.links?.length || term.articles?.length || guides.length) && (
           <section className="flex flex-col gap-3 border-t border-white/8 pt-6">
             <h2 className="font-heading text-lg font-semibold text-white">
               {GLOSSARY_COPY.keepReading[locale]}
             </h2>
             <ul className="flex flex-col gap-2 text-sm">
+              {guides.map((guide) => (
+                <li key={guide.id}>
+                  <Link
+                    href={guidePath(guide, locale)}
+                    className="text-ec-cyan underline-offset-4 hover:underline"
+                  >
+                    {guide.title[locale]}
+                  </Link>
+                </li>
+              ))}
               {term.links?.map((link) => (
                 <li key={link.path}>
                   <Link
