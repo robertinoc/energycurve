@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">118</strong>
+      <strong id="tally-total">117</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -501,7 +501,7 @@
 
   <div class="gate">
     <span class="tag">Antes&nbsp;de&nbsp;empezar</span>
-    <p><strong>Esta página es, desde el 06/10, sólo lo que necesita una persona.</strong> La sesión de automatización sacó 30 filas: 18 pasaron a ser tests de Playwright y 12 ya los tenían sin que el banco lo dijera. Quedan 116 —el lote 19 sumó cuatro, la sesión L19, y el 10/10 salieron SEO3.1 y SEO4.2, que ahora corre <code>e2e/banco-public.spec.ts</code>—, y cada una necesita un oído, un teléfono en la mano, un lector de pantalla, una consola tuya o un juicio. Qué test reemplazó a cada fila, y por qué cada una de las que quedan no se puede automatizar, está en <code>docs/qa/automatizacion-banco-2026-10.md</code>.</p>
+    <p><strong>Esta página es, desde el 06/10, sólo lo que necesita una persona.</strong> La sesión de automatización sacó 30 filas: 18 pasaron a ser tests de Playwright y 12 ya los tenían sin que el banco lo dijera. Quedan 116 —el lote 19 sumó cuatro, la sesión L19, y el 10/10 salieron SEO3.1, SEO4.2 y TOOL.3, que ahora corre <code>e2e/banco-public.spec.ts</code>—, y cada una necesita un oído, un teléfono en la mano, un lector de pantalla, una consola tuya o un juicio. Qué test reemplazó a cada fila, y por qué cada una de las que quedan no se puede automatizar, está en <code>docs/qa/automatizacion-banco-2026-10.md</code>.</p>
     <p style="margin:9px 0 0"><strong>Lo que antes eran filas de validación es ahora una sola pregunta:</strong> ¿qué commit sirve producción? Los arreglos de los lotes 16 y 17 los prueba la suite contra un build de ese commit. Si Vercel sirve el merge y la suite está en cero, están validados; ya no hace falta contarlos a mano.</p>
     <p style="margin:9px 0 0"><strong>La suite E2E:</strong> al 06/10 (sesión de automatización del banco) <strong>1336 pasan / 67 saltean / 0 fallan, tres corridas seguidas iguales</strong>, de 6,1 a 6,3 minutos cada una, sin reintentos. Los saltos son deliberados y dicen por qué: los 46 de siempre (el arco de pagos sin <code>stripe listen</code>, el sitemap sólo en Chromium, el importador una vez sobre FREE, el plan free en PRO y PRO+, el request de PostHog sólo en Chromium) y 21 de los specs nuevos, que corren en un solo proyecto o en escritorio. Un solo comando: <code>npm run test:e2e</code> corre los cinco shards en paralelo y devuelve un resumen. Los tests de volumen siembran dev con <code>scripts/seed-scale.mjs</code>, borran sólo lo suyo y terminan afirmando que las cuentas quedaron como estaban.</p>
     <p style="margin:9px 0 0"><strong>Ruta recomendada para la jornada</strong> — de lo que desbloquea a lo que no:</p>
@@ -708,12 +708,6 @@
           steps: ["Probá un NML de Traktor real", "Un M3U8 exportado por tu software", "Un CSV guardado por Excel en español (separador <code>;</code>)", "Y el <code>.txt</code> de Rekordbox, que viene en UTF-16"],
           expect: "Los cuatro entran y dibujan una curva coherente con el set.",
           ifNot: "Los tests usan un fixture por formato; tu librería tiene los casos raros. Si uno falla, guardá el archivo: es el mejor insumo para el arreglo."
-        },
-        {
-          code: "TOOL.3", title: "Nada del archivo sale por red — en producción", sub: "Con la analítica encendida, que en CI no está",
-          steps: ["Abrí la herramienta en producción con las devtools en Network", "Aceptá las cookies, para que PostHog cargue", "Cargá un set con nombres reconocibles", "Filtrá los requests buscando un título y un artista"],
-          expect: "Ningún request lleva títulos ni artistas: ni fetch, ni server action, ni evento de analítica.",
-          ifNot: "El E2E ya lo afirma, pero corre sin PostHog. Éste es el mismo chequeo en el entorno que tiene scripts de terceros. Si aparece algo, es severidad alta y la página deja de poder prometer lo que promete."
         },
         {
           code: "TOOL.4", title: "El pase a signup, de punta a punta", sub: "Y qué se pierde en el camino, que es a propósito",
