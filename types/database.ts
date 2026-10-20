@@ -58,6 +58,15 @@ export interface Database {
           // visits (updated_at also bumps on Stripe webhooks, so it lies).
           last_seen_at: string | null
           last_seen_country: string | null
+          // Migration 0034: first touch (lote 20). NULL recorded_at = unknown —
+          // no consent, or signed up before it was measured. See lib/attribution.
+          first_touch_source: string | null
+          first_touch_medium: string | null
+          first_touch_campaign: string | null
+          first_touch_referrer: string | null
+          first_touch_landing: string | null
+          first_touch_at: string | null
+          first_touch_recorded_at: string | null
           plan: string
           plan_status: string | null
           plan_current_period_end: string | null
@@ -78,6 +87,13 @@ export interface Database {
           deletion_requested_at?: string | null
           last_seen_at?: string | null
           last_seen_country?: string | null
+          first_touch_source?: string | null
+          first_touch_medium?: string | null
+          first_touch_campaign?: string | null
+          first_touch_referrer?: string | null
+          first_touch_landing?: string | null
+          first_touch_at?: string | null
+          first_touch_recorded_at?: string | null
           plan?: string
           plan_status?: string | null
           plan_current_period_end?: string | null
@@ -98,6 +114,13 @@ export interface Database {
           deletion_requested_at?: string | null
           last_seen_at?: string | null
           last_seen_country?: string | null
+          first_touch_source?: string | null
+          first_touch_medium?: string | null
+          first_touch_campaign?: string | null
+          first_touch_referrer?: string | null
+          first_touch_landing?: string | null
+          first_touch_at?: string | null
+          first_touch_recorded_at?: string | null
           plan?: string
           plan_status?: string | null
           plan_current_period_end?: string | null

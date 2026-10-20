@@ -5,6 +5,7 @@ import {
   DashboardShell,
   type SidebarPlaylist,
 } from "@/components/dashboard/dashboard-shell"
+import { FirstTouchReport } from "@/components/analytics/first-touch"
 import { BillingAlertStrip } from "@/components/dashboard/billing-alert-strip"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { signOutAndReturnTo } from "@/lib/auth/sign-out"
@@ -128,6 +129,9 @@ export default async function DashboardLayout({
       >
         {children}
       </DashboardShell>
+      {/* Sends the visitor's first touch once; the server keeps it only for
+          a profile created in the last 24 hours (services/attribution-service). */}
+      <FirstTouchReport />
     </AuthProvider>
   )
 }
