@@ -5,6 +5,7 @@ slug: what-is-a-dj-set-energy-curve
 locale: en
 targetQuery: "what is a DJ set energy curve"
 publishedAt: 2026-09-22
+updatedAt: 2026-10-20
 tags: energy curve, fundamentals, set prep
 ---
 
@@ -103,6 +104,9 @@ recording analysed on Sunday tells you what happened. A tracklist analysed on Th
 tells you what to move. Both are worth having; only one of them changes the night. That
 distinction is the subject of
 [analysing your set before you play it](/blog/analyse-your-dj-set-before-you-play-it).
+
+What each energy band means, and where every track's number comes from, is in
+[the guide to the energy curve in a DJ set](/guide/energy-curve-in-a-dj-set).
 
 You can draw the curve for a set right now, with no account, on
 [the energy curve tool](/tools/energy-curve) — paste a tracklist or drop an export from

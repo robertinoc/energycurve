@@ -6,7 +6,7 @@ locale: es
 translationOf: analyse-your-dj-set-before-you-play-it
 targetQuery: "analizar la energía de un set de DJ"
 publishedAt: 2026-08-20
-updatedAt: 2026-09-22
+updatedAt: 2026-10-20
 tags: curva de energía, preparar el set, análisis
 ---
 
@@ -98,7 +98,8 @@ escuchar.
 
 Un análisis previo no sabe cómo va a estar la pista. No sabe que a la una y media
 entró un grupo de veinte personas, ni que el que tocó antes se fue a 160 BPM y te
-dejó la pista prendida fuego. Eso lo resolvés vos en la cabina.
+dejó la pista prendida fuego. Eso lo resolvés vos en la cabina,
+[leyendo la pista](/es/glosario/leer-la-pista).
 
 Lo que sí resuelve es lo otro: que el set que llevás preparado no tenga un pozo en el
 minuto cuarenta porque dos temas quedaron en el orden equivocado.

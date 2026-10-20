@@ -130,3 +130,25 @@ una cada una por la guía.
 - **Descripciones fuera de rango**, anteriores a este lote: `/es/import-formats`
   181 caracteres y `/import-formats` 177; `/install` 89 y `/es/install` 102.
   Medidas decodificando entidades sobre el build.
+
+## Lote 20 — las seis que quedaban (20/10/2026)
+
+Medido con `scripts/inbound-links.mjs` contra `next start` en el puerto 3011:
+el **antes**, sobre un build de `main` (`472535c`) hecho el mismo día; el
+**después**, sobre el build de `plans/lote-20`. 116 páginas rastreadas en los
+dos; el sitemap da 116 en los dos.
+
+| Página | Antes | Después | Desde dónde | Por qué ahí |
+|---|---|---|---|---|
+| `/guide/energy-curve-in-a-dj-set` | 2 | **3** | `/blog/what-is-a-dj-set-energy-curve` | El artículo que define la curva no enlazaba la guía del mismo tema; la gemela española ya lo hacía desde `como-cerrar-un-set-de-dj`. Una frase antes de la herramienta: qué es cada banda y de dónde sale el número de cada tema |
+| `/glossary/crowd-reading` | 2 | **3** | `/blog/analyse-your-dj-set-before-you-play-it` | «Lo que no te dice el análisis» termina en «You solve that in the booth»: eso **es** leer la pista, y la entrada dice lo mismo con sus palabras (ninguna preparación lo reemplaza) |
+| `/es/glosario/leer-la-pista` | 2 | **3** | `/es/blog/antes-de-tocar-no-despues` | La misma frase, en la gemela: «Eso lo resolvés vos en la cabina, leyendo la pista» |
+| `/blog/what-is-a-dj-set` | 2 | **3** | `/blog/how-to-structure-a-dj-set` | «Start from the slot» enumera warm-up, peak-time y closing; el otro artículo pone esos tres, y el b2b, lado a lado |
+| `/glossary/b2b` | 2 | **3** | `/blog/how-to-structure-a-dj-set` | En la misma frase: el b2b es la cuarta clase de set, y la única en la que la forma la acuerdan dos personas antes de tocar |
+| `/es/glosario/b2b` | 1 | **1** | — | **Se deja, por la misma razón que en el lote 19, revisada:** ningún texto en español habla de B2B salvo la FAQ de precios («¿Mi compañero de B2B también necesita PRO+…?»). Esa FAQ se imprime como texto plano y es también el `FAQPage`; ponerle enlaces es cambiar su renderer, no este lote. Si un lote escribe la gemela de `what-is-a-dj-set`, o le da enlaces a la FAQ, ése es el lugar |
+
+**Resultado: de 6 de 116 con dos enlaces o menos, a 1.** Ninguna página perdió
+enlaces entrantes (comparado página por página). La mediana queda en 9: cinco
+enlaces nuevos no la mueven.
+
+Los cuatro artículos tocados llevan `updatedAt: 2026-10-20`: cambió su texto.
