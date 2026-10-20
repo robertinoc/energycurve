@@ -49,16 +49,16 @@ const SUBJECTS = ["Rekordbox", "Serato", "Traktor", "VirtualDJ", "djay Pro"]
 
 /** The five programs, one table row each, in the vendors' own words. */
 const PRICE_TABLE = {
-  en: `| Program | What its own site says about price, 27 September 2026 |
+  en: `| Program | What its own site says about price, 20 October 2026 |
 |---|---|
-| Rekordbox | Four plans: Free (no price shown), Core, Creative, Professional. With the plan page set to yearly billing: Core US$19, Creative US$23, Professional US$30 per month, quoted as the monthly conversion of US$228, US$276 and US$360 a year. A "Free + Cloud Option" is US$9 a month on the same basis. |
+| Rekordbox | Four plans: Free (US$0), Core, Creative, Professional. With the plan page set to yearly billing: Core US$10, Creative US$15, Professional US$30 per month, quoted as the monthly conversion of US$120, US$180 and US$360 a year. Free, Core and Creative can each add a Cloud Option, priced as a separate bundle: Free + Cloud Option US$9, Core + Cloud Option US$19, Creative + Cloud Option US$23 a month on the same basis. Professional includes its cloud storage. |
 | Serato | Serato DJ Lite is free. Serato DJ Pro is US$11.99 a month, or US$299 to buy; Serato DJ Suite is US$14.99 a month, or US$499 to buy. Hardware that unlocks Serato DJ Pro removes the need for a licence. |
 | Traktor | Traktor Pro 4 is US$149, one payment, download available immediately. The page's own FAQ carries the heading "Why has Traktor Pro Plus been canceled?" — the subscription tier is gone. |
 | VirtualDJ | Free for home use. VirtualDJ Home is US$4 a month for home use and "cannot be used at paid gigs"; VDJ Pro is US$19 a month and "can be used in public or paid gigs"; a Business plan is US$99 a month. Prices in US dollars, before taxes. |
 | djay Pro | Not published on algoriddim.com: the product pages show no figure and there is no pricing page. The price lives in the app stores, so there is no number here to quote. |`,
-  es: `| Programa | Qué dice su propio sitio sobre el precio, 27 de septiembre de 2026 |
+  es: `| Programa | Qué dice su propio sitio sobre el precio, 20 de octubre de 2026 |
 |---|---|
-| Rekordbox | Cuatro planes: Free (sin precio a la vista), Core, Creative, Professional. Con la página de planes en facturación anual: Core u$s19, Creative u$s23, Professional u$s30 por mes, citados como la conversión mensual de u$s228, u$s276 y u$s360 al año. Un «Free + Cloud Option» cuesta u$s9 por mes sobre la misma base. |
+| Rekordbox | Cuatro planes: Free (u$s0), Core, Creative, Professional. Con la página de planes en facturación anual: Core u$s10, Creative u$s15, Professional u$s30 por mes, citados como la conversión mensual de u$s120, u$s180 y u$s360 al año. Free, Core y Creative pueden sumar un Cloud Option, con precio de paquete aparte: Free + Cloud Option u$s9, Core + Cloud Option u$s19, Creative + Cloud Option u$s23 por mes sobre la misma base. Professional ya incluye su almacenamiento en la nube. |
 | Serato | Serato DJ Lite es gratis. Serato DJ Pro cuesta u$s11,99 por mes, o u$s299 para comprarlo; Serato DJ Suite, u$s14,99 por mes o u$s499. Un hardware que desbloquea Serato DJ Pro hace innecesaria la licencia. |
 | Traktor | Traktor Pro 4 cuesta u$s149, un solo pago, descarga inmediata. La FAQ de la propia página lleva el título «Why has Traktor Pro Plus been canceled?»: el nivel por suscripción ya no existe. |
 | VirtualDJ | Gratis para uso hogareño. VirtualDJ Home cuesta u$s4 por mes para uso en casa y «cannot be used at paid gigs»; VDJ Pro, u$s19 por mes, y «can be used in public or paid gigs»; hay un plan Business de u$s99 por mes. Precios en dólares, antes de impuestos. |
@@ -121,15 +121,15 @@ export const REKORDBOX_VS: Comparison = {
     en: "rekordbox-vs-serato-vs-traktor",
     es: "rekordbox-vs-serato-vs-traktor",
   },
-  verifiedAt: "2026-09-27",
+  verifiedAt: "2026-10-20",
   sources: SOURCES,
   title: {
     en: "Rekordbox vs Serato vs Traktor (and VirtualDJ, djay Pro): what each DJ program says it is",
     es: "Rekordbox vs Serato vs Traktor (y VirtualDJ, djay Pro): qué dice cada programa de DJ que es",
   },
   description: {
-    en: "Five DJ programs compared on what their own sites say: price and licence, platforms, streaming, and the case each one is right for. Read 27 Sep 2026.",
-    es: "Cinco programas de DJ comparados por lo que dicen sus sitios: precio, plataformas, streaming y para qué caso conviene cada uno. Leído el 27/9/2026.",
+    en: "Five DJ programs compared on what their own sites say: price and licence, platforms, streaming, and the case each one is right for. Read 20 Oct 2026.",
+    es: "Cinco programas de DJ comparados por lo que dicen sus sitios: precio, plataformas, streaming y para qué caso conviene cada uno. Leído el 20/10/2026.",
   },
   summary: {
     en: "The question behind \"rekordbox vs serato\" is rarely which is good. It is which one fits the gear you own, the money you want to spend and where your music lives. Each row below is what the maker's own page said on the date shown, and nothing else.",
@@ -201,8 +201,8 @@ El streaming es donde las páginas más difieren, y conviene leerlas al pie de l
                 es: "¿Rekordbox es gratis?",
               },
               answer: {
-                en: "Its plan page lists a Free plan, described as basic music management and DJ experience, with no price shown. The paid tiers — Core, Creative, Professional — add cloud storage, syncing and analysis features; a Free + Cloud Option is also listed as a paid add-on.",
-                es: "Su página de planes lista un plan Free, descrito como gestión básica de música y experiencia de DJ, sin precio a la vista. Los niveles pagos —Core, Creative, Professional— agregan almacenamiento en la nube, sincronización y análisis; también aparece un «Free + Cloud Option» pago.",
+                en: "Its plan page lists a Free plan, described as basic music management and DJ experience, at US$0. The paid tiers — Core, Creative, Professional — add cloud storage, syncing and analysis features; a Free + Cloud Option is also listed as a paid add-on.",
+                es: "Su página de planes lista un plan Free, descrito como gestión básica de música y experiencia de DJ, a u$s0. Los niveles pagos —Core, Creative, Professional— agregan almacenamiento en la nube, sincronización y análisis; también aparece un «Free + Cloud Option» pago.",
               },
             },
             {
@@ -211,8 +211,8 @@ El streaming es donde las páginas más difieren, y conviene leerlas al pie de l
                 es: "¿Qué software de DJ funciona con Spotify?",
               },
               answer: {
-                en: "On the pages read on 27 September 2026, Serato DJ Pro's FAQ lists Spotify among its streaming services, and djay Pro's pages say you can connect a Spotify account. Rekordbox's plan page names Beatport, Beatsource, TIDAL and SoundCloud \"and other\" services; Traktor's names Beatport and Beatsource. We did not read a streaming list on VirtualDJ's pages.",
-                es: "En las páginas leídas el 27 de septiembre de 2026, la FAQ de Serato DJ Pro lista a Spotify entre sus servicios de streaming, y las páginas de djay Pro dicen que podés conectar una cuenta de Spotify. La página de planes de Rekordbox nombra Beatport, Beatsource, TIDAL y SoundCloud «and other»; la de Traktor nombra Beatport y Beatsource. No leímos una lista de streaming en las páginas de VirtualDJ.",
+                en: "On the pages read on 20 October 2026, Serato DJ Pro's FAQ lists Spotify among its streaming services, and djay Pro's pages say you can connect a Spotify account. Rekordbox's plan page names Beatport, Beatsource, TIDAL and SoundCloud \"and other\" services; Traktor's names Beatport and Beatsource. We did not read a streaming list on VirtualDJ's pages.",
+                es: "En las páginas leídas el 20 de octubre de 2026, la FAQ de Serato DJ Pro lista a Spotify entre sus servicios de streaming, y las páginas de djay Pro dicen que podés conectar una cuenta de Spotify. La página de planes de Rekordbox nombra Beatport, Beatsource, TIDAL y SoundCloud «and other»; la de Traktor nombra Beatport y Beatsource. No leímos una lista de streaming en las páginas de VirtualDJ.",
               },
             },
             {
