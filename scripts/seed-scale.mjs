@@ -48,6 +48,7 @@
  *   node scripts/seed-scale.mjs clean
  *   node scripts/seed-scale.mjs clean --seed 7
  *   node scripts/seed-scale.mjs status
+ *   node scripts/seed-scale.mjs acquisition --seed 20   (lote 20: the backstage acquisition panel)
  *
  * Reads SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from the environment or from
  * `.env.local`. Never prints the key.
@@ -202,6 +203,152 @@ export function generate({ seed, users, playlists, tracks, owners = [] }) {
   })
 
   return { profiles: profileRows, playlists: playlistRows, tracks: trackRows }
+}
+
+// ---------------------------------------------------------------------------
+// The acquisition scenario (lote 20)
+// ---------------------------------------------------------------------------
+
+/**
+ * A Monday with nobody around it. The scenario's six weekly cohorts start here,
+ * a window the dev database had no profiles in when this was written — checked
+ * before every run (`acquisition` refuses a window that is not empty), because
+ * the cohort table can only be compared to the seed if the seed is all it holds.
+ */
+export const ACQUISITION_EPOCH = Date.parse("2025-01-06T00:00:00.000Z")
+export const ACQUISITION_WEEKS = 6
+export const ACQUISITION_USERS = 40
+
+const HOUR = 3_600_000
+const DAY = 24 * HOUR
+
+/**
+ * Forty users with a designed life: when they signed up, where from, whether
+ * they analysed and how soon, whether they paid and how soon. `expected` is
+ * counted here with plain loops over the design — deliberately not with
+ * lib/backstage/acquisition.ts, which is what it checks.
+ *
+ * Without `withFirstTouch` (dev before migration 0034) every user is unknown
+ * and `expected.bySource` says so.
+ */
+export function generateAcquisition({ seed, withFirstTouch }) {
+  const SOURCES = ["instagram", "google", "producthunt", null, "stagelink"]
+  const LANDINGS = ["/tools/energy-curve", "/es/herramientas/rueda-camelot", "/", "/pricing"]
+  const profiles = []
+  const playlists = []
+  const analyses = []
+  const billingEvents = []
+  const design = []
+
+  for (let i = 0; i < ACQUISITION_USERS; i++) {
+    const week = i % ACQUISITION_WEEKS
+    const created = ACQUISITION_EPOCH + week * 7 * DAY + (i % 5) * DAY + 10 * HOUR
+    const id = stableUuid(seed, `acq-profile:${i}`)
+    const source = SOURCES[i % SOURCES.length]
+    const landing = LANDINGS[i % LANDINGS.length]
+    const analysed = i % 3 !== 0
+    const importedOnly = !analysed && i % 2 === 0
+    const paidAfterDays = i % 8 === 0 ? (i / 8 + 1) * 2 : null
+    const firstAnalysisAfterHours = analysed ? (i % 7) + 1 : null
+    const plan = paidAfterDays !== null ? "pro" : i === ACQUISITION_USERS - 1 ? "pro_plus" : "free"
+
+    profiles.push({
+      id,
+      workos_user_id: `${MARKER.workosPrefix}${seed}_acq_${i}`,
+      email: `scale-seed-${seed}-acq-${i}@${MARKER.emailDomain}`,
+      plan,
+      plan_status: plan === "free" ? null : "active",
+      preferred_locale: "en",
+      created_at: new Date(created).toISOString(),
+      updated_at: new Date(created).toISOString(),
+      ...(withFirstTouch && source
+        ? {
+            first_touch_source: source,
+            first_touch_medium: { instagram: "social", google: "organic", producthunt: "directory", stagelink: "crosspromo" }[source],
+            first_touch_landing: landing,
+            first_touch_at: new Date(created - DAY).toISOString(),
+            first_touch_recorded_at: new Date(created + HOUR).toISOString(),
+          }
+        : {}),
+    })
+
+    if (analysed || importedOnly) {
+      const playlistId = stableUuid(seed, `acq-playlist:${i}`)
+      playlists.push({
+        id: playlistId,
+        user_id: id,
+        name: `Acquisition ${i}`,
+        genre: GENRES[0],
+        context: "main",
+        import_source: "seed",
+        description: `${MARKER.descriptionPrefix}${seed}] acquisition scenario`,
+        created_at: new Date(created + 30 * 60_000).toISOString(),
+        updated_at: new Date(created + 30 * 60_000).toISOString(),
+      })
+
+      if (analysed) {
+        // Two analyses: the first is what counts, the second must not move it.
+        for (const [n, after] of [[0, firstAnalysisAfterHours * HOUR], [1, 9 * DAY]]) {
+          analyses.push({
+            id: stableUuid(seed, `acq-analysis:${i}:${n}`),
+            playlist_id: playlistId,
+            user_id: id,
+            genre: GENRES[0],
+            context: "main",
+            set_score: 7,
+            input_hash: `scale-seed-${seed}-${i}-${n}`,
+            algorithm_version: 1,
+            created_at: new Date(created + after).toISOString(),
+          })
+        }
+      }
+    }
+
+    if (paidAfterDays !== null) {
+      billingEvents.push({
+        id: `evt_scale_seed_${seed}_acq_${i}`,
+        type: "checkout.session.completed",
+        profile_id: id,
+        payload: null,
+        processed_at: new Date(created + paidAfterDays * DAY).toISOString(),
+      })
+    }
+
+    design.push({ week, source: withFirstTouch ? source : null, analysed, importedOnly, paidAfterDays, firstAnalysisAfterHours, landing })
+  }
+
+  const medianOf = (values) => {
+    const sorted = [...values].sort((a, b) => a - b)
+    const middle = Math.floor(sorted.length / 2)
+    return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2
+  }
+  const weekLabel = (week) => new Date(ACQUISITION_EPOCH + week * 7 * DAY).toISOString().slice(0, 10)
+  const bySource = {}
+  for (const row of design) {
+    const key = row.source ?? "unknown"
+    bySource[key] = (bySource[key] ?? 0) + 1
+  }
+  const paidDays = design.filter((row) => row.paidAfterDays !== null).map((row) => row.paidAfterDays)
+  const analysisHours = design.filter((row) => row.analysed).map((row) => row.firstAnalysisAfterHours)
+
+  const expected = {
+    users: ACQUISITION_USERS,
+    perWeek: Object.fromEntries(
+      Array.from({ length: ACQUISITION_WEEKS }, (_, week) => [weekLabel(week), design.filter((row) => row.week === week).length])
+    ),
+    bySource,
+    analysed: design.filter((row) => row.analysed).length,
+    never: design.filter((row) => !row.analysed).length,
+    neverUsed: design.filter((row) => !row.analysed && !row.importedOnly).length,
+    importedOnly: design.filter((row) => row.importedOnly).length,
+    medianHoursToFirstAnalysis: medianOf(analysisHours),
+    paid: paidDays.length,
+    medianDaysToPay: medianOf(paidDays),
+    paidWithoutCheckout: 1,
+    landedOnEnergyCurve: withFirstTouch ? design.filter((row) => row.source && row.landing === "/tools/energy-curve").length : 0,
+  }
+
+  return { profiles, playlists, analyses, billingEvents, expected }
 }
 
 /** sha256 of rows in a canonical order and key order. */
@@ -513,6 +660,44 @@ async function main() {
     return
   }
 
+  if (args.command === "acquisition") {
+    const seed = args.seed ?? 20
+    console.log(`target: ${target}`)
+    // The first-touch columns are migration 0034. Without them the scenario
+    // still seeds — everyone is unknown, which is the case the panel has to
+    // get right first — and says so.
+    const probe = await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?select=first_touch_source&limit=1`, {
+      headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` },
+    })
+    const withFirstTouch = probe.ok
+    console.log(`first touch: ${withFirstTouch ? "columns present, seeding sources" : `columns missing (${probe.status}) — migration 0034 not applied; every user will be unknown`}`)
+    const windowEnd = new Date(ACQUISITION_EPOCH + ACQUISITION_WEEKS * 7 * DAY).toISOString()
+    const others = await db.count(
+      "profiles",
+      `created_at=gte.${new Date(ACQUISITION_EPOCH).toISOString()}&created_at=lt.${windowEnd}` +
+        `&workos_user_id=not.like.${encodeURIComponent(seedProfilePattern(seed))}*`
+    )
+    if (others > 0) {
+      throw new Error(`${others} profiles not from seed ${seed} already sit in the scenario's weeks; the cohort table could not be compared to the seed.`)
+    }
+    const rows = generateAcquisition({ seed, withFirstTouch })
+    await db.insert("profiles", rows.profiles)
+    await db.insert("playlists", rows.playlists)
+    await db.insert("analyses", rows.analyses)
+    await db.insert("billing_events", rows.billingEvents)
+    console.log(JSON.stringify({
+      seed,
+      wrote: {
+        profiles: rows.profiles.length,
+        playlists: rows.playlists.length,
+        analyses: rows.analyses.length,
+        billing_events: rows.billingEvents.length,
+      },
+      expected: rows.expected,
+    }, null, 2))
+    return
+  }
+
   if (args.command === "fingerprint") {
     const seed = args.seed ?? 1
     const playlists = await db.selectAll(
@@ -555,6 +740,10 @@ async function main() {
       }
       await db.request("DELETE", `playlists?id=${list}`)
     }
+    // The acquisition scenario's checkouts. billing_events would keep them
+    // with profile_id nulled (on delete set null), so they go by their id.
+    const eventPattern = args.seed === undefined ? "evt_scale_seed_" : `evt_scale_seed_${args.seed}_`.replace(/_/g, "\\_")
+    await db.request("DELETE", `billing_events?id=like.${encodeURIComponent(eventPattern)}*`)
     // A seed's generated users are `scale_seed_<seed>_…`; `--owner` playlists
     // belong to a real test account, which is never deleted.
     await db.request("DELETE", `profiles?workos_user_id=like.${encodeURIComponent(seedProfilePattern(args.seed))}*`)
@@ -563,7 +752,7 @@ async function main() {
     return
   }
 
-  console.error("Usage: node scripts/seed-scale.mjs <seed|fingerprint|clean|status> [--seed N --users N --playlists N --tracks N --owner email]")
+  console.error("Usage: node scripts/seed-scale.mjs <seed|acquisition|fingerprint|clean|status> [--seed N --users N --playlists N --tracks N --owner email]")
   process.exit(2)
 }
 
