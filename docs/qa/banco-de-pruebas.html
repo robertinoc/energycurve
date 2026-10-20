@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">117</strong>
+      <strong id="tally-total">124</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1378,6 +1378,56 @@
           steps: ["Abrí <code>/blog/what-is-a-dj-set</code> y bajá a la lista de tipos de set", "Abrí <code>/guide/energy-curve-in-a-dj-set</code> y <code>/es/guia/curva-de-energia-en-un-set-de-dj</code>: el recuadro de «sin etiquetas», los cuatro pasos y la primera pregunta del FAQ", "Con VoiceOver o NVDA, recorré los enlaces de la lista del artículo"],
           expect: "Ningún corchete a la vista. Los enlaces en negrita se ven como el resto de los enlaces del texto y siguen en negrita; el lector los anuncia como enlace con su texto («warm-up», «b2b»).",
           ifNot: "Si un enlace en negrita no se distingue del texto (sin color ni subrayado), es un detalle de estilo de <code>.ec-prose a strong</code>: anotá la página y una captura."
+        }
+      ]
+    },
+    {
+      code: "L20",
+      title: "Lote 20: de dónde viene cada usuario",
+      meta: "~60 min · necesita el deploy · L20.2 a L20.6 necesitan la migración 0034 aplicada en producción · L20.5 necesita el backstage",
+      why: "El lote 20 empezó a guardar, en el perfil y con consentimiento, de dónde llegó cada persona la primera vez, y armó en el backstage el tablero que lo lee: registros por fuente y semana, registro → primer análisis, las herramientas gratis, Free → Pro y el tiempo hasta el primer análisis. Todo tiene tests y se comparó contra datos sembrados en dev; lo que ningún test puede decir es que en producción el registro de verdad deje el primer contacto, que sin consentimiento no deje nada, ni que los números del tablero coincidan con Supabase y con Stripe. Y sin la migración 0034 aplicada, el tablero dice «not measured» y no mide nada: es lo primero.",
+      tests: [
+        {
+          code: "L20.1", initial: "validar", title: "La comparación cita el precio de cada plan de Rekordbox, no el del paquete", sub: "H-14 · <code>/compare/rekordbox-vs-serato-vs-traktor</code>",
+          steps: ["Abrí <code>/compare/rekordbox-vs-serato-vs-traktor</code> y <code>/es/comparar/rekordbox-vs-serato-vs-traktor</code>", "Leé la fila de Rekordbox de la tabla de precios", "Abrí <code>rekordbox.com/en/plan</code> con el selector en Yearly y compará"],
+          expect: "Core US$10 y Creative US$15 por mes (US$120 y US$180 al año); US$19 y US$23 aparecen sólo como «Core + Cloud Option» y «Creative + Cloud Option». La página dice «20 October 2026» / «20 de octubre de 2026» como fecha de lectura.",
+          ifNot: "Si Rekordbox cambió sus precios después del 20/10, no es un bug de la página: anotá los números nuevos y la fecha, y la página se relee entera (cambiar la fecha es afirmar que se leyeron las cinco)."
+        },
+        {
+          code: "L20.2", initial: "pending", title: "Un registro con la analítica aceptada deja su primer contacto", sub: "Tarea 2 · necesita la migración 0034 en producción",
+          steps: ["Aplicá <code>supabase/migrations/0034_profile_first_touch.sql</code> en producción (y en dev, si no lo hiciste)", "En una ventana privada, abrí <code>https://energycurve.app/es/herramientas/curva-de-energia?utm_source=instagram&utm_medium=social&utm_campaign=prueba-banco</code>", "Aceptá la analítica en el banner", "Navegá a otra página, después a <code>/signup</code>, y registrate con una cuenta descartable", "En el backstage, buscá esa cuenta"],
+          expect: "En Supabase, la fila de <code>profiles</code> de esa cuenta tiene <code>first_touch_source = instagram</code>, <code>first_touch_medium = social</code>, <code>first_touch_campaign = prueba-banco</code>, <code>first_touch_landing = /es/herramientas/curva-de-energia</code> y <code>first_touch_recorded_at</code> con la hora del registro. Nada de la query string completa en ninguna columna.",
+          ifNot: "Si <code>first_touch_recorded_at</code> quedó vacío, mirá los logs de Vercel: <code>attribution.first_touch</code> con <code>not_recorded</code> (el perfil no era nuevo), o un 503 en <code>/api/attribution/first-touch</code> (falta la migración). Borrá la cuenta descartable al terminar."
+        },
+        {
+          code: "L20.3", initial: "pending", title: "Un registro sin aceptar no deja nada", sub: "Tarea 2 · el camino sin consentimiento",
+          steps: ["En otra ventana privada, abrí el mismo enlace con <code>utm_campaign=prueba-rechazo</code>", "Rechazá la analítica", "Registrate con otra cuenta descartable", "En DevTools → Application → Local Storage, buscá <code>ec.first-touch.v1</code>"],
+          expect: "En el navegador no existe <code>ec.first-touch.v1</code>. En Supabase, todas las columnas <code>first_touch_*</code> de esa cuenta están vacías, y en el backstage cuenta como «Unknown · signed up after, with no first touch».",
+          ifNot: "Si aparece cualquier dato de origen para esta cuenta, es el defecto más grave de la tarea: frená y avisá. Es justo lo que la regla de consentimiento prohíbe. Borrá la cuenta descartable al terminar."
+        },
+        {
+          code: "L20.4", initial: "validar", title: "El tablero de adquisición dice sobre qué cuenta cada número", sub: "Tareas 4, 5 y 8 · backstage → Users, debajo de «Where they are»",
+          steps: ["Abrí el backstage y bajá a «Where they come from, and what they do next»", "Leé la línea de arriba: desde cuándo se mide y cuántos registros tienen primer contacto", "En la tabla semanal, compará la columna «Signups» de la semana actual con los perfiles creados esa semana en Supabase", "Mirá «Signup → first analysis» y «Time to first analysis»"],
+          expect: "«Unknown» es la primera columna y la primera fila, nunca un cero escondido, y abajo dice por qué (antes de la medición, o sin primer contacto). Cada número dice «X of N». Una fuente con menos de 20 registros dice «too few for a rate (needs 20)» en vez de un porcentaje. En «Time to first analysis», los que nunca llegaron se parten en el «Never used» de la tarjeta de arriba (el mismo número), los que importaron y pararon, y los suspendidos.",
+          ifNot: "Si la línea de arriba dice «Not measured in this environment», la migración 0034 no está aplicada en producción. Si una semana no coincide con Supabase, anotá la semana y los dos números."
+        },
+        {
+          code: "L20.5", initial: "validar", title: "Free → Pro, contra Stripe", sub: "Tarea 7",
+          steps: ["En el panel «Free → Pro», anotá cuántos tienen un checkout completado y la mediana de días", "En Stripe → Payments (o Customers), contá los clientes con una suscripción que empezó por checkout", "Si hay cuentas PRO dadas a mano, fijate que aparezcan en la línea «on a paid plan with no checkout on record»"],
+          expect: "El número del panel coincide con Stripe. Con menos de 5 conversiones la mediana dice «too few to say»; con menos de 20 conversiones con fuente conocida, no se parte por fuente y lo dice.",
+          ifNot: "Una diferencia con Stripe suele ser un checkout cuyo webhook no llegó (<code>billing.webhook.unattributable</code> en los logs). Anotá el cliente de Stripe, sin datos de tarjeta."
+        },
+        {
+          code: "L20.6", initial: "pending", title: "La columna «Used» de las herramientas, con PostHog conectado", sub: "Tarea 6 · la única consulta que no se probó contra PostHog real",
+          steps: ["Confirmá que <code>POSTHOG_PERSONAL_API_KEY</code> y <code>POSTHOG_PROJECT_ID</code> están en las variables de producción de Vercel (si no, el backstage lo avisa arriba)", "Abrí el panel «The free tools as a bridge»", "En PostHog → SQL, corré la consulta de <code>fetchToolUsage</code> en <code>lib/backstage/posthog-reporting.ts</code> y compará"],
+          expect: "Las columnas «Used» y «Signed up after» tienen números y coinciden con la consulta. Si están vacías, el panel dice que PostHog no está configurado o que la consulta falló — nunca muestra ceros.",
+          ifNot: "Si la consulta da error en PostHog, pegá el mensaje: es HogQL escrito sin poder correrlo, y el error dice qué cambiar. Recordá que estos números sólo cuentan a quien aceptó la analítica."
+        },
+        {
+          code: "L20.7", initial: "validar", title: "Los enlaces que salen del sitio llevan la etiqueta, y los propios no", sub: "Tarea 3 · <code>docs/seo/utm-convention.md</code>",
+          steps: ["En la portada, pasá el mouse por los enlaces a StageLink (bloque de la familia, pie y menú) y mirá la URL", "En <code>/compare/rekordbox-vs-serato-vs-traktor</code>, mirá los enlaces de «Sources»", "Abrí <code>https://energycurve.app/llms.txt</code> y buscá <code>stagelink</code> y <code>utm_</code>"],
+          expect: "Los enlaces a StageLink y a los fabricantes terminan en <code>utm_source=energycurve</code> con su <code>utm_medium</code> y <code>utm_campaign</code>. En <code>llms.txt</code>, la única URL con <code>utm_</code> es la de StageLink; ninguna página propia lleva etiqueta.",
+          ifNot: "Un enlace propio con UTM es un error de la convención (regla 3): anotá dónde. Un enlace a StageLink sin etiqueta, también."
         }
       ]
     }
