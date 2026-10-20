@@ -39,6 +39,7 @@ import {
 } from "@/components/marketing/landing-sections"
 import { InstallBanner } from "@/components/marketing/install-banner"
 import { useSiteLocale } from "@/components/marketing/use-site-locale"
+import { outboundHref, STAGELINK_URL } from "@/lib/attribution/utm"
 import { LOCALE_PREFIX, localizedPath } from "@/lib/content/locale-routing"
 import { getSiteCopy, SiteLocale } from "@/lib/content/site-copy"
 import { isStandaloneDisplayMode } from "@/lib/pwa"
@@ -221,7 +222,10 @@ export function LandingPage({ locale }: { locale: SiteLocale }) {
             },
             { href: "#faq", label: copy.nav.faq, icon: HelpCircle },
             {
-              href: "https://stagelink.art",
+              href: outboundHref(STAGELINK_URL, {
+                medium: "crosspromo",
+                campaign: "nav-menu",
+              }),
               label: copy.footer.stagelink,
               external: true,
               icon: Compass,

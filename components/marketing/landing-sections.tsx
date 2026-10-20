@@ -26,6 +26,7 @@ import { SectionContainer } from "@/components/marketing/section-container"
 import { SectionReveal } from "@/components/marketing/section-reveal"
 import { EnergyCurveHeroVisual } from "@/components/marketing/energy-curve-hero-visual"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { outboundHref, STAGELINK_URL } from "@/lib/attribution/utm"
 import { ResolvedSiteCopy } from "@/lib/content/site-copy"
 import { COMPARISONS } from "@/lib/content/compare/comparisons"
 import { comparisonPath } from "@/lib/content/compare/paths"
@@ -404,7 +405,7 @@ export function SuiteSection({ copy }: { copy: ResolvedSiteCopy }) {
               {copy.suite.body}
             </p>
             <a
-              href="https://stagelink.art"
+              href={outboundHref(STAGELINK_URL, { medium: "crosspromo", campaign: "landing-suite" })}
               target="_blank"
               rel="noreferrer"
               className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-white/78 underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
@@ -795,7 +796,7 @@ export function FooterSection({
                 {part}
                 {index < parts.length - 1 ? (
                   <a
-                    href="https://stagelink.art"
+                    href={outboundHref(STAGELINK_URL, { medium: "crosspromo", campaign: "footer-family" })}
                     target="_blank"
                     rel="noreferrer"
                     className="text-white/72 underline decoration-white/24 underline-offset-4 transition hover:text-[#7DE6F7]"
@@ -910,7 +911,10 @@ export function FooterSection({
               // The sister product, as a resource: someone preparing sets is a
               // candidate for the rest of the family, and the traffic runs both ways.
               {
-                href: "https://stagelink.art",
+                href: outboundHref(STAGELINK_URL, {
+                  medium: "crosspromo",
+                  campaign: "footer-resources",
+                }),
                 label: copy.footer.stagelink,
                 external: true,
               },

@@ -81,7 +81,6 @@ export const KNOWN_SOURCES = {
   claude: "ai",
   gemini: "ai",
   copilot: "ai",
-  "llms-txt": "ai",
   instagram: "social",
   facebook: "social",
   x: "social",
@@ -116,13 +115,19 @@ const SOURCE_ALIASES: Record<string, KnownSource> = {
   yt: "youtube",
   gpt: "chatgpt",
   openai: "chatgpt",
+  // AI assistants tag the links they cite on their own, with their domain:
+  // ChatGPT appends `utm_source=chatgpt.com` to every citation.
+  "chatgpt.com": "chatgpt",
+  "chat.openai.com": "chatgpt",
+  "perplexity.ai": "perplexity",
+  "claude.ai": "claude",
+  "gemini.google.com": "gemini",
+  "copilot.microsoft.com": "copilot",
   ph: "producthunt",
   "product-hunt": "producthunt",
   "product hunt": "producthunt",
   "stagelink.art": "stagelink",
   "stage-link": "stagelink",
-  llms: "llms-txt",
-  "llms.txt": "llms-txt",
 }
 
 const MEDIUM_ALIASES: Record<string, Medium> = {
