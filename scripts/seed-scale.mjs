@@ -420,6 +420,9 @@ export function restVerdicts(migrations, schema) {
     if (migration.rlsEnabled.length) unseen.add("RLS")
     if (migration.nullable.length) unseen.add("nullability")
     if (migration.policiesDropped.length) unseen.add("policies")
+    if (migration.constraints?.length) unseen.add("constraints")
+    if (migration.functions?.length) unseen.add("functions")
+    if (migration.triggers?.length) unseen.add("triggers")
 
     const visible = {
       ...migration,
@@ -427,6 +430,9 @@ export function restVerdicts(migrations, schema) {
       rlsEnabled: [],
       nullable: [],
       policiesDropped: [],
+      constraints: [],
+      functions: [],
+      triggers: [],
     }
     return {
       file: migration.file,

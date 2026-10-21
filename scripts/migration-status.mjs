@@ -50,6 +50,11 @@
  *
  *   MIGRATION_DB_URL='postgresql://…' node scripts/migration-status.mjs
  *   MIGRATION_DB_URL='postgresql://…' node scripts/migration-status.mjs --json
+ *   node scripts/migration-status.mjs --sql | pbcopy    # paste into the SQL Editor
+ *
+ * `--sql` needs no connection: it prints one `select` that computes the same
+ * verdicts inside Postgres, for whoever has the Supabase console and not the
+ * connection string (lote 22).
  *
  * Exit code is 1 when anything is missing, so it can gate a deploy.
  * The URL is never read from a file in the repo and never written to one.
@@ -159,6 +164,33 @@ export function deriveProbes(sql) {
     ),
   ].map((match) => ({ policy: match[1], table: match[2] }))
 
+  // The three below are lote 22. Before them, ten `add constraint`, three
+  // functions and two triggers created things nobody looked for. Six of the
+  // constraints are written as `drop constraint if exists` + `add constraint`,
+  // so a paste that died between the two left the table *without* its check
+  // and the verdict still read `applied`. Two of the functions
+  // (`consume_feature_quota`, `consume_rate_limit`) are called by the app on
+  // every AI request.
+  const constraints = [
+    ...code.matchAll(/alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?(?:public\.)?([a-z_][a-z0-9_]*)\s([^;]*)/g),
+  ].flatMap((statement) =>
+    [
+      ...statement[2].matchAll(/add\s+constraint\s+([a-z_][a-z0-9_]*)/g),
+    ].map((match) => ({ table: statement[1], constraint: match[1] }))
+  )
+
+  const functions = [
+    ...code.matchAll(
+      /create\s+(?:or\s+replace\s+)?function\s+(?:public\.)?([a-z_][a-z0-9_]*)\s*\(/g
+    ),
+  ].map((match) => match[1])
+
+  const triggers = [
+    ...code.matchAll(
+      /create\s+(?:or\s+replace\s+)?trigger\s+([a-z_][a-z0-9_]*)\s[^;]*?\son\s+(?:public\.)?([a-z_][a-z0-9_]*)/g
+    ),
+  ].map((match) => ({ table: match[2], trigger: match[1] }))
+
   return {
     tables,
     columns,
@@ -168,6 +200,9 @@ export function deriveProbes(sql) {
     rlsEnabled,
     nullable,
     policiesDropped,
+    constraints,
+    functions,
+    triggers,
   }
 }
 
@@ -253,6 +288,20 @@ export function verdictFor(migration, schema) {
     )
   }
 
+  for (const { table, constraint } of migration.constraints ?? []) {
+    const key = `${table}.${constraint}`
+    ;(schema.constraints?.has(key) ? present : missing).push(`constraint ${key}`)
+  }
+
+  for (const name of migration.functions ?? []) {
+    ;(schema.functions?.has(name) ? present : missing).push(`function ${name}`)
+  }
+
+  for (const { table, trigger } of migration.triggers ?? []) {
+    const key = `${table}.${trigger}`
+    ;(schema.triggers?.has(key) ? present : missing).push(`trigger ${key}`)
+  }
+
   if (present.length === 0 && missing.length === 0) {
     return { status: "unknown", present, missing }
   }
@@ -266,6 +315,109 @@ export function verdictFor(migration, schema) {
     present,
     missing,
   }
+}
+
+/**
+ * The same verdicts, as one read-only query for the Supabase SQL Editor.
+ *
+ * For whoever has the console and not the connection string (lote 22). It is
+ * generated from `deriveProbes`, never written by hand, so it cannot drift from
+ * the CLI: each probe becomes one row whose `present` is an `exists (…)` against
+ * the catalog, and Postgres groups them into applied / PARTIAL / MISSING the way
+ * `verdictFor` does — including its one exception, a column of a table that
+ * this same migration creates and that is absent (counted once, as the table).
+ * Only `select`, so the SQL Editor runs it without a confirmation prompt and
+ * it cannot change anything.
+ */
+export function sqlReport(migrations) {
+  const q = (value) => `'${String(value).replace(/'/g, "''")}'`
+  const rows = []
+  const tableExists = (t) =>
+    `exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = ${q(t)})`
+
+  for (const m of migrations) {
+    const add = (label, present, counts = "true") =>
+      rows.push(`(${q(m.file)}, ${q(label)}, ${present}, ${counts})`)
+
+    for (const t of m.tables) add(`table ${t}`, tableExists(t))
+    for (const { table, column } of m.columns) {
+      add(
+        `column ${table}.${column}`,
+        `exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = ${q(table)} and column_name = ${q(column)})`,
+        m.tables.includes(table) ? tableExists(table) : "true"
+      )
+    }
+    for (const i of m.indexes) {
+      add(`index ${i}`, `exists (select 1 from pg_indexes where schemaname = 'public' and indexname = ${q(i)})`)
+    }
+    for (const t of m.types) {
+      add(
+        `type ${t}`,
+        `exists (select 1 from pg_type ty join pg_namespace n on n.oid = ty.typnamespace where n.nspname = 'public' and ty.typname = ${q(t)})`
+      )
+    }
+    for (const { type, value } of m.enumValues) {
+      add(
+        `enum value ${type}.${value}`,
+        `exists (select 1 from pg_enum e join pg_type ty on ty.oid = e.enumtypid join pg_namespace n on n.oid = ty.typnamespace where n.nspname = 'public' and ty.typname = ${q(type)} and e.enumlabel = ${q(value)})`
+      )
+    }
+    for (const t of m.rlsEnabled) {
+      if (m.tables.includes(t)) continue
+      add(
+        `RLS on ${t}`,
+        `exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = ${q(t)} and c.relrowsecurity)`
+      )
+    }
+    for (const { table, column } of m.nullable) {
+      add(
+        `nullable ${table}.${column}`,
+        `exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = ${q(table)} and column_name = ${q(column)} and is_nullable = 'YES')`
+      )
+    }
+    for (const { policy, table } of m.policiesDropped) {
+      add(
+        `policy ${table}.${policy} removed`,
+        `not exists (select 1 from pg_policies where schemaname = 'public' and tablename = ${q(table)} and policyname = ${q(policy)})`
+      )
+    }
+    for (const { table, constraint } of m.constraints ?? []) {
+      add(
+        `constraint ${table}.${constraint}`,
+        `exists (select 1 from pg_constraint c join pg_class t on t.oid = c.conrelid join pg_namespace n on n.oid = t.relnamespace where n.nspname = 'public' and t.relname = ${q(table)} and c.conname = ${q(constraint)})`
+      )
+    }
+    for (const f of m.functions ?? []) {
+      add(
+        `function ${f}`,
+        `exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = ${q(f)})`
+      )
+    }
+    for (const { table, trigger } of m.triggers ?? []) {
+      add(
+        `trigger ${table}.${trigger}`,
+        `exists (select 1 from pg_trigger tg join pg_class c on c.oid = tg.tgrelid join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = ${q(table)} and tg.tgname = ${q(trigger)} and not tg.tgisinternal)`
+      )
+    }
+  }
+
+  return `with probes (file, probe, present, counts) as (
+  values
+    ${rows.join(",\n    ")}
+)
+select
+  file,
+  case
+    when count(*) filter (where counts and not present) = 0 then 'applied'
+    when count(*) filter (where counts and present) = 0 then 'MISSING'
+    else 'PARTIAL'
+  end as status,
+  count(*) filter (where counts) as probes,
+  string_agg(probe, ', ') filter (where counts and not present) as missing
+from probes
+group by file
+order by file;
+`
 }
 
 /** Everything in `public`, in three sets, read in one round trip each. */
@@ -295,8 +447,33 @@ async function readSchema(client) {
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relrowsecurity`
   )
+  const constraints = await client.query(
+    `select t.relname, c.conname
+       from pg_constraint c
+       join pg_class t on t.oid = c.conrelid
+       join pg_namespace n on n.oid = t.relnamespace
+      where n.nspname = 'public'`
+  )
+  const functions = await client.query(
+    `select p.proname
+       from pg_proc p
+       join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public'`
+  )
+  const triggers = await client.query(
+    `select c.relname, t.tgname
+       from pg_trigger t
+       join pg_class c on c.oid = t.tgrelid
+       join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public' and not t.tgisinternal`
+  )
 
   return {
+    constraints: new Set(
+      constraints.rows.map((row) => `${row.relname}.${row.conname}`)
+    ),
+    functions: new Set(functions.rows.map((row) => row.proname)),
+    triggers: new Set(triggers.rows.map((row) => `${row.relname}.${row.tgname}`)),
     tables: new Set(tables.rows.map((row) => row.table_name)),
     columns: new Set(
       columns.rows.map((row) => `${row.table_name}.${row.column_name}`)
@@ -328,6 +505,12 @@ const STATUS_LABEL = {
 }
 
 async function main() {
+  // No connection needed: prints the query, the operator pastes it.
+  if (process.argv.includes("--sql")) {
+    process.stdout.write(sqlReport(readMigrations()))
+    return
+  }
+
   const url = process.env.MIGRATION_DB_URL
 
   if (!url) {

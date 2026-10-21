@@ -126,6 +126,22 @@ describe("the migration gate over REST", () => {
 
     expect(results.find((result) => result.file.startsWith("0005"))?.status).toBe("missing")
   })
+
+  it("does not read what REST cannot see as missing (lote 22)", () => {
+    // Constraints, functions and triggers are probed over Postgres since lote
+    // 22. REST shows none of them; counting them as absent would make every
+    // dev seed stop on a migration that is there.
+    const schema = {
+      tables: new Set(["profiles"]),
+      columns: new Set(["profiles.preferred_locale"]),
+      types: new Set<string>(),
+      enumValues: new Set<string>(),
+    }
+    const { results, unseen } = restVerdicts(readMigrations(), schema)
+
+    expect(results.find((result) => result.file.startsWith("0018"))?.status).toBe("applied")
+    expect(unseen).toEqual(expect.arrayContaining(["constraints", "functions", "triggers"]))
+  })
 })
 
 describe("arguments", () => {
