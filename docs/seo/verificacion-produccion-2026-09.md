@@ -276,6 +276,42 @@ live» se puede cerrar.
 
 ---
 
+# Fases 4 y 5, otra vez — 21/10/2026 (lote 21): **sin correr contra producción**
+
+El lote pedía repetir las fases 4 y 5 contra `https://energycurve.app` con el
+lote 20 desplegado (`786e97b`). **No se pudo:** desde el entorno de Claude el
+dominio no responde (`curl -s -o /dev/null -w '%{http_code}' https://energycurve.app/`
+→ `000`, igual con `www`; el proxy rechaza la conexión). Nada de esta sección
+está verificado en producción.
+
+Lo que quedó es la verificación en un comando, con los mismos ítems que la
+tabla del 27/09 de abajo, para que correrla cueste un minuto:
+
+```bash
+node scripts/verify-seo-phases.mjs https://energycurve.app
+```
+
+Imprime una línea por ítem — verde o ROJO, qué se pidió y qué volvió — y sale
+con 1 si hay algún rojo. Todo el JSON-LD se **parsea**, no se busca el
+`<script>`.
+
+**Corrida contra un build local de `plans/lote-21`** (= `786e97b` más este
+lote; no es producción), 21/10: **27 ítems, 27 verdes**. Contra un prefijo que
+no existe, 27 rojos y salida 1, para saber que el script sabe fallar.
+
+| Fase | Por código, en el build local | En producción | Fase entera |
+|---|---|---|---|
+| 4 | E23: 12 de 12 URLs con 200, JSON-LD que parsea y en el sitemap; el pie enlaza las 6 en cada idioma. E24: `/llms.txt` con las 6 comparaciones y «Articles (English)» (los dos rojos del 27/09, arreglados en el lote 14). E22: `alternateName`, `WebSite` y **1** perfil en `sameAs` | **sin correr** | **NO VERIFICADA** |
+| 5 | E28: el CTA a la herramienta en las 4 páginas de referencia y en un artículo de cada idioma | **sin correr** | **NO VERIFICADA** |
+
+**Lo que falta para cerrar cada fase**, con nombre: correr el comando de arriba
+contra producción (Robertino, 1 minuto; banco L21.7), y las tareas externas de
+la tabla del final, que no cambiaron: E22 (cinco perfiles), E25, E26, E27,
+la mitad de PostHog de E28 y E31 (el secret `PAGESPEED_API_KEY`) — todas de
+Robertino.
+
+---
+
 # Verificación en producción — Fases 4 y 5
 
 **Fecha:** 27/09/2026 (lote 14)
