@@ -4,6 +4,46 @@
 `29f26cc` (`main`, el merge del #278). Todos los números salen de un comando
 corrido ese día sobre un build local; el comando está al lado.
 
+## Estado al 21/10/2026 (lote 21) — leé esto primero
+
+Las secciones de abajo son el histórico de los lotes 19 y 20, con los números
+de ese día. Esto es lo de hoy: rama `plans/lote-21` sobre `786e97b` (`main`,
+el lote 20), build local, mismo comando de siempre.
+
+| | Antes de la tarea 4 | Después |
+|---|---|---|
+| URLs en el sitemap | 116 | 116 |
+| Con 0 enlaces entrantes | 0 | 0 |
+| Con 1 o 2 | 1 (`/es/glosario/b2b`, justificada en el lote 19) | 1, la misma |
+| Con 3 a 5 | 32 | 31 |
+| Con 6 a 10 | 31 | 32 |
+| Con 11 a 20 | 11 | 11 |
+| Con más de 20 | 41 | 41 |
+| Mediana | 9 | 9 |
+| `/es/guia/curva-de-energia-en-un-set-de-dj` | **3** | **8** |
+| Páginas que perdieron enlaces | — | 0 |
+
+**La tarea 4 del lote 21** sumó la guía pilar a cinco artículos en español,
+en el cuerpo: `esta-bien-el-orden-de-mi-set`, `cuanto-es-mucho-salto-de-energia`,
+`antes-de-tocar-no-despues`, `tus-temas-no-tienen-bpm-ni-tonalidad` y
+`ordenar-un-set-desde-una-lista-de-texto`. Quedaron afuera, a propósito, los
+tres de mover archivos entre programas (Traktor → Rekordbox, Rekordbox → USB,
+crates de Serato): no hablan de la curva y el enlace sería relleno.
+`tests/pillar-guide-links.test.ts` lo fija.
+
+**Una trampa que apareció:** poner el enlace sobre la frase «la curva de
+energía de tu set» le quitaba al glosario su única mención en ese artículo
+—el enlazador automático de términos sólo mira texto, no enlaces—, y
+`/es/glosario/curva-de-energia` bajaba de 11 a 10. Se movió el enlace a la
+oración siguiente. Al enlazar una página nueva desde un artículo, mirá que el
+ancla no sea la frase con la que el artículo ya enlaza un término del glosario.
+
+**Las que tienen 3**, el piso de hoy después de `/es/glosario/b2b`: las dos
+`subprocessors` (página legal, enlazada desde el pie y la política: está bien
+así) y seis entradas de glosario (`crowd-reading`/`leer-la-pista`,
+`key-lock`, `b2b` en inglés) que reciben el índice, la entrada vecina y un
+artículo. No se tocaron.
+
 ## Cómo se midió
 
 ```
