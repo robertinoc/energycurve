@@ -71,7 +71,9 @@ export function PlanCard({
               {formatTemplate(COPY[notice.kind].title[locale], params)}
             </h2>
             <p className="max-w-xl text-sm leading-6 text-white/62">
-              {formatTemplate(COPY[notice.kind].body[locale], params)}
+              {notice.kind === "active" && !notice.date
+                ? COPY.activeNoDate.body[locale]
+                : formatTemplate(COPY[notice.kind].body[locale], params)}
             </p>
           </div>
         </div>

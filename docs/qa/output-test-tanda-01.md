@@ -63,6 +63,7 @@ que resolver **antes** de escribir el arreglo.
 | H-22 | Seis defectos más del mismo origen, encontrados al arreglar: el export repetía temas y no entraba en una respuesta de Vercel, la librería y los sets compartidos, sets de más de 1.000 temas, y un reordenamiento que falla y traba el set | Bugs silenciosos y uno ruidoso | — | ✅ lote 17 · validar (L17.1, L17.3–L17.6) |
 | H-23 | En el pico, la CPU se va en el orden sugerido de la página de análisis, calculado en cada render | Rendimiento | Claude propone · **Robertino decide** | La mitad sin decisión ✅ lote 18 (memorizada) · sacarla del render espera a Robertino (L18.2) |
 | H-24 | La página de precios de Serato ya no dice lo del hardware que desbloquea DJ Pro, y `/compare/best-dj-software` se lo atribuye | Deriva de fuente | Claude | Atribución ✅ lote 21 · la fecha espera la relectura (L21.2) |
+| H-25 | Un plan activo sin fecha de renovación muestra «Se renueva el .» | Bug de copy | — (Robertino autorizó el arreglo) | ✅ lote 22 · validar con la cuenta de cortesía |
 
 ---
 
@@ -587,6 +588,24 @@ lote pedía releer la fuente antes de poner la fecha de hoy, y desde el entorno
 de Claude `serato.com` no responde. El texto nuevo se apoya en la lectura
 literal del 20/10 citada arriba. Queda la relectura y la fecha: banco L21.2.
 ---
+
+## H-25 · «Se renueva el .»: un plan activo sin fecha
+
+Encontrado el 21/10/2026 por Robertino, en `energycurve.app/dashboard/account`
+con su propia cuenta, al buscar el botón de H-16. Esa cuenta es PRO+ de
+cortesía (`COMP_PRO_PLUS_EMAILS`, `services/billing-service.ts`): se lee como
+una suscripción activa, pero no tiene `plan_current_period_end` ni cliente de
+Stripe. La tarjeta del plan armaba igual «Se renueva el {date}.» con la fecha
+vacía. Le pasaría también a una suscripción paga si Stripe nunca mandó el fin
+del período.
+
+**Arreglo (lote 22, autorizado por Robertino):** sin fecha, la tarjeta dice
+«Sin fecha de renovación registrada.» / «No renewal date on record.», en vez de
+prometer una renovación sin fecha. Con fecha, no cambia nada.
+`tests/plan-card-no-date.test.ts` renderiza la tarjeta en los dos idiomas: 5
+tests, los 5 en rojo antes del arreglo (el HTML contenía «Se renueva el »).
+
+**Validar:** con la cuenta de cortesía, Account y el dashboard después del deploy.
 
 ## Menores, salidos de los logs
 
