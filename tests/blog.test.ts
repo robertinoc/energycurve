@@ -1031,7 +1031,7 @@ describe("the cornerstone articles meet the SEO-E13 rules", () => {
           for (const entry of block.entries) walk(entry.answer)
         } else if (block.kind === "list") {
           for (const item of block.items) walk(item)
-        } else if (block.kind !== "code" && block.kind !== "table") {
+        } else if (block.kind !== "code" && block.kind !== "table" && block.kind !== "figure") {
           walk(block.inline)
         }
       }

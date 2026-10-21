@@ -1,28 +1,25 @@
 # Lo que espera algo tuyo
 
-**Podado el 21/10/2026 (lote 21).** Una tabla ordenada por **lo que destraba**,
-no por antigüedad ni por número. El número de cada fila es su nombre, no su
-puesto: no se renumera, para no romper las referencias de otros documentos
-(«fila 10», «fila 16», «fila 20»).
+**Actualizado el 21/10/2026 (lote 22); podado el mismo día en el lote 21.** Una
+tabla ordenada por **lo que destraba**, no por antigüedad ni por número. El
+número de cada fila es su nombre, no su puesto: no se renumera, para no romper
+las referencias de otros documentos («fila 10», «fila 16», «fila 20»).
 
-Qué cambió en esta poda:
+Qué cambió en el lote 22:
 
-- **Sale la 13** (H-16): Robertino autorizó el rename y el lote 21 lo hizo.
-  Lo que queda es validarlo en producción, y eso está en la fila 3 (L21.3).
-- **Cambian la 3, la 10, la 11, la 14, la 15, la 18 y la 28.** La 28 pasa
-  arriba de todo y tiene runbook. La 14 y la 15 pasan de «definir» a
-  «elegir», porque las opciones ya están escritas. La 10 y la 18 tienen el
-  costo corregido.
-- **Entran la 32** (qué commit sirve producción) **y la 33** (las
-  comparaciones que vencen el 31/10).
-- Antes había **33 filas** (el pedido del lote decía 30; las conté: 33).
-  Ahora hay **34**.
+- **Salen la 28, la 11 y la 32**, resueltas el 21/10 (ver «Resuelto»): la 0034
+  está en dev y en producción; las 34 migraciones se revisaron en los dos
+  proyectos sin connection string; y producción sirve lo mismo que `main`.
+- **Entra la 34**, arriba: la 0032 nunca corrió en producción (H-26).
+- **Sube la 29** al segundo lugar: con la 0034 en producción, el dato del
+  primer contacto ya se guarda, y la frase de la política que lo cuenta sigue
+  sin aprobar.
+- **Cambia la 3**: 9 de las 16 filas de L20 y L21 ya tienen su respuesta por
+  máquina, y entra la sesión L22.
+- Antes había **34 filas**. Ahora hay **32**.
 
-Cada fila nueva o cambiada se verificó al escribirla, con un comando o leyendo
-el archivo que nombra. Las que no cambiaron dicen lo mismo que el lote 20 y
-**no se volvieron a verificar**. Lo que no se pudo confirmar dice «sin
-confirmar». Producción no se miró en este lote: el contenedor no llega a
-`energycurve.app` ni a Vercel.
+Las filas que no cambiaron dicen lo mismo que el lote 21 y **no se volvieron a
+verificar**. Lo que no se pudo confirmar dice «sin confirmar».
 
 El costo es el tuyo, contando el rato de entrar a la consola. Donde una fila
 abre trabajo de código después, va aparte. Los costos son estimaciones. Donde
@@ -32,15 +29,13 @@ la estimación es floja, lo dice.
 
 | # | Qué | Qué destraba | Tu costo | Esperando desde | Detalle |
 |---|---|---|---|---|---|
-| 28 | **Aplicar la migración `0034_profile_first_touch.sql`** en dev (`djoutoutkukpjrdgjqkb`) y en producción (`iwzkzybzadsmnwilcity`). **Desde el lote 21 es copiar y pegar:** `docs/runbooks/aplicar-migracion-0034.md` tiene el chequeo previo («¿ya está?»), el SQL exacto entre `begin;` y `commit;`, y una consulta que contesta «ESTÁ» o «NO ESTÁ». Correrla dos veces no rompe nada: se probó en un Postgres 16 descartable | Que el producto empiece a guardar de dónde llega cada usuario. **Sin ella, cada registro en producción se pierde para la medición** (la ruta contesta 503 y el navegador guarda el contacto, pero el servidor lo acepta sólo durante las 24 h siguientes al registro) y el tablero dice «not measured». En dev, además, `seed-scale.mjs seed` frena hasta que se aplique. Comprobado el 20/10: dev contesta `42703 column profiles.first_touch_source does not exist`. En producción: **sin confirmar** (este contenedor no llega) | ~10 min por proyecto, con el chequeo | 20/10 | `docs/runbooks/aplicar-migracion-0034.md`; banco L21.1 (y L20.2) |
-| 11 | **`db:status` con `MIGRATION_DB_URL`**: contra producción (DB.3) y, de paso, contra dev (DB.2) | Saber qué migraciones tiene prod —nunca se preguntó— y confirmar en dev lo que REST no ve: índices y políticas. Desde el lote 21 también detecta las siete columnas de la 0034 (antes veía una sola de siete), así que sirve como paso 1 del runbook de la fila 28 | 10 min | 25/09 | Banco DB.3. El comando lo corrés vos: la connection string es un secreto |
-| 32 | **Confirmar qué commit sirve producción, y desplegar `main`** si no es el último. La última vez que alguien lo miró (20/10, API de Vercel) servía `472535c`, el merge del #286. El lote 20 se mergeó después, en `786e97b` | Todas las filas de validación del banco (L20 y L21) y la fila 28, que importa recién cuando el código del lote 20 está en producción. Si el lote 20 está desplegado: **sin confirmar**; este contenedor no llega a Vercel | 5 min mirar; el deploy, lo que tarde Vercel | 21/10 | Vercel → Deployments; `docs/handoff-2026-09-17.md`, «Estado de hoy» |
+| 34 | **Aplicar la 0032 en producción**: en el SQL Editor de `iwzkzybzadsmnwilcity`, `drop policy if exists feature_usage_own_rows on public.feature_usage;` y volver a correr la consulta de `node scripts/migration-status.mjs --sql`: la fila de la 0032 tiene que decir `applied` | Que el esquema de producción deje de mostrar un control de dueño que no existe (H-26). **No se perdió ningún dato**: la política no matchea nunca. Encontrado el 21/10 (lote 22): producción tiene 33 de 34 migraciones, la 0032 salteada | 2 min | 21/10 | `docs/qa/migraciones-revision-2026-10.md`; tanda 01 §H-26 |
+| 29 | **Aprobar la frase de la política** sobre el primer contacto. Propuesta, sin aplicar: «Si aceptás la analítica, guardamos además, con tu cuenta, de dónde llegó tu primera visita: el sitio o la campaña que te trajo (por ejemplo, Instagram o Google), la página pública por la que entraste y cuándo. Nunca la dirección completa de la que venías. Lo usamos sólo para contar, en conjunto, qué canales traen gente a EnergyCurve.» / «If you accept analytics, we also keep, with your account, where your first visit came from: the site or campaign that sent you (for example Instagram or Google), the public page you arrived on, and when. Never the full address you came from. We use it only to count, in aggregate, which channels bring people to EnergyCurve.» | Que la política diga lo que el producto guarda. **Desde el 21/10 corre en producción**: con la 0034 aplicada, cada registro que aceptó la analítica guarda su primer contacto, y la política todavía no lo menciona. El dato es nuevo; el consentimiento es el mismo de la analítica, y el banner no se tocó. **No es asesoramiento legal** | 10 min de lectura | 20/10 | `docs/seo/primer-contacto.md`; RoPA T5, fila «Primer contacto» |
 | 1 | **PostHog → Settings → Project → «Discard client IP data»**: confirmar que está prendido, y si no, prenderlo | Que el banner y la política digan algo verdadero hoy. El código ya no manda `$ip` en el evento (lote 16), pero la IP llega igual en la conexión, y si PostHog la guarda depende **sólo** de este ajuste | 2 min | 02/10 | `docs/qa/output-test-tanda-01.md` §H-17 |
 | 2 | **Aprobar la frase corregida** de la política, el banner, `privacy-by-design.md` y el export de datos | Publicar la corrección de H-17. Está escrita y **no aplicada**, a propósito: es copy legal. Depende de la fila 1 — si el ajuste está apagado, la frase es otra | 10 min de lectura | 02/10 | El resumen del lote 16 y §H-17. No es asesoramiento legal |
-| 29 | **Aprobar la frase de la política** sobre el primer contacto. Propuesta, sin aplicar: «Si aceptás la analítica, guardamos además, con tu cuenta, de dónde llegó tu primera visita: el sitio o la campaña que te trajo (por ejemplo, Instagram o Google), la página pública por la que entraste y cuándo. Nunca la dirección completa de la que venías. Lo usamos sólo para contar, en conjunto, qué canales traen gente a EnergyCurve.» / «If you accept analytics, we also keep, with your account, where your first visit came from: the site or campaign that sent you (for example Instagram or Google), the public page you arrived on, and when. Never the full address you came from. We use it only to count, in aggregate, which channels bring people to EnergyCurve.» | Que la política diga lo que el producto guarda. El dato es nuevo; el consentimiento es el mismo de la analítica, y el banner no se tocó. **No es asesoramiento legal** | 10 min de lectura | 20/10 | `docs/seo/primer-contacto.md`; RoPA T5, fila «Primer contacto» |
 | 30 | **Decidir qué pasa con el primer contacto ya guardado cuando alguien retira el consentimiento** | Hoy el retiro borra lo que espera en el navegador, y no lo que ya está en el perfil (que sí se va al borrar la cuenta y sale en el export de datos). Las dos salidas: borrarlo también del perfil cuando el retiro pasa con sesión iniciada (código chico), o dejarlo porque ya se procesó con consentimiento válido. Es una decisión de privacidad, no de código | La decisión | 20/10 | `docs/seo/primer-contacto.md`, «Consentimiento» |
 | 4 | **Validar H-10 en producción (banco J.4), y recién después cargar crédito en Anthropic** (H-9) | El orden inteligente vuelve a ser IA para todos los usuarios — hoy cae siempre al heurístico — y destraba J.6. **El orden importa:** mientras no haya saldo es la única ventana para ver el mensaje nuevo de «sin crédito» contra el deploy; cargar primero la cierra | 5 min la validación + 5 min cargar + el dinero | 20/09 | Tanda 01 §H-9 y §H-10, banco J.4 |
-| 3 | **Correr las sesiones del banco después de cada deploy**: L16 (L16.2 a L16.6), L20 (las siete) y L21 (L21.1 a L21.7) | Pasar de «implementado» a «verificado» todo lo que ya está en `main`: H-15, H-18, H-19, IMP.1 y el login en español (L16); el lote 20 entero; y del lote 21, H-16, H-24, los enlaces a la guía y las fases 4 y 5 de SEO. Ninguno se da por cerrado sin eso | ~40 min L16 + ~1 h L20 + ~1 h L21, sin confirmar: son estimaciones, no se cronometró ninguna | 02/10 (L20: 20/10; L21: 21/10) | Banco, sesiones L16, L20 y L21 |
+| 3 | **Correr las sesiones del banco después de cada deploy**: L16 (L16.2 a L16.6), L20 (las siete), L21 (L21.2 a L21.4 y L21.9–10) y L22 (dos) | Pasar de «implementado» a «verificado». **El 21/10 se pre-verificaron por máquina 9 de las 16 de L20 y L21, las 9 como se esperaba** (`docs/qa/prevalidacion-banco-l20-l21.md`): a L20.7, L21.1, L21.6 y L21.7 no les queda nada a ojo; a L20.1, L21.2, L21.3, L21.4 y L21.5, la parte humana que dice cada fila. L20.2 a L20.6 ya tienen la 0034 que necesitaban | ~40 min L16 + ~45 min L20 + ~20 min L21 + ~15 min L22, sin confirmar: estimaciones | 02/10 (L20: 20/10; L21 y L22: 21/10) | Banco; `docs/qa/prevalidacion-banco-l20-l21.md` |
 | 33 | **Releer las fuentes de las comparaciones que vencen**: mixed-in-key, setflow y dj-studio el 31/10, best-dj-software el 01/11 (con la página de Serato DJ Pro, que el lote 21 no pudo abrir). O pedírselo a un lote que tenga acceso a esos sitios | Que la fecha «revisado» de cada comparación sea verdadera. El umbral es 35 días (`tests/comparison-review-age.test.ts`, con `CHECK_REVIEW_AGE=1`); pasado eso, la página publica una revisión que nadie hizo. Corrige también la mitad que faltó de H-24 | ~1 h las cuatro | 21/10 | `docs/seo/competitor-facts-2026-09-26.md`, «Antigüedad de cada página»; banco L21.2 y L21.5 |
 | 3b | **Exportar tus datos en producción con una librería de más de ~7.000 temas** y contar los temas del archivo | Saber si el export pasa el tope de 4,5 MB de Vercel: sale en streaming desde el lote 17 y eso sólo se ve en producción. El resto de la sesión L17 se automatizó en el #279 (`e2e/large-library.auth.spec.ts`), contra dev; ésta es la parte que un test local no puede hacer | ~20 min, si hay una cuenta con esa librería | 06/10 | `docs/qa/carga-2026-10.md`, sección del lote 17 |
 | 6 | **Correr `scripts/verify-deletion.mjs`** contra una cuenta descartable | Saber que borrar una cuenta borra de verdad. Nunca corrió | ~15 min | 25/09 | `docs/handoff-2026-09-17.md` §17.6 punto 3 |
@@ -68,6 +63,20 @@ la estimación es floja, lo dice.
 | 20 | **La palabra «AI»**: si el producto la quiere en su posicionamiento | Un hueco del mapa de keywords (`ai dj set planner free`) | La decisión | 27/09 | `docs/seo/keyword-map.md:251` |
 
 ## Resuelto
+
+**Resueltas el 21/10/2026 (lote 22), con lo que corrió Robertino:**
+
+- **28 · la migración 0034.** Dev: la consulta del runbook decía «ESTÁ» antes
+  de aplicar nada. Producción: «NO ESTÁ» → se pegó el bloque del runbook →
+  «ESTÁ — 0034 aplicada: 7 de 7 columnas y la restricción». Desde ahora cada
+  registro en producción guarda su primer contacto (si aceptó la analítica).
+- **11 · qué migraciones tiene cada entorno.** Sin connection string: la
+  consulta de `node scripts/migration-status.mjs --sql`, en el SQL Editor de
+  los dos proyectos. Dev («TEST»): 34 de 34. Producción: 33 de 34, falta la
+  0032 → fila 34. `docs/qa/migraciones-revision-2026-10.md`.
+- **32 · qué commit sirve producción.** Lo mismo que `main` en `131d4df`:
+  producción servía los tres cambios observables del lote 21 y entre el último
+  (`ab58552`) y `131d4df` no cambia nada servido. Hash exacto sin confirmar.
 
 Podado el 10/10 (lote 19). Lo resuelto vive en el historial de este archivo y
 en el traspaso, no acá: las dos filas que había (`CRON_SECRET` en Vercel, 401

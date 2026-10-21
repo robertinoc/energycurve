@@ -141,6 +141,7 @@ function allInline(blocks: BlogBlock[]): InlineNode[] {
       case "faq":
         return block.entries.flatMap((entry) => entry.answer)
       case "code":
+      case "figure":
         return []
     }
   })

@@ -96,6 +96,28 @@ for (const { locale, path } of WHEEL) {
       await page.getByTestId("key-filter").fill("8A")
       await expect(rows).toHaveCount(1)
     })
+
+    test("the table keeps a filter typed before hydration", async ({ page }) => {
+      // The race WebKit lost in CI on lote 22, forced instead of waited for:
+      // hold the page's JavaScript, type into the server-rendered box, then
+      // let React in. Without useTypedBeforeHydration the box says 8A and the
+      // table still has 24 rows.
+      let release!: () => void
+      const gate = new Promise<void>((resolve) => (release = resolve))
+      await page.route("**/_next/static/chunks/**", async (route) => {
+        await gate
+        await route.continue()
+      })
+
+      await page.goto(path, { waitUntil: "commit" })
+      const rows = page.getByTestId("key-table-body").locator("tr")
+      await expect(rows).toHaveCount(24)
+
+      await page.getByTestId("key-filter").fill("8A")
+      release()
+
+      await expect(rows).toHaveCount(1)
+    })
   })
 }
 

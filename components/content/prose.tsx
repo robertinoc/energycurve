@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { BlogFigure } from "@/components/content/blog-figure";
+import type { SiteLocale } from "@/lib/content/site-copy";
+
 import {
   inlineToText,
   type BlogBlock,
@@ -75,8 +78,20 @@ export function Inline({ nodes }: { nodes: InlineNode[] }) {
   );
 }
 
-export function Block({ block }: { block: BlogBlock }) {
+export function Block({
+  block,
+  locale,
+}: {
+  block: BlogBlock;
+  /** Needed only by a figure, the one block whose words are not in the source. */
+  locale?: SiteLocale;
+}) {
   switch (block.kind) {
+    case "figure":
+      if (!locale) {
+        throw new Error(`figure "${block.id}" rendered without a locale`);
+      }
+      return <BlogFigure id={block.id} locale={locale} />;
     case "heading": {
       // The level is data, so the tag has to be chosen rather than written.
       const Tag = `h${block.level}` as "h2" | "h3" | "h4";

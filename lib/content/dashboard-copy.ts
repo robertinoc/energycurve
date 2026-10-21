@@ -1668,6 +1668,16 @@ export const DASHBOARD_COPY = {
       title: { en: "{plan} is active", es: "{plan} está activo" },
       body: { en: "Renews on {date}.", es: "Se renueva el {date}." },
     },
+    // H-25 (lote 22): an active plan with no renewal date on record — a
+    // complimentary PRO+, or a period end Stripe never sent. Rendering the
+    // sentence above with an empty date read «Se renueva el .». Says what is
+    // known instead of promising a renewal it cannot date.
+    activeNoDate: {
+      body: {
+        en: "No renewal date on record.",
+        es: "Sin fecha de renovación registrada.",
+      },
+    },
     ending: {
       title: { en: "{plan} ends on {date}", es: "{plan} termina el {date}" },
       body: {

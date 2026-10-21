@@ -369,6 +369,86 @@ describe("every migration can be checked against a live database", () => {
     })
   })
 
+  it("reads what a migration creates besides tables and columns (lote 22)", async () => {
+    // Ten `add constraint`, three functions and two triggers used to be
+    // invisible: a paste that died between `drop constraint` and `add
+    // constraint` left the table without its check, and the script said
+    // `applied`. Two of the functions are called on every AI request.
+    const { deriveProbes } = await import("../scripts/migration-status.mjs")
+
+    const byFile = (name: string) =>
+      deriveProbes(migrations.find((m) => m.file.startsWith(name))!.sql)
+
+    expect(byFile("0018").constraints).toEqual([
+      { table: "profiles", constraint: "profiles_preferred_locale_check" },
+    ])
+    expect(byFile("0015").constraints).toHaveLength(4)
+    expect(byFile("0034").constraints).toEqual([
+      { table: "profiles", constraint: "profiles_first_touch_format_check" },
+    ])
+    expect(byFile("0014").functions).toEqual(["consume_feature_quota"])
+    expect(byFile("0029").functions).toEqual(["consume_rate_limit"])
+    expect(byFile("0001").functions).toEqual(["set_updated_at"])
+    expect(byFile("0001").triggers).toEqual([
+      { table: "profiles", trigger: "profiles_set_updated_at" },
+      { table: "playlists", trigger: "playlists_set_updated_at" },
+    ])
+
+    const all = migrations.map((m) => deriveProbes(m.sql))
+    expect(all.flatMap((p) => p.constraints)).toHaveLength(10)
+    expect(all.flatMap((p) => p.functions)).toHaveLength(3)
+    expect(all.flatMap((p) => p.triggers)).toHaveLength(2)
+  })
+
+  it("calls a migration with its columns but not its constraint partial", async () => {
+    const { deriveProbes, verdictFor } = await import("../scripts/migration-status.mjs")
+    const migration = deriveProbes(
+      migrations.find((m) => m.file.startsWith("0018"))!.sql
+    )
+    const empty = () => new Set<string>()
+    const schema = {
+      tables: new Set(["profiles"]),
+      columns: new Set(["profiles.preferred_locale"]),
+      indexes: empty(),
+      types: empty(),
+      enumValues: empty(),
+      rlsEnabled: empty(),
+      nullable: empty(),
+      policies: empty(),
+      constraints: empty(),
+      functions: empty(),
+      triggers: empty(),
+    }
+
+    expect(verdictFor(migration, schema)).toMatchObject({
+      status: "partial",
+      missing: ["constraint profiles.profiles_preferred_locale_check"],
+    })
+
+    schema.constraints.add("profiles.profiles_preferred_locale_check")
+    expect(verdictFor(migration, schema).status).toBe("applied")
+  })
+
+  it("prints a read-only query for the SQL Editor that asks every probe", async () => {
+    // For whoever has the console and not the connection string: the same
+    // verdicts, computed by Postgres, from the same probes — not a second copy.
+    const { readMigrations, sqlReport } = await import("../scripts/migration-status.mjs")
+    const sql: string = sqlReport(readMigrations())
+
+    expect(sql.trimStart()).toMatch(/^with probes/)
+    expect(sql).not.toMatch(/\b(insert|update|delete|drop|alter|create|truncate|grant)\b/i)
+    for (const name of [
+      "0034_profile_first_touch.sql",
+      "first_touch_recorded_at",
+      "profiles_first_touch_format_check",
+      "consume_feature_quota",
+      "playlists_set_updated_at",
+      "feature_usage_own_rows",
+    ]) {
+      expect(sql).toContain(name)
+    }
+  })
+
   it("has the CLI config the runner needs", () => {
     // This assertion used to read `expect(hasRunner).toBe(false)` and was
     // correct: there was no config, no seed and no runner, and it was written
