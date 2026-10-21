@@ -12,6 +12,7 @@ import { ActivityFeed } from "./ActivityFeed"
 import { Bento, BentoLabel } from "./BackstagePrimitives"
 import { PendingDeletions } from "./PendingDeletions"
 import { PrivacyRequestQueue } from "./PrivacyRequestQueue"
+import { AcquisitionDashboard } from "./AcquisitionDashboard"
 import { UsersDashboard } from "./UsersDashboard"
 import { UsersTable } from "./UsersTable"
 
@@ -20,7 +21,10 @@ export const metadata: Metadata = {
 }
 
 import type { BackstageUserKpis } from "@/lib/backstage/users"
-import { isPostHogReportingConfigured } from "@/lib/backstage/posthog-reporting"
+import {
+  fetchToolUsage,
+  isPostHogReportingConfigured,
+} from "@/lib/backstage/posthog-reporting"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 /** StageLink-style KPI cards: big number, colored, with a one-line footnote. */
@@ -66,17 +70,19 @@ function kpiCards(kpis: BackstageUserKpis): Array<{
 
 export default async function BackstageUsersPage() {
   const [
-    { users, kpis },
+    { users, kpis, acquisition },
     recentAnalyses,
     adminActions,
     privacyRequests,
     pendingDeletions,
+    toolUsage,
   ] = await Promise.all([
     getBackstageUsersSnapshot(),
     getRecentAnalyses(),
     getRecentAdminActions(),
     listOpenPrivacyRequests(),
     listPendingDeletions(),
+    fetchToolUsage(),
   ])
 
   return (
@@ -119,6 +125,15 @@ export default async function BackstageUsersPage() {
       <UsersTable users={users} />
 
       <UsersDashboard users={users} />
+
+      {/* Lote 20: acquisition and activation. Its own reads (first touch,
+          checkouts) fail on their own and say so; the table above never waits
+          on them. */}
+      <AcquisitionDashboard
+        users={users}
+        acquisition={acquisition}
+        toolUsage={toolUsage}
+      />
 
       {/* Feed first by request: what just happened is what gets checked daily;
           the compliance queues below carry their own deadlines and alarms. */}

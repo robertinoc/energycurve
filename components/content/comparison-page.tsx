@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ContentBody } from "@/components/content/content-body"
 import { PageShell } from "@/components/marketing/page-shell"
 import { ContentFooter } from "@/components/marketing/content-footer"
+import { outboundHref } from "@/lib/attribution/utm"
 import type { Comparison } from "@/lib/content/compare/comparisons"
 import {
   comparisonAlternates,
@@ -92,7 +93,10 @@ export function ComparisonPage({
               <span key={source.url}>
                 {index > 0 ? " · " : null}
                 <a
-                  href={source.url}
+                  href={outboundHref(source.url, {
+                    medium: "referral",
+                    campaign: "compare-sources",
+                  })}
                   rel="nofollow noopener noreferrer"
                   target="_blank"
                   className="text-white/85 underline underline-offset-4 hover:text-white"

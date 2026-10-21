@@ -8,6 +8,7 @@ import {
   type AnalyticsPeriod,
   type BackstageAnalyticsSummary,
 } from "@/lib/backstage/analytics"
+import { TOOLS, type ToolUsage } from "@/lib/backstage/acquisition"
 import { logError } from "@/lib/observability/logger"
 
 /**
@@ -289,4 +290,76 @@ export async function fetchBackstagePersonFacts(): Promise<
   }
 
   return facts
+}
+
+/** Tool events that mean somebody used a tool (not "clicked sign up" on it). */
+const TOOL_USE_EVENTS_SQL =
+  "('tool_file_loaded', 'tool_example_loaded', 'tool_result_shown', 'camelot_key_selected', 'compatibility_checked')"
+
+export const TOOL_USAGE_WINDOW_DAYS = 90
+
+/**
+ * The free tools as a bridge (lote 20, task 6): people who used each tool in
+ * the window, and of them, how many have a `signup` event **after** their first
+ * use. After, not because of — nothing here can tell whether the tool is why.
+ *
+ * Counted over PostHog persons, which exist only for visitors who accepted
+ * analytics, and the signup is only tied to the tool use if the person was
+ * identified on the dashboard with consent. Both numbers are therefore lower
+ * bounds over a subset, and the UI says so. The energy-curve tool's events
+ * carry no `tool` property (it predates the others), so an event without one
+ * is the energy curve.
+ *
+ * Returns null when reporting is not configured or the query fails: the
+ * section then says it has no usage data, rather than showing zeros.
+ */
+export async function fetchToolUsage(): Promise<ToolUsage | null> {
+  const config = getConfig()
+
+  if (!config) {
+    return null
+  }
+
+  const query = `
+    SELECT t.tool, count() AS users, countIf(s.signed_at > t.first_use) AS signed_up_after
+    FROM (
+      SELECT
+        person_id,
+        if(
+          toString(properties.tool) IN ('camelot_wheel', 'key_bpm', 'playlist_converter'),
+          toString(properties.tool),
+          'energy_curve'
+        ) AS tool,
+        min(timestamp) AS first_use
+      FROM events
+      WHERE event IN ${TOOL_USE_EVENTS_SQL}
+        AND timestamp >= now() - INTERVAL ${TOOL_USAGE_WINDOW_DAYS} DAY
+      GROUP BY person_id, tool
+    ) AS t
+    LEFT JOIN (
+      SELECT person_id, min(timestamp) AS signed_at
+      FROM events
+      WHERE event = 'signup'
+      GROUP BY person_id
+    ) AS s ON t.person_id = s.person_id
+    GROUP BY t.tool
+  `
+
+  try {
+    const rows = await runHogQLQuery(config, query)
+    const byTool = new Map(rows.map((row) => [String(row[0]), row]))
+
+    return {
+      windowDays: TOOL_USAGE_WINDOW_DAYS,
+      rows: TOOLS.map((tool) => ({
+        tool,
+        users: toNumber(byTool.get(tool)?.[1]),
+        signedUpAfter: toNumber(byTool.get(tool)?.[2]),
+      })),
+    }
+  } catch (error) {
+    logError("backstage.tool_usage_failed", error, {})
+
+    return null
+  }
 }

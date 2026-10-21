@@ -33,6 +33,11 @@ function user(overrides: Partial<BackstageUserRow> = {}): BackstageUserRow {
     playlistCount: overrides.playlistCount ?? 1,
     analysisCount: overrides.analysisCount ?? 0,
     lastAnalysisAt: overrides.lastAnalysisAt ?? null,
+    firstAnalysisAt: overrides.firstAnalysisAt ?? null,
+    firstTouchSource: overrides.firstTouchSource ?? null,
+    firstTouchMedium: overrides.firstTouchMedium ?? null,
+    firstTouchLanding: overrides.firstTouchLanding ?? null,
+    paidAt: overrides.paidAt ?? null,
   }
 }
 

@@ -39,6 +39,20 @@ export interface BackstagePersonFacts {
   referrerDomain: string | null
 }
 
+/** The profile's own first touch (migration 0034). Null fields = unknown. */
+export interface BackstageFirstTouchInput {
+  first_touch_source: string | null
+  first_touch_medium: string | null
+  first_touch_landing: string | null
+}
+
+/** The acquisition reads of lote 20, keyed by profile id. Both optional. */
+export interface BackstageAcquisitionInputs {
+  firstTouches?: Map<string, BackstageFirstTouchInput>
+  /** The first completed checkout per profile, from billing_events. */
+  paidAt?: Map<string, string>
+}
+
 export interface BackstageUserRow {
   id: string
   email: string
@@ -62,6 +76,14 @@ export interface BackstageUserRow {
   playlistCount: number
   analysisCount: number
   lastAnalysisAt: string | null
+  /** The earliest analysis that still exists (deleting a set deletes its analyses). */
+  firstAnalysisAt: string | null
+  /** From the profile's own first touch; null = unknown. */
+  firstTouchSource: string | null
+  firstTouchMedium: string | null
+  firstTouchLanding: string | null
+  /** First completed checkout; null = none on record. */
+  paidAt: string | null
 }
 
 export interface BackstageUserKpis {
@@ -89,7 +111,8 @@ export function buildBackstageUsers(
   playlistOwners: BackstageOwnedRowInput[],
   analyses: BackstageAnalysisInput[],
   personFacts: Map<string, BackstagePersonFacts> = new Map(),
-  namesByWorkOSId: Map<string, string> = new Map()
+  namesByWorkOSId: Map<string, string> = new Map(),
+  acquisition: BackstageAcquisitionInputs = {}
 ): BackstageUserRow[] {
   const playlistCounts = new Map<string, number>()
 
@@ -99,6 +122,7 @@ export function buildBackstageUsers(
 
   const analysisCounts = new Map<string, number>()
   const lastAnalysisAt = new Map<string, string>()
+  const firstAnalysisAt = new Map<string, string>()
 
   for (const row of analyses) {
     analysisCounts.set(row.user_id, (analysisCounts.get(row.user_id) ?? 0) + 1)
@@ -108,12 +132,19 @@ export function buildBackstageUsers(
     if (!previous || row.created_at > previous) {
       lastAnalysisAt.set(row.user_id, row.created_at)
     }
+
+    const earliest = firstAnalysisAt.get(row.user_id)
+
+    if (!earliest || row.created_at < earliest) {
+      firstAnalysisAt.set(row.user_id, row.created_at)
+    }
   }
 
   return [...profiles]
     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
     .map((profile) => {
       const facts = personFacts.get(profile.id)
+      const touch = acquisition.firstTouches?.get(profile.id)
 
       return {
         id: profile.id,
@@ -133,6 +164,11 @@ export function buildBackstageUsers(
         playlistCount: playlistCounts.get(profile.id) ?? 0,
         analysisCount: analysisCounts.get(profile.id) ?? 0,
         lastAnalysisAt: lastAnalysisAt.get(profile.id) ?? null,
+        firstAnalysisAt: firstAnalysisAt.get(profile.id) ?? null,
+        firstTouchSource: touch?.first_touch_source ?? null,
+        firstTouchMedium: touch?.first_touch_medium ?? null,
+        firstTouchLanding: touch?.first_touch_landing ?? null,
+        paidAt: acquisition.paidAt?.get(profile.id) ?? null,
       }
     })
 }

@@ -240,6 +240,36 @@ describe("what makes these pages publishable", () => {
     }
   })
 
+  /**
+   * H-14. Rekordbox sells Core and Creative alone and as "+ Cloud Option"
+   * bundles, and the page once quoted the bundle (US$19, US$23) as the plan's
+   * own price. The facts file had the qualifier; it got lost on the way here.
+   * A price written right after a plan's name has to be that plan's own price,
+   * as rekordbox.com/en/plan showed it on 20/10/2026 with yearly billing; a
+   * bundle price has to come after "+ Cloud Option".
+   */
+  it("never quotes a Rekordbox Cloud Option bundle as the plan's price", () => {
+    const OWN_PRICE: Record<string, string> = { Core: "10", Creative: "15" }
+    let quoted = 0
+
+    for (const comparison of COMPARISONS) {
+      for (const locale of supportedLocales) {
+        const text = visibleText(comparison, locale)
+
+        for (const match of text.matchAll(/\b(Core|Creative) (?:US\$|u\$s)(\d+)/g)) {
+          quoted += 1
+          expect(match[2], `${comparison.id} (${locale}): "${match[0]}"`).toBe(
+            OWN_PRICE[match[1]]
+          )
+        }
+      }
+    }
+
+    // The comparison that carries the prices has to keep carrying them, or
+    // this test would pass by having nothing left to check.
+    expect(quoted).toBeGreaterThan(0)
+  })
+
   it("gives every page questions, so each one emits a FAQPage", () => {
     for (const comparison of COMPARISONS) {
       const questions = comparison.sections

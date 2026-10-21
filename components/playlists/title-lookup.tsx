@@ -5,6 +5,7 @@ import { Loader2, Search } from "lucide-react"
 
 import { lookupTitlesAction } from "@/app/(en)/dashboard/playlists/actions"
 import { Button } from "@/components/ui/button"
+import { outboundHref } from "@/lib/attribution/utm"
 import { formatTemplate } from "@/lib/content/analysis-copy"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -96,7 +97,10 @@ export function TitleLookup({
       <p className="mt-4 border-t border-white/8 pt-3 text-xs text-white/32">
         {COPY.credit[locale]}{" "}
         <a
-          href="https://getsongbpm.com"
+          href={outboundHref("https://getsongbpm.com", {
+            medium: "referral",
+            campaign: "title-lookup-credit",
+          })}
           target="_blank"
           rel="noopener"
           className="text-ec-cyan underline-offset-4 hover:underline"

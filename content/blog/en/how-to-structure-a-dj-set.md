@@ -5,6 +5,7 @@ slug: how-to-structure-a-dj-set
 locale: en
 targetQuery: "how to structure a dj set"
 publishedAt: 2026-09-26
+updatedAt: 2026-10-20
 tags: set structure, energy curve, set prep
 ---
 
@@ -36,6 +37,10 @@ slower" but where the energy is allowed to go.
 - **A [closing set](/glossary/closing-set)** brings the night down without
   dropping it. The energy falls, but by choice and gradually, and the last
   track is a decision rather than whatever was left.
+
+Those three, and the [b2b](/glossary/b2b) — two or more DJs alternating in one
+slot, who have to agree on the shape before either of them plays — are set side
+by side in [what is a DJ set](/blog/what-is-a-dj-set).
 
 Write the slot down first. Every other choice in this guide is made against it. If
 the tracks are not chosen yet, [how a DJ prepares a set](/blog/how-djs-prepare-their-sets)

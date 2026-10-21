@@ -6,6 +6,7 @@ locale: en
 translationOf: antes-de-tocar-no-despues
 targetQuery: "analyze DJ set energy"
 publishedAt: 2026-09-22
+updatedAt: 2026-10-20
 tags: energy curve, set prep, analysis
 ---
 
@@ -97,8 +98,8 @@ transitions to listen to.
 
 A prior analysis does not know what the floor will be like. It does not know that at
 half one a group of twenty walked in, or that the DJ before you went to 160 BPM and
-left the room on fire. You solve that in the booth, and no amount of preparation
-replaces it.
+left the room on fire. You solve that in the booth, by
+[reading the crowd](/glossary/crowd-reading), and no amount of preparation replaces it.
 
 What it does solve is the other thing: that the set you brought does not have a hole
 at minute forty because two tracks ended up in the wrong order.

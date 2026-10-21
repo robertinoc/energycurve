@@ -51,7 +51,7 @@ que resolver **antes** de escribir el arreglo.
 | H-10 | Un problema de facturación se muestra como request mal formado | Bug | — | ✅ PR #246 · validar |
 | — | El botón de login dice «Login» en español | Bug de copy | — | ✅ PR #249 · validar |
 | H-13 | El JSON-LD del artículo no emite `keywords`; el del índice sí | Bug menor | — | ✅ PR #267 |
-| H-14 | La comparación publica el precio del paquete «+ Cloud Option» como si fuera el plan de Rekordbox | **Bug de contenido** | Claude | Pendiente |
+| H-14 | La comparación publica el precio del paquete «+ Cloud Option» como si fuera el plan de Rekordbox | **Bug de contenido** | — | ✅ lote 20 · validar (L20.1) |
 | H-15 | ~~Tres~~ **Una** cita de Lexicon ya no era literal en su sitio | Deriva de fuente | — | ✅ lote 16 · validar (L16.4) |
 | H-16 | Dos textos mandan a un botón «Manage billing» que se llama «Manage subscription» | Bug de copy | Robertino decide | Pendiente |
 | H-17 | La promesa «no guardamos tu IP» se apoya en una opción de PostHog que no hace nada | **Privacidad · alta** | **Robertino** (ajuste + aprobar la frase) | Código ✅ lote 16 · el resto espera a Robertino (L16.1) |
@@ -62,6 +62,7 @@ que resolver **antes** de escribir el arreglo.
 | H-21 | La lista de playlists del menú lateral cuenta mal desde 1.000 temas en total | Bug silencioso | — | ✅ lote 17 · validar (L17.2) |
 | H-22 | Seis defectos más del mismo origen, encontrados al arreglar: el export repetía temas y no entraba en una respuesta de Vercel, la librería y los sets compartidos, sets de más de 1.000 temas, y un reordenamiento que falla y traba el set | Bugs silenciosos y uno ruidoso | — | ✅ lote 17 · validar (L17.1, L17.3–L17.6) |
 | H-23 | En el pico, la CPU se va en el orden sugerido de la página de análisis, calculado en cada render | Rendimiento | Claude propone · **Robertino decide** | La mitad sin decisión ✅ lote 18 (memorizada) · sacarla del render espera a Robertino (L18.2) |
+| H-24 | La página de precios de Serato ya no dice lo del hardware que desbloquea DJ Pro, y `/compare/best-dj-software` se lo atribuye | Deriva de fuente | Claude | Pendiente |
 
 ---
 
@@ -552,6 +553,30 @@ Se descartaron por inspección, y ninguno era el problema: modelo
 
 Bloquea la prueba **J.6** del banco: mientras la IA falle siempre, medir el
 orden de respaldo no dice nada sobre el comportamiento normal del producto.
+
+## H-24 · La página de precios de Serato cambió, y una frase nuestra se apoya en ella
+
+**Severidad baja: el hecho sigue siendo cierto, cambió dónde está escrito.**
+Salió el 20/10, al releer los diez enlaces de fuente de la comparación de
+Rekordbox para arreglar H-14.
+
+`/compare/best-dj-software` (y su gemela) dice que *«Serato's pricing page says
+as much about hardware that unlocks DJ Pro»*. El 20/10, `serato.com/dj/pro/pricing`
+no tiene esa frase: el CMS de la página marca una edición del **19/10/2026**, y
+en el texto de la página la palabra «unlock» sólo aparece para Serato Studio y
+DJ Suite. La frase sigue publicada en **`serato.com/dj/pro`**: *«If you have
+hardware that unlocks Serato DJ Pro when connected, you don't need a license or
+subscription.»*
+
+`/compare/rekordbox-vs-serato-vs-traktor` no tiene el problema: dice el hecho
+sin atribuirlo a la página de precios, y `serato.com/dj/pro` está entre sus
+fuentes.
+
+**Al arreglar:** cambiar «Serato's pricing page» por «Serato's DJ Pro page» en
+los dos idiomas, y —como cambiar texto obliga a cambiar la fecha— releer las
+fuentes de esa página antes de mover su `verifiedAt`. No se hizo en el lote 20
+porque el lote pedía confirmar que esa página no repetía H-14, no reescribirla.
+
 
 ---
 

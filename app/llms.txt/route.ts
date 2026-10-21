@@ -1,3 +1,4 @@
+import { outboundHref } from "@/lib/attribution/utm"
 import { listPosts, postUpdatedAt } from "@/lib/blog/posts"
 import { COMPARISONS } from "@/lib/content/compare/comparisons"
 import { comparisonPath } from "@/lib/content/compare/paths"
@@ -72,7 +73,10 @@ export function GET() {
     // site's own words, from the landing's differentiation block.
     copy.diff.body,
     "",
-    `EnergyCurve is operated by ${OPERATING_COMPANY.name} (${OPERATING_COMPANY.url}); payments and receipts read "${OPERATING_COMPANY.name}".`,
+    // The one link here that leaves the site, so the one that is tagged
+    // (docs/seo/utm-convention.md). The page links above stay clean on
+    // purpose: an assistant citing them adds its own utm_source.
+    `EnergyCurve is operated by ${OPERATING_COMPANY.name} (${outboundHref(OPERATING_COMPANY.url, { medium: "crosspromo", campaign: "llms-txt" })}); payments and receipts read "${OPERATING_COMPANY.name}".`,
     "",
 
     ...section("Start here", [

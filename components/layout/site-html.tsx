@@ -1,6 +1,7 @@
 import { Manrope, Space_Grotesk, Space_Mono } from "next/font/google"
 
 import { AnalyticsTracker } from "@/components/analytics/analytics-tracker"
+import { FirstTouchCapture } from "@/components/analytics/first-touch"
 import { TermTooltipDismiss } from "@/components/content/term-tooltip-dismiss"
 import { ConsentBanner } from "@/components/privacy/consent-banner"
 import type { SiteLocale } from "@/lib/content/site-copy"
@@ -58,6 +59,12 @@ export function SiteHtml({
         */}
         {children}
         <AnalyticsTracker />
+        {/*
+          Where this visitor arrived from, kept only once analytics is
+          accepted. Independent of the PostHog key: it is our own record, and
+          the backstage reads it from the profile (lib/attribution).
+        */}
+        <FirstTouchCapture />
         {/*
           Below the tracker on purpose: the tracker no longer initialises
           anything until this banner has been answered, so the order reads the

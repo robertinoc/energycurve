@@ -2,9 +2,14 @@ import "server-only"
 
 import { getWorkOS } from "@workos-inc/authkit-nextjs"
 
+import type {
+  AcquisitionMeasurement,
+  BackstageAcquisitionStatus,
+} from "@/lib/backstage/acquisition"
 import {
   buildBackstageUsers,
   computeUserKpis,
+  type BackstageFirstTouchInput,
   type BackstageUserKpis,
   type BackstageUserRow,
 } from "@/lib/backstage/users"
@@ -25,6 +30,21 @@ import type { Profile } from "@/types/domain"
 export interface BackstageUsersSnapshot {
   users: BackstageUserRow[]
   kpis: BackstageUserKpis
+  acquisition: BackstageAcquisitionStatus
+}
+
+/** The one checkout event that marks a paid conversion. */
+const CHECKOUT_COMPLETED = "checkout.session.completed"
+
+function readError(error: unknown): string {
+  return String((error as { message?: unknown })?.message ?? error)
+}
+
+/** PostgREST's "column does not exist": migration 0034 is not applied here. */
+function isMissingColumn(error: unknown): boolean {
+  const { code, message } = (error ?? {}) as { code?: unknown; message?: unknown }
+
+  return code === "42703" || /does not exist/i.test(String(message ?? ""))
 }
 
 /**
@@ -70,8 +90,17 @@ export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapsho
   // unranged select: past PostgREST's 1,000 rows the user table stopped
   // listing people and the per-user counts came out of whichever rows made the
   // first page, with nothing on screen saying so.
-  const [profilesResult, playlistsResult, analysesResult, personFacts, names] =
-    await Promise.all([
+  const [
+    profilesResult,
+    playlistsResult,
+    analysesResult,
+    personFacts,
+    names,
+    touchesResult,
+    paidResult,
+    profileCount,
+    recordedCount,
+  ] = await Promise.all([
       fetchAllRows((from, to) =>
         supabase
           .from("profiles")
@@ -97,12 +126,43 @@ export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapsho
       ),
       fetchBackstagePersonFacts(),
       fetchWorkOSNames(),
+      // Lote 20. Separate from the profiles read above on purpose: if
+      // migration 0034 is missing, this one fails and the user list does not.
+      fetchAllRows<BackstageFirstTouchInput & { id: string; first_touch_recorded_at: string | null }>(
+        (from, to) =>
+          supabase
+            .from("profiles")
+            .select(
+              "id, first_touch_source, first_touch_medium, first_touch_landing, first_touch_recorded_at"
+            )
+            .order("id", { ascending: true })
+            .range(from, to)
+      ),
+      // The first completed checkout per profile is the Free → Pro moment.
+      // billing_events keeps id, type and processed_at past the payload sweep
+      // (retention-service), which is all this needs.
+      fetchAllRows((from, to) =>
+        supabase
+          .from("billing_events")
+          .select("id, profile_id, processed_at")
+          .eq("type", CHECKOUT_COMPLETED)
+          .not("profile_id", "is", null)
+          .order("id", { ascending: true })
+          .range(from, to)
+      ),
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .not("first_touch_recorded_at", "is", null),
     ])
 
   for (const [table, result] of [
     ["profiles", profilesResult],
     ["playlists", playlistsResult],
     ["analyses", analysesResult],
+    ["profiles (first touch)", touchesResult],
+    ["billing_events", paidResult],
   ] as const) {
     if (result.truncated) {
       // 50,000 rows of one table. Logged as an error: the panel's numbers
@@ -140,10 +200,76 @@ export async function getBackstageUsersSnapshot(): Promise<BackstageUsersSnapsho
     playlistsResult.error ? [] : playlistsResult.rows,
     analysesResult.error ? [] : analysesResult.rows,
     personFacts,
-    names
+    names,
+    acquisitionInputs(touchesResult, paidResult)
   )
 
-  return { users, kpis: computeUserKpis(users) }
+  const measurement: AcquisitionMeasurement = touchesResult.error
+    ? { available: false, since: null }
+    : {
+        available: true,
+        since:
+          touchesResult.rows
+            .map((row) => row.first_touch_recorded_at)
+            .filter((value): value is string => Boolean(value))
+            .sort()[0] ?? null,
+      }
+
+  return {
+    users,
+    kpis: computeUserKpis(users),
+    acquisition: {
+      measurement,
+      paidLogAvailable: !paidResult.error,
+      counts: {
+        profiles: profileCount.error ? null : (profileCount.count ?? null),
+        recordedTouches:
+          recordedCount.error || touchesResult.error ? null : (recordedCount.count ?? null),
+      },
+    },
+  }
+}
+
+function acquisitionInputs(
+  touchesResult: Awaited<
+    ReturnType<
+      typeof fetchAllRows<BackstageFirstTouchInput & { id: string; first_touch_recorded_at: string | null }>
+    >
+  >,
+  paidResult: Awaited<
+    ReturnType<typeof fetchAllRows<{ id: string; profile_id: string | null; processed_at: string }>>
+  >
+) {
+  if (touchesResult.error) {
+    // Expected until 0034 is applied; anything else is worth a warning too.
+    logWarn(
+      isMissingColumn(touchesResult.error)
+        ? "backstage.first_touch_not_migrated"
+        : "backstage.first_touch_unavailable",
+      { reason: readError(touchesResult.error) }
+    )
+  }
+
+  if (paidResult.error) {
+    logWarn("backstage.paid_conversions_unavailable", { reason: readError(paidResult.error) })
+  }
+
+  // Same rule as the counts above: a failed read contributes nothing rather
+  // than the pages it managed.
+  const firstTouches = new Map(
+    (touchesResult.error ? [] : touchesResult.rows).map((row) => [row.id, row])
+  )
+  const paidAt = new Map<string, string>()
+
+  for (const row of paidResult.error ? [] : paidResult.rows) {
+    const previous = paidAt.get(row.profile_id!)
+
+    if (!previous || row.processed_at < previous) {
+      paidAt.set(row.profile_id!, row.processed_at)
+    }
+  }
+
+  return { firstTouches, paidAt }
 }
 
 export interface BackstageRecentAnalysis {

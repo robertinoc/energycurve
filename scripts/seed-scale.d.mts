@@ -49,3 +49,31 @@ export function parseArgs(argv: string[]): {
 export function seedProfilePattern(seed?: number): string
 /** The `like` pattern for one seed's playlists; all of them without a seed. */
 export function seedPlaylistPattern(seed?: number): string
+
+/** Lote 20: the acquisition scenario for the backstage panel. */
+export const ACQUISITION_EPOCH: number
+export const ACQUISITION_WEEKS: number
+export const ACQUISITION_USERS: number
+
+export interface AcquisitionExpected {
+  users: number
+  perWeek: Record<string, number>
+  bySource: Record<string, number>
+  analysed: number
+  never: number
+  neverUsed: number
+  importedOnly: number
+  medianHoursToFirstAnalysis: number
+  paid: number
+  medianDaysToPay: number
+  paidWithoutCheckout: number
+  landedOnEnergyCurve: number
+}
+
+export function generateAcquisition(options: { seed: number; withFirstTouch: boolean }): {
+  profiles: Row[]
+  playlists: Array<{ id: string; user_id: string } & Row>
+  analyses: Array<{ id: string; user_id: string; created_at: string } & Row>
+  billingEvents: Array<{ id: string; profile_id: string; processed_at: string } & Row>
+  expected: AcquisitionExpected
+}

@@ -134,6 +134,8 @@ export const config = {
     // "Download my data" reads the signed-in user's whole account, so it needs
     // the session the same way the billing routes do.
     "/api/account/:path*",
+    // The first touch is written onto the signed-in profile (lote 20).
+    "/api/attribution/first-touch",
     "/login",
     "/signup",
     // Backstage subdomain: every request must run through authkit because
