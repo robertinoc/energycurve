@@ -64,6 +64,7 @@ que resolver **antes** de escribir el arreglo.
 | H-23 | En el pico, la CPU se va en el orden sugerido de la página de análisis, calculado en cada render | Rendimiento | Claude propone · **Robertino decide** | La mitad sin decisión ✅ lote 18 (memorizada) · sacarla del render espera a Robertino (L18.2) |
 | H-24 | La página de precios de Serato ya no dice lo del hardware que desbloquea DJ Pro, y `/compare/best-dj-software` se lo atribuye | Deriva de fuente | Claude | Atribución ✅ lote 21 · la fecha espera la relectura (L21.2) |
 | H-25 | Un plan activo sin fecha de renovación muestra «Se renueva el .» | Bug de copy | — (Robertino autorizó el arreglo) | ✅ lote 22 · validar con la cuenta de cortesía |
+| H-26 | La migración 0032 nunca corrió en producción: sigue la política muerta `feature_usage_own_rows` | **Esquema · producción** | **Robertino** (una línea en el SQL Editor) | Encontrado en el lote 22 · sin arreglar a propósito · `docs/qa/migraciones-revision-2026-10.md` |
 
 ---
 
@@ -606,6 +607,20 @@ prometer una renovación sin fecha. Con fecha, no cambia nada.
 tests, los 5 en rojo antes del arreglo (el HTML contenía «Se renueva el »).
 
 **Validar:** con la cuenta de cortesía, Account y el dashboard después del deploy.
+
+## H-26 · La 0032 se salteó en producción
+
+Encontrado el 21/10/2026 (lote 22) al revisar las 34 migraciones con la
+herramienta arreglada, que Robertino corrió en el SQL Editor de los dos
+proyectos. Dev: 34 de 34. **Producción: 33 de 34, la 0032 `MISSING`**: la
+política `feature_usage_own_rows` (de la 0014, `auth.uid() = profile_id`) sigue
+ahí. Producción tiene la 0031, la 0033 y la 0034.
+
+**No se perdió ningún dato:** la política no matchea nunca (no hay JWT de
+Supabase; la app usa la service role). Lo que está mal es que el esquema de
+producción muestra un control de dueño que no existe. Detalle y arreglo:
+`docs/qa/migraciones-revision-2026-10.md`. Sin arreglar en el lote 22, a
+propósito: el lote averigua.
 
 ## Menores, salidos de los logs
 
