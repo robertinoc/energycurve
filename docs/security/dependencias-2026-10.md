@@ -8,6 +8,31 @@ Cada número de este documento salió de un comando el 20/10/2026, sobre la rama
 `plans/lote-20`; el comando está al lado. El «antes» es el lockfile de `main`
 (`472535c`), que la rama tenía intacto al empezar.
 
+## Revisado el 21/10/2026 (lote 21): sin novedad
+
+`npm audit --json` y `npm audit --omit=dev --json` sobre `plans/lote-21`
+(= `786e97b` + el lote, sin cambios de dependencias):
+
+| | 20/10 | 21/10 |
+|---|---|---|
+| Todo | 26 (0 críticas, 20 altas, 4 moderadas, 2 bajas) | **26 (0 críticas, 20 altas, 4 moderadas, 2 bajas)** |
+| Sólo producción | 0 | **0** |
+
+**Ninguna de las 20 altas tiene parche publicado.** Lo que `npm audit` ofrece
+como arreglo son versiones *viejas* con cambio de major (`@lhci/cli` 0.1.0,
+`eslint-config-next` 14.2.35, `shadcn` 1.0.0), no parches. Mirado en el
+registro el 21/10:
+
+| Cadena | Raíz | ¿Hay versión que la arregle? |
+|---|---|---|
+| `shadcn` → `fast-glob` → `micromatch` → `braces`; `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → … → `braces` | `braces` ≤ 3.0.3 (GHSA-vfj7-8cjw-p6xm, agotamiento de pila) | **No.** La última de `braces` es 3.0.3, la vulnerable. `eslint-config-next` 16.4.2 (publicada el 20/10) sigue trayendo `fast-glob` 3.3.1 |
+| `shadcn` → `ts-morph` 26 → `@ts-morph/common` 0.27 | `fast-glob` (la misma) | No: `shadcn` 4.22.1 ya es la última y fija `ts-morph` 26 |
+| `@lhci/cli` → `lighthouse`, `puppeteer-core`, `proxy-agent`, `tmp`, `basic-ftp`… | varias | No: `@lhci/cli` 0.15.1 ya es la última (publicada en junio de 2025) |
+
+Las tres son herramientas de desarrollo y ninguna está en un trace del build:
+nada de esto se despliega. Próxima revisión: la que haga falta cuando
+`braces` o `@lhci/cli` publiquen versión — no antes.
+
 ## El resultado, en una tabla
 
 | Paso | Todo (`npm audit`) | Sólo producción (`npm audit --omit=dev`) |

@@ -24,27 +24,38 @@ alter table public.profiles
   add column if not exists first_touch_at timestamptz,
   add column if not exists first_touch_recorded_at timestamptz;
 
-alter table public.profiles
-  drop constraint if exists profiles_first_touch_format_check;
-
-alter table public.profiles
-  add constraint profiles_first_touch_format_check
-  check (
-    (first_touch_source is null or first_touch_source ~ '^[a-z0-9-]{1,32}$')
-    and (first_touch_medium is null or first_touch_medium ~ '^[a-z0-9-]{1,32}$')
-    and (
-      first_touch_campaign is null
-      or (char_length(first_touch_campaign) <= 64
-          and first_touch_campaign ~ '^[a-z0-9]+(-[a-z0-9]+)*$')
-    )
-    and (
-      first_touch_referrer is null
-      or (char_length(first_touch_referrer) <= 100
-          and first_touch_referrer ~ '^[a-z0-9.-]+$')
-    )
-    and (
-      first_touch_landing is null
-      or (char_length(first_touch_landing) <= 160
-          and first_touch_landing ~ '^/[a-z0-9/\[\]-]*$')
-    )
-  );
+-- Added only when it is not there (lote 21). It used to be drop + add, which
+-- re-runs without error but rebuilds the constraint and re-checks every row of
+-- profiles on each paste. Pasting this file into a database that already has
+-- 0034 now changes nothing.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'profiles_first_touch_format_check'
+      and conrelid = 'public.profiles'::regclass
+  ) then
+    alter table public.profiles
+      add constraint profiles_first_touch_format_check
+      check (
+        (first_touch_source is null or first_touch_source ~ '^[a-z0-9-]{1,32}$')
+        and (first_touch_medium is null or first_touch_medium ~ '^[a-z0-9-]{1,32}$')
+        and (
+          first_touch_campaign is null
+          or (char_length(first_touch_campaign) <= 64
+              and first_touch_campaign ~ '^[a-z0-9]+(-[a-z0-9]+)*$')
+        )
+        and (
+          first_touch_referrer is null
+          or (char_length(first_touch_referrer) <= 100
+              and first_touch_referrer ~ '^[a-z0-9.-]+$')
+        )
+        and (
+          first_touch_landing is null
+          or (char_length(first_touch_landing) <= 160
+              and first_touch_landing ~ '^/[a-z0-9/\[\]-]*$')
+        )
+      );
+  end if;
+end
+$$;

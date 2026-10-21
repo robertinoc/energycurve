@@ -341,3 +341,22 @@ describe("the structured data says what the page says", () => {
     }
   })
 })
+
+describe("H-24: what Serato says, and where", () => {
+  // The hardware-unlocks-DJ-Pro sentence left serato.com/dj/pro/pricing on
+  // 19/10/2026; it is on serato.com/dj/pro. The fact holds, the attribution
+  // pointed at a page that no longer says it (lote 21).
+  const page = COMPARISONS.find((c) => c.id === "best-dj-software")!
+  const prose = JSON.stringify(page.sections)
+
+  it("attributes it to the DJ Pro page, in both languages", () => {
+    expect(prose).not.toMatch(/Serato's pricing page/)
+    expect(prose).not.toMatch(/página de precios de Serato/)
+    expect(prose).toContain("Serato's DJ Pro page")
+    expect(prose).toContain("la página de Serato DJ Pro")
+  })
+
+  it("lists that page among its sources", () => {
+    expect(page.sources.map((s) => s.url)).toContain("https://serato.com/dj/pro")
+  })
+})

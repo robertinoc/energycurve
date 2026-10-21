@@ -1238,8 +1238,8 @@ export const DASHBOARD_COPY = {
     // surprise afterwards — and a surprise about money afterwards is a
     // chargeback.
     deletePlanWarning: {
-      en: "Your subscription stops renewing as soon as you ask, and your plan stays active until {date}. There is no refund for the unused part. If all you want is to stop paying, use Manage billing above instead — that keeps your account and your sets.",
-      es: "Tu suscripción deja de renovarse en cuanto lo pedís, y tu plan sigue activo hasta el {date}. No hay reembolso por la parte no usada. Si lo único que querés es dejar de pagar, usá Gestionar facturación más arriba — eso te deja la cuenta y los sets.",
+      en: "Your subscription stops renewing as soon as you ask, and your plan stays active until {date}. There is no refund for the unused part. If all you want is to stop paying, use Manage subscription above instead — that keeps your account and your sets.",
+      es: "Tu suscripción deja de renovarse en cuanto lo pedís, y tu plan sigue activo hasta el {date}. No hay reembolso por la parte no usada. Si lo único que querés es dejar de pagar, usá Gestionar suscripción más arriba — eso te deja la cuenta y los sets.",
     },
     deleteExportFirst: {
       en: "Download your data first if you want to keep it. Once the 30 days are up there is nothing left to download.",
@@ -1299,8 +1299,8 @@ export const DASHBOARD_COPY = {
     // Better to say it than to let somebody discover a charge they thought they
     // had stopped.
     deleteSubscriptionWarning: {
-      en: "One thing went wrong: we could not stop your subscription from renewing. Open Manage billing and cancel it there, or write to us and we will.",
-      es: "Una cosa falló: no pudimos detener la renovación de tu suscripción. Abrí Gestionar facturación y cancelala ahí, o escribinos y lo hacemos nosotros.",
+      en: "One thing went wrong: we could not stop your subscription from renewing. Open Manage subscription and cancel it there, or write to us and we will.",
+      es: "Una cosa falló: no pudimos detener la renovación de tu suscripción. Abrí Gestionar suscripción y cancelala ahí, o escribinos y lo hacemos nosotros.",
     },
   },
 

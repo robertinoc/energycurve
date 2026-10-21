@@ -6,11 +6,11 @@ locale: es
 translationOf: how-much-energy-jump-is-too-much-dj
 targetQuery: "salto de energía entre tracks DJ"
 publishedAt: 2026-08-20
-updatedAt: 2026-09-22
+updatedAt: 2026-10-21
 tags: curva de energía, transiciones, BPM
 ---
 
-En una escala de energía del 1 al 10, un salto de más de **dos puntos hacia arriba**
+En una [escala de energía del 1 al 10](/es/guia/curva-de-energia-en-un-set-de-dj), un salto de más de **dos puntos hacia arriba**
 se escucha y de más de tres se siente como un corte. Hacia abajo el margen es más
 chico todavía, porque bajar la pista es fácil y volver a subirla no. El tempo tiene su
 propio límite —pasado el 6-8% se empieza a oír el pitch— pero el tempo casi nunca es

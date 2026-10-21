@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">124</strong>
+      <strong id="tally-total">133</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1428,6 +1428,68 @@
           steps: ["En la portada, pasá el mouse por los enlaces a StageLink (bloque de la familia, pie y menú) y mirá la URL", "En <code>/compare/rekordbox-vs-serato-vs-traktor</code>, mirá los enlaces de «Sources»", "Abrí <code>https://energycurve.app/llms.txt</code> y buscá <code>stagelink</code> y <code>utm_</code>"],
           expect: "Los enlaces a StageLink y a los fabricantes terminan en <code>utm_source=energycurve</code> con su <code>utm_medium</code> y <code>utm_campaign</code>. En <code>llms.txt</code>, la única URL con <code>utm_</code> es la de StageLink; ninguna página propia lleva etiqueta.",
           ifNot: "Un enlace propio con UTM es un error de la convención (regla 3): anotá dónde. Un enlace a StageLink sin etiqueta, también."
+        }
+      ]
+    },
+    {
+      code: "L21",
+      title: "Lote 21: tareas chicas para cerrar",
+      meta: "~60 min · L21.1 primero, sin deploy · L21.2 a L21.7 necesitan el deploy del lote 21 · L21.9 y L21.10 son decisiones, no pruebas",
+      why: "El lote 21 dejó la migración 0034 lista para copiar y pegar, corrigió la cita de Serato (H-24) y el nombre del botón que abre Stripe (H-16), enlazó la guía pilar desde cinco artículos en español y dejó las fases 4 y 5 de SEO en un comando. Todo tiene tests y se miró sobre el build local; nada se miró en producción, porque el contenedor del lote no llega a energycurve.app. Lo primero es la 0034: sin ella el lote 20 no mide nada.",
+      tests: [
+        {
+          code: "L21.1", title: "La migración 0034, aplicada en dev y en producción", sub: "Tarea 1 · <code>docs/runbooks/aplicar-migracion-0034.md</code>",
+          steps: ["Seguí el paso 1 del runbook en cada proyecto (dev <code>djoutoutkukpjrdgjqkb</code>, producción <code>iwzkzybzadsmnwilcity</code>): el curl a REST o <code>npm run db:status</code>, que corrés vos con tu connection string", "Si dice que falta, pegá el bloque del paso 2 en el SQL Editor de ese proyecto y correlo", "Corré la consulta del paso 3"],
+          expect: "La consulta del paso 3 contesta «ESTÁ — 0034 aplicada: 7 de 7 columnas y la restricción» en los dos proyectos. Si la corrés dos veces, la segunda tampoco falla.",
+          ifNot: "«NO ESTÁ» después de pegar quiere decir que el bloque no terminó: el SQL Editor muestra el error en rojo. Copialo sin la connection string y anotalo acá. Nunca pegues la connection string en el banco."
+        },
+        {
+          code: "L21.2", initial: "validar", title: "H-24: Serato, citado donde lo dice", sub: "Tarea 2 · <code>/compare/best-dj-software</code> y <code>/es/comparar/mejor-software-para-dj</code> · a medias",
+          steps: ["Abrí <code>serato.com/dj/pro</code> y buscá qué dice sobre el hardware que desbloquea DJ Pro", "Abrí las dos páginas de la comparación y leé el párrafo de Serato", "Mirá la fecha de revisión al pie"],
+          expect: "El texto dice «Serato's DJ Pro page says as much» / «la página de Serato DJ Pro lo dice sobre el hardware que lo desbloquea», y eso es lo que dice la página de Serato hoy. La fecha sigue en 27/09/2026: el lote no pudo releer la fuente y no la movió.",
+          ifNot: "Si Serato ya no lo dice así, el texto se corrige, no la fecha. Si lo dice, la mitad que falta es releer la página entera y mover <code>verifiedAt</code> a ese día (fila 33 de <code>docs/pendientes-robertino.md</code>)."
+        },
+        {
+          code: "L21.3", initial: "validar", title: "H-16: los textos nombran el botón que existe", sub: "Tarea 3 · Account, en inglés y en español",
+          steps: ["Con una cuenta PRO, abrí <code>/dashboard/account</code> y fijate cómo se llama el botón que abre Stripe en la tarjeta del plan", "Abrí «Borrar la cuenta» hasta ver el aviso sobre el plan (no confirmes)", "Cambiá el idioma y repetí"],
+          expect: "El botón dice «Manage subscription» / «Gestionar suscripción», y el aviso de borrado dice exactamente lo mismo. En ningún lado aparece «Manage billing» ni «Gestionar facturación».",
+          ifNot: "Si aparece el nombre viejo, el deploy no tiene el commit del lote 21: anotá el commit que sirve producción."
+        },
+        {
+          code: "L21.4", initial: "validar", title: "Cinco artículos en español enlazan la guía pilar", sub: "Tarea 4 · <code>/es/guia/curva-de-energia-en-un-set-de-dj</code>",
+          steps: ["Abrí <code>/es/blog/esta-bien-el-orden-de-mi-set</code>, <code>cuanto-es-mucho-salto-de-energia</code>, <code>antes-de-tocar-no-despues</code>, <code>tus-temas-no-tienen-bpm-ni-tonalidad</code> y <code>ordenar-un-set-desde-una-lista-de-texto</code>", "En cada uno, buscá el enlace a la guía en el cuerpo y hacé clic", "Leé la oración donde está"],
+          expect: "Un enlace por artículo, dentro del texto (no en un recuadro al pie), que abre la guía en español. La oración se lee natural, sin «hacé clic acá». Los enlaces del glosario de esos artículos siguen estando.",
+          ifNot: "Si un enlace lleva a la guía en inglés o a un 404, anotá el artículo: es un error de ruta."
+        },
+        {
+          code: "L21.5", title: "Ninguna comparación con la fecha de revisión vencida", sub: "Tarea 5 · antes del 31/10, y una vez por mes",
+          steps: ["En el repo, corré <code>CHECK_REVIEW_AGE=1 npx vitest run tests/comparison-review-age.test.ts</code>", "Si alguna falla, releé sus fuentes y mové su fecha (fila 33 de pendientes)", "Volvé a correrlo"],
+          expect: "Las seis comparaciones pasan: ninguna tiene una fecha de revisión de más de 35 días.",
+          ifNot: "Una que falla dice cuántos días tiene. No muevas la fecha sin releer la fuente: la fecha publicada afirma esa lectura."
+        },
+        {
+          code: "L21.6", title: "El censo de enlaces internos, contra producción", sub: "Tarea 6 · <code>docs/seo/enlazado-interno-2026-10.md</code>",
+          steps: ["Corré <code>node scripts/inbound-links.mjs https://energycurve.app</code>", "Compará con «Estado al 21/10/2026» del documento"],
+          expect: "116 URLs en el sitemap, ninguna con 0 enlaces entrantes, una sola con 2 o menos (<code>/es/glosario/b2b</code>), y la guía en español con 8.",
+          ifNot: "Si los números no coinciden con los del build local, anotá cuáles: el deploy puede no tener el lote 21."
+        },
+        {
+          code: "L21.7", title: "Las fases 4 y 5 de SEO, contra producción", sub: "Tarea 7 · <code>scripts/verify-seo-phases.mjs</code>",
+          steps: ["Corré <code>node scripts/verify-seo-phases.mjs https://energycurve.app</code>", "Pegá la salida en <code>docs/seo/verificacion-produccion-2026-09.md</code>, sección del 21/10"],
+          expect: "27 de 27 en verde, como en el build local. Aun así, ninguna de las dos fases queda verificada: la salida lista las tareas externas que siguen abiertas.",
+          ifNot: "Cada línea roja dice qué se pidió y qué volvió. Anotá las rojas; un rojo en sameAs es esperable hasta que estén los perfiles (fila 18 de pendientes)."
+        },
+        {
+          code: "L21.9", title: "H-1 y H-2: elegir A o B", sub: "Tarea 9 · <code>docs/qa/decisiones-h1-h2.md</code> · una decisión",
+          steps: ["Leé el documento y mirá las maquetas", "Elegí A, B o ninguna para cada hallazgo", "Anotá la elección acá"],
+          expect: "Una elección por hallazgo. En las dos opciones de H-1, el aviso de pago fallido sigue en la franja de todas las páginas y en la tarjeta arriba del dashboard.",
+          ifNot: "Si ninguna sirve, anotá qué falta. Con eso alcanza para otra ronda de maquetas."
+        },
+        {
+          code: "L21.10", title: "H-6 y H-7: Settings y Help Center", sub: "Tarea 10 · <code>docs/qa/propuesta-h6-h7.md</code> · una decisión",
+          steps: ["Leé la propuesta ítem por ítem", "Contestá las cinco preguntas del final"],
+          expect: "Cinco respuestas: los nombres, la ruta, si idioma y notación se editan en Settings, dónde va el formulario de contacto y si hay Discord.",
+          ifNot: "Si falta algo que el producto tiene y la lista no nombra, anotalo: la lista se armó desde el código."
         }
       ]
     }

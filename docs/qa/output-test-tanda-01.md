@@ -39,13 +39,13 @@ que resolver **antes** de escribir el arreglo.
 
 | # | Qué | Tipo | Dueño | Estado |
 |---|---|---|---|---|
-| H-1 | El plan debería ser un tag del usuario | Producto | Claude | Pendiente |
-| H-2 | El bloque de primera vez ocupa demasiado | Producto | Claude | Pendiente |
+| H-1 | El plan debería ser un tag del usuario | Producto | Robertino decide | Dos opciones con maqueta: `docs/qa/decisiones-h1-h2.md` (lote 21) |
+| H-2 | El bloque de primera vez ocupa demasiado | Producto | Robertino decide | Dos opciones con maqueta: `docs/qa/decisiones-h1-h2.md` (lote 21) |
 | H-3 | ~~El logout no cerraba sesión~~ | Bug | — | ✅ PR #222 |
 | H-4 | «Your payment went through» con importe $0 | Bug de copy | — | ✅ PR #247 · validar |
 | H-5 | ~~El nombre de Google se descarta~~ | **Mal diagnosticado** | Claude | Re-diagnosticar |
-| H-6 | «Account» debería ser «⚙️ Settings» | Producto | Robertino decide | Pendiente |
-| H-7 | El contacto no debería vivir en la cuenta | Producto | Robertino decide | Pendiente |
+| H-6 | «Account» debería ser «⚙️ Settings» | Producto | Robertino decide | Propuesta ítem por ítem: `docs/qa/propuesta-h6-h7.md` (lote 21) |
+| H-7 | El contacto no debería vivir en la cuenta | Producto | Robertino decide | Propuesta ítem por ítem: `docs/qa/propuesta-h6-h7.md` (lote 21) |
 | H-8 | El export termina en `.app.csv` | Producto | — | ✅ PR #248 · validar |
 | H-9 | Sin crédito en la cuenta de Anthropic | Operación | **Robertino** | Pendiente |
 | H-10 | Un problema de facturación se muestra como request mal formado | Bug | — | ✅ PR #246 · validar |
@@ -53,7 +53,7 @@ que resolver **antes** de escribir el arreglo.
 | H-13 | El JSON-LD del artículo no emite `keywords`; el del índice sí | Bug menor | — | ✅ PR #267 |
 | H-14 | La comparación publica el precio del paquete «+ Cloud Option» como si fuera el plan de Rekordbox | **Bug de contenido** | — | ✅ lote 20 · validar (L20.1) |
 | H-15 | ~~Tres~~ **Una** cita de Lexicon ya no era literal en su sitio | Deriva de fuente | — | ✅ lote 16 · validar (L16.4) |
-| H-16 | Dos textos mandan a un botón «Manage billing» que se llama «Manage subscription» | Bug de copy | Robertino decide | Pendiente |
+| H-16 | Dos textos mandan a un botón «Manage billing» que se llama «Manage subscription» | Bug de copy | Robertino decide | ✅ lote 21 (Robertino lo autorizó) · validar en producción (L21.3) |
 | H-17 | La promesa «no guardamos tu IP» se apoya en una opción de PostHog que no hace nada | **Privacidad · alta** | **Robertino** (ajuste + aprobar la frase) | Código ✅ lote 16 · el resto espera a Robertino (L16.1) |
 | H-18 | Dos artículos en inglés enlazan el mismo término de glosario dos veces | Bug menor | — | ✅ lote 16 · validar (L16.2) |
 | H-19 | El tooltip de término no se cierra con Escape (WCAG 1.4.13) | Accesibilidad · media | — | ✅ lote 16 · validar (L16.3) |
@@ -62,7 +62,7 @@ que resolver **antes** de escribir el arreglo.
 | H-21 | La lista de playlists del menú lateral cuenta mal desde 1.000 temas en total | Bug silencioso | — | ✅ lote 17 · validar (L17.2) |
 | H-22 | Seis defectos más del mismo origen, encontrados al arreglar: el export repetía temas y no entraba en una respuesta de Vercel, la librería y los sets compartidos, sets de más de 1.000 temas, y un reordenamiento que falla y traba el set | Bugs silenciosos y uno ruidoso | — | ✅ lote 17 · validar (L17.1, L17.3–L17.6) |
 | H-23 | En el pico, la CPU se va en el orden sugerido de la página de análisis, calculado en cada render | Rendimiento | Claude propone · **Robertino decide** | La mitad sin decisión ✅ lote 18 (memorizada) · sacarla del render espera a Robertino (L18.2) |
-| H-24 | La página de precios de Serato ya no dice lo del hardware que desbloquea DJ Pro, y `/compare/best-dj-software` se lo atribuye | Deriva de fuente | Claude | Pendiente |
+| H-24 | La página de precios de Serato ya no dice lo del hardware que desbloquea DJ Pro, y `/compare/best-dj-software` se lo atribuye | Deriva de fuente | Claude | Atribución ✅ lote 21 · la fecha espera la relectura (L21.2) |
 
 ---
 
@@ -578,6 +578,14 @@ fuentes de esa página antes de mover su `verifiedAt`. No se hizo en el lote 20
 porque el lote pedía confirmar que esa página no repetía H-14, no reescribirla.
 
 
+
+**Lote 21 (21/10/2026), a medias.** La atribución se corrigió en los dos
+idiomas («Serato's DJ Pro page» / «la página de Serato DJ Pro»), con un test
+en `tests/comparisons.test.ts` que falla si vuelve a nombrar la página de
+precios. **El `verifiedAt` de la página no se movió (sigue 2026-09-27):** el
+lote pedía releer la fuente antes de poner la fecha de hoy, y desde el entorno
+de Claude `serato.com` no responde. El texto nuevo se apoya en la lectura
+literal del 20/10 citada arriba. Queda la relectura y la fecha: banco L21.2.
 ---
 
 ## Menores, salidos de los logs

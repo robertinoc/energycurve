@@ -6,7 +6,7 @@ locale: es
 translationOf: is-my-dj-set-in-the-right-order
 targetQuery: "cómo ordenar los tracks de un set de DJ"
 publishedAt: 2026-08-20
-updatedAt: 2026-09-22
+updatedAt: 2026-10-21
 tags: orden del set, curva de energía, preparar el set
 ---
 
@@ -43,7 +43,9 @@ es si lo que viene después la aprovecha.
 
 Acá el horario importa más que la forma. Un set con el pico a los quince minutos
 está mal armado si tocás de apertura, y está perfecto si cerrás. Es el error más
-caro del DJ de warm-up: quemar la pista antes de que llegue el que sigue.
+caro del DJ de warm-up: quemar la pista antes de que llegue el que sigue. Qué
+forma toma la curva en cada horario está en [la guía de la curva de
+energía](/es/guia/curva-de-energia-en-un-set-de-dj).
 
 Escribí a qué hora tocás y dividí el set en tercios. Preguntate por cada tercio qué
 tiene que estar pasando en la pista en ese momento — no qué tema te gusta más.
