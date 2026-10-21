@@ -53,7 +53,7 @@ que resolver **antes** de escribir el arreglo.
 | H-13 | El JSON-LD del artículo no emite `keywords`; el del índice sí | Bug menor | — | ✅ PR #267 |
 | H-14 | La comparación publica el precio del paquete «+ Cloud Option» como si fuera el plan de Rekordbox | **Bug de contenido** | — | ✅ lote 20 · validar (L20.1) |
 | H-15 | ~~Tres~~ **Una** cita de Lexicon ya no era literal en su sitio | Deriva de fuente | — | ✅ lote 16 · validar (L16.4) |
-| H-16 | Dos textos mandan a un botón «Manage billing» que se llama «Manage subscription» | Bug de copy | Robertino decide | Pendiente |
+| H-16 | Dos textos mandan a un botón «Manage billing» que se llama «Manage subscription» | Bug de copy | Robertino decide | ✅ lote 21 (Robertino lo autorizó) · validar en producción (L21.3) |
 | H-17 | La promesa «no guardamos tu IP» se apoya en una opción de PostHog que no hace nada | **Privacidad · alta** | **Robertino** (ajuste + aprobar la frase) | Código ✅ lote 16 · el resto espera a Robertino (L16.1) |
 | H-18 | Dos artículos en inglés enlazan el mismo término de glosario dos veces | Bug menor | — | ✅ lote 16 · validar (L16.2) |
 | H-19 | El tooltip de término no se cierra con Escape (WCAG 1.4.13) | Accesibilidad · media | — | ✅ lote 16 · validar (L16.3) |
