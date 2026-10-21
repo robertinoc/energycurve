@@ -1,7 +1,7 @@
 # Revisión mensual de SEO — SEO-E27
 
 **El primer lunes de cada mes, ~1 h.** Search Console primero, después la
-corrida de visibilidad en IA, y al final una nota de 10 líneas en Asana con los
+corrida de visibilidad en IA, y al final una nota de 11 líneas en Asana con los
 números de la columna «Se anota». Escrito el 10/10/2026 (lote 19).
 
 Antes de abrir nada: `curl -s https://energycurve.app/sitemap.xml | grep -c '<loc>'`
@@ -45,7 +45,14 @@ resumen: consignas que nombran a EnergyCurve, de 10, por motor.
 Mala señal: un motor que nombraba a EnergyCurve y deja de hacerlo, o un
 competidor nuevo que aparece en varias consignas.
 
-## La nota de Asana — 10 líneas
+## Las comparaciones vencidas
+
+`CHECK_REVIEW_AGE=1 npx vitest run tests/comparison-review-age.test.ts` — cada
+página cuya lectura de fuentes tiene más de 35 días falla con su nombre. Se
+anota cuántas; releerlas es otra tarea (la lista y el porqué del umbral, en
+`docs/seo/competitor-facts-2026-09-26.md`).
+
+## La nota de Asana — 11 líneas
 
 ```
 Revisión SEO <fecha> — sitemap <N> URLs
@@ -57,6 +64,7 @@ Clics sin marca: <N> (meta 150/mes al 15/12)
 CWV mobile: <buenas>/<mejorar>/<deficientes> · cwv-log: <última fila>
 Mejoras no válidas: <N, por informe, o «0»>
 IA: <ChatGPT n/10 · Perplexity n/10 · Google n/10 · Claude n/10 · Gemini n/10>
+Comparaciones vencidas: <N de 6>
 Malas señales: <la lista de arriba que se cumplió, o «ninguna»>
 ```
 

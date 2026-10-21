@@ -3,6 +3,40 @@
 La base de evidencia de las páginas `/compare/*` (SEO-E23). **Una fila de una
 página de comparación no puede decir nada que no esté acá.**
 
+## Antigüedad de cada página, al 21/10/2026 (lote 21)
+
+Lo que cada comparación declara como fecha de lectura de sus fuentes
+(`verifiedAt`, publicado como `lastReviewed`), de la más vieja a la más nueva.
+**No se releyó ninguna fuente para armar esta lista**; es la lista de qué
+releer.
+
+| Página | Declara | Días al 21/10 | Fuentes | Vence (35 días) |
+|---|---|---|---|---|
+| `/compare/mixed-in-key` | 2026-09-26 | 25 | 2 | 31/10 |
+| `/compare/setflow` | 2026-09-26 | 25 | 1 | 31/10 |
+| `/compare/dj-studio` | 2026-09-26 | 25 | 2 | 31/10 |
+| `/compare/best-dj-software` | 2026-09-27 | 24 | 10 | 01/11 — **y tiene H-24 pendiente de relectura (L21.2)** |
+| `/compare/lexicon` | 2026-10-02 | 19 | 2 | 06/11 |
+| `/compare/rekordbox-vs-serato-vs-traktor` | 2026-10-20 | 1 | 10 | 24/11 |
+
+Las gemelas en español (`/es/comparar/…`) comparten la fecha.
+
+**El umbral, 35 días:** la revisión es mensual (SEO-E27), más una semana de
+margen. Una página pasada de eso quiere decir que se salteó una lectura. No es
+una predicción de cuándo cambia una fuente: las dos derivas de octubre
+aparecieron a los ≤ 4 días (Lexicon, H-15) y a los 22 días (Serato, H-24) de
+leídas, y ningún umbral fijo atrapa eso.
+
+**Cómo se recalcula**, en la revisión mensual:
+
+```bash
+CHECK_REVIEW_AGE=1 npx vitest run tests/comparison-review-age.test.ts
+```
+
+Falla con el nombre de cada página vencida. No corre en CI a propósito: un test
+que se pone rojo solo con el paso del tiempo bloquea PRs que no tienen nada que
+ver, la misma razón por la que `npm audit` es advisory en CI.
+
 ## La regla
 
 Sólo entra un hecho que se pueda citar de **la página pública del propio
