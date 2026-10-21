@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 
 import { WHEEL_COPY } from "@/lib/content/harmonic-tools-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
+import { useTypedBeforeHydration } from "@/lib/tools/use-typed-before-hydration"
 
 export interface KeyTableRow {
   camelot: string
@@ -35,6 +36,11 @@ export function KeyTable({
 }) {
   const copy = WHEEL_COPY.ui
   const [query, setQuery] = useState("")
+
+  // The one filter on the site that did not have this (lote 22): WebKit in CI
+  // typed «8A» before hydration and the table kept all 24 rows — the #232 bug,
+  // in a control that missed the fix.
+  useTypedBeforeHydration([["key-filter", query, setQuery]])
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase()
