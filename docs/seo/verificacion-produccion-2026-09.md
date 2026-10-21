@@ -276,6 +276,56 @@ live» se puede cerrar.
 
 ---
 
+# Fases 4 y 5 contra producción — 21/10/2026 (lote 22): **27 de 27 verdes**
+
+**Quién y desde dónde.** El comando lo corrió **Robertino, desde su Mac**, el
+21/10/2026, y pegó la salida completa en la sesión del lote 22. El contenedor
+de Claude sigue sin llegar al dominio (`curl -sI https://energycurve.app` →
+`403` del proxy, no del sitio), así que este resultado **no** es de Claude: es
+de una request real a producción, hecha por Robertino.
+
+```bash
+cd ~/Documents/code/energycurve/_worktrees/verificar-l21   # main en 131d4df
+node scripts/verify-seo-phases.mjs https://energycurve.app
+```
+
+**Qué commit servía producción.** Sin confirmar como hash (no hay acceso a
+Vercel desde acá). Deducido por la técnica del §2 del traspaso —un cambio
+observable en una respuesta pública—: el mismo día, producción servía las tres
+cosas que el lote 21 cambió en lo servido, cada una de un commit distinto: la
+frase nueva de Serato (`ae7c1e1`, `grep -c` = 1 y 1), «Gestionar suscripción»
+en el JS de Account sin el nombre viejo (`71c1c72`, `{nuevo: 1, viejo: 0}`) y
+el enlace a la guía en los cinco artículos (`ab58552`, 1 en cada uno). Entre
+`ab58552` y `131d4df` (= `main`) no cambia ningún archivo servido
+(`git diff --stat ab58552 131d4df -- app components lib content public …`
+vacío). O sea: **producción sirve lo mismo que `main` en `131d4df`**. Un rojo
+abajo no podría ser «falta un deploy».
+
+| Fase | Ítems | Resultado en producción |
+|---|---|---|
+| 4 · E23 | 12 URLs de comparación: 200, `WebPage` + `BreadcrumbList` + `FAQPage` parseados, 0 sin parsear, en el sitemap; el pie de `/` y de `/es` enlaza las 6 | **14 de 14 verdes** |
+| 4 · E24 | `/llms.txt`: 200, `text/plain; charset=utf-8`, 17.524 caracteres; 6 enlaces a `/compare/`; «## Articles (English)»; US$9.99 y StageLink LLC | **4 de 4 verdes** |
+| 4 · E22 | `alternateName` = EnergyCurve DJ; `WebSite.name` = EnergyCurve; `sameAs` con **1** perfil (`instagram.com/energycurve.app`) | **3 de 3 verdes** (el ítem de `sameAs` pide ≥ 1; la tarea externa pide 6) |
+| 5 · E28 | El CTA a la herramienta en `/energy-tags`, `/import-formats`, sus gemelas en español (2 anclas cada una), `/blog/how-to-structure-a-dj-set` (3) y `/es/blog/esta-bien-el-orden-de-mi-set` (2) | **6 de 6 verdes** |
+| | | **27 de 27 verdes, 0 rojos** |
+
+**Ninguna de las dos fases queda verificada.** Lo que está verde es la mitad de
+código, y ahora también en producción. Lo que falta no es código, y es todo de
+Robertino:
+
+| Fase | Falta | Lo destraba |
+|---|---|---|
+| 4 | E22: cinco perfiles de entidad y sus URLs en `ENTITY_PROFILES` (hoy `sameAs` tiene 1 de 6) | Robertino (pendientes, fila 18) |
+| 4 | E25: el programa de menciones | Robertino |
+| 4 | E26: el enlace y el post en stagelink.art | Robertino |
+| 4 | E27: la revisión mensual con el tracker de IA | Robertino (fila 25) |
+| 5 | E28: key events y embudo en PostHog | Robertino, con su cuenta (fila 17) |
+| 5 | E31: el secret `PAGESPEED_API_KEY` y la primera fila del log | Robertino (fila 23) |
+
+E29 y E30 se verifican en CI, no en el dominio.
+
+---
+
 # Fases 4 y 5, otra vez — 21/10/2026 (lote 21): **sin correr contra producción**
 
 El lote pedía repetir las fases 4 y 5 contra `https://energycurve.app` con el
