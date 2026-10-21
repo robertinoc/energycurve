@@ -92,11 +92,18 @@ export function deriveProbes(sql) {
     ),
   ].map((match) => match[1])
 
+  // Every `add column` of every `alter table`, not only the first: 0034 adds
+  // seven columns in one statement, and reading just the first meant a probe
+  // for one of them and silence about six (lote 21).
   const columns = [
-    ...code.matchAll(
-      /alter\s+table\s+(?:public\.)?([a-z_][a-z0-9_]*)\s+add\s+column\s+(?:if\s+not\s+exists\s+)?([a-z_][a-z0-9_]*)/g
-    ),
-  ].map((match) => ({ table: match[1], column: match[2] }))
+    ...code.matchAll(/alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?(?:public\.)?([a-z_][a-z0-9_]*)\s([^;]*)/g),
+  ].flatMap((statement) =>
+    [
+      ...statement[2].matchAll(
+        /add\s+column\s+(?:if\s+not\s+exists\s+)?([a-z_][a-z0-9_]*)/g
+      ),
+    ].map((match) => ({ table: statement[1], column: match[1] }))
+  )
 
   const indexes = [
     ...code.matchAll(

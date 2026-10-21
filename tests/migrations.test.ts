@@ -341,6 +341,17 @@ describe("every migration can be checked against a live database", () => {
     expect(byFile("0021").columns).toEqual([
       { table: "tracks", column: "audio_features" },
     ])
+    // Several columns in one `alter table`: 0034 adds seven, and until lote 21
+    // the extractor read only the first, so six could be missing unseen.
+    expect(byFile("0034").columns.map((c: { column: string }) => c.column)).toEqual([
+      "first_touch_source",
+      "first_touch_medium",
+      "first_touch_campaign",
+      "first_touch_referrer",
+      "first_touch_landing",
+      "first_touch_at",
+      "first_touch_recorded_at",
+    ])
     expect(byFile("0019").tables).toContain("curve_templates")
     expect(byFile("0002").types).toContain("playlist_context")
     expect(byFile("0005").enumValues).toContainEqual({
