@@ -6,7 +6,7 @@ locale: es
 translationOf: order-a-dj-set-from-a-text-list
 targetQuery: "ordenar set de DJ sin Rekordbox"
 publishedAt: 2026-08-20
-updatedAt: 2026-09-22
+updatedAt: 2026-10-21
 tags: orden del set, importar, sin librería
 ---
 
@@ -33,7 +33,7 @@ Con "Artista - Título" por línea ya se puede:
 - **Estimar la energía por posición** cuando no hay otro dato. Es la estimación más
   débil de todas y hay que saberlo, pero da una base.
 - **Ver la forma del set** y contrastarla con la que querías: warm-up, peak time,
-  after.
+  after. Cómo es cada una está en [la guía de la curva de energía](/es/guia/curva-de-energia-en-un-set-de-dj).
 
 Lo que **no** se puede sin datos: mezcla armónica de verdad. La tonalidad no está en
 el nombre del archivo.

@@ -6,7 +6,7 @@ locale: es
 translationOf: analyse-your-dj-set-before-you-play-it
 targetQuery: "analizar la energía de un set de DJ"
 publishedAt: 2026-08-20
-updatedAt: 2026-10-20
+updatedAt: 2026-10-21
 tags: curva de energía, preparar el set, análisis
 ---
 
@@ -19,7 +19,8 @@ Hay herramientas que te muestran la curva de energía de tu set y te dan una lec
 de qué funcionó. Están bien hechas y son útiles. Pero casi todas trabajan sobre **la
 grabación**: subís el audio del toque y te devuelven el análisis.
 
-Eso significa que el resultado llega cuando ya no podés hacer nada con él.
+Eso significa que el resultado llega cuando ya no podés hacer nada con él. Cómo
+leerla antes de tocar está en [la guía de la curva de energía](/es/guia/curva-de-energia-en-un-set-de-dj).
 
 ## La diferencia no es técnica, es de momento
 

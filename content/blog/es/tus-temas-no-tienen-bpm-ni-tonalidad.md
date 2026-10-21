@@ -6,7 +6,7 @@ locale: es
 translationOf: dj-tracks-with-no-bpm-or-key
 targetQuery: "temas sin BPM ni tonalidad"
 publishedAt: 2026-08-20
-updatedAt: 2026-09-22
+updatedAt: 2026-10-21
 tags: BPM, tonalidad, importar, sin librería
 ---
 
@@ -80,7 +80,7 @@ Rekordbox, Serato y Traktor, y dónde no se ponen de acuerdo.
 ### ¿Se puede preparar un set sin ningún tag?
 
 Sí, con un resultado más chico. La detección de género y una estimación de energía por
-posición alcanzan para ver la forma del set y agarrar las dos transiciones que lo
+posición alcanzan para ver [la forma del set](/es/guia/curva-de-energia-en-un-set-de-dj) y agarrar las dos transiciones que lo
 rompen — mirá
 [ordenar un set desde una lista de texto](/es/blog/ordenar-un-set-desde-una-lista-de-texto)
 para saber qué te da ese camino. Lo que perdés es el chequeo armónico, que necesita
