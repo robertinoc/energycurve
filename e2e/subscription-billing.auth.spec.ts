@@ -25,7 +25,7 @@ import { billingSkipReason, refuseLiveMode, stripeMode } from "./helpers/stripe"
  * | paso | acción | lo que la tarjeta de plan dice |
  * | --- | --- | --- |
  * | alta | checkout PRO monthly with a test card | `PRO is active` |
- * | facturación | Stripe issues the first invoice; the app offers the portal | `Manage billing` opens `billing.stripe.com` |
+ * | facturación | Stripe issues the first invoice; the app offers the portal | `Manage subscription` opens `billing.stripe.com` |
  * | baja | cancel at period end | `PRO ends on {date}` |
  * | cancelación | the subscription actually ends | `Your PRO subscription ended` |
  *
@@ -355,10 +355,10 @@ test.describe("subscription, payment and cancellation", () => {
 
     await page.goto("/dashboard/account")
 
-    // "Manage subscription" is what the button says. Two other strings in
-    // `dashboard-copy.ts` tell people to use "Manage billing above", which is a
-    // name no control on the page carries — noted, not worked around: matching
-    // both here would hide the inconsistency instead of recording it.
+    // "Manage subscription" is what the button says. Two other strings used to
+    // send people to "Manage billing", a name no control carried (H-16); since
+    // lote 21 they read the button's own label, pinned by
+    // tests/manage-subscription-label.test.ts.
     await page.getByRole("button", { name: /manage subscription/i }).click()
 
     await page.waitForURL(/billing\.stripe\.com/, { timeout: 30_000 })
