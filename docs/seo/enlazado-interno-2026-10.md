@@ -38,11 +38,16 @@ energía de tu set» le quitaba al glosario su única mención en ese artículo
 oración siguiente. Al enlazar una página nueva desde un artículo, mirá que el
 ancla no sea la frase con la que el artículo ya enlaza un término del glosario.
 
-**Las que tienen 3**, el piso de hoy después de `/es/glosario/b2b`: las dos
-`subprocessors` (página legal, enlazada desde el pie y la política: está bien
-así) y seis entradas de glosario (`crowd-reading`/`leer-la-pista`,
-`key-lock`, `b2b` en inglés) que reciben el índice, la entrada vecina y un
-artículo. No se tocaron.
+**Las que tienen 3**, el piso de hoy después de `/es/glosario/b2b`:
+
+| Página | La enlazan |
+|---|---|
+| `/subprocessors`, `/es/subprocessors` | las otras tres páginas legales de su idioma (cookies, privacidad, términos). Es una página de referencia legal: está bien así |
+| `/glossary/key-lock`, `/es/glosario/key-lock` | el índice, `bpm` y `pitch` |
+| `/glossary/crowd-reading`, `/es/glosario/leer-la-pista` | el índice, `warm-up` y un artículo (el de antes de tocar) |
+| `/glossary/b2b` | el índice y dos artículos en inglés |
+
+No se tocaron: cada una tiene los enlaces que su tema justifica.
 
 ## Cómo se midió
 
