@@ -139,7 +139,7 @@ export function BlogArticle({
             turned into a link on the parsed nodes. See lib/blog/link-terms.ts. */}
         <div className="ec-prose">
           {linkGlossaryTerms(post.blocks, post.locale).map((block, index) => (
-            <Block key={index} block={block} />
+            <Block key={index} block={block} locale={post.locale} />
           ))}
         </div>
 

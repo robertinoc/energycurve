@@ -31,6 +31,7 @@
  * careful about forever.
  */
 
+import { isBlogFigureId, type BlogFigureId } from "@/lib/blog/figure-ids"
 export type InlineNode =
   | { kind: "text"; text: string }
   | { kind: "strong"; text: string }
@@ -79,6 +80,11 @@ export type BlogBlock =
    * the markup — the property the rest of the site already holds.
    */
   | { kind: "faq"; entries: FaqPair[] }
+  /**
+   * A figure from the closed list in `lib/blog/figures.ts` (lote 22), written
+   * as a fence with the info string `figure` and the id as its only line.
+   */
+  | { kind: "figure"; id: BlogFigureId }
 
 export class UnsupportedMarkdownError extends Error {
   constructor(what: string, lineNumber: number) {
@@ -371,6 +377,16 @@ export function parseMarkdown(markdown: string): BlogBlock[] {
 
       if (info === "faq") {
         blocks.push(parseFaq(code, lineNumber))
+      } else if (info === "figure") {
+        const id = code.map((l) => l.trim()).filter(Boolean)
+
+        if (id.length !== 1 || !isBlogFigureId(id[0])) {
+          throw new UnsupportedMarkdownError(
+            `figure "${id.join(" ")}" (known: see lib/blog/figures.ts)`,
+            lineNumber
+          )
+        }
+        blocks.push({ kind: "figure", id: id[0] })
       } else {
         blocks.push({ kind: "code", lines: code })
       }

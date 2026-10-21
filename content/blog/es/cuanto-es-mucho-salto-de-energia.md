@@ -11,8 +11,9 @@ tags: curva de energía, transiciones, BPM
 ---
 
 En una [escala de energía del 1 al 10](/es/guia/curva-de-energia-en-un-set-de-dj), un salto de más de **dos puntos hacia arriba**
-se escucha y de más de tres se siente como un corte. Hacia abajo el margen es más
-chico todavía, porque bajar la pista es fácil y volver a subirla no. El tempo tiene su
+se escucha y de más de tres se siente como un corte. Hacia abajo lo que decide no es
+el número: bajar la pista es fácil y volver a subirla no, así que una bajada se juzga
+por lo que viene después. El tempo tiene su
 propio límite —pasado el 6-8% se empieza a oír el pitch— pero el tempo casi nunca es
 el salto que arruinó la transición.
 
@@ -31,9 +32,15 @@ cierto punto; pasado el 6-8% se empieza a escuchar.
 
 **El de energía.** Cuánto más intenso se siente un tema que el anterior. Acá no hay
 una unidad estándar, y por eso conviene ponerle una: del 1 al 10, un salto de más de
-**dos puntos** hacia arriba se nota, y de más de tres se siente como un corte. Hacia
-abajo el margen es más chico todavía, porque bajar la pista es fácil y volver a
-subirla no.
+**dos puntos** hacia arriba se nota, y de más de tres se siente como un corte. Cuánto
+margen hay depende del género —el gráfico muestra el que usa el análisis de
+EnergyCurve—, y en la mayoría de los géneros la bajada cómoda es igual o más grande
+que la subida. Hacia abajo, igual, lo que decide no es el número: bajar la pista es
+fácil y volver a subirla no.
+
+```figure
+transition-tolerance
+```
 
 **El armónico.** Tonalidades incompatibles suenan mal aunque el resto encaje. Acá
 conviene desconfiar de la regla corta que se repite en todos lados — quedate en la

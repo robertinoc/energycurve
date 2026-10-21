@@ -165,7 +165,7 @@ function assessShape(
 // ranked so the worst problems dominate instead of stacking with set length.
 // ---------------------------------------------------------------------------
 
-interface TransitionAssessment {
+export interface TransitionAssessment {
   /** 0-based index of the transition's first track. */
   index: number
   delta: number
@@ -173,7 +173,11 @@ interface TransitionAssessment {
   isBreather: boolean
 }
 
-function assessTransitions(
+/**
+ * Exported for the blog's figures (lote 22), which mark a jump with the same
+ * rule the score penalizes it with instead of a second copy of the threshold.
+ */
+export function assessTransitions(
   curve: number[],
   genre: SupportedGenre
 ): TransitionAssessment[] {

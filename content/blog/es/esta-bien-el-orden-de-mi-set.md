@@ -88,6 +88,10 @@ Mové el tema 4 a la posición 7 y la secuencia queda **4, 5, 5, 4, 6, 7, 8, 9, 
 un solo movimiento, sin sacudón, y el pico cae en el último tercio. Ésa es la forma de
 casi todos los arreglos: un tema, una posición.
 
+```figure
+set-order-example
+```
+
 ### ¿Cuántos temas tiene que tener un set?
 
 Los que llenen tu horario, que es más o menos un tema cada cuatro o cinco minutos. El

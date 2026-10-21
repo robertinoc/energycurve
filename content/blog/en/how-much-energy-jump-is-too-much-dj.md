@@ -6,12 +6,14 @@ locale: en
 translationOf: cuanto-es-mucho-salto-de-energia
 targetQuery: "energy jump between tracks DJ"
 publishedAt: 2026-09-22
+updatedAt: 2026-10-21
 tags: energy curve, transitions, BPM
 ---
 
 On a 1-to-10 energy scale, a jump of more than **two points upward** is audible and
-more than three feels like a cut. Downward the margin is smaller still, because
-dropping a floor is easy and lifting it again is not. Tempo has its own limit — past
+more than three feels like a cut. Downward, the number is not what decides it:
+dropping a floor is easy and lifting it again is not, so a drop is judged by what
+comes after it. Tempo has its own limit — past
 6 to 8 percent you start to hear the pitch — but tempo is usually not the jump that
 ruined the transition.
 

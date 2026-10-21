@@ -26,6 +26,11 @@ interface SetCurveProps {
    * measured. Drawn hollow, so filled means "this came from the music".
    */
   estimatedIndices?: readonly number[]
+  /**
+   * What the chart shows, for a screen reader. The product's own pages keep
+   * the default; an article (lote 22) passes the numbers, in its language.
+   */
+  ariaLabel?: string
 }
 
 const DOMAIN = { min: ENERGY_SCORE_RANGE.min, max: ENERGY_SCORE_RANGE.max }
@@ -35,6 +40,7 @@ export function SetCurve({
   target,
   hoveredIndex,
   estimatedIndices = [],
+  ariaLabel = "Set energy curve",
 }: SetCurveProps) {
   const estimated = useMemo(() => new Set(estimatedIndices), [estimatedIndices])
   const points = useMemo(
@@ -68,7 +74,7 @@ export function SetCurve({
       preserveAspectRatio="none"
       className="h-[180px] w-full"
       role="img"
-      aria-label="Set energy curve"
+      aria-label={ariaLabel}
     >
       <defs>
         <linearGradient
