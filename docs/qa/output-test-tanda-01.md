@@ -44,8 +44,8 @@ que resolver **antes** de escribir el arreglo.
 | H-3 | ~~El logout no cerraba sesión~~ | Bug | — | ✅ PR #222 |
 | H-4 | «Your payment went through» con importe $0 | Bug de copy | — | ✅ PR #247 · validar |
 | H-5 | ~~El nombre de Google se descarta~~ | **Mal diagnosticado** | Claude | Re-diagnosticar |
-| H-6 | «Account» debería ser «⚙️ Settings» | Producto | Robertino decide | Pendiente |
-| H-7 | El contacto no debería vivir en la cuenta | Producto | Robertino decide | Pendiente |
+| H-6 | «Account» debería ser «⚙️ Settings» | Producto | Robertino decide | Propuesta ítem por ítem: `docs/qa/propuesta-h6-h7.md` (lote 21) |
+| H-7 | El contacto no debería vivir en la cuenta | Producto | Robertino decide | Propuesta ítem por ítem: `docs/qa/propuesta-h6-h7.md` (lote 21) |
 | H-8 | El export termina en `.app.csv` | Producto | — | ✅ PR #248 · validar |
 | H-9 | Sin crédito en la cuenta de Anthropic | Operación | **Robertino** | Pendiente |
 | H-10 | Un problema de facturación se muestra como request mal formado | Bug | — | ✅ PR #246 · validar |
