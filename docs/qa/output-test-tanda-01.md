@@ -39,8 +39,8 @@ que resolver **antes** de escribir el arreglo.
 
 | # | Qué | Tipo | Dueño | Estado |
 |---|---|---|---|---|
-| H-1 | El plan debería ser un tag del usuario | Producto | Claude | Pendiente |
-| H-2 | El bloque de primera vez ocupa demasiado | Producto | Claude | Pendiente |
+| H-1 | El plan debería ser un tag del usuario | Producto | Robertino decide | Dos opciones con maqueta: `docs/qa/decisiones-h1-h2.md` (lote 21) |
+| H-2 | El bloque de primera vez ocupa demasiado | Producto | Robertino decide | Dos opciones con maqueta: `docs/qa/decisiones-h1-h2.md` (lote 21) |
 | H-3 | ~~El logout no cerraba sesión~~ | Bug | — | ✅ PR #222 |
 | H-4 | «Your payment went through» con importe $0 | Bug de copy | — | ✅ PR #247 · validar |
 | H-5 | ~~El nombre de Google se descarta~~ | **Mal diagnosticado** | Claude | Re-diagnosticar |
