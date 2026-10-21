@@ -62,7 +62,7 @@ que resolver **antes** de escribir el arreglo.
 | H-21 | La lista de playlists del menú lateral cuenta mal desde 1.000 temas en total | Bug silencioso | — | ✅ lote 17 · validar (L17.2) |
 | H-22 | Seis defectos más del mismo origen, encontrados al arreglar: el export repetía temas y no entraba en una respuesta de Vercel, la librería y los sets compartidos, sets de más de 1.000 temas, y un reordenamiento que falla y traba el set | Bugs silenciosos y uno ruidoso | — | ✅ lote 17 · validar (L17.1, L17.3–L17.6) |
 | H-23 | En el pico, la CPU se va en el orden sugerido de la página de análisis, calculado en cada render | Rendimiento | Claude propone · **Robertino decide** | La mitad sin decisión ✅ lote 18 (memorizada) · sacarla del render espera a Robertino (L18.2) |
-| H-24 | La página de precios de Serato ya no dice lo del hardware que desbloquea DJ Pro, y `/compare/best-dj-software` se lo atribuye | Deriva de fuente | Claude | Pendiente |
+| H-24 | La página de precios de Serato ya no dice lo del hardware que desbloquea DJ Pro, y `/compare/best-dj-software` se lo atribuye | Deriva de fuente | Claude | Atribución ✅ lote 21 · la fecha espera la relectura (L21.2) |
 
 ---
 
@@ -578,6 +578,14 @@ fuentes de esa página antes de mover su `verifiedAt`. No se hizo en el lote 20
 porque el lote pedía confirmar que esa página no repetía H-14, no reescribirla.
 
 
+
+**Lote 21 (21/10/2026), a medias.** La atribución se corrigió en los dos
+idiomas («Serato's DJ Pro page» / «la página de Serato DJ Pro»), con un test
+en `tests/comparisons.test.ts` que falla si vuelve a nombrar la página de
+precios. **El `verifiedAt` de la página no se movió (sigue 2026-09-27):** el
+lote pedía releer la fuente antes de poner la fecha de hoy, y desde el entorno
+de Claude `serato.com` no responde. El texto nuevo se apoya en la lectura
+literal del 20/10 citada arriba. Queda la relectura y la fecha: banco L21.2.
 ---
 
 ## Menores, salidos de los logs

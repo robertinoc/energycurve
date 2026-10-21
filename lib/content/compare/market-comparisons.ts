@@ -297,7 +297,7 @@ export const CHOOSING_DJ_SOFTWARE: Comparison = {
 | Traktor | The product page shows one price, US$149, and no free tier. |
 | djay Pro | The pages we read show neither a price nor a free tier; the price is in the app stores. |
 
-For somebody starting out, the honest reading is: Serato DJ Lite and VirtualDJ let you learn on a laptop for nothing, and Rekordbox's Free plan lets you manage a library for nothing. Which of those is right depends on the controller you end up buying, because the controller often decides the program — Serato's pricing page says as much about hardware that unlocks DJ Pro.`,
+For somebody starting out, the honest reading is: Serato DJ Lite and VirtualDJ let you learn on a laptop for nothing, and Rekordbox's Free plan lets you manage a library for nothing. Which of those is right depends on the controller you end up buying, because the controller often decides the program — Serato's DJ Pro page says as much about hardware that unlocks DJ Pro.`,
             es: `Tres de los cinco tienen una entrada que no cuesta nada, y los tres «gratis» son cosas distintas.
 
 | Programa | La entrada gratis, en sus propias palabras |
@@ -308,7 +308,7 @@ For somebody starting out, the honest reading is: Serato DJ Lite and VirtualDJ l
 | Traktor | La página de producto muestra un precio, u$s149, y ningún nivel gratis. |
 | djay Pro | Las páginas que leímos no muestran ni precio ni nivel gratis; el precio está en las tiendas de apps. |
 
-Para alguien que empieza, la lectura honesta es: Serato DJ Lite y VirtualDJ te dejan aprender en una laptop sin pagar, y el plan Free de Rekordbox te deja gestionar una librería sin pagar. Cuál de ésos conviene depende del controlador que termines comprando, porque el controlador muchas veces decide el programa: la página de precios de Serato lo dice sobre el hardware que desbloquea DJ Pro.`,
+Para alguien que empieza, la lectura honesta es: Serato DJ Lite y VirtualDJ te dejan aprender en una laptop sin pagar, y el plan Free de Rekordbox te deja gestionar una librería sin pagar. Cuál de ésos conviene depende del controlador que termines comprando, porque el controlador muchas veces decide el programa: la página de Serato DJ Pro lo dice sobre el hardware que lo desbloquea.`,
           },
         },
       ],
