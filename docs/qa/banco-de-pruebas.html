@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">133</strong>
+      <strong id="tally-total">135</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1490,6 +1490,26 @@
           steps: ["Leé la propuesta ítem por ítem", "Contestá las cinco preguntas del final"],
           expect: "Cinco respuestas: los nombres, la ruta, si idioma y notación se editan en Settings, dónde va el formulario de contacto y si hay Discord.",
           ifNot: "Si falta algo que el producto tiene y la lista no nombra, anotalo: la lista se armó desde el código."
+        }
+      ]
+    },
+    {
+      code: "L22",
+      title: "Lote 22: dos gráficos y una fecha que faltaba",
+      meta: "~15 min · necesita el deploy del lote 22 · L22.1 con el teléfono y VoiceOver · L22.2 con tu cuenta de cortesía",
+      why: "El lote 22 agregó un gráfico a dos artículos en español —el ejemplo antes/después de «¿Está bien el orden de mi set?» y la tolerancia de salto por género en «¿Cuánto es mucho salto de energía?»— y arregló H-25: un plan activo sin fecha de renovación decía «Se renueva el .». Los números de los gráficos salen del motor y los tests lo afirman; lo que ningún test dice es si un DJ entiende el gráfico en un teléfono, ni cómo lo lee un lector de pantalla.",
+      tests: [
+        {
+          code: "L22.1", title: "Los dos gráficos, leídos como DJ y en el teléfono", sub: "Tarea 4 · <code>/es/blog/esta-bien-el-orden-de-mi-set</code> y <code>/es/blog/cuanto-es-mucho-salto-de-energia</code>",
+          steps: ["En el teléfono, abrí los dos artículos y bajá hasta el gráfico", "En el primero, compará las dos curvas con la secuencia del texto («4, 5, 5, 8, 4, 6, 7, 9, 8» y la de después)", "En el segundo, leé las barras de tu género", "Con VoiceOver, pasá por cada gráfico y escuchá qué dice"],
+          expect: "Se lee sin hacer zoom. En el primero, «Antes» marca +3 y −4 y «Después» no marca ninguno, igual que la tabla del texto. En el segundo, la frase de arriba ya no dice que hacia abajo el margen es más chico. VoiceOver lee los números (la secuencia y los saltos, o cada género con su subida y su bajada), no «gráfico».",
+          ifNot: "Si un gráfico confunde más de lo que aclara, anotá qué esperabas ver: un gráfico que no suma se saca. Si VoiceOver dice sólo «imagen», anotá en cuál."
+        },
+        {
+          code: "L22.2", initial: "validar", title: "H-25: un plan activo sin fecha ya no dice «Se renueva el .»", sub: "Lote 22 · Account y dashboard, con la cuenta PRO+ de cortesía",
+          steps: ["Con tu cuenta (PRO+ de cortesía), abrí Account y mirá la tarjeta del plan", "Abrí el dashboard y mirá la misma tarjeta", "Cambiá a inglés y repetí"],
+          expect: "«PRO+ está activo» y debajo «Sin fecha de renovación registrada.» / «No renewal date on record.». En ningún lado «Se renueva el .» ni «Renews on .».",
+          ifNot: "Si sigue la frase vieja, el deploy no tiene el commit del lote 22: anotá qué commit sirve producción."
         }
       ]
     }
