@@ -300,11 +300,30 @@ jobs:
       # timeout is the backstop: if it ever hangs again it fails in five minutes
       # with a name instead of twenty-two without one.
       - name: Install browser system dependencies
-        timeout-minutes: 5
+        timeout-minutes: 9
         run: |
           sudo systemctl stop unattended-upgrades.service 2>/dev/null || true
           sudo systemctl disable --now apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
-          npx playwright install-deps ${{ steps.playwright.outputs.browsers }}
+          # Frenar el timer no alcanza: si el runner arranca con una corrida de
+          # apt ya empezada, install-deps espera el lock de dpkg igual y se come
+          # los cinco minutos. El 26/10 pasó dos veces seguidas en el mismo PR
+          # —tres shards en una corrida, firefox en la siguiente— sin que
+          # ninguno llegara a correr un test.
+          #
+          # Tres intentos acotados en vez de uno: cada uno conserva el fallo
+          # rápido que motivó el backstop (150 s y se corta), y un lock que se
+          # libera deja de costar un PR en rojo. El techo real son 8 minutos,
+          # todavía lejos de los 22 del cuelgue original, y si los tres se
+          # agotan el step dice por qué.
+          for intento in 1 2 3; do
+            if timeout 150s npx playwright install-deps ${{ steps.playwright.outputs.browsers }}; then
+              exit 0
+            fi
+            echo "install-deps falló o se colgó (intento $intento de 3); reintento en 15 s"
+            sleep 15
+          done
+          echo "install-deps no terminó en tres intentos de 150 s"
+          exit 1
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
