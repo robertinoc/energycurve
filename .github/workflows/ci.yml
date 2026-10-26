@@ -304,25 +304,31 @@ jobs:
         run: |
           sudo systemctl stop unattended-upgrades.service 2>/dev/null || true
           sudo systemctl disable --now apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
-          # Frenar el timer no alcanza: si el runner arranca con una corrida de
-          # apt ya empezada, install-deps espera el lock de dpkg igual y se come
-          # los cinco minutos. El 26/10 pasó dos veces seguidas en el mismo PR
-          # —tres shards en una corrida, firefox en la siguiente— sin que
-          # ninguno llegara a correr un test.
+
+          # Frenar el timer no alcanza: si el runner ya tiene un apt-get
+          # corriendo, el lock de dpkg está tomado y apt NO espera, se rinde en
+          # el acto. El log del 26/10 lo dice con nombre y número:
+          #   E: Could not get lock /var/lib/dpkg/lock-frontend.
+          #      It is held by process 2893 (apt-get)
           #
-          # Tres intentos acotados en vez de uno: cada uno conserva el fallo
-          # rápido que motivó el backstop (150 s y se corta), y un lock que se
-          # libera deja de costar un PR en rojo. El techo real son 8 minutos,
-          # todavía lejos de los 22 del cuelgue original, y si los tres se
-          # agotan el step dice por qué.
-          for intento in 1 2 3; do
-            if timeout 150s npx playwright install-deps ${{ steps.playwright.outputs.browsers }}; then
+          # Por eso reintentar solo no alcanzaba: los reintentos caían contra el
+          # mismo dueño en treinta segundos. Lo que faltaba era pedirle a apt que
+          # espere. install-deps llama a apt-get por dentro, así que la opción va
+          # por configuración y no por línea de comando.
+          echo 'DPkg::Lock::Timeout "180";' | sudo tee /etc/apt/apt.conf.d/99lock-timeout >/dev/null
+
+          # Con la espera puesta, un intento debería bastar; el segundo cubre que
+          # el lock siga tomado pasados los 180 s. Cada intento conserva su corte
+          # duro, que es lo que motivó el backstop original: el techo real son
+          # ~8,5 minutos, todavía lejos de los 22 del cuelgue que lo originó.
+          for intento in 1 2; do
+            if timeout 240s npx playwright install-deps ${{ steps.playwright.outputs.browsers }}; then
               exit 0
             fi
-            echo "install-deps falló o se colgó (intento $intento de 3); reintento en 15 s"
-            sleep 15
+            echo "install-deps falló o se colgó (intento $intento de 2); reintento en 20 s"
+            sleep 20
           done
-          echo "install-deps no terminó en tres intentos de 150 s"
+          echo "install-deps no terminó en dos intentos de 240 s con espera de lock"
           exit 1
 
       - name: Install Playwright browsers
