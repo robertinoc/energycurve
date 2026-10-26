@@ -300,11 +300,36 @@ jobs:
       # timeout is the backstop: if it ever hangs again it fails in five minutes
       # with a name instead of twenty-two without one.
       - name: Install browser system dependencies
-        timeout-minutes: 5
+        timeout-minutes: 9
         run: |
           sudo systemctl stop unattended-upgrades.service 2>/dev/null || true
           sudo systemctl disable --now apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
-          npx playwright install-deps ${{ steps.playwright.outputs.browsers }}
+
+          # Frenar el timer no alcanza: si el runner ya tiene un apt-get
+          # corriendo, el lock de dpkg está tomado y apt NO espera, se rinde en
+          # el acto. El log del 26/10 lo dice con nombre y número:
+          #   E: Could not get lock /var/lib/dpkg/lock-frontend.
+          #      It is held by process 2893 (apt-get)
+          #
+          # Por eso reintentar solo no alcanzaba: los reintentos caían contra el
+          # mismo dueño en treinta segundos. Lo que faltaba era pedirle a apt que
+          # espere. install-deps llama a apt-get por dentro, así que la opción va
+          # por configuración y no por línea de comando.
+          echo 'DPkg::Lock::Timeout "180";' | sudo tee /etc/apt/apt.conf.d/99lock-timeout >/dev/null
+
+          # Con la espera puesta, un intento debería bastar; el segundo cubre que
+          # el lock siga tomado pasados los 180 s. Cada intento conserva su corte
+          # duro, que es lo que motivó el backstop original: el techo real son
+          # ~8,5 minutos, todavía lejos de los 22 del cuelgue que lo originó.
+          for intento in 1 2; do
+            if timeout 240s npx playwright install-deps ${{ steps.playwright.outputs.browsers }}; then
+              exit 0
+            fi
+            echo "install-deps falló o se colgó (intento $intento de 2); reintento en 20 s"
+            sleep 20
+          done
+          echo "install-deps no terminó en dos intentos de 240 s con espera de lock"
+          exit 1
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
