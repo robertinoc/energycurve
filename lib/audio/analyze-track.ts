@@ -21,12 +21,14 @@ import {
 import { CHROMA_METHODS, DEFAULT_CHROMA_METHOD } from "./analysis-types"
 import type {
   AudioFeatures,
+  BeatGuess,
   ChromaMethod,
   ChromaVariant,
   TrackAnalysis,
   WorkerRequest,
   WorkerResponse,
 } from "./analysis-types"
+import type { EnergyEnvelope } from "./energy-envelope"
 
 /**
  * Copies each channel out of the AudioBuffer so it can be transferred.
@@ -43,6 +45,14 @@ function copyChannels(buffer: AudioBuffer): Float32Array[] {
   )
 }
 
+interface ExtractedFeatures {
+  features: AudioFeatures
+  variants: Record<ChromaMethod, ChromaVariant>
+  analyzeMs: number
+  envelope?: EnergyEnvelope
+  envelopeMs?: number
+}
+
 /**
  * One worker, reused across files. Spinning one up per track costs ~10-40ms
  * each and re-parses Meyda every time.
@@ -51,11 +61,7 @@ let worker: Worker | null = null
 const pending = new Map<
   string,
   {
-    resolve: (value: {
-      features: AudioFeatures
-      variants: Record<ChromaMethod, ChromaVariant>
-      analyzeMs: number
-    }) => void
+    resolve: (value: ExtractedFeatures) => void
     reject: (error: Error) => void
   }
 >()
@@ -82,6 +88,8 @@ function getWorker(): Worker {
         features: message.features,
         variants: message.variants,
         analyzeMs: message.analyzeMs,
+        envelope: message.envelope,
+        envelopeMs: message.envelopeMs,
       })
     } else {
       entry.reject(new Error(message.error))
@@ -109,18 +117,19 @@ export function disposeAudioWorker(): void {
 function extractFeatures(
   channels: Float32Array[],
   sampleRate: number,
-  chromaMethod: ChromaMethod
-): Promise<{
-  features: AudioFeatures
-  variants: Record<ChromaMethod, ChromaVariant>
-  analyzeMs: number
-}> {
+  chromaMethod: ChromaMethod,
+  envelope: boolean
+): Promise<ExtractedFeatures> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
   const active = getWorker()
 
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject })
-    const request: WorkerRequest = { id, channels, sampleRate, chromaMethod }
+    // The flag is added only when set, so the import's request is byte-for-byte
+    // the one it always sent.
+    const request: WorkerRequest = envelope
+      ? { id, channels, sampleRate, chromaMethod, envelope: true }
+      : { id, channels, sampleRate, chromaMethod }
     // Transferred rather than cloned: a 5-minute stereo track is ~100 MB of
     // Float32, and cloning it would cost more than the analysis.
     active.postMessage(
@@ -147,6 +156,12 @@ export interface AnalyzeOptions {
    * measurement decides.
    */
   chromaMethod?: ChromaMethod
+  /**
+   * CUE points, phase A: also compute the whole-track envelope and run `guess()`
+   * for a beat phase. Measurement only — the backstage CUE harness sets it, the
+   * import never does, so the import's cost and output don't move.
+   */
+  cueMeasurement?: boolean
 }
 
 /**
@@ -213,14 +228,50 @@ export async function analyzeAudioFile(
     }
     base.bpmMs = performance.now() - bpmStart
 
+    // `guess()` is the same tempo analysis as `analyze()` plus a beat offset, run
+    // as a second, separate call rather than replacing the first: the question is
+    // whether its phase is usable, and swapping the BPM source in the same breath
+    // would make any BPM regression impossible to attribute.
+    let guess: BeatGuess | null = null
+    let guessError: string | null = null
+    let guessMs = 0
+    if (options.cueMeasurement) {
+      const guessStart = performance.now()
+      try {
+        const detector = await import("web-audio-beat-detector")
+        const result: { bpm: number; offset: number; tempo?: unknown } =
+          await detector.guess(buffer)
+        guess = {
+          bpm: result.bpm,
+          offset: result.offset,
+          tempo: typeof result.tempo === "number" ? result.tempo : null,
+        }
+      } catch (error) {
+        guessError = error instanceof Error ? error.message : String(error)
+      }
+      guessMs = performance.now() - guessStart
+    }
+
     const channels = copyChannels(buffer)
-    const { features, variants, analyzeMs } = await extractFeatures(
-      channels,
-      buffer.sampleRate,
-      options.chromaMethod ?? DEFAULT_CHROMA_METHOD
-    )
+    const { features, variants, analyzeMs, envelope, envelopeMs } =
+      await extractFeatures(
+        channels,
+        buffer.sampleRate,
+        options.chromaMethod ?? DEFAULT_CHROMA_METHOD,
+        options.cueMeasurement === true
+      )
     base.featuresMs = analyzeMs
     base.features = features
+
+    if (options.cueMeasurement && envelope) {
+      base.cue = {
+        envelope,
+        envelopeMs: envelopeMs ?? 0,
+        guess,
+        guessMs,
+        guessError,
+      }
+    }
 
     // Each analysed window votes, rather than one average over the whole track
     // deciding alone — the spike's second recommended fix for the 21% accuracy,

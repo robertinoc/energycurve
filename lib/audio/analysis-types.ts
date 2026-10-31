@@ -154,6 +154,31 @@ export type WorkerResponse =
     }
   | { id: string; ok: false; error: string }
 
+/** What `guess()` from web-audio-beat-detector returned for a track. */
+export interface BeatGuess {
+  /** Rounded to an integer by the library before it computes the offset. */
+  bpm: number
+  /** Seconds to the first beat, folded into one beat period. */
+  offset: number
+  /**
+   * The unrounded tempo — the same number `analyze()` returns. The library's
+   * worker returns it but its published type omits it, so it is read defensively
+   * and null when absent.
+   */
+  tempo: number | null
+}
+
+/** Present on a TrackAnalysis only when CUE measurement was asked for. */
+export interface CueMeasurement {
+  envelope: EnergyEnvelope
+  /** Wall-clock of the envelope pass, inside the worker. */
+  envelopeMs: number
+  guess: BeatGuess | null
+  /** Wall-clock of `guess()`, which renders and peak-picks the track again. */
+  guessMs: number
+  guessError: string | null
+}
+
 /** Everything the harness measures for one file. */
 export interface TrackAnalysis {
   fileName: string
@@ -196,4 +221,6 @@ export interface TrackAnalysis {
   taggedBpm: number | null
   taggedKey: string | null
   error: string | null
+  /** Only when `cueMeasurement` was set — absent, not null, on the import path. */
+  cue?: CueMeasurement
 }
