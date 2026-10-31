@@ -35,6 +35,7 @@ import {
   type WorkerRequest,
   type WorkerResponse,
 } from "./analysis-types"
+import { computeEnergyEnvelope } from "./energy-envelope"
 import { HarmonicWindow } from "./hpss"
 import { planSampleWindows } from "./sample-windows"
 import {
@@ -64,7 +65,7 @@ const WIDE_FEATURES: MeydaAudioFeature[] = ["amplitudeSpectrum"]
 type ExtractedFeatures = Partial<MeydaFeaturesObject>
 
 self.onmessage = (event: MessageEvent<WorkerRequest>) => {
-  const { id, channels, sampleRate, chromaMethod } = event.data
+  const { id, channels, sampleRate, chromaMethod, envelope } = event.data
   const chromaFrom = chromaMethod ?? DEFAULT_CHROMA_METHOD
 
   /**
@@ -331,6 +332,15 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
         analyzedSeconds: sampleRate > 0 ? (rms.length * HOP_SIZE) / sampleRate : 0,
         tuningOffsetSemitones: tuningOffset,
       },
+    }
+
+    // After the response is built, so `analyzeMs` above is the feature pass alone
+    // and stays comparable with runs from before the envelope existed. Nothing
+    // here runs, and no key is added, unless the request asked for it.
+    if (envelope && response.ok) {
+      const envelopeStart = performance.now()
+      response.envelope = computeEnergyEnvelope(samples, sampleRate)
+      response.envelopeMs = performance.now() - envelopeStart
     }
 
     self.postMessage(response)

@@ -1,5 +1,7 @@
 /** Shared types for the browser audio-analysis spike. */
 
+import type { EnergyEnvelope } from "./energy-envelope"
+
 /** Frame size Meyda runs on. Must be a power of two. */
 export const FRAME_SIZE = 2048
 
@@ -73,6 +75,12 @@ export interface WorkerRequest {
    * itself is built, so it has to happen inside the frame loop.
    */
   chromaMethod?: ChromaMethod
+  /**
+   * Also compute a whole-track energy envelope (CUE points, phase A). Off unless
+   * asked for: the import never sets it, so its cost and its output are exactly
+   * what they were — tests/audio-worker-baseline.test.ts holds it to that.
+   */
+  envelope?: boolean
 }
 
 /**
@@ -136,8 +144,40 @@ export type WorkerResponse =
        */
       variants: Record<ChromaMethod, ChromaVariant>
       analyzeMs: number
+      /**
+       * Only when the request asked for it. `analyzeMs` does not include it, so the
+       * feature pass stays comparable with every earlier run; its own wall-clock is
+       * `envelopeMs`.
+       */
+      envelope?: EnergyEnvelope
+      envelopeMs?: number
     }
   | { id: string; ok: false; error: string }
+
+/** What `guess()` from web-audio-beat-detector returned for a track. */
+export interface BeatGuess {
+  /** Rounded to an integer by the library before it computes the offset. */
+  bpm: number
+  /** Seconds to the first beat, folded into one beat period. */
+  offset: number
+  /**
+   * The unrounded tempo — the same number `analyze()` returns. The library's
+   * worker returns it but its published type omits it, so it is read defensively
+   * and null when absent.
+   */
+  tempo: number | null
+}
+
+/** Present on a TrackAnalysis only when CUE measurement was asked for. */
+export interface CueMeasurement {
+  envelope: EnergyEnvelope
+  /** Wall-clock of the envelope pass, inside the worker. */
+  envelopeMs: number
+  guess: BeatGuess | null
+  /** Wall-clock of `guess()`, which renders and peak-picks the track again. */
+  guessMs: number
+  guessError: string | null
+}
 
 /** Everything the harness measures for one file. */
 export interface TrackAnalysis {
@@ -181,4 +221,6 @@ export interface TrackAnalysis {
   taggedBpm: number | null
   taggedKey: string | null
   error: string | null
+  /** Only when `cueMeasurement` was set — absent, not null, on the import path. */
+  cue?: CueMeasurement
 }
