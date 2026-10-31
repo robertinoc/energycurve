@@ -88,6 +88,9 @@ function expectClose(actual: unknown, expected: unknown, path = "$"): void {
   expect(actual, path).toEqual(expected)
 }
 
+// Each run is a full Meyda pass over 40–100 s of audio: a few seconds, not ms.
+const SLOW = 30_000
+
 describe("feature worker, default path", () => {
   // 100 s: long enough that the three 30-second windows are sampled rather than
   // the track being analysed whole, which is the path every real import takes.
@@ -106,5 +109,33 @@ describe("feature worker, default path", () => {
       stable(run({ channels: short(), sampleRate: RATE })),
       expected.short
     )
-  })
+  }, SLOW)
+
+  it("adds the envelope only when asked, and moves nothing else", () => {
+    const off = stable(run({ channels: long(), sampleRate: RATE }))
+    const on = stable(run({ channels: long(), sampleRate: RATE, envelope: true }))
+
+    expect(off).not.toHaveProperty("envelope")
+    expect(off).not.toHaveProperty("envelopeMs")
+
+    const { envelope, envelopeMs, ...rest } = on as Record<string, unknown> & {
+      envelope: {
+        full: number[]
+        low: number[]
+        lowFine: number[]
+        secondsPerPoint: number
+      }
+      envelopeMs: number
+    }
+    // Same arithmetic in the same process: these are bit-identical, not close.
+    expect(rest).toEqual(off)
+    expect(envelopeMs).toBeGreaterThanOrEqual(0)
+    // The whole 100 s, not the 90 s the feature pass samples. At 11 025 Hz the
+    // hops round (110 and 5 500 samples), so a point is 0.4989 s and 100 s needs
+    // 201 of them; at 44.1 and 48 kHz the half second is exact.
+    expect(envelope.secondsPerPoint).toBeCloseTo(5_500 / RATE, 12)
+    expect(envelope.full).toHaveLength(Math.ceil((100 * RATE) / 5_500))
+    expect(envelope.low).toHaveLength(envelope.full.length)
+    expect(envelope.lowFine).toHaveLength(Math.ceil((100 * RATE) / 110))
+  }, SLOW)
 })

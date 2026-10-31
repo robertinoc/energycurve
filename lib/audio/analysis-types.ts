@@ -1,5 +1,7 @@
 /** Shared types for the browser audio-analysis spike. */
 
+import type { EnergyEnvelope } from "./energy-envelope"
+
 /** Frame size Meyda runs on. Must be a power of two. */
 export const FRAME_SIZE = 2048
 
@@ -73,6 +75,12 @@ export interface WorkerRequest {
    * itself is built, so it has to happen inside the frame loop.
    */
   chromaMethod?: ChromaMethod
+  /**
+   * Also compute a whole-track energy envelope (CUE points, phase A). Off unless
+   * asked for: the import never sets it, so its cost and its output are exactly
+   * what they were — tests/audio-worker-baseline.test.ts holds it to that.
+   */
+  envelope?: boolean
 }
 
 /**
@@ -136,6 +144,13 @@ export type WorkerResponse =
        */
       variants: Record<ChromaMethod, ChromaVariant>
       analyzeMs: number
+      /**
+       * Only when the request asked for it. `analyzeMs` does not include it, so the
+       * feature pass stays comparable with every earlier run; its own wall-clock is
+       * `envelopeMs`.
+       */
+      envelope?: EnergyEnvelope
+      envelopeMs?: number
     }
   | { id: string; ok: false; error: string }
 
