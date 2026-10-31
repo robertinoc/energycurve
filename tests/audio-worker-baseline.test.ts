@@ -54,7 +54,8 @@ function stable(response: WorkerResponse) {
   if (!response.ok) {
     throw new Error(response.error)
   }
-  const { analyzeMs: _ignored, ...rest } = response
+  const rest: Record<string, unknown> = { ...response }
+  delete rest.analyzeMs
   return JSON.parse(JSON.stringify(rest)) as Record<string, unknown>
 }
 
