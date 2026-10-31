@@ -19,6 +19,10 @@ import type {
 import { logError, logWarn } from "@/lib/observability/logger"
 import { consumeRateLimit } from "@/services/rate-limit-service"
 import { isOverImportLimit, tooManyTracksMessage } from "@/lib/playlists/import-limit"
+import { proposeSplit } from "@/lib/playlists/import-readiness"
+import { SPLIT_COPY } from "@/lib/playlists/split-copy"
+import { isSplitCriterion, planSplit } from "@/lib/engine/set-split"
+import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
 import { decodeUploadedText } from "@/lib/playlists/decode-upload"
 import type {
@@ -43,7 +47,7 @@ import {
   type PlaylistContext,
   type SupportedGenre,
 } from "@/lib/product/strategy"
-import { can } from "@/lib/product/capabilities"
+import { can, quotaFor } from "@/lib/product/capabilities"
 import { restorableOrder } from "@/lib/playlists/versions"
 import { parseTrackAudioFeatures } from "@/lib/audio/track-features"
 import {
@@ -75,6 +79,7 @@ import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import {
   PlaylistLimitError,
   addTrack,
+  countPlaylists,
   createPlaylistWithTracks,
   deletePlaylist,
   getOwnedPlaylistWithTracks,
@@ -728,6 +733,30 @@ export async function importPlaylistAction(
   }
 
   const tracks = parsed.tracks
+  const playlistInput = {
+    name,
+    genre,
+    context: contextChoice.base,
+    importSource: parsed.source,
+    sourceHeader: parsed.sourceHeader ?? null,
+    customContextId: contextChoice.customId,
+    customGenreId: genreChoice?.customId ?? null,
+  }
+
+  // Several sets instead of one, when the DJ chose it. Everything the form
+  // showed is recomputed here from the file, and a choice the file does not
+  // support (a count not offered, harmonic without the keys) is refused.
+  const splitCount = Number(formData.get("splitCount") ?? 0)
+
+  if (Number.isInteger(splitCount) && splitCount >= 2) {
+    return importAsSplitSets(profile.id, locale, {
+      tracks,
+      count: splitCount,
+      criterion: String(formData.get("splitCriterion") ?? ""),
+      playlistInput,
+      source: parsed.source,
+    })
+  }
 
   let playlistId: string
 
@@ -735,30 +764,8 @@ export async function importPlaylistAction(
     // Playlist and tracks together, or neither (IMP.1).
     const playlist = await createPlaylistWithTracks(
       profile.id,
-      {
-      name,
-      genre,
-      context: contextChoice.base,
-      importSource: parsed.source,
-      sourceHeader: parsed.sourceHeader ?? null,
-      customContextId: contextChoice.customId,
-      customGenreId: genreChoice?.customId ?? null,
-      },
-      tracks.map((track) => ({
-        artist: track.artist || "Unknown artist",
-        name: track.name || "Untitled",
-        bpm: track.bpm,
-        energyScore: track.energy,
-        sourceUri: track.sourceUri,
-        musicalKey: track.key,
-        genre: track.genre,
-        comment: track.comment,
-        durationSeconds: track.durationSeconds,
-        perceivedDb: track.perceivedDb ?? null,
-        sourcePayload: track.sourcePayload ?? null,
-        sourcePayloadFormat: track.sourcePayloadFormat ?? null,
-        energySource: track.energySource ?? null,
-      }))
+      playlistInput,
+      tracks.map(importedTrackWrite)
     )
     playlistId = playlist.id
   } catch (error) {
@@ -789,6 +796,159 @@ export async function importPlaylistAction(
   // of blanks with no explanation reads as a broken reader, which is exactly
   // how an alpha user read his M3U8 import.
   redirect(`/dashboard/playlists/${playlistId}?imported=1`)
+}
+
+/** An exported track as the tracks table stores it. Shared by one set and many. */
+function importedTrackWrite(track: ImportedTrack) {
+  return {
+    artist: track.artist || "Unknown artist",
+    name: track.name || "Untitled",
+    bpm: track.bpm,
+    energyScore: track.energy,
+    sourceUri: track.sourceUri,
+    musicalKey: track.key,
+    genre: track.genre,
+    comment: track.comment,
+    durationSeconds: track.durationSeconds,
+    perceivedDb: track.perceivedDb ?? null,
+    sourcePayload: track.sourcePayload ?? null,
+    sourcePayloadFormat: track.sourcePayloadFormat ?? null,
+    energySource: track.energySource ?? null,
+  }
+}
+
+/**
+ * One uploaded list, created as several sets of about an hour.
+ *
+ * Split first, order second (lib/engine/set-split.ts): the tracks are dealt
+ * into groups by the chosen criterion, and each group is then ordered on its
+ * own against its own target. Each set is stored in that suggested order — the
+ * DJ asked for sets, so they arrive ready to play.
+ *
+ * All or nothing, like a single import (IMP.1): the plan's playlist allowance
+ * is checked for the whole split before the first set is created, and if one
+ * set fails to save the ones already created are deleted again.
+ */
+async function importAsSplitSets(
+  profileId: string,
+  locale: SiteLocale,
+  input: {
+    tracks: ImportedTrack[]
+    count: number
+    criterion: string
+    playlistInput: {
+      name: string
+      genre: SupportedGenre
+      context: PlaylistContext
+      importSource: ImportSource
+      sourceHeader: unknown
+      customContextId: string | null
+      customGenreId: string | null
+    }
+    source: ImportSource
+  }
+): Promise<PlaylistActionState> {
+  const { tracks, count, criterion, playlistInput } = input
+  const proposal = proposeSplit(tracks)
+
+  if (
+    !proposal ||
+    !proposal.counts.includes(count) ||
+    !isSplitCriterion(criterion) ||
+    (criterion === "harmonic" && !proposal.harmonic.available)
+  ) {
+    return failure(SPLIT_COPY.invalidChoice[locale])
+  }
+
+  const billing = await getProfileBilling(profileId)
+  const limit = quotaFor(billing.plan, billing.status, "active_playlists")
+
+  if (limit !== null) {
+    const room = Math.max(0, limit - (await countPlaylists(profileId)))
+
+    if (room < count) {
+      return failure(
+        formatTemplate(SPLIT_COPY.notEnoughRoom[locale], { count, room })
+      )
+    }
+  }
+
+  const energies = resolveTrackEnergies(
+    tracks.map((track, index) => ({
+      position: index + 1,
+      bpm: track.bpm,
+      energy_score: track.energy,
+      genre: track.genre,
+      musical_key: track.key,
+      perceived_db: track.perceivedDb ?? null,
+    })),
+    playlistInput.context,
+    playlistInput.genre
+  )
+  const sets = planSplit(
+    tracks.map((track, index) => ({
+      energy: energies[index],
+      durationSeconds: track.durationSeconds,
+      bpm: track.bpm,
+    })),
+    count,
+    criterion,
+    { genre: playlistInput.genre, context: playlistInput.context }
+  )
+
+  const created: string[] = []
+
+  try {
+    for (const set of sets) {
+      const playlist = await createPlaylistWithTracks(
+        profileId,
+        {
+          ...playlistInput,
+          name: formatTemplate(SPLIT_COPY.setName[locale], {
+            name: playlistInput.name,
+            number: set.number,
+            total: sets.length,
+          }),
+        },
+        set.order.map((index) => importedTrackWrite(tracks[index]))
+      )
+
+      created.push(playlist.id)
+    }
+  } catch (error) {
+    for (const id of created) {
+      try {
+        await deletePlaylist(profileId, id)
+      } catch (cleanupError) {
+        logError("playlist.split_rollback_failed", cleanupError, { profileId, playlistId: id })
+      }
+    }
+
+    const limited = playlistLimitMessage(error, locale)
+
+    if (limited) {
+      return failure(limited)
+    }
+
+    logError("playlist.split_import_failed", error, { profileId, count, criterion })
+    return failure(ACTION_COPY.genericError[locale])
+  }
+
+  captureServerEvent(profileId, "playlist_created", {
+    via: "import",
+    source: input.source,
+    trackCount: tracks.length,
+    genre: playlistInput.genre,
+    context: playlistInput.context,
+    splitInto: sets.length,
+    splitCriterion: criterion,
+  })
+
+  revalidatePath("/dashboard/playlists")
+  revalidatePath("/dashboard")
+  redirect(
+    `/dashboard/playlists/split?ids=${created.join(",")}&criterion=${criterion}`
+  )
 }
 
 export interface AudioImportResult {
