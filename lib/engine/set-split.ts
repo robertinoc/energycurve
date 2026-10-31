@@ -332,13 +332,15 @@ function round1(value: number): number {
 /**
  * For `continuous`: each set's target runs from where the previous one ended to
  * the top of its own band. Set 1 starts at the bottom of its band.
+ *
+ * Takes the energies of each set, in playing order of the sets, so the result
+ * screen can redraw the same chain from the stored sets.
  */
-function chainedAnchors(groups: readonly number[][], energies: readonly ResolvedTrackEnergy[]) {
+export function chainedAnchors(scoresPerSet: readonly (readonly number[])[]): Array<Array<[number, number]>> {
   const anchors: Array<Array<[number, number]>> = []
   let previousEnd: number | null = null
 
-  for (const group of groups) {
-    const scores = group.map((index) => energies[index].score)
+  for (const scores of scoresPerSet) {
     const start = previousEnd ?? Math.min(...scores)
     const end = Math.max(...scores)
 
@@ -360,7 +362,10 @@ export function planSplit(
 ): PlannedSet[] {
   const energies = tracks.map((track) => track.energy)
   const groups = partitionTracks(energies, count, criterion)
-  const anchorsPerSet = criterion === "continuous" ? chainedAnchors(groups, energies) : null
+  const anchorsPerSet =
+    criterion === "continuous"
+      ? chainedAnchors(groups.map((group) => group.map((index) => energies[index].score)))
+      : null
   const shape = options.shape ?? null
 
   return groups.map((group, setIndex) => {
