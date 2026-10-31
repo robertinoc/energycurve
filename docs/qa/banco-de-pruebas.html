@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">135</strong>
+      <strong id="tally-total">141</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1510,6 +1510,50 @@
           steps: ["Con tu cuenta (PRO+ de cortesía), abrí Account y mirá la tarjeta del plan", "Abrí el dashboard y mirá la misma tarjeta", "Cambiá a inglés y repetí"],
           expect: "«PRO+ está activo» y debajo «Sin fecha de renovación registrada.» / «No renewal date on record.». En ningún lado «Se renueva el .» ni «Renews on .».",
           ifNot: "Si sigue la frase vieja, el deploy no tiene el commit del lote 22: anotá qué commit sirve producción."
+        }
+      ]
+    },
+    {
+      code: "SETS",
+      title: "Varios sets desde una lista subida",
+      meta: "~60 min · necesita el deploy · tres exports reales tuyos de más de una hora · SETS.5 y SETS.6 desde el teléfono con la app instalada",
+      why: "Cuando una lista suena claramente más de una hora, el import ofrece partirla en sets de alrededor de una hora y deja elegir el criterio. Primero se reparte y después cada set se ordena por su cuenta, así ningún set arranca en el pico de otro. Los tests afirman el reparto (con «curva propia» los sets cubren el mismo rango de energía; con «energía continua», no), el tope de 80 y el todo o nada; lo que ningún test dice es si los sets que salen de una lista real te sirven para tocar, ni cómo se ve en un teléfono sin barra del navegador.",
+      tests: [
+        {
+          code: "SETS.1", title: "Curva propia por set, con una lista real", sub: "Criterio (a) · sets autónomos",
+          steps: ["Importá un export tuyo de 30 a 60 temas que dure más de una hora", "Leé la línea de duración: ¿dice «medido» o «estimación gruesa», y por qué?", "Elegí la cantidad de sets que te ofrece y «Curva propia por set»", "En el resultado, mirá la curva de cada set y abrí uno"],
+          expect: "Cada set arranca abajo, sube y cierra solo, y los dos (o tres) cubren más o menos el mismo rango de energía. La duración de cada set está cerca de la hora y dice de dónde sale.",
+          ifNot: "Si un set queda todo arriba o todo abajo, anotá qué lista era y cuántos temas: con este criterio no debería pasar."
+        },
+        {
+          code: "SETS.2", title: "Energía continua, con una lista real", sub: "Criterio (b) · una noche larga",
+          steps: ["Con el mismo export (o uno parecido), elegí «Energía continua»", "En el resultado, compará el final del set 1 con el principio del set 2"],
+          expect: "El set 1 es el más tranquilo y el último el más alto; la curva objetivo de cada set arranca donde terminó la del anterior. Ningún set empieza en el pico.",
+          ifNot: "Si el set 2 arranca más abajo de donde terminó el 1, anotá los dos números: es la cadena la que falla."
+        },
+        {
+          code: "SETS.3", title: "Compatibilidad armónica, con keys y sin ellas", sub: "Criterio (c) · sólo con keys del archivo",
+          steps: ["Importá un export con key en casi todos los temas y elegí «Compatibilidad armónica»", "Mezclá en tu cabeza (o en el software) las primeras transiciones del set 1", "Importá otro export con muchos temas sin key"],
+          expect: "Con keys, cada set junta tonalidades vecinas en la rueda y se mezcla limpio. Sin keys suficientes, la opción aparece deshabilitada y dice cuántos temas no traen key; no se puede elegir.",
+          ifNot: "Si un set armónico tiene saltos de tonalidad que no mezclan, anotá las dos keys. Si la opción se habilita con menos del 80 % de keys, es el defecto más serio de la sesión."
+        },
+        {
+          code: "SETS.4", title: "Una lista de más de 80 temas", sub: "El tope · el límite viene del optimizador",
+          steps: ["Elegí un export de más de 80 temas en el import de archivos", "Probá también pegando más de 80 líneas en «A mano»", "Cambiá el idioma y repetí uno"],
+          expect: "Antes de enviar, el formulario dice cuántos temas tiene la lista y que el límite es 80 porque es lo más largo que el optimizador de orden puede trabajar. No se crea ninguna playlist. Lo mismo en español y en inglés.",
+          ifNot: "Si se crea una playlist con los primeros 80 (o 500), el rechazo no llegó al deploy: anotá el commit."
+        },
+        {
+          code: "SETS.5", title: "La pregunta y el selector, en el teléfono instalado", sub: "Pantalla nueva · PWA en standalone",
+          steps: ["Con la app instalada en el teléfono (no el navegador), importá una lista de más de una hora", "Mirá el bloque «Más de una hora» entero sin hacer zoom", "Elegí una cantidad y recorré los tres criterios", "Girá el teléfono"],
+          expect: "Sin scroll horizontal. Los nombres de los criterios y la frase de lo que cada uno resigna se leen completos, uno debajo del otro. Nada queda tapado por la muesca ni por la barra de gestos.",
+          ifNot: "Captura de pantalla y modelo de teléfono. Ojo: en el navegador de escritorio no se ve esto — sólo cuenta probado desde la app instalada."
+        },
+        {
+          code: "SETS.6", title: "La pantalla de resultado, en el teléfono instalado", sub: "Pantalla nueva · PWA en standalone",
+          steps: ["Con la app instalada, terminá un import partido en tres sets", "Bajá hasta el último set", "Girá el teléfono a horizontal y volvé"],
+          expect: "Se ve en una columna, en el orden en que se tocan, con «Set 1 de 3», «Set 2 de 3»… arriba de cada uno. El primero no queda debajo de la muesca y el botón «Abrir el set» del último no queda tapado por la barra de gestos. Las curvas se leen y no empujan el ancho.",
+          ifNot: "Captura y modelo de teléfono. Si algo queda debajo de la barra de estado, puede ser del layout general (estilo de barra «black-translucent» sin <code>viewport-fit=cover</code>), no de esta pantalla: anotalo igual."
         }
       ]
     }
