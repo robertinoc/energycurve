@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   title: "Your sets",
 }
 
+// Per-user, read from the session: never prerendered, like every dashboard page.
+export const dynamic = "force-dynamic"
+
 /** A split makes at most this many sets (80 tracks, about an hour each). */
 const MAX_SETS = 6
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
