@@ -86,7 +86,9 @@ export default async function SplitResultPage({
     criterion === "continuous" ? chainedAnchors(sets.map((set) => set.scores)) : null
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+    // The dashboard pages own their gutter (px-6, lg:px-10, as /dashboard/playlists
+    // does); the bottom adds the gesture-bar inset for the installed app.
+    <div className="mx-auto w-full max-w-4xl space-y-6 px-6 pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))] lg:px-10">
       <header className="space-y-2">
         <h1 className="font-heading text-2xl font-bold text-ec-text">
           {SPLIT_COPY.resultTitle[locale]}
@@ -161,7 +163,7 @@ export default async function SplitResultPage({
                 </dd>
               </div>
             </dl>
-            <p className="text-[13px] leading-5 text-ec-text-dim">
+            <p className="text-[13px] leading-5 text-ec-text-muted">
               {durationSource(duration, playlist.tracks.length, locale).join(" ")}
             </p>
 

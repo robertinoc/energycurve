@@ -117,18 +117,22 @@ export function SplitProposal({
                   className={cn(
                     "flex min-w-0 flex-col gap-2 rounded-xl border p-4 text-left transition-colors",
                     disabled
-                      ? "cursor-not-allowed border-ec-border bg-ec-surface opacity-70"
+                      ? "cursor-not-allowed border-ec-border bg-ec-surface"
                       : criterion === option
                         ? "border-ec-cyan bg-ec-cyan/10"
                         : "border-ec-border bg-ec-surface hover:border-ec-border-strong"
                   )}
                 >
-                  <span className="font-heading text-base font-semibold text-ec-text">
+                  {/* Disabled dims what the option would do, never why it is
+                      off: the reason below stays at full strength. */}
+                  <span className={cn("font-heading text-base font-semibold text-ec-text", disabled && "opacity-60")}>
                     {copy.name[locale]}
                   </span>
-                  <span className="text-sm leading-6 text-ec-text-muted">{copy.gives[locale]}</span>
-                  <span className="text-sm leading-6 text-ec-text-dim">
-                    <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em]">
+                  <span className={cn("text-sm leading-6 text-ec-text-muted", disabled && "opacity-60")}>
+                    {copy.gives[locale]}
+                  </span>
+                  <span className={cn("text-sm leading-6 text-ec-text-muted", disabled && "opacity-60")}>
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-ec-text">
                       {SPLIT_COPY.givesUp[locale]}:
                     </span>{" "}
                     {copy.givesUp[locale]}
@@ -145,7 +149,7 @@ export function SplitProposal({
               )
             })}
           </div>
-          <p className="text-sm leading-6 text-ec-text-dim">{SPLIT_COPY.orderNote[locale]}</p>
+          <p className="text-sm leading-6 text-ec-text-muted">{SPLIT_COPY.orderNote[locale]}</p>
         </div>
       ) : null}
     </fieldset>
