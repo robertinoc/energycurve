@@ -4,6 +4,25 @@ import {
   UnsupportedImportError,
 } from "@/lib/playlists/parse-import"
 import type { ImportSource } from "@/lib/playlists/imported-track"
+import { isOverImportLimit } from "@/lib/playlists/import-limit"
+import { estimateSetDuration, type SetDuration } from "@/lib/engine/set-duration"
+import {
+  harmonicAvailability,
+  splitCountOptions,
+  type HarmonicAvailability,
+} from "@/lib/engine/set-split"
+import { toCamelot } from "@/lib/music/camelot"
+
+/**
+ * What the form offers when a list runs past an hour: how long it plays and
+ * where that number came from, the set counts that leave each part near an
+ * hour, and whether the harmonic criterion has enough keys to stand on.
+ */
+export interface SplitProposal {
+  duration: SetDuration
+  counts: number[]
+  harmonic: HarmonicAvailability
+}
 
 /**
  * Whether a chosen file is actually importable, decided by parsing it.
@@ -26,7 +45,16 @@ import type { ImportSource } from "@/lib/playlists/imported-track"
  * one rulebook cannot disagree about which files are empty.
  */
 export type ImportReadiness =
-  | { kind: "ready"; source: ImportSource; tracks: number; playlistName: string | null }
+  | {
+      kind: "ready"
+      source: ImportSource
+      tracks: number
+      playlistName: string | null
+      /** Null when the list plays about an hour or less: nothing is asked. */
+      split: SplitProposal | null
+    }
+  /** More tracks than any import accepts (lib/playlists/import-limit.ts). */
+  | { kind: "too_many"; tracks: number }
   /** A recognised export whose playlist has no tracks. */
   | { kind: "empty" }
   /** Not a shape any of our readers recognises. */
@@ -57,10 +85,35 @@ export function assessImport(fileContents: string): ImportReadiness {
     return { kind: "empty" }
   }
 
+  if (isOverImportLimit(parsed.tracks.length)) {
+    return { kind: "too_many", tracks: parsed.tracks.length }
+  }
+
   return {
     kind: "ready",
     source: parsed.source,
     tracks: parsed.tracks.length,
     playlistName: parsed.playlistName,
+    split: proposeSplit(parsed.tracks),
   }
+}
+
+/** The keys the file itself carried — the only ones a split is computed on. */
+export function importedCamelots(
+  tracks: readonly { key: string | null }[]
+): Array<string | null> {
+  return tracks.map((track) => toCamelot(track.key))
+}
+
+export function proposeSplit(
+  tracks: readonly { durationSeconds: number | null; bpm: number | null; key: string | null }[]
+): SplitProposal | null {
+  const duration = estimateSetDuration(tracks)
+  const counts = splitCountOptions(duration, tracks.length)
+
+  if (counts.length === 0) {
+    return null
+  }
+
+  return { duration, counts, harmonic: harmonicAvailability(importedCamelots(tracks)) }
 }
