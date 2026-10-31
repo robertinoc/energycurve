@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { FlaskConical } from "lucide-react"
 
 import { AudioSpikePanel } from "./AudioSpikePanel"
@@ -49,6 +50,13 @@ export default function BackstageAudioSpikePage() {
             <code className="text-ec-text-dim">
               docs/spike-browser-audio-analysis.md
             </code>
+            .
+          </p>
+          <p className="text-ec-text-dim">
+            CUE-point suggestions are measured on a sibling screen,{" "}
+            <Link href="/backstage/cue-spike" className="text-ec-cyan hover:underline">
+              CUE spike
+            </Link>
             .
           </p>
           <p className="text-ec-text-dim">
