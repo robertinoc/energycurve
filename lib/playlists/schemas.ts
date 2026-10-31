@@ -1,3 +1,4 @@
+import { isOverImportLimit, tooManyTracksMessage } from "@/lib/playlists/import-limit"
 import { z } from "zod"
 
 import { parseTrackAudioFeatures } from "@/lib/audio/track-features"
@@ -372,7 +373,17 @@ export function createAudioImportSchema(locale: SiteLocale) {
     tracks: z
       .array(track)
       .min(1, messages.audioTracksRequired)
-      .max(AUDIO_IMPORT_MAX_TRACKS, messages.audioTracksTooMany),
+      // A ceiling on the payload itself, checked first…
+      .max(AUDIO_IMPORT_MAX_TRACKS, messages.audioTracksTooMany)
+      // …and the import limit, which says how many and why.
+      .superRefine((tracks, context) => {
+        if (isOverImportLimit(tracks.length)) {
+          context.addIssue({
+            code: "custom",
+            message: tooManyTracksMessage(tracks.length, locale),
+          })
+        }
+      }),
   })
 }
 

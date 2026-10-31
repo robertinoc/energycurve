@@ -18,6 +18,7 @@ import type {
 } from "@/lib/playlists/action-state"
 import { logError, logWarn } from "@/lib/observability/logger"
 import { consumeRateLimit } from "@/services/rate-limit-service"
+import { isOverImportLimit, tooManyTracksMessage } from "@/lib/playlists/import-limit"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
 import { decodeUploadedText } from "@/lib/playlists/decode-upload"
 import type {
@@ -315,6 +316,10 @@ export async function createPlaylistWithTracksAction(
             })
           : ACTION_COPY.noValidLines[locale]
       )
+    }
+
+    if (isOverImportLimit(tracks.length)) {
+      return failure(tooManyTracksMessage(tracks.length, locale))
     }
 
     pastedTracks = tracks
@@ -645,7 +650,6 @@ const IMPORT_SOURCE_LABELS: Partial<Record<ImportSource, string>> = {
 }
 
 const IMPORT_MAX_FILE_BYTES = 12 * 1024 * 1024 // 12 MB — full collections can be large
-const IMPORT_MAX_TRACKS = 500
 
 export async function importPlaylistAction(
   _prevState: PlaylistActionState,
@@ -716,8 +720,14 @@ export async function importPlaylistAction(
       source: IMPORT_SOURCE_LABELS[parsed.source] ?? "Rekordbox",
     })
 
-  const tracks = parsed.tracks.slice(0, IMPORT_MAX_TRACKS)
-  const skipped = parsed.tracks.length - tracks.length
+  // Rejected whole, not cut: a list past the optimizer's bound could not be
+  // ordered or split, and keeping its first 80 tracks would be a set the DJ
+  // never chose (lib/playlists/import-limit.ts).
+  if (isOverImportLimit(parsed.tracks.length)) {
+    return failure(tooManyTracksMessage(parsed.tracks.length, locale))
+  }
+
+  const tracks = parsed.tracks
 
   let playlistId: string
 
@@ -771,14 +781,6 @@ export async function importPlaylistAction(
     genre,
     context: contextChoice.base,
   })
-
-  if (skipped > 0) {
-    logWarn("playlist.import_truncated", {
-      profileId: profile.id,
-      total: parsed.tracks.length,
-      kept: tracks.length,
-    })
-  }
 
   revalidatePath("/dashboard/playlists")
   revalidatePath("/dashboard")
