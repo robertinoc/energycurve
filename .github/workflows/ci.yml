@@ -29,7 +29,13 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    # Pinned rather than following GitHub's "latest" label. On 31/10/2026 that
+    # label moved to 26.04, and the WebKit build this Playwright version
+    # downloads is linked against 24.04's ICU (libicudata.so.74): every webkit
+    # and mobile-safari test failed to launch the browser at all. 24.04 is the
+    # image of the last green main. Move it together with a Playwright release
+    # that supports the newer image.
+    runs-on: ubuntu-24.04
     # Without this the job's ceiling is GitHub's default of 6 hours. The browser
     # install below hung for 22 minutes on two pull requests at once, and a hung
     # check is worse than a failing one: nothing can merge and nothing says why.
@@ -186,7 +192,8 @@ jobs:
   # into one summary, so the number everyone reads is still one number.
   # `scripts/e2e-sharded.mjs` is the same split, run locally.
   e2e-shard:
-    runs-on: ubuntu-latest
+    # Same pin as verify, for the same reason.
+    runs-on: ubuntu-24.04
     timeout-minutes: 12
     strategy:
       fail-fast: false
@@ -363,7 +370,7 @@ jobs:
   e2e:
     needs: e2e-shard
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

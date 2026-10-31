@@ -11,6 +11,8 @@ import { initialPlaylistActionState } from "@/lib/playlists/action-state"
 import { decodeUploadedText } from "@/lib/playlists/decode-upload"
 import { assessImport, type ImportReadiness } from "@/lib/playlists/import-readiness"
 import { AudioFilesImport } from "@/components/playlists/audio-files-import"
+import { SplitProposal } from "@/components/playlists/split-proposal"
+import { tooManyTracksMessage } from "@/lib/playlists/import-limit"
 import { ManualCreatePanel } from "@/components/playlists/manual-create-panel"
 import { Button } from "@/components/ui/button"
 import {
@@ -173,7 +175,9 @@ export function PlaylistImportUpload({
           ? readiness.tracks === 1
             ? COPY.fileReadyOne[locale]
             : formatTemplate(COPY.fileReadyCount[locale], { count: readiness.tracks })
-          : readiness.kind === "empty"
+          : readiness.kind === "too_many"
+            ? tooManyTracksMessage(readiness.tracks, locale)
+            : readiness.kind === "empty"
             ? COPY.fileEmpty[locale]
             : readiness.kind === "unrecognised"
               ? COPY.fileUnrecognised[locale]
@@ -380,6 +384,18 @@ export function PlaylistImportUpload({
               void inspect(event.target.files?.[0])
             }
           />
+
+          {/* Only for a list that plays clearly past an hour; otherwise the
+              form is exactly what it was. Keyed by file so a new file starts
+              from "keep one set" again. */}
+          {readiness !== null && readiness !== "checking" && readiness.kind === "ready" && readiness.split ? (
+            <SplitProposal
+              key={fileName ?? ""}
+              proposal={readiness.split}
+              trackCount={readiness.tracks}
+              locale={locale}
+            />
+          ) : null}
 
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-[14px] border border-ec-border bg-white/[0.02] px-3.5 py-2.5">
             <span className="mr-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ec-text-dim">

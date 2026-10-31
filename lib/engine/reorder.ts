@@ -52,6 +52,19 @@ export interface OptimizedOrder {
   harmonicRatio: number
 }
 
+/** Anchors of a target curve, as `buildTargetCurve` and the scorer take them. */
+export type TargetAnchors = readonly (readonly [number, number])[]
+
+/**
+ * What the order is scored against: the declared shape, or explicit anchors.
+ * Anchors win when both are given, exactly as in `buildTargetCurve` and
+ * `computeSetScore` — this only carries them through the search.
+ */
+interface TargetSpec {
+  shape: CurveShape | null
+  anchors: TargetAnchors | null
+}
+
 /**
  * Whether the optimizer weighs harmony (B20): enough of the transitions must
  * have both keys, otherwise the objective is energy-only (prior behavior).
@@ -68,7 +81,7 @@ function energyScoreOf(
   order: number[],
   genre: SupportedGenre,
   context: PlaylistContext,
-  shape: CurveShape | null
+  target: TargetSpec
 ): number {
   // Per-track provenance travels with the permutation so the confidence
   // rules (B13) shape the optimizer's objective exactly like the analysis.
@@ -80,7 +93,8 @@ function energyScoreOf(
       source: energies[index].source,
       bpm: energies[index].bpm,
     })),
-    shape
+    target.shape,
+    target.anchors
   )
 }
 
@@ -109,10 +123,10 @@ function objectiveOf(
   order: number[],
   genre: SupportedGenre,
   context: PlaylistContext,
-  shape: CurveShape | null,
+  target: TargetSpec,
   useHarmony: boolean
 ): number {
-  const energy = energyScoreOf(energies, order, genre, context, shape)
+  const energy = energyScoreOf(energies, order, genre, context, target)
 
   if (!useHarmony) {
     return energy
@@ -129,7 +143,7 @@ function exactBestOrder(
   wheel: Array<CamelotPosition | null>,
   genre: SupportedGenre,
   context: PlaylistContext,
-  shape: CurveShape | null,
+  target: TargetSpec,
   useHarmony: boolean
 ): number[] {
   const n = energies.length
@@ -149,7 +163,7 @@ function exactBestOrder(
       candidate,
       genre,
       context,
-      shape,
+      target,
       useHarmony
     )
 
@@ -188,10 +202,16 @@ function greedySeed(
   energies: ResolvedTrackEnergy[],
   genre: SupportedGenre,
   context: PlaylistContext,
-  shape: CurveShape | null
+  target: TargetSpec
 ): number[] {
-  const target = buildTargetCurve(energies.length, context, genre, shape)
-  const slotsByEnergy = target
+  const curve = buildTargetCurve(
+    energies.length,
+    context,
+    genre,
+    target.shape,
+    target.anchors
+  )
+  const slotsByEnergy = curve
     .map((energy, slot) => ({ energy, slot }))
     .sort((a, b) => a.energy - b.energy || a.slot - b.slot)
   const tracksByEnergy = energies
@@ -241,7 +261,7 @@ function twoOpt(
   wheel: Array<CamelotPosition | null>,
   genre: SupportedGenre,
   context: PlaylistContext,
-  shape: CurveShape | null,
+  target: TargetSpec,
   useHarmony: boolean
 ): { order: number[]; objective: number } {
   const order = [...seed]
@@ -251,7 +271,7 @@ function twoOpt(
     order,
     genre,
     context,
-    shape,
+    target,
     useHarmony
   )
 
@@ -270,7 +290,7 @@ function twoOpt(
           order,
           genre,
           context,
-          shape,
+          target,
           useHarmony
         )
         ;[order[a], order[b]] = [order[b], order[a]]
@@ -301,15 +321,15 @@ function localSearchBestOrder(
   wheel: Array<CamelotPosition | null>,
   genre: SupportedGenre,
   context: PlaylistContext,
-  shape: CurveShape | null,
+  target: TargetSpec,
   useHarmony: boolean
 ): number[] {
   // Two seeds, two hill climbs, best objective wins (B20): the energy seed
   // protects the curve; the harmonic seed protects the Camelot chains that
   // pairwise swaps alone can't assemble from scratch.
   const seeds = useHarmony
-    ? [greedySeed(energies, genre, context, shape), harmonicSeed(energies)]
-    : [greedySeed(energies, genre, context, shape)]
+    ? [greedySeed(energies, genre, context, target), harmonicSeed(energies)]
+    : [greedySeed(energies, genre, context, target)]
 
   let best: { order: number[]; objective: number } | null = null
 
@@ -320,7 +340,7 @@ function localSearchBestOrder(
       wheel,
       genre,
       context,
-      shape,
+      target,
       useHarmony
     )
 
@@ -347,20 +367,27 @@ export function optimizeOrder(
    * playing. Without this the optimizer would optimize against the derived
    * target and actively fight a declared after-hours or landing set.
    */
-  shape: CurveShape | null = null
+  shape: CurveShape | null = null,
+  /**
+   * Explicit target anchors. Null keeps the derived or declared target exactly
+   * as before; the split-into-sets flow passes them to chain one set's curve
+   * onto the previous one. Scored by the same rules as a saved curve template.
+   */
+  anchors: TargetAnchors | null = null
 ): OptimizedOrder {
+  const target: TargetSpec = { shape, anchors }
   const useHarmony = harmonyApplies(energies)
   // Parsed once for the whole search, then only indexed.
   const wheel = toWheelPositions(energies.map((entry) => entry.camelot))
 
   const order =
     energies.length <= EXACT_SEARCH_MAX_TRACKS
-      ? exactBestOrder(energies, wheel, genre, context, shape, useHarmony)
-      : localSearchBestOrder(energies, wheel, genre, context, shape, useHarmony)
+      ? exactBestOrder(energies, wheel, genre, context, target, useHarmony)
+      : localSearchBestOrder(energies, wheel, genre, context, target, useHarmony)
 
   return {
     order,
-    score: energyScoreOf(energies, order, genre, context, shape),
+    score: energyScoreOf(energies, order, genre, context, target),
     harmonicRatio: harmonicRatioOf(wheel, order),
   }
 }
