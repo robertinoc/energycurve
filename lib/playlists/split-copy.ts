@@ -54,7 +54,17 @@ export const SPLIT_COPY = {
   givesUp: { en: "Gives up", es: "Resigna" },
   harmonicDisabled: {
     en: "Not available: {missing} of {total} tracks have no key in the file, and a split computed on part of the keys would mix badly without saying why.",
-    es: "No disponible: {missing} de {total} temas no traen key en el archivo, y repartir con parte de las keys daría sets que se mezclan mal sin explicar por qué.",
+    es: "No disponible: {missing} de {total} temas no traen tonalidad en el archivo, y repartir con parte de las tonalidades daría sets que se mezclan mal sin explicar por qué.",
+  },
+  proBadge: { en: "pro", es: "pro" },
+  lockedBody: {
+    en: "With PRO, this list is split into sets of about an hour, each in its own order and with its own curve, and you choose how the tracks are shared out. On your plan it imports as one set, as always.",
+    es: "Con PRO, esta lista se parte en sets de alrededor de una hora, cada uno con su orden y su curva, y elegís con qué criterio se reparten los temas. En tu plan se importa como un solo set, como siempre.",
+  },
+  lockedCta: { en: "See plans", es: "Ver planes" },
+  proOnly: {
+    en: "Splitting a list into several sets is part of PRO. Nothing was created: import it as one set, or see the plans.",
+    es: "Partir una lista en varios sets es de PRO. No se creó nada: importala como un solo set, o mirá los planes.",
   },
   orderNote: {
     en: "The tracks are shared out first and each set is then ordered on its own, so no set starts on another one's peak.",

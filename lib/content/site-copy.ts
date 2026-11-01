@@ -1271,6 +1271,28 @@ const siteCopy: SiteCopySchema = {
         proPlus: "yes",
       },
       {
+        key: "multi_set_split",
+        capability: {
+          en: "Split a long list into sets of about an hour, each with its own curve",
+          es: "Partir una lista larga en sets de alrededor de una hora, cada uno con su curva",
+        },
+        free: "no",
+        pro: "yes",
+        proPlus: "yes",
+      },
+      {
+        // Soon, not yes: Phase A (PR #292) measured whether CUEs can be
+        // suggested well enough to load on a CDJ, and nothing is built yet.
+        key: "cue_points",
+        capability: {
+          en: "Suggested CUE points, on screen and exported to Rekordbox and Traktor",
+          es: "CUE sugeridos, en pantalla y exportados a Rekordbox y Traktor",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
         key: "residency_mode",
         capability: {
           en: "Residency mode (don’t repeat recent sets at a venue)",

@@ -849,6 +849,15 @@ async function importAsSplitSets(
   }
 ): Promise<PlaylistActionState> {
   const { tracks, count, criterion, playlistInput } = input
+  const billing = await getProfileBilling(profileId)
+
+  // PRO from the first day (docs/conversion-plan.md, step 2.2). Checked before
+  // the choice itself: the form shows a FREE account the split as a PRO wall
+  // and never sends a count, so a count arriving here was sent by hand.
+  if (!can(billing.plan, billing.status, "multi_set_split")) {
+    return failure(SPLIT_COPY.proOnly[locale])
+  }
+
   const proposal = proposeSplit(tracks)
 
   if (
@@ -860,7 +869,6 @@ async function importAsSplitSets(
     return failure(SPLIT_COPY.invalidChoice[locale])
   }
 
-  const billing = await getProfileBilling(profileId)
   const limit = quotaFor(billing.plan, billing.status, "active_playlists")
 
   if (limit !== null) {

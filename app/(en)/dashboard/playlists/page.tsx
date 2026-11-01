@@ -63,6 +63,7 @@ export default async function PlaylistsPage() {
           customContexts={customContexts}
           customGenres={customGenres}
           canAnalyzeAudio={can(billing.plan, billing.status, "audio_analysis")}
+          canSplitSets={can(billing.plan, billing.status, "multi_set_split")}
         />
 
         {playlists.length === 0 ? (

@@ -388,6 +388,7 @@ server needed**, with two corrections to the plan.
 <!-- planned-capabilities:start -->
 - `key_detection`
 - `energy_model_v3`
+- `cue_points`
 <!-- planned-capabilities:end -->
 
 Generated from `CAPABILITIES` in `lib/product/capabilities.ts` and checked by

@@ -94,6 +94,23 @@ export const CAPABILITIES = {
   named_curve_shapes: { minPlan: "pro", status: "shipped" },
   planned_vs_played: { minPlan: "pro", status: "shipped" },
   printable_set_sheet: { minPlan: "pro", status: "shipped" },
+  /**
+   * PRO from the first day, decided 1 Nov 2026 (docs/conversion-plan.md, step
+   * 2.1): on screen and exported, with no free version. Planned, not shipped —
+   * Phase A (PR #292) only measured whether it can be done, and recommended
+   * against building it on guess()'s beat phase.
+   */
+  cue_points: { minPlan: "pro", status: "planned" },
+  /**
+   * PRO from the first day, decided 1 Nov 2026 (docs/conversion-plan.md, step
+   * 2.2). Gated in importPlaylistAction, and the import form shows the split
+   * to a FREE account as a PRO wall instead of hiding it.
+   */
+  multi_set_split: {
+    minPlan: "pro",
+    status: "shipped",
+    note: "Splitting a long list into sets of about an hour. A FREE account still sees the question and what each criterion does, with the PRO badge: a sales wall, not an absence.",
+  },
 
   // ── PRO+: professional workflow ───────────────────────────────────────────
   custom_curve_templates: { minPlan: "pro_plus", status: "shipped" },
