@@ -95,7 +95,7 @@ en producción, se dice al lado.
 | 0.1 | Cargar las dos variables de PostHog en producción | Robertino | Pendiente |
 | 0.2 | Confirmar si el 48 es sobre 188 o sobre 99 | Robertino | Pendiente. El código dice 188 (ver la sección 1); falta que Robertino lo confirme contra el panel |
 | 0.3 | Instrumentar el embudo de activación | Claude Code | Pendiente |
-| 2.1 | Gating de CUE a PRO | Claude Code | Pendiente |
+| 2.1 | Gating de CUE a PRO | Claude Code | Hecho en el código (01/11): fila pública con «no» en FREE y «soon» en PRO y PRO+, registro `cue_points` con `minPlan: "pro"` y `status: "planned"`. No hay nada que gatear en el servidor todavía: la función no existe |
 | 2.2 | Gating de varios sets a PRO | Claude Code | Pendiente |
 | 1.1 | Set de ejemplo precargado | Claude Code | Pendiente |
 | 3.1 | Los tres muros de venta en la app | Claude Code | Pendiente |

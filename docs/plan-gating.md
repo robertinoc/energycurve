@@ -44,7 +44,7 @@ edit together.
 | Heuristic reordering | ✓ | ✓ | ✓ |
 | **Native export** (Rekordbox / Traktor / M3U8) | ✓ | ✓ | ✓ |
 | **Slot-aware planning**, **named curve shapes**, **PDF set sheet**, **order history**, **planned vs played**, **real BPM from audio** | ✗ | ✓ | ✓ |
-| Key detection from audio, Energy Model v3 | ✗ | soon | soon |
+| Key detection from audio, Energy Model v3, **suggested CUE points** (on screen and exported) | ✗ | soon | soon |
 | **Set comparator** (two sets side by side), **global library**, **per-transition advice**, **your own curve shapes**, **title lookup** | ✗ | ✗ | ✓ |
 | Residency mode, B2B sets, Gig Mode | ✗ | ✗ | soon |
 

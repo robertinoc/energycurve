@@ -1271,6 +1271,18 @@ const siteCopy: SiteCopySchema = {
         proPlus: "yes",
       },
       {
+        // Soon, not yes: Phase A (PR #292) measured whether CUEs can be
+        // suggested well enough to load on a CDJ, and nothing is built yet.
+        key: "cue_points",
+        capability: {
+          en: "Suggested CUE points, on screen and exported to Rekordbox and Traktor",
+          es: "CUE sugeridos, en pantalla y exportados a Rekordbox y Traktor",
+        },
+        free: "no",
+        pro: "soon",
+        proPlus: "soon",
+      },
+      {
         key: "residency_mode",
         capability: {
           en: "Residency mode (don’t repeat recent sets at a venue)",

@@ -94,6 +94,13 @@ export const CAPABILITIES = {
   named_curve_shapes: { minPlan: "pro", status: "shipped" },
   planned_vs_played: { minPlan: "pro", status: "shipped" },
   printable_set_sheet: { minPlan: "pro", status: "shipped" },
+  /**
+   * PRO from the first day, decided 1 Nov 2026 (docs/conversion-plan.md, step
+   * 2.1): on screen and exported, with no free version. Planned, not shipped —
+   * Phase A (PR #292) only measured whether it can be done, and recommended
+   * against building it on guess()'s beat phase.
+   */
+  cue_points: { minPlan: "pro", status: "planned" },
 
   // ── PRO+: professional workflow ───────────────────────────────────────────
   custom_curve_templates: { minPlan: "pro_plus", status: "shipped" },
