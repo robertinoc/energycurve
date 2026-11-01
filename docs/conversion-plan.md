@@ -116,3 +116,27 @@ entrada `cue_points` de `lib/product/capabilities.ts`. Las dos van juntas porque
 pública. `tests/cue-points-not-promised.test.ts` falla si la promesa vuelve
 sin que se haya decidido.
 
+
+### El prerrequisito: arreglar la detección de fase de beat
+
+Antes de construir los CUE hay que arreglar la fase del beat. Hoy sale de
+`guess()` (web-audio-beat-detector), y un CUE que cae fuera del beat no sirve en
+un CDJ.
+
+**El error medido, en milisegundos.** No está en `docs/`: está en la descripción
+del PR #292, sección «Fase de `guess()` (error en ms)». Lo que dice:
+
+- **Música real** (38 temas de la librería de Robertino con el BPM bien
+  detectado, contra la grilla de Traktor): error absoluto **mediana 33,8 ms**,
+  **máximo 204,8 ms**. Dentro de 10 ms, 3 de 38; de 20 ms, 6 de 38; de 50 ms,
+  21 de 38. Cuatro temas lossless quedan a 0,40–0,46 de un beat, o sea, en el
+  contratiempo.
+- **Temas sintéticos** (verdad exacta): con BPM entero y bien detectado, entre
+  +3,2 y +3,5 ms, siempre tarde. Con BPM no entero (124,5) el redondeo hace que la
+  fase derive entre −57 y −168 ms a lo largo del tema.
+- **Salvedad del mismo PR:** la grilla de Traktor es su autogrid, sin verificar,
+  así que para música real no hay verdad de campo confiable.
+
+El umbral que tendría que alcanzar la fase para retomar los CUE **no está
+decidido** en ningún lado del repo ni del PR. Es lo primero a fijar antes de
+volver a medir.
