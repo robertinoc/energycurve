@@ -70,8 +70,9 @@ funcionando antes de tener que traer su propia lista. El primer paso es un set d
 ejemplo precargado, para que el dashboard vacío no sea lo primero que ven.
 
 **Fase 2 — Una razón para pagar.** Funciones con valor real para un DJ que
-trabaja, que nacen en PRO desde el primer día. Las dos primeras son los CUE
-sugeridos y partir una lista larga en varios sets. **No se le saca nada al plan
+trabaja, que nacen en PRO desde el primer día. Las dos primeras eran los CUE
+sugeridos y partir una lista larga en varios sets; los CUE quedaron frenados
+el 01/11 (ver la sección 5). **No se le saca nada al plan
 gratis**: el export nativo sigue en FREE y las 3 playlists siguen siendo 3.
 Quitar algo que ya se dio quema confianza y no es parte de esta decisión.
 
@@ -95,8 +96,23 @@ en producción, se dice al lado.
 | 0.1 | Cargar las dos variables de PostHog en producción | Robertino | Pendiente |
 | 0.2 | Confirmar si el 48 es sobre 188 o sobre 99 | Robertino | Pendiente. El código dice 188 (ver la sección 1); falta que Robertino lo confirme contra el panel |
 | 0.3 | Instrumentar el embudo de activación | Claude Code | Pendiente |
-| 2.1 | Gating de CUE a PRO | Claude Code | Hecho en el código (01/11): fila pública con «no» en FREE y «soon» en PRO y PRO+, registro `cue_points` con `minPlan: "pro"` y `status: "planned"`. No hay nada que gatear en el servidor todavía: la función no existe |
+| 2.1 | CUE sugeridos en PRO | Claude Code | **Frenado (01/11)**, por la decisión de la sección 5. La fila pública y el registro `cue_points` se sacaron: `/pricing` ya no los promete. El tier sigue decidido (PRO) y está anotado en la sección 5. Se retoma cuando se cumpla el prerrequisito de esa sección |
 | 2.2 | Gating de varios sets a PRO | Claude Code | Hecho en el código (01/11): fila pública con «no» en FREE y «yes» en PRO y PRO+, registro `multi_set_split` con `minPlan: "pro"` y `status: "shipped"`. El servidor rechaza la división de una cuenta FREE antes de crear nada (`importAsSplitSets`), y el formulario le muestra la división como muro de venta: cuánto suena la lista, en cuántos sets se partiría, qué hace cada criterio, la insignia PRO y el enlace a los planes. La lista se sigue importando entera como un solo set |
 | 1.1 | Set de ejemplo precargado | Claude Code | Pendiente |
 | 3.1 | Los tres muros de venta en la app | Claude Code | Pendiente |
 | 4.1 | Mail a los 48 que corrieron un análisis | Robertino | Pendiente |
+
+## 5. Los CUE sugeridos: frenados, con el tier decidido
+
+**Decidido por Robertino el 01/11/2026:** la promesa pública de los CUE se saca
+porque la Fase A (PR #292) desaconsejó construirlos sobre la detección de beat
+actual. Una promesa en la página de precios que no se puede cumplir es lo
+contrario de lo que este plan necesita. **Cuando salgan, los CUE sugeridos van en
+PRO**: el tier no cambia, sólo deja de estar publicado.
+
+Qué se sacó: la fila `cue_points` de `/pricing` («soon» en PRO y PRO+) y la
+entrada `cue_points` de `lib/product/capabilities.ts`. Las dos van juntas porque
+`tests/capabilities.test.ts` no permite una entrada del registro sin su fila
+pública. `tests/cue-points-not-promised.test.ts` falla si la promesa vuelve
+sin que se haya decidido.
+
