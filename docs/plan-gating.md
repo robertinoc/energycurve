@@ -43,7 +43,7 @@ edit together.
 | Import, analysis, curve, score | ✓ | ✓ | ✓ |
 | Heuristic reordering | ✓ | ✓ | ✓ |
 | **Native export** (Rekordbox / Traktor / M3U8) | ✓ | ✓ | ✓ |
-| **Slot-aware planning**, **named curve shapes**, **PDF set sheet**, **order history**, **planned vs played**, **real BPM from audio** | ✗ | ✓ | ✓ |
+| **Slot-aware planning**, **named curve shapes**, **PDF set sheet**, **order history**, **planned vs played**, **real BPM from audio**, **splitting a long list into sets of about an hour** | ✗ | ✓ | ✓ |
 | Key detection from audio, Energy Model v3, **suggested CUE points** (on screen and exported) | ✗ | soon | soon |
 | **Set comparator** (two sets side by side), **global library**, **per-transition advice**, **your own curve shapes**, **title lookup** | ✗ | ✗ | ✓ |
 | Residency mode, B2B sets, Gig Mode | ✗ | ✗ | soon |

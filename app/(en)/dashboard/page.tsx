@@ -217,6 +217,11 @@ export default async function DashboardPage({
                 ? can(billing.plan, billing.status, "audio_analysis")
                 : false
             }
+            canSplitSets={
+              billing
+                ? can(billing.plan, billing.status, "multi_set_split")
+                : false
+            }
           />
           <div className="flex flex-wrap items-center gap-2 text-sm text-white/56">
             <span>{copy.byHand[locale]}</span>

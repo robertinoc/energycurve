@@ -96,7 +96,7 @@ en producción, se dice al lado.
 | 0.2 | Confirmar si el 48 es sobre 188 o sobre 99 | Robertino | Pendiente. El código dice 188 (ver la sección 1); falta que Robertino lo confirme contra el panel |
 | 0.3 | Instrumentar el embudo de activación | Claude Code | Pendiente |
 | 2.1 | Gating de CUE a PRO | Claude Code | Hecho en el código (01/11): fila pública con «no» en FREE y «soon» en PRO y PRO+, registro `cue_points` con `minPlan: "pro"` y `status: "planned"`. No hay nada que gatear en el servidor todavía: la función no existe |
-| 2.2 | Gating de varios sets a PRO | Claude Code | Pendiente |
+| 2.2 | Gating de varios sets a PRO | Claude Code | Hecho en el código (01/11): fila pública con «no» en FREE y «yes» en PRO y PRO+, registro `multi_set_split` con `minPlan: "pro"` y `status: "shipped"`. El servidor rechaza la división de una cuenta FREE antes de crear nada (`importAsSplitSets`), y el formulario le muestra la división como muro de venta: cuánto suena la lista, en cuántos sets se partiría, qué hace cada criterio, la insignia PRO y el enlace a los planes. La lista se sigue importando entera como un solo set |
 | 1.1 | Set de ejemplo precargado | Claude Code | Pendiente |
 | 3.1 | Los tres muros de venta en la app | Claude Code | Pendiente |
 | 4.1 | Mail a los 48 que corrieron un análisis | Robertino | Pendiente |

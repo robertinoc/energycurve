@@ -84,12 +84,15 @@ export function PlaylistImportUpload({
   customContexts,
   customGenres,
   canAnalyzeAudio,
+  canSplitSets,
 }: {
   locale: SiteLocale
   customContexts: UserContext[]
   customGenres: UserGenre[]
   /** PRO gate, resolved on the server and threaded down to the audio tab. */
   canAnalyzeAudio: boolean
+  /** PRO gate for splitting a long list; FREE sees the split as a PRO wall. */
+  canSplitSets: boolean
 }) {
   const [state, formAction, isPending] = useActionState(
     importPlaylistAction,
@@ -394,6 +397,7 @@ export function PlaylistImportUpload({
               proposal={readiness.split}
               trackCount={readiness.tracks}
               locale={locale}
+              locked={!canSplitSets}
             />
           ) : null}
 

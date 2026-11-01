@@ -19,6 +19,8 @@ const state = vi.hoisted(() => ({
   failOn: null as number | null,
   plan: "pro" as "free" | "pro",
   used: 0,
+  /** A playlist cap for PRO, which has none today, to reach the room check. */
+  proCap: null as number | null,
 }))
 
 vi.mock("@workos-inc/authkit-nextjs", () => ({
@@ -43,6 +45,17 @@ vi.mock("@/services/rate-limit-service", () => ({ consumeRateLimit: async () => 
 vi.mock("@/services/billing-service", () => ({
   getProfileBilling: async () => ({ plan: state.plan, status: state.plan === "free" ? null : "active" }),
 }))
+vi.mock("@/lib/product/capabilities", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/product/capabilities")>()
+
+  return {
+    ...actual,
+    quotaFor: (...args: Parameters<typeof actual.quotaFor>) =>
+      args[2] === "active_playlists" && state.proCap !== null
+        ? state.proCap
+        : actual.quotaFor(...args),
+  }
+})
 vi.mock("@/services/playlist-service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/playlist-service")>()),
   countPlaylists: async () => state.used,
@@ -98,6 +111,7 @@ beforeEach(() => {
   state.failOn = null
   state.plan = "pro"
   state.used = 0
+  state.proCap = null
 })
 
 describe("what the form is offered", () => {
@@ -171,8 +185,11 @@ describe("the import, split", () => {
     expect(created).toHaveLength(0)
   })
 
+  // No plan that may split has a playlist cap today (PRO and PRO+ are
+  // unlimited); the check stays for the day one does, so it is tested on a
+  // PRO account given a cap of 3.
   it("checks the plan's room for every set before creating the first", async () => {
-    state.plan = "free"
+    state.proCap = 3
     state.used = 1
 
     const result = await run(form(csv(), { count: 3, criterion: "own_curve" }))
@@ -200,5 +217,32 @@ describe("the import, split", () => {
     expect(created[0].tracks.map((track) => track.name)).toEqual(
       Array.from({ length: 40 }, (_, i) => `Track ${i}`)
     )
+  })
+})
+
+describe("the split is PRO", () => {
+  it("refuses a FREE account's split, even a valid one, and creates nothing", async () => {
+    state.plan = "free"
+
+    const result = await run(form(csv(), { count: 3, criterion: "own_curve" }))
+
+    expect(result.ok).toBe(false)
+    expect(result.message).toBe(SPLIT_COPY.proOnly.en)
+    expect(created).toHaveLength(0)
+  })
+
+  it("still imports a FREE account's long list as one set", async () => {
+    state.plan = "free"
+
+    await expect(run(form(csv()))).rejects.toThrow(/REDIRECT \/dashboard\/playlists\/[^/]+\?imported=1/)
+    expect(created).toHaveLength(1)
+    expect(created[0].tracks).toHaveLength(40)
+  })
+
+  it("lets a PRO account split", async () => {
+    await expect(run(form(csv(), { count: 4, criterion: "continuous" }))).rejects.toThrow(
+      /REDIRECT \/dashboard\/playlists\/split/
+    )
+    expect(created).toHaveLength(4)
   })
 })

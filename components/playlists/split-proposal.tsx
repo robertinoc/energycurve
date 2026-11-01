@@ -1,8 +1,11 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 
+import { buttonVariants } from "@/components/ui/button"
 import { formatTemplate } from "@/lib/content/analysis-copy"
+import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { SPLIT_CRITERIA, type SplitCriterion } from "@/lib/engine/set-split"
 import type { SplitProposal as Proposal } from "@/lib/playlists/import-readiness"
@@ -25,19 +28,113 @@ import { cn } from "@/lib/utils"
  * Laid out for a phone first: the count options and the three criteria stack
  * in one column below `sm`, and each criterion keeps its full sentence of what
  * it gives up instead of a smaller font — the trade-off is the point.
+ *
+ * Splitting is PRO (docs/conversion-plan.md, step 2.2). A FREE account still
+ * gets the measurement and the options this list would have, as a sales wall
+ * rather than an absence: `locked` renders them read-only with the PRO badge
+ * and sends no fields, so the import stays one set. The action refuses a
+ * split from FREE on its own; this is only what the DJ sees.
  */
 export function SplitProposal({
   proposal,
   trackCount,
   locale,
+  locked = false,
 }: {
   proposal: Proposal
   trackCount: number
   locale: SiteLocale
+  /** True when the plan does not include splitting, resolved on the server. */
+  locked?: boolean
 }) {
   const [count, setCount] = useState(0)
   const [criterion, setCriterion] = useState<SplitCriterion>("own_curve")
   const { duration, counts, harmonic } = proposal
+
+  const measurement = (
+    <div className="space-y-1.5">
+      <p className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-ec-cyan">
+        {SPLIT_COPY.eyebrow[locale]}
+      </p>
+      <p className="font-heading text-lg font-semibold text-ec-text">
+        {formatTemplate(SPLIT_COPY.plays[locale], {
+          time: formatMinutes(duration.minutes),
+        })}
+      </p>
+      {durationSource(duration, trackCount, locale).map((line) => (
+        <p
+          key={line}
+          className={cn(
+            "text-sm leading-6",
+            duration.method === "rough" ? "text-ec-amber" : "text-ec-text-muted"
+          )}
+        >
+          {line}
+        </p>
+      ))}
+    </div>
+  )
+
+  if (locked) {
+    return (
+      <section
+        aria-labelledby="split-locked-title"
+        className="space-y-4 rounded-2xl border border-ec-border-strong bg-ec-raised p-4 sm:p-5"
+      >
+        {measurement}
+
+        <div className="space-y-2">
+          <h3
+            id="split-locked-title"
+            className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ec-text"
+          >
+            {SPLIT_COPY.question[locale]}
+            <span className="rounded border border-ec-border-strong px-1 text-[10px] font-semibold uppercase tracking-wide text-ec-text-muted">
+              {SPLIT_COPY.proBadge[locale]}
+            </span>
+          </h3>
+          <ul className="grid gap-2 sm:grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]">
+            {counts.map((option) => (
+              <li
+                key={option}
+                className="rounded-xl border border-ec-border bg-ec-surface px-4 py-3 text-sm text-ec-text-muted"
+              >
+                {formatTemplate(SPLIT_COPY.countOption[locale], {
+                  count: option,
+                  each: formatMinutes(Math.round(duration.minutes / option)),
+                })}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* The criteria by name only: on a phone their full sentences would push
+            the way to the plans a screen down. Harmonic is left out when this
+            file could not use it, so the wall never sells an option the DJ
+            would find closed after paying. */}
+        <ul aria-label={SPLIT_COPY.criterionLegend[locale]} className="flex flex-wrap gap-2">
+          {SPLIT_CRITERIA.filter((option) => option !== "harmonic" || harmonic.available).map(
+            (option) => (
+              <li
+                key={option}
+                className="rounded-full border border-ec-border bg-ec-surface px-3 py-1 text-[13px] text-ec-text"
+              >
+                {CRITERION_COPY[option].name[locale]}
+              </li>
+            )
+          )}
+        </ul>
+
+        <p className="text-sm leading-6 text-ec-text-muted">{SPLIT_COPY.lockedBody[locale]}</p>
+        <Link
+          href={localizedPath("/pricing", locale)}
+          className={cn(buttonVariants({ size: "sm" }), "w-fit")}
+        >
+          {SPLIT_COPY.lockedCta[locale]}
+        </Link>
+      </section>
+    )
+  }
 
   return (
     <fieldset className="space-y-4 rounded-2xl border border-ec-border-strong bg-ec-raised p-4 sm:p-5">
@@ -45,27 +142,7 @@ export function SplitProposal({
       <input type="hidden" name="splitCount" value={count} />
       <input type="hidden" name="splitCriterion" value={count > 0 ? criterion : ""} />
 
-      <div className="space-y-1.5">
-        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-ec-cyan">
-          {SPLIT_COPY.eyebrow[locale]}
-        </p>
-        <p className="font-heading text-lg font-semibold text-ec-text">
-          {formatTemplate(SPLIT_COPY.plays[locale], {
-            time: formatMinutes(duration.minutes),
-          })}
-        </p>
-        {durationSource(duration, trackCount, locale).map((line) => (
-          <p
-            key={line}
-            className={cn(
-              "text-sm leading-6",
-              duration.method === "rough" ? "text-ec-amber" : "text-ec-text-muted"
-            )}
-          >
-            {line}
-          </p>
-        ))}
-      </div>
+      {measurement}
 
       <div role="radiogroup" aria-label={SPLIT_COPY.question[locale]} className="space-y-2">
         <p className="text-sm font-semibold text-ec-text">{SPLIT_COPY.question[locale]}</p>

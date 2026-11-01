@@ -1271,6 +1271,16 @@ const siteCopy: SiteCopySchema = {
         proPlus: "yes",
       },
       {
+        key: "multi_set_split",
+        capability: {
+          en: "Split a long list into sets of about an hour, each with its own curve",
+          es: "Partir una lista larga en sets de alrededor de una hora, cada uno con su curva",
+        },
+        free: "no",
+        pro: "yes",
+        proPlus: "yes",
+      },
+      {
         // Soon, not yes: Phase A (PR #292) measured whether CUEs can be
         // suggested well enough to load on a CDJ, and nothing is built yet.
         key: "cue_points",
