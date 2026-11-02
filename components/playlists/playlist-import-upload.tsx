@@ -14,6 +14,7 @@ import { AudioFilesImport } from "@/components/playlists/audio-files-import"
 import { SplitProposal } from "@/components/playlists/split-proposal"
 import { tooManyTracksMessage } from "@/lib/playlists/import-limit"
 import { ManualCreatePanel } from "@/components/playlists/manual-create-panel"
+import { PlaylistLimitWall } from "@/components/plans/playlist-limit-wall"
 import { Button } from "@/components/ui/button"
 import {
   TaxonomySelect,
@@ -505,7 +506,9 @@ export function PlaylistImportUpload({
             <span className="text-[12.5px] text-ec-text-dim">
               {COPY.ctaHint[locale]}
             </span>
-            {!state.ok && state.message ? (
+            {!state.ok && state.message && state.wall === "playlist_limit" ? (
+              <PlaylistLimitWall title={state.message} locale={locale} className="w-full" />
+            ) : !state.ok && state.message ? (
               <p className="w-full text-sm text-ec-error">{state.message}</p>
             ) : null}
           </div>

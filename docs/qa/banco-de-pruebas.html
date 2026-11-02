@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">141</strong>
+      <strong id="tally-total">142</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1554,6 +1554,20 @@
           steps: ["Con la app instalada, terminá un import partido en tres sets", "Bajá hasta el último set", "Girá el teléfono a horizontal y volvé"],
           expect: "Se ve en una columna, en el orden en que se tocan, con «Set 1 de 3», «Set 2 de 3»… arriba de cada uno. El primero no queda debajo de la muesca y el botón «Abrir el set» del último no queda tapado por la barra de gestos. Las curvas se leen y no empujan el ancho.",
           ifNot: "Captura y modelo de teléfono. Si algo queda debajo de la barra de estado, puede ser del layout general (estilo de barra «black-translucent» sin <code>viewport-fit=cover</code>), no de esta pantalla: anotalo igual."
+        }
+      ]
+    },
+    {
+      code: "MUROS",
+      title: "Los muros de venta dentro de la app",
+      meta: "~30 min · necesita el deploy · una cuenta FREE (no tu PRO+ de cortesía) · el teléfono con la app instalada",
+      why: "Paso 3.1 de <code>docs/conversion-plan.md</code>: la venta pasa adentro, en el momento en que alguien quiere hacer algo y no puede, o en el que el producto le acaba de demostrar que sirve. Los límites son los mismos de siempre; lo que cambia es cómo se dicen. Cada muro cuenta qué cambiaría PRO ahí, muestra la insignia y lleva a los planes por <code>/api/sales-wall</code>, que registra el clic (<code>sales_wall_clicked</code>). Los tests afirman que el muro aparece, que no desborda a 375 px y que el botón llega a los planes; lo que ningún test dice es si el texto convence o si se siente como un castigo.",
+      tests: [
+        {
+          code: "MUROS.1", title: "La cuarta playlist", sub: "FREE · límite de 3 playlists",
+          steps: ["Con la cuenta FREE y tres playlists ya guardadas, importá una cuarta desde la app instalada", "Leé el muro entero sin hacer zoom", "Tocá «Ver planes»", "Repetí pegando una lista en «A mano» y desde «Tus archivos de audio»"],
+          expect: "En los tres caminos aparece el mismo muro en vez del error rojo: «Llegaste a 3 playlists en tu plan.», la insignia PRO, qué cambia con PRO y que también podés borrar uno de tus sets. No se crea la cuarta. «Ver planes» abre <code>/es/pricing</code>. Sin scroll horizontal.",
+          ifNot: "Captura del camino que falló. Si alguno sigue mostrando la línea roja, ese formulario no recibió el muro."
         }
       ]
     }

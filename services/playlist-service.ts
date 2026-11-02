@@ -19,6 +19,7 @@ import type {
   TrackWriteInput,
 } from "@/types/domain"
 import { quotaFor } from "@/lib/product/capabilities"
+import type { Plan } from "@/lib/product/plans"
 import { quotaState } from "@/lib/product/usage"
 import { getProfileBilling } from "./billing-service"
 
@@ -114,7 +115,9 @@ function flattenTaxonomyNames<T extends PlaylistNameJoins>(
 export class PlaylistLimitError extends Error {
   constructor(
     readonly used: number,
-    readonly limit: number
+    readonly limit: number,
+    /** The plan on the profile, which for a lapsed subscriber is not FREE. */
+    readonly plan: Plan = "free"
   ) {
     super(`Playlist limit reached (${used}/${limit})`)
     this.name = "PlaylistLimitError"
@@ -162,7 +165,7 @@ export async function createPlaylist(
       // Blocks creation and nothing else. Everything already saved stays visible
       // and editable, including for someone who ends up over the cap after a
       // downgrade — their playlists are their work, not leverage.
-      throw new PlaylistLimitError(used, limit)
+      throw new PlaylistLimitError(used, limit, billing.plan)
     }
   }
 

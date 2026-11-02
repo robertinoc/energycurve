@@ -29,6 +29,24 @@ export type AnalyticsEvent =
    * the only moment a paid plan is worth anything to them.
    */
   | "plan_limit_reached"
+  /**
+   * A sales wall was put in front of someone (`wall` says which one, `plan`
+   * what they had). Separate from `plan_limit_reached` on purpose: the limit
+   * and the wall are not the same moment. The AI-ordering wall shows before the
+   * click (the button is already disabled, F1 audit A4), so the limit event
+   * almost never fires there; and the score wall is not a limit at all. One
+   * event per wall shown keeps every wall's funnel the same two steps.
+   * Emitted where the server decides to show it, so it counts renders: read it
+   * per person, not per event.
+   */
+  | "sales_wall_shown"
+  /**
+   * Someone pressed a sales wall's way to the plans. Counted on the server by
+   * the redirect in app/api/sales-wall, so the click is known whatever the
+   * browser blocks. Read against `sales_wall_shown` with the same `wall` to
+   * tell a wall nobody sees from one nobody believes.
+   */
+  | "sales_wall_clicked"
   | "payment_failed"
 
 type AnalyticsProperties = Record<

@@ -136,6 +136,9 @@ export const config = {
     "/api/account/:path*",
     // The first touch is written onto the signed-in profile (lote 20).
     "/api/attribution/first-touch",
+    // A sales wall's button counts the click for the signed-in profile before
+    // it redirects to /pricing (docs/conversion-plan.md, step 3.1).
+    "/api/sales-wall",
     "/login",
     "/signup",
     // Backstage subdomain: every request must run through authkit because

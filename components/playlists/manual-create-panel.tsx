@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react"
 import { TriangleAlert } from "lucide-react"
 
 import { createPlaylistWithTracksAction } from "@/app/(en)/dashboard/playlists/actions"
+import { PlaylistLimitWall } from "@/components/plans/playlist-limit-wall"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -270,7 +271,9 @@ export function ManualCreatePanel({
                 })
               : COPY.createCta[locale]}
         </Button>
-        {!state.ok && state.message ? (
+        {!state.ok && state.message && state.wall === "playlist_limit" ? (
+          <PlaylistLimitWall title={state.message} locale={locale} className="w-full" />
+        ) : !state.ok && state.message ? (
           <p className="text-sm text-ec-error">{state.message}</p>
         ) : null}
       </div>
