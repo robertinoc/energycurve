@@ -74,13 +74,16 @@ habrían reportado como funcionando.
 | Métrica | Valor |
 |---|---|
 | Capabilities `shipped` | 25 |
-| Capabilities `planned` | 3 |
+| Capabilities `planned` | 2 |
 | Idiomas soportados | 2 (EN / ES) |
 
 > **Las filas de capabilities siguen al registro, no a la foto del 22/09.**
 > El 01/11/2026 el plan de conversión (`docs/conversion-plan.md`) sumó
-> `cue_points` como `planned` y `multi_set_split` como `shipped`. El párrafo de abajo es la corrección del 22/09 y
-> describe el registro de ese día.
+> `cue_points` como `planned` y `multi_set_split` como `shipped`. Ese mismo día
+> `cue_points` volvió a salir del registro y de `/pricing`, porque la Fase A
+> desaconsejó construirlos sobre la detección de beat actual: quedan 25 `shipped`
+> y 2 `planned`. El párrafo de abajo es la corrección del 22/09 y describe el
+> registro de ese día.
 
 > **Las dos filas de capabilities decían 28 y 7, y se corrigieron el 22/09/2026.**
 > El registro (`lib/product/capabilities.ts`) tiene 26 entradas: 24 `shipped` y

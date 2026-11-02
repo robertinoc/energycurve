@@ -19,6 +19,16 @@ forgotten. A feature that isn't built yet still gets both, with `"soon"` cells
 and `status: "planned"` — that way its tier is decided when the roadmap decides
 it, not improvised at merge time.
 
+**The exception: a feature that is measured and blocked.** The rule above
+assumes everything with a row is on its way. When a measurement says a feature
+can't be built yet — it is waiting on a prerequisite, not on time — a `"soon"`
+cell is a promise on the page people are asked to pay on. Such a feature gets
+**neither** the row nor the registry entry (`tests/capabilities.test.ts` doesn't
+allow one without the other), and its tier is written down in
+`docs/conversion-plan.md` instead, so it is still decided rather than improvised
+later. Suggested CUE points are the case that made this rule (01/11/2026): see
+below.
+
 Numbers live in **one** place: `PLAN_LIMITS` in `lib/product/plans.ts`. The
 registry says *which tier* unlocks a thing; `PLAN_LIMITS` says *how many*.
 
@@ -44,9 +54,17 @@ edit together.
 | Heuristic reordering | ✓ | ✓ | ✓ |
 | **Native export** (Rekordbox / Traktor / M3U8) | ✓ | ✓ | ✓ |
 | **Slot-aware planning**, **named curve shapes**, **PDF set sheet**, **order history**, **planned vs played**, **real BPM from audio**, **splitting a long list into sets of about an hour** | ✗ | ✓ | ✓ |
-| Key detection from audio, Energy Model v3, **suggested CUE points** (on screen and exported) | ✗ | soon | soon |
+| Key detection from audio, Energy Model v3 | ✗ | soon | soon |
 | **Set comparator** (two sets side by side), **global library**, **per-transition advice**, **your own curve shapes**, **title lookup** | ✗ | ✗ | ✓ |
 | Residency mode, B2B sets, Gig Mode | ✗ | ✗ | soon |
+
+**Suggested CUE points are not on the ladder, on purpose.** They were a `"soon"`
+row on PRO and PRO+ until 01/11/2026, when Phase A (PR #292) recommended against
+building them on the current beat detection. Robertino's decision: take the
+public promise down until the beat phase is fixed. The tier doesn't change — PRO
+when they ship — and it lives in `docs/conversion-plan.md`, section 5, with the
+prerequisite. `tests/cue-points-not-promised.test.ts` fails if the promise
+comes back without that decision.
 
 **Title lookup is PRO+ because of what it costs, not what it returns.** It fills
 in the same two fields as measuring the audio, which is why it first shipped

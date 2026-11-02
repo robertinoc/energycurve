@@ -94,13 +94,12 @@ export const CAPABILITIES = {
   named_curve_shapes: { minPlan: "pro", status: "shipped" },
   planned_vs_played: { minPlan: "pro", status: "shipped" },
   printable_set_sheet: { minPlan: "pro", status: "shipped" },
-  /**
-   * PRO from the first day, decided 1 Nov 2026 (docs/conversion-plan.md, step
-   * 2.1): on screen and exported, with no free version. Planned, not shipped —
-   * Phase A (PR #292) only measured whether it can be done, and recommended
-   * against building it on guess()'s beat phase.
-   */
-  cue_points: { minPlan: "pro", status: "planned" },
+  // Suggested CUE points are deliberately absent (01/11/2026). Phase A (PR #292)
+  // recommended against building them on guess()'s beat phase, so they came off
+  // /pricing — and an entry here would have to be on /pricing too
+  // (tests/capabilities.test.ts). The tier is decided, PRO, and recorded in
+  // docs/conversion-plan.md; add `cue_points` back here and on the page together
+  // once the beat phase is fixed.
   /**
    * PRO from the first day, decided 1 Nov 2026 (docs/conversion-plan.md, step
    * 2.2). Gated in importPlaylistAction, and the import form shows the split

@@ -1280,18 +1280,11 @@ const siteCopy: SiteCopySchema = {
         pro: "yes",
         proPlus: "yes",
       },
-      {
-        // Soon, not yes: Phase A (PR #292) measured whether CUEs can be
-        // suggested well enough to load on a CDJ, and nothing is built yet.
-        key: "cue_points",
-        capability: {
-          en: "Suggested CUE points, on screen and exported to Rekordbox and Traktor",
-          es: "CUE sugeridos, en pantalla y exportados a Rekordbox y Traktor",
-        },
-        free: "no",
-        pro: "soon",
-        proPlus: "soon",
-      },
+      // Suggested CUE points used to be a row here, "soon" on PRO and PRO+.
+      // Taken off the page on 01/11/2026: Phase A (PR #292) recommended against
+      // building them on the current beat detection, and a "soon" on the page
+      // people are asked to pay on is a promise. The tier stays PRO; it is
+      // recorded in docs/conversion-plan.md, not published.
       {
         key: "residency_mode",
         capability: {

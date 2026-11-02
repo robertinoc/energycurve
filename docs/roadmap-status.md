@@ -388,8 +388,13 @@ server needed**, with two corrections to the plan.
 <!-- planned-capabilities:start -->
 - `key_detection`
 - `energy_model_v3`
-- `cue_points`
 <!-- planned-capabilities:end -->
+
+Suggested CUE points were in this list from 01/11/2026 until later that same
+day, when they came off the registry and `/pricing`: Phase A (PR #292)
+recommended against building them on the current beat detection. They are
+paused, not dropped — PRO when they ship, with fixing the beat phase as the
+prerequisite. `docs/conversion-plan.md`, section 5.
 
 Generated from `CAPABILITIES` in `lib/product/capabilities.ts` and checked by
 `tests/doc-accuracy.test.ts`, which fails when this list and the registry
