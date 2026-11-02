@@ -1,13 +1,13 @@
 "use client"
 
-import Link from "next/link"
-
 import { useState } from "react"
 import { GripVertical, Sparkles } from "lucide-react"
 
+import { AiOrderingWall } from "@/components/plans/ai-ordering-wall"
 import { ANALYSIS_UI, formatTemplate } from "@/lib/content/analysis-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { ENERGY_SCORE_RANGE } from "@/lib/product/strategy"
+import type { UpsellPlan } from "@/lib/product/sales-walls"
 import { cn } from "@/lib/utils"
 
 export interface LiveTracklistRow {
@@ -53,6 +53,12 @@ interface LiveTracklistProps {
    * the click instead of after it.
    */
   aiQuota?: { remaining: number | null; limit: number | null }
+  /**
+   * The plan that gives more (wall 2 of step 3.1). With the month spent, the
+   * wall under the button names it — PRO for FREE, PRO+ for PRO — instead of
+   * a "More on PRO" link that told a PRO account to buy what it had.
+   */
+  aiUpgrade?: UpsellPlan | null
   locale: SiteLocale
 }
 
@@ -74,6 +80,7 @@ export function LiveTracklist({
   onReset,
   exportSlot,
   aiQuota,
+  aiUpgrade = null,
   locale,
 }: LiveTracklistProps) {
   const quotaSpent = aiQuota?.remaining === 0
@@ -176,17 +183,6 @@ export function LiveTracklist({
               )}
             >
               {quotaNote}
-              {quotaSpent ? (
-                <>
-                  {" "}
-                  <Link
-                    href="/pricing"
-                    className="font-semibold text-white underline underline-offset-4 hover:text-ec-cyan"
-                  >
-                    {ANALYSIS_UI.smartOrderUpgrade[locale]}
-                  </Link>
-                </>
-              ) : null}
             </span>
           ) : null}
           {manualMoveCount > 0 ? (
@@ -209,6 +205,12 @@ export function LiveTracklist({
           ) : null}
         </div>
       </div>
+
+      {/* Wall 2 of step 3.1: right under the button that is off, so the moment
+          someone reaches for it is the moment they read what would turn it on. */}
+      {quotaSpent && aiUpgrade ? (
+        <AiOrderingWall upgrade={aiUpgrade} locale={locale} className="mb-4" />
+      ) : null}
 
       <ol
         className="grid gap-1.5 sm:grid-flow-col sm:grid-cols-2"

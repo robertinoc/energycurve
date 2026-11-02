@@ -53,6 +53,9 @@ import type {
   SupportedGenre,
 } from "@/lib/product/strategy"
 import type { ResolvedTrackEnergy } from "@/types/analysis"
+import { AiOrderingWall } from "@/components/plans/ai-ordering-wall"
+import { ScoreGainStrip } from "@/components/plans/score-gain-strip"
+import type { UpsellPlan } from "@/lib/product/sales-walls"
 
 /** Per-playlist persistence of the user's decisions (survives reloads). */
 function storageKey(playlistId: string) {
@@ -214,6 +217,17 @@ export interface AnalysisWorkbenchProps {
   /** See LiveTracklist. Read on the server; undefined means unlimited. */
   aiQuota?: { remaining: number | null; limit: number | null }
   /**
+   * The plan that gives more AI orderings (wall 2 of step 3.1), or null when
+   * none does. Decided on the server from PLAN_LIMITS.
+   */
+  aiUpgrade?: UpsellPlan | null
+  /**
+   * This analysis raised the score because the set changed (wall 3 of step
+   * 3.1). The strip renders only when `wall` is true: the account can't read
+   * its version history yet.
+   */
+  scoreGain?: { from: number; to: number; wall: boolean } | null
+  /**
    * Where the curve's energy values came from. Optional so the component still
    * renders for a caller that doesn't have it; absent means no caveat is shown.
    */
@@ -254,6 +268,8 @@ export function AnalysisWorkbench({
   targetCurve,
   residencyRepeats = [],
   aiQuota,
+  aiUpgrade = null,
+  scoreGain = null,
   coverage,
   locale,
 }: AnalysisWorkbenchProps) {
@@ -906,6 +922,10 @@ export function AnalysisWorkbench({
         locale={locale}
       />
 
+      {scoreGain?.wall ? (
+        <ScoreGainStrip from={scoreGain.from} to={scoreGain.to} locale={locale} />
+      ) : null}
+
       {fixes.length === 0 ? (
         <div className="rounded-2xl border border-ec-border bg-ec-surface p-5">
           <p className="mb-4 flex items-center gap-2 text-sm text-ec-text-muted">
@@ -1046,6 +1066,17 @@ export function AnalysisWorkbench({
             </div>
           ) : null}
         </div>
+      ) : smartError && smartQuotaHit && aiUpgrade ? (
+        // The race (another tab, a stale page). The sentence first — someone
+        // just pressed the button, and what they need to hear is that nothing
+        // they did was lost — then the same wall the tracklist shows once the
+        // month is spent.
+        <div className="flex flex-col gap-3">
+          <div className="rounded-xl border border-ec-amber/35 bg-ec-amber/[0.06] px-4 py-3 text-sm text-white/80">
+            {ANALYSIS_UI.smartOrderQuotaError[locale]}
+          </div>
+          <AiOrderingWall upgrade={aiUpgrade} locale={locale} />
+        </div>
       ) : smartError ? (
         <div className="rounded-xl border border-ec-amber/35 bg-ec-amber/[0.06] px-4 py-3 text-sm text-white/80">
           {smartQuotaHit
@@ -1122,6 +1153,7 @@ export function AnalysisWorkbench({
         smartStatus={smartStatus}
         onSmartOrder={smartOrderRequest}
         aiQuota={aiQuota}
+        aiUpgrade={aiUpgrade}
         onReset={resetOrder}
         exportSlot={
           <PlaylistExportButton playlist={exportPlaylist} locale={locale} />

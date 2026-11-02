@@ -16,7 +16,9 @@ import { importPlaylist } from "./helpers/import-playlist"
  * live in different places:
  *
  * - **Before** is the page: with the allowance spent, the Smart ordering
- *   button is disabled and the note beside it links to /pricing.
+ *   button is disabled, the note beside it says so, and the sales wall under
+ *   it names the plan that gives more (step 3.1 of docs/conversion-plan.md;
+ *   until then the note carried a "More on PRO" link to /pricing).
  * - **During** is the race the page cannot see: it rendered with one left, the
  *   DJ moved a track by hand, and the allowance went somewhere else (another
  *   tab, a stale page) before the click. The server refuses with a 402 before
@@ -113,6 +115,10 @@ test("UX.5 · the AI quota spent mid-flow is refused before Claude, and the hand
       ),
       "the refusal has its own sentence, not the generic error"
     ).toBeVisible()
+    await expect(
+      page.locator('[data-sales-wall="ai_ordering_limit"]'),
+      "and the wall under it says what the next plan gives"
+    ).toBeVisible()
     await expect(movedByHand, "the hand move is still in effect").toBeVisible()
     expect(await rows.allInnerTexts(), "the order on screen did not change").toEqual(orderBefore)
 
@@ -126,9 +132,9 @@ test("UX.5 · the AI quota spent mid-flow is refused before Claude, and the hand
     const note = page.locator("#smart-order-quota")
     await expect(note).toHaveText(/You've used this month's AI ordering|Ya usaste el ordenamiento con IA/)
     await expect(
-      note.getByRole("link", { name: /More on PRO|Más en PRO/ }),
+      page.locator('[data-sales-wall="ai_ordering_limit"]').getByRole("link", { name: /See plans|Ver planes/ }),
       "the way to more is offered where the refusal is"
-    ).toHaveAttribute("href", "/pricing")
+    ).toHaveAttribute("href", /^\/api\/sales-wall\?wall=ai_ordering_limit&locale=(en|es)$/)
   } finally {
     // Put the month back the way it was: no row stays no row.
     if (before) {

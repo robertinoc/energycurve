@@ -48,7 +48,10 @@ test("a list past an hour: FREE sees the split as PRO, PRO can choose it", async
     await expect(choice).toHaveCount(0)
     await expect(form.locator('input[name="splitCount"]')).toHaveCount(0)
     await expect(form).toContainText(/With PRO, this list is split into sets/)
-    await expect(form.getByRole("link", { name: "See plans" })).toHaveAttribute("href", "/pricing")
+    await expect(form.getByRole("link", { name: "See plans" })).toHaveAttribute(
+      "href",
+      "/api/sales-wall?wall=multi_set_split&locale=en"
+    )
 
     // The wall is new surface on a dark raised card, where a dimmed token has
     // failed contrast before: checked on its own, against WCAG AA.

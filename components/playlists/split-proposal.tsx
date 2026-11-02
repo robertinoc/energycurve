@@ -1,11 +1,9 @@
 "use client"
 
-import Link from "next/link"
 import { useState } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { formatTemplate } from "@/lib/content/analysis-copy"
-import { localizedPath } from "@/lib/content/locale-routing"
 import type { SiteLocale } from "@/lib/content/site-copy"
 import { SPLIT_CRITERIA, type SplitCriterion } from "@/lib/engine/set-split"
 import type { SplitProposal as Proposal } from "@/lib/playlists/import-readiness"
@@ -15,6 +13,7 @@ import {
   durationSource,
   formatMinutes,
 } from "@/lib/playlists/split-copy"
+import { salesWallHref } from "@/lib/product/sales-walls"
 import { cn } from "@/lib/utils"
 
 /**
@@ -126,12 +125,14 @@ export function SplitProposal({
         </ul>
 
         <p className="text-sm leading-6 text-ec-text-muted">{SPLIT_COPY.lockedBody[locale]}</p>
-        <Link
-          href={localizedPath("/pricing", locale)}
+        {/* Through the counting redirect, like the walls of step 3.1. A plain
+            <a>: a prefetch would count a click nobody made. */}
+        <a
+          href={salesWallHref("multi_set_split", locale)}
           className={cn(buttonVariants({ size: "sm" }), "w-fit")}
         >
           {SPLIT_COPY.lockedCta[locale]}
-        </Link>
+        </a>
       </section>
     )
   }

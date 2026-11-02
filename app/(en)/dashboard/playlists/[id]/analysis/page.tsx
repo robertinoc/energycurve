@@ -28,6 +28,8 @@ import { getProfileBilling } from "@/services/billing-service"
 import { getResidencySummary } from "@/services/residency-service"
 import { readQuota } from "@/services/usage-service"
 import { quotaFor } from "@/lib/product/capabilities"
+import { aiOrderingUpgrade } from "@/lib/product/sales-walls"
+import { captureServerEvent } from "@/lib/analytics/posthog-server"
 import {
   getPlaylistAnalysis,
   MIN_ANALYZABLE_TRACKS,
@@ -121,6 +123,20 @@ export default async function PlaylistAnalysisPage({
   const billing = await getProfileBilling(profile.id)
   const aiLimit = quotaFor(billing.plan, billing.status, "ai_ordering")
   const aiQuota = await readQuota(profile.id, "ai_ordering", aiLimit)
+  // Wall 2 of step 3.1 (docs/conversion-plan.md): with the month spent, the
+  // tracklist shows what the next plan gives right under the disabled button.
+  // Counted here, where the decision to show it is made: the button is off, so
+  // `plan_limit_reached` (fired only on a refused request) never sees this one.
+  const aiUpgrade = aiOrderingUpgrade(billing.plan, billing.status)
+
+  if (aiQuota.remaining === 0 && aiUpgrade) {
+    captureServerEvent(profile.id, "sales_wall_shown", {
+      wall: "ai_ordering_limit",
+      plan: billing.plan,
+      used: aiQuota.used,
+      limit: aiQuota.limit,
+    })
+  }
 
   const fixes = deriveFixes({
     trackIds: playlist.tracks.map((track) => track.id),
@@ -213,6 +229,8 @@ export default async function PlaylistAnalysisPage({
           targetCurve={analysis.targetCurve}
           residencyRepeats={residency.repeats}
           aiQuota={{ remaining: aiQuota.remaining, limit: aiQuota.limit }}
+          aiUpgrade={aiUpgrade}
+          scoreGain={result.scoreGain}
           locale={locale}
         />
 

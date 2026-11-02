@@ -15,7 +15,10 @@ import { LiveTracklist } from "@/components/analysis/live-tracklist"
  * Rendered to static markup on purpose: the property is what the HTML says and
  * whether the button is disabled, and both are visible without a DOM.
  */
-function render(aiQuota: { remaining: number | null; limit: number | null }) {
+function render(
+  aiQuota: { remaining: number | null; limit: number | null },
+  aiUpgrade: "pro" | "pro_plus" | null = "pro"
+) {
   // React escapes apostrophes as `&#x27;` in static markup; the copy has them.
   return decode(renderToStaticMarkup(
     createElement(LiveTracklist, {
@@ -30,6 +33,7 @@ function render(aiQuota: { remaining: number | null; limit: number | null }) {
       onReset: () => {},
       locale: "en",
       aiQuota,
+      aiUpgrade,
     })
   ))
 }
@@ -47,14 +51,30 @@ const SMART_BUTTON_DISABLED =
   /<button(?:(?!>)[\s\S])*\sdisabled=""(?:(?!>)[\s\S])*>(?:(?!<\/button>)[\s\S])*Smart ordering/
 
 describe("the Smart ordering button and the monthly allowance", () => {
-  it("is disabled, says the allowance is spent, and offers PRO when nothing is left", () => {
+  it("is disabled, says the allowance is spent, and shows the PRO wall when nothing is left", () => {
     const html = render({ remaining: 0, limit: 1 })
 
     expect(html).toMatch(/You've used this month's AI ordering/)
-    expect(html).toMatch(/href="\/pricing"/)
     // The button itself, not some other disabled control on the page. The
     // label sits after an icon, so the match walks the button's whole content.
     expect(html).toMatch(SMART_BUTTON_DISABLED)
+    // Wall 2 of step 3.1: what PRO gives, through the counting redirect.
+    expect(html).toMatch(/data-sales-wall="ai_ordering_limit"/)
+    expect(html).toMatch(/PRO gives you 3 AI orderings a month/)
+    expect(html).toMatch(/href="\/api\/sales-wall\?wall=ai_ordering_limit&locale=en"/)
+    expect(html).not.toMatch(/href="\/pricing"/)
+  })
+
+  it("names PRO+ to a PRO account, never the plan it already has", () => {
+    const html = render({ remaining: 0, limit: 3 }, "pro_plus")
+
+    expect(html).toMatch(/You've used this month's 3 AI orderings/)
+    expect(html).toMatch(/PRO\+ has no monthly limit on AI ordering/)
+    expect(html).not.toMatch(/PRO gives you/)
+  })
+
+  it("shows no wall while there are orderings left", () => {
+    expect(render({ remaining: 1, limit: 3 })).not.toMatch(/data-sales-wall/)
   })
 
   it("says how many are left while there are some", () => {

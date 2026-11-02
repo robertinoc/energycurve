@@ -21,6 +21,8 @@ import { consumeRateLimit } from "@/services/rate-limit-service"
 import { isOverImportLimit, tooManyTracksMessage } from "@/lib/playlists/import-limit"
 import { proposeSplit } from "@/lib/playlists/import-readiness"
 import { SPLIT_COPY } from "@/lib/playlists/split-copy"
+import { SALES_WALL_COPY } from "@/lib/content/sales-wall-copy"
+import type { SalesWall } from "@/lib/product/sales-walls"
 import { isSplitCriterion, planSplit } from "@/lib/engine/set-split"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { parseTracklist } from "@/lib/playlists/parse-tracklist"
@@ -241,19 +243,39 @@ async function resolveGenreChoice(
  * server-side (never trust the client preview), mirroring importTracklistAction.
  */
 /**
- * Turns a plan-cap throw into copy, or null when the error is something else.
+ * Turns a plan-cap throw into the refusal the form shows as a sales wall, or
+ * null when the error is something else.
  *
  * The cap is enforced in `createPlaylist` so no creation path can skip it; each
- * path still has to translate the refusal, and a shared helper keeps the three
- * from drifting into three different messages.
+ * path still has to translate the refusal, and a shared helper keeps the four
+ * from drifting into four different messages. The service has already
+ * recorded `plan_limit_reached` (the limit); this records `sales_wall_shown`
+ * (the wall), because every form that lands here answers with it.
  */
-function playlistLimitMessage(
+function playlistLimitFailure(
   error: unknown,
-  locale: SiteLocale
-): string | null {
-  return error instanceof PlaylistLimitError
-    ? formatTemplate(ACTION_COPY.playlistLimit[locale], { max: error.limit })
-    : null
+  locale: SiteLocale,
+  profileId: string
+): PlaylistActionState | null {
+  if (!(error instanceof PlaylistLimitError)) {
+    return null
+  }
+
+  captureServerEvent(profileId, "sales_wall_shown", {
+    wall: "playlist_limit",
+    plan: error.plan,
+    used: error.used,
+    limit: error.limit,
+  })
+
+  return {
+    ok: false,
+    message: formatTemplate(SALES_WALL_COPY.playlistLimitTitle[locale], {
+      max: error.limit,
+    }),
+    fieldErrors: null,
+    wall: "playlist_limit",
+  }
 }
 
 export async function createPlaylistWithTracksAction(
@@ -351,9 +373,9 @@ export async function createPlaylistWithTracksAction(
     )
     playlistId = playlist.id
   } catch (error) {
-    const limited = playlistLimitMessage(error, locale)
+    const limited = playlistLimitFailure(error, locale, profile.id)
     if (limited) {
-      return failure(limited)
+      return limited
     }
 
     logError("playlist.create_with_tracks_failed", error, {
@@ -769,9 +791,9 @@ export async function importPlaylistAction(
     )
     playlistId = playlist.id
   } catch (error) {
-    const limited = playlistLimitMessage(error, locale)
+    const limited = playlistLimitFailure(error, locale, profile.id)
     if (limited) {
-      return failure(limited)
+      return limited
     }
 
     logError("playlist.import_failed", error, {
@@ -932,10 +954,10 @@ async function importAsSplitSets(
       }
     }
 
-    const limited = playlistLimitMessage(error, locale)
+    const limited = playlistLimitFailure(error, locale, profileId)
 
     if (limited) {
-      return failure(limited)
+      return limited
     }
 
     logError("playlist.split_import_failed", error, { profileId, count, criterion })
@@ -963,6 +985,8 @@ export interface AudioImportResult {
   ok: boolean
   message?: string
   playlistId?: string
+  /** As on PlaylistActionState: answer with this sales wall, not an error line. */
+  wall?: SalesWall | null
 }
 
 /**
@@ -1063,9 +1087,9 @@ export async function importAudioFilesAction(
     )
     playlistId = playlist.id
   } catch (error) {
-    const limited = playlistLimitMessage(error, locale)
+    const limited = playlistLimitFailure(error, locale, profile.id)
     if (limited) {
-      return { ok: false, message: limited }
+      return { ok: false, message: limited.message ?? undefined, wall: limited.wall }
     }
 
     logError("playlist.audio_import_failed", error, {

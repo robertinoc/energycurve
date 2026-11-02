@@ -26,6 +26,7 @@ import { getCurveTemplate } from "@/services/curve-template-service"
 import { can } from "@/lib/product/capabilities"
 import { getProfileBilling } from "@/services/billing-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
+import { scoreGain, type RecordedAnalysis } from "@/lib/product/score-gain"
 import type {
   PlaylistAnalysis,
   ResolvedTrackEnergy,
@@ -43,6 +44,12 @@ export type PlaylistAnalysisResult =
       recommendations: Recommendation[]
       reorder: ReorderSuggestion | null
       durationMinutes: number
+      /**
+       * This analysis raised the score because the set changed (see
+       * lib/product/score-gain.ts), or null. `wall` is true when the account
+       * can't read its version history yet — then the page sells it.
+       */
+      scoreGain: { from: number; to: number; wall: boolean } | null
     }
   | {
       status: "not_analyzable"
@@ -141,6 +148,50 @@ export async function getPlaylistAnalysis(
     targetShape
   )
 
+  // Wall 3 of step 3.1: did this analysis raise the score because the DJ
+  // changed the set? Read before the snapshot below is recorded, so on the
+  // render that records it the newest row is still the previous analysis.
+  const inputHash = computeAnalysisInputHash({
+    curve: analysis.curve,
+    genre: analysis.genre,
+    context: analysis.context,
+    targetShape: analysis.targetShape,
+    algorithmVersion: CURRENT_ANALYSIS_ALGORITHM_VERSION,
+  })
+  const gain = scoreGain(
+    {
+      inputHash,
+      setScore: analysis.setScore,
+      curve: analysis.curve,
+      genre: analysis.genre,
+      context: analysis.context,
+      algorithmVersion: CURRENT_ANALYSIS_ALGORITHM_VERSION,
+    },
+    await readRecentAnalyses(playlistId)
+  )
+  // History is recorded for everyone and read on PRO ("recording is free;
+  // reading is paid"), so the wall goes to whoever can't read it yet.
+  const gainWall = gain !== null && !can(billing.plan, billing.status, "version_history")
+
+  if (gain?.fresh) {
+    // Once per improvement, on every plan: how often a re-analysis pays off is
+    // worth knowing on its own, and PRO is the baseline the wall is read against.
+    captureServerEvent(profileId, "score_improved", {
+      playlistId,
+      from: gain.from,
+      to: gain.to,
+      plan: billing.plan,
+      wallShown: gainWall,
+    })
+  }
+
+  if (gainWall) {
+    captureServerEvent(profileId, "sales_wall_shown", {
+      wall: "score_improved",
+      plan: billing.plan,
+    })
+  }
+
   logInfo("playlist.analyzed", {
     profileId,
     playlistId,
@@ -179,6 +230,46 @@ export async function getPlaylistAnalysis(
     // the track count here would have the results page and the analysis quoting two
     // different set lengths on the same screen.
     durationMinutes: analysis.timing.totalMinutes,
+    scoreGain: gain ? { from: gain.from, to: gain.to, wall: gainWall } : null,
+  }
+}
+
+/**
+ * The two newest analyses of a playlist, newest first, for scoreGain. A read
+ * that fails is no gain: the strip is a moment, never a reason to break the
+ * results page.
+ */
+async function readRecentAnalyses(playlistId: string): Promise<RecordedAnalysis[]> {
+  try {
+    const { data, error } = await getSupabaseAdminClient()
+      .from("analyses")
+      .select("input_hash, set_score, curve, genre, context, algorithm_version, created_at")
+      .eq("playlist_id", playlistId)
+      .order("created_at", { ascending: false })
+      .limit(2)
+
+    if (error) {
+      throw error
+    }
+
+    return (data ?? []).flatMap((row) =>
+      row.input_hash && row.set_score !== null && Array.isArray(row.curve)
+        ? [
+            {
+              inputHash: row.input_hash,
+              setScore: Number(row.set_score),
+              curve: (row.curve as unknown[]).map(Number),
+              genre: row.genre,
+              context: row.context,
+              algorithmVersion: row.algorithm_version,
+              createdAt: row.created_at,
+            },
+          ]
+        : []
+    )
+  } catch (error) {
+    logError("analysis.recent_read_failed", error, { playlistId })
+    return []
   }
 }
 

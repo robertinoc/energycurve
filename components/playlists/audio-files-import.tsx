@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { AudioLines, FolderOpen, Music4, TriangleAlert } from "lucide-react"
 
 import { importAudioFilesAction } from "@/app/(en)/dashboard/playlists/actions"
+import { PlaylistLimitWall } from "@/components/plans/playlist-limit-wall"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -95,6 +96,8 @@ export function AudioFilesImport({
     unreadable: 0,
   })
   const [error, setError] = useState<string | null>(null)
+  // The refusal was the playlist cap: answer it with the PRO wall, not red text.
+  const [limitWall, setLimitWall] = useState(false)
   const [dragging, setDragging] = useState(false)
 
   const [name, setName] = useState("")
@@ -325,6 +328,7 @@ export function AudioFilesImport({
 
     setPhase("submitting")
     setError(null)
+    setLimitWall(false)
 
     const result = await importAudioFilesAction({
       name,
@@ -342,6 +346,7 @@ export function AudioFilesImport({
     }
 
     setError(result.message ?? null)
+    setLimitWall(result.wall === "playlist_limit")
     setPhase("preview")
   }
 
@@ -742,7 +747,11 @@ export function AudioFilesImport({
         </div>
       ) : null}
 
-      {error ? <p className="text-sm text-ec-error">{error}</p> : null}
+      {error && limitWall ? (
+        <PlaylistLimitWall title={error} locale={locale} />
+      ) : error ? (
+        <p className="text-sm text-ec-error">{error}</p>
+      ) : null}
     </div>
   )
 }

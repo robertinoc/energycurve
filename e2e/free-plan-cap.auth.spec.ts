@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright"
 import { expect, test } from "@playwright/test"
 
 import { asCsv, syntheticPlaylist } from "../tests/fixtures/playlists"
@@ -23,11 +24,16 @@ import {
  * cleanups for one question. The three playlists go in through the service
  * role instead — the cap counts rows, not how they arrived — and the fourth is
  * a real import through the form, which is the thing the row is about.
+ *
+ * Since step 3.1 of docs/conversion-plan.md the refusal is a sales wall: the
+ * same sentence, what PRO changes, the PRO badge and a button that goes to the
+ * plans through the counting redirect. Checked at phone width, because that is
+ * where a wall that pushes the page sideways would hide.
  */
 
 const free = accountFor("free")
 
-test("AUD.4 · a fourth import on FREE is refused, and the refusal says why", async ({
+test("AUD.4 · a fourth import on FREE is refused with the PRO wall, at phone width", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "auth-free", "Runs once, as the FREE account.")
@@ -53,6 +59,7 @@ test("AUD.4 · a fourth import on FREE is refused, and the refusal says why", as
   if (error) throw new Error(`Filling the FREE cap: ${error.message}`)
 
   try {
+    await page.setViewportSize({ width: 375, height: 812 })
     await page.goto("/dashboard/playlists")
     // Same wait as e2e/helpers/import-playlist.ts: a file set before the form
     // hydrates is never seen by it (seen on the first run of this test).
@@ -72,12 +79,30 @@ test("AUD.4 · a fourth import on FREE is refused, and the refusal says why", as
     await page.getByRole("option", { name: "Techno", exact: true }).click()
     await form.locator('button[type="submit"]').click()
 
-    await expect(
-      page.getByText(
-        /You've reached 3 playlists on your plan|Llegaste a 3 playlists en tu plan/
-      )
-    ).toBeVisible({ timeout: 20_000 })
+    const wall = page.locator('[data-sales-wall="playlist_limit"]')
+
+    await expect(wall).toBeVisible({ timeout: 20_000 })
+    await expect(wall).toContainText(/You've reached 3 playlists on your plan|Llegaste a 3 playlists en tu plan/)
+    await expect(wall).toContainText(/PRO/)
+    await expect(wall).toContainText(/delete one of yours|borrá uno de los tuyos/)
     expect(await ownedPlaylistCount(ownerId), "no fourth playlist was saved").toBe(3)
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+    )
+    expect(overflow, "the wall does not push the page sideways").toBeLessThanOrEqual(0)
+
+    const { violations } = await new AxeBuilder({ page })
+      .include('[data-sales-wall="playlist_limit"]')
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze()
+    expect(violations.map((violation) => violation.id)).toEqual([])
+
+    // The button goes through the counting redirect and lands on the plans.
+    const cta = wall.getByRole("link", { name: /See plans|Ver planes/ })
+    await expect(cta).toHaveAttribute("href", /^\/api\/sales-wall\?wall=playlist_limit&locale=(en|es)$/)
+    await cta.click()
+    await expect(page).toHaveURL(/\/(es\/)?pricing$/)
   } finally {
     // The fillers, and a fourth one if the cap ever stops holding.
     const { data: owned } = await devDb().from("playlists").select("id").eq("user_id", ownerId)
