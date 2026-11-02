@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Page } from "@playwright/test"
 
+import { CURRENT_ANALYSIS_ALGORITHM_VERSION } from "../lib/product/strategy"
 import { currentPeriodStart } from "../lib/product/usage"
 import { accountFor, skipReason } from "./helpers/accounts"
 import { DEV_DB_SKIP_REASON, devDb, devDbConfigured, profileIdFor } from "./helpers/dev-db"
@@ -121,5 +122,79 @@ test("MUROS.2 · the month's AI ordering spent: the button is off and the PRO wa
         .eq("capability", "ai_ordering")
         .eq("period_start", period)
     }
+  }
+})
+
+/**
+ * An earlier analysis of the set, in another order, with this score. Same
+ * genre, context and algorithm version as the page will compute, so the only
+ * thing that changed is the set — the one case wall 3 is for.
+ */
+async function seedEarlierAnalysis(ownerId: string, playlistId: string, setScore: number) {
+  const { error } = await devDb()
+    .from("analyses")
+    .insert({
+      playlist_id: playlistId,
+      user_id: ownerId,
+      genre: "house",
+      context: "main",
+      set_score: setScore,
+      curve: [9, 3, 8, 4, 7, 5, 6, 5],
+      issues: [],
+      breakdown: {},
+      input_hash: `muros-3-earlier-${Date.now()}`,
+      algorithm_version: CURRENT_ANALYSIS_ALGORITHM_VERSION,
+      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    })
+
+  if (error) throw new Error(`Seeding the earlier analysis: ${error.message}`)
+}
+
+test("MUROS.3 · a re-analysis that raised the score: a strip under it, not over it", async ({
+  page,
+}, testInfo) => {
+  freeOnly(testInfo.project.name)
+
+  const ownerId = await profileIdFor(free!.email)
+  const playlistId = await seedSet(ownerId, `MUROS.3 ${Date.now()}`, [3, 5, 4, 7, 6, 8, 9, 5])
+
+  try {
+    await seedEarlierAnalysis(ownerId, playlistId, 1.0)
+
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.goto(`/dashboard/playlists/${playlistId}/analysis`)
+
+    const strip = page.locator('[data-sales-wall="score_improved"]')
+    await expect(strip).toBeVisible({ timeout: 20_000 })
+    await expect(strip).toContainText(/You raised the score from 1\.0 to \d+\.\d|Subiste el score de 1\.0 a \d+\.\d/)
+    await expect(strip).toContainText(/PRO/)
+    await expect(strip.getByRole("link", { name: /See plans|Ver planes/ })).toHaveAttribute(
+      "href",
+      /^\/api\/sales-wall\?wall=score_improved&locale=(en|es)$/
+    )
+    // Not a modal: nothing is covering the page.
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+
+    await expectWallFits(page, "score_improved")
+  } finally {
+    // Cascades to the analyses, the seeded one and the one this visit recorded.
+    await devDb().from("playlists").delete().eq("id", playlistId)
+  }
+})
+
+test("MUROS.3 · a re-analysis that lowered the score shows nothing", async ({ page }, testInfo) => {
+  freeOnly(testInfo.project.name)
+
+  const ownerId = await profileIdFor(free!.email)
+  const playlistId = await seedSet(ownerId, `MUROS.3 lower ${Date.now()}`, [3, 5, 4, 7, 6, 8, 9, 5])
+
+  try {
+    await seedEarlierAnalysis(ownerId, playlistId, 10.0)
+
+    await page.goto(`/dashboard/playlists/${playlistId}/analysis`)
+    await expect(page.getByText(/Score now|Score ahora/i).first()).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('[data-sales-wall="score_improved"]')).toHaveCount(0)
+  } finally {
+    await devDb().from("playlists").delete().eq("id", playlistId)
   }
 })

@@ -54,6 +54,7 @@ import type {
 } from "@/lib/product/strategy"
 import type { ResolvedTrackEnergy } from "@/types/analysis"
 import { AiOrderingWall } from "@/components/plans/ai-ordering-wall"
+import { ScoreGainStrip } from "@/components/plans/score-gain-strip"
 import type { UpsellPlan } from "@/lib/product/sales-walls"
 
 /** Per-playlist persistence of the user's decisions (survives reloads). */
@@ -221,6 +222,12 @@ export interface AnalysisWorkbenchProps {
    */
   aiUpgrade?: UpsellPlan | null
   /**
+   * This analysis raised the score because the set changed (wall 3 of step
+   * 3.1). The strip renders only when `wall` is true: the account can't read
+   * its version history yet.
+   */
+  scoreGain?: { from: number; to: number; wall: boolean } | null
+  /**
    * Where the curve's energy values came from. Optional so the component still
    * renders for a caller that doesn't have it; absent means no caveat is shown.
    */
@@ -262,6 +269,7 @@ export function AnalysisWorkbench({
   residencyRepeats = [],
   aiQuota,
   aiUpgrade = null,
+  scoreGain = null,
   coverage,
   locale,
 }: AnalysisWorkbenchProps) {
@@ -913,6 +921,10 @@ export function AnalysisWorkbench({
         playlistHref={`/dashboard/playlists/${playlistId}`}
         locale={locale}
       />
+
+      {scoreGain?.wall ? (
+        <ScoreGainStrip from={scoreGain.from} to={scoreGain.to} locale={locale} />
+      ) : null}
 
       {fixes.length === 0 ? (
         <div className="rounded-2xl border border-ec-border bg-ec-surface p-5">

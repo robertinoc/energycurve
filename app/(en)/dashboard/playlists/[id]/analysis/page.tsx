@@ -230,6 +230,7 @@ export default async function PlaylistAnalysisPage({
           residencyRepeats={residency.repeats}
           aiQuota={{ remaining: aiQuota.remaining, limit: aiQuota.limit }}
           aiUpgrade={aiUpgrade}
+          scoreGain={result.scoreGain}
           locale={locale}
         />
 

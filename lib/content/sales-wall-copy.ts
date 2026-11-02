@@ -42,4 +42,14 @@ export const SALES_WALL_COPY = {
     en: "Whatever you've ordered stays as it is, and the fixes and moving tracks by hand work exactly the same.",
     es: "Lo que ya ordenaste queda como está, y los arreglos y mover temas a mano funcionan igual.",
   } satisfies Copy,
+
+  /** Wall 3: under the score, right after a re-analysis that raised it. */
+  scoreGainTitle: {
+    en: "You raised the score from {from} to {to}.",
+    es: "Subiste el score de {from} a {to}.",
+  } satisfies Copy,
+  scoreGainBody: {
+    en: "With PRO you see every version of this set — the history is already being kept — and compare what you planned with what you played.",
+    es: "Con PRO ves cada versión de este set —el historial ya se está guardando— y comparás lo que planeaste con lo que tocaste.",
+  } satisfies Copy,
 } as const

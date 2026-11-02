@@ -30,6 +30,15 @@ export type AnalyticsEvent =
    */
   | "plan_limit_reached"
   /**
+   * A re-analysis raised the set's score because the DJ changed the set — the
+   * moment the product has just proved itself, with no argument needed
+   * (lib/product/score-gain.ts has the bar). Once per improvement, on every
+   * plan, with `from`, `to` and `wallShown`: not a limit but a success, so it
+   * is its own event and not a `plan_limit_reached`. PRO accounts are the
+   * baseline the FREE wall is read against.
+   */
+  | "score_improved"
+  /**
    * A sales wall was put in front of someone (`wall` says which one, `plan`
    * what they had). Separate from `plan_limit_reached` on purpose: the limit
    * and the wall are not the same moment. The AI-ordering wall shows before the

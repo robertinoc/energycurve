@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">143</strong>
+      <strong id="tally-total">144</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1574,6 +1574,12 @@
           steps: ["Con la cuenta FREE, usá el ordenamiento con IA del mes en un set (o usá uno que ya lo haya gastado)", "Abrí el análisis de otro set desde la app instalada", "Mirá el botón «Ordenación inteligente» y lo que hay debajo", "Tocá «Ver planes»"],
           expect: "El botón está apagado y la nota en ámbar dice que ya usaste el del mes. Debajo, el muro: «Con PRO son 3 ordenamientos con IA por mes.», la insignia PRO, que PRO+ no tiene límite y que lo que ya ordenaste y los arreglos a mano siguen igual. «Ver planes» abre <code>/es/pricing</code>. Sin scroll horizontal.",
           ifNot: "Si el muro dice PRO a una cuenta que ya es PRO, o falta y sólo queda la nota, captura y anotá el plan de la cuenta."
+        },
+        {
+          code: "MUROS.3", title: "Después de un reanálisis que mejoró el score", sub: "FREE · el muro que no es un límite",
+          steps: ["Con la cuenta FREE, abrí el análisis de un set y anotá el score", "Volvé al set y cambiá el orden siguiendo uno de los arreglos que propone (moviendo temas, sin tocar el género ni el contexto)", "Abrí el análisis otra vez desde la app instalada", "Repetí con un cambio que empeore el score"],
+          expect: "Cuando subió: debajo del score, una franja discreta —no un cartel que tape la curva— con «Subiste el score de X a Y.», la insignia PRO y qué agrega PRO (ver cada versión y comparar lo planeado con lo tocado). Cuando bajó o quedó igual: nada. Lo que hay que juzgar es si se lee como un logro tuyo o como un aviso de venta.",
+          ifNot: "Si aparece cuando el score bajó, o al cambiar sólo el género, es el defecto más serio de esta sección: anotá los dos scores y qué cambiaste."
         }
       ]
     }
