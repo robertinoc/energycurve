@@ -621,7 +621,6 @@ export const ANALYSIS_UI = {
     en: "You've used this month's {limit} AI orderings. Everything here still works by hand.",
     es: "Ya usaste los {limit} ordenamientos con IA de este mes. Todo lo de acá sigue funcionando a mano.",
   },
-  smartOrderUpgrade: { en: "More on PRO", es: "Más en PRO" },
   /** Shown if the server refuses after all — a race with another tab, say. */
   smartOrderQuotaError: {
     en: "This month's AI orderings are used up. The order you had is untouched, and you can keep editing by hand.",

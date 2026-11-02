@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">142</strong>
+      <strong id="tally-total">143</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1164,7 +1164,7 @@
         {
           code: "AUD.3", title: "La cuota de IA se ve antes del clic — validar el fix", sub: "Hallazgo A4 · arreglado el 26/09 en <code>7066c64</code> (lote 10)",
           steps: ["Con la cuenta FREE (1 por mes), abrí el análisis de un set y mirá debajo del botón de Smart ordering", "Si todavía no usaste el del mes, usalo", "Importá otro set y abrí su análisis"],
-          expect: "Antes de usarlo dice cuántos quedan. Después, el botón está <strong>apagado</strong>, dice «You've used this month's AI ordering» y al lado hay un enlace «More on PRO» a <code>/pricing</code>. El límite no se movió: sigue saliendo de <code>PLAN_LIMITS</code> y el servidor sigue decidiendo — esto sólo lo hace visible antes.",
+          expect: "Antes de usarlo dice cuántos quedan. Después, el botón está <strong>apagado</strong> y dice «You've used this month's AI ordering». Desde el paso 3.1 (02/11) ya no hay un enlace «More on PRO» al lado: debajo está el muro de MUROS.2, que nombra el plan siguiente. El límite no se movió: sigue saliendo de <code>PLAN_LIMITS</code> y el servidor sigue decidiendo — esto sólo lo hace visible antes.",
           ifNot: "Si el botón aparece habilitado con la cuota en cero, mirá si la página se cargó antes de gastarla: la cuota se lee al renderizar, y una pestaña vieja la muestra vieja. Al apretar, el 402 ahora tiene su propia frase."
         },
         {
@@ -1568,6 +1568,12 @@
           steps: ["Con la cuenta FREE y tres playlists ya guardadas, importá una cuarta desde la app instalada", "Leé el muro entero sin hacer zoom", "Tocá «Ver planes»", "Repetí pegando una lista en «A mano» y desde «Tus archivos de audio»"],
           expect: "En los tres caminos aparece el mismo muro en vez del error rojo: «Llegaste a 3 playlists en tu plan.», la insignia PRO, qué cambia con PRO y que también podés borrar uno de tus sets. No se crea la cuarta. «Ver planes» abre <code>/es/pricing</code>. Sin scroll horizontal.",
           ifNot: "Captura del camino que falló. Si alguno sigue mostrando la línea roja, ese formulario no recibió el muro."
+        },
+        {
+          code: "MUROS.2", title: "El ordenamiento con IA del mes, gastado", sub: "FREE · 1 por mes",
+          steps: ["Con la cuenta FREE, usá el ordenamiento con IA del mes en un set (o usá uno que ya lo haya gastado)", "Abrí el análisis de otro set desde la app instalada", "Mirá el botón «Ordenación inteligente» y lo que hay debajo", "Tocá «Ver planes»"],
+          expect: "El botón está apagado y la nota en ámbar dice que ya usaste el del mes. Debajo, el muro: «Con PRO son 3 ordenamientos con IA por mes.», la insignia PRO, que PRO+ no tiene límite y que lo que ya ordenaste y los arreglos a mano siguen igual. «Ver planes» abre <code>/es/pricing</code>. Sin scroll horizontal.",
+          ifNot: "Si el muro dice PRO a una cuenta que ya es PRO, o falta y sólo queda la nota, captura y anotá el plan de la cuenta."
         }
       ]
     }

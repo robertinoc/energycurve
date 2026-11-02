@@ -5,6 +5,7 @@ import { withAuth } from "@workos-inc/authkit-nextjs"
 import { NextResponse } from "next/server"
 
 import { captureServerEvent } from "@/lib/analytics/posthog-server"
+import { aiOrderingUpgrade } from "@/lib/product/sales-walls"
 import { CONTEXT_DISPLAY_NAMES } from "@/lib/content/analysis-copy"
 import { analyzePlaylist } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
@@ -505,15 +506,30 @@ export async function POST(
       limit: quota.limit,
     })
 
+    // What unlocks more, so the client can name the right plan rather than
+    // hardcoding one that may move. This said "pro_plus" to everyone, FREE
+    // included, whose next step is PRO.
+    const upgradeTo = aiOrderingUpgrade(billing.plan, billing.status)
+
+    // The page normally shows the wall before the click (the button is off once
+    // the month is spent); this is the race — another tab, a stale page — and
+    // the workbench answers it with the same wall, so it counts as shown here.
+    if (upgradeTo) {
+      captureServerEvent(profile.id, "sales_wall_shown", {
+        wall: "ai_ordering_limit",
+        plan: billing.plan,
+        used: quota.used,
+        limit: quota.limit,
+      })
+    }
+
     return NextResponse.json(
       {
         error: "quota_exceeded",
         capability: "ai_ordering",
         used: quota.used,
         limit: quota.limit,
-        // What unlocks more, so the client can name the right plan rather than
-        // hardcoding one that may move.
-        upgradeTo: "pro_plus",
+        upgradeTo,
       },
       { status: 402 }
     )

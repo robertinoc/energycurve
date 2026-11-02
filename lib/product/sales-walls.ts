@@ -1,5 +1,11 @@
 import type { SiteLocale } from "@/lib/content/site-copy"
-import type { Plan } from "@/lib/product/plans"
+import {
+  PLAN_LIMITS,
+  PLANS,
+  effectivePlan,
+  type Plan,
+  type PlanStatus,
+} from "@/lib/product/plans"
 
 /**
  * The places inside the app that sell a plan at the moment it is worth
@@ -42,4 +48,28 @@ export const UPSELL_PLAN_LABEL: Record<UpsellPlan, string> = {
  */
 export function salesWallHref(wall: SalesWall, locale: SiteLocale): string {
   return `/api/sales-wall?wall=${wall}&locale=${locale}`
+}
+
+/**
+ * The plan that gives this account more AI orderings, or null when none does.
+ *
+ * FREE → PRO (more a month), PRO → PRO+ (no monthly limit), PRO+ → null. Read
+ * from PLAN_LIMITS rather than written down, so the wall can't name a plan
+ * that stopped being the answer. Uses the effective plan: a lapsed PRO is on
+ * FREE's allowance, and PRO is what restores it.
+ */
+export function aiOrderingUpgrade(plan: Plan, status: PlanStatus | null): UpsellPlan | null {
+  const current = PLAN_LIMITS[effectivePlan(plan, status)].aiOrderingsPerMonth
+
+  if (current === null) {
+    return null
+  }
+
+  const better = PLANS.find((candidate): candidate is UpsellPlan => {
+    if (candidate === "free") return false
+    const allowance = PLAN_LIMITS[candidate].aiOrderingsPerMonth
+    return allowance === null || allowance > current
+  })
+
+  return better ?? null
 }

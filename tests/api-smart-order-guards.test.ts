@@ -39,7 +39,8 @@ vi.mock("@/lib/observability/logger", () => ({
   logInfo: vi.fn(),
   logWarn: vi.fn(),
 }))
-vi.mock("@/lib/analytics/posthog-server", () => ({ captureServerEvent: vi.fn() }))
+const captureServerEvent = vi.fn()
+vi.mock("@/lib/analytics/posthog-server", () => ({ captureServerEvent }))
 
 const { POST } = await import("@/app/api/playlists/[id]/smart-order/route")
 
@@ -168,5 +169,31 @@ describe("the quota gate", () => {
     expect(response.status).toBe(402)
     // FREE gets one a month; the cap is the point, not the access.
     await expect(response.json()).resolves.toMatchObject({ limit: 1 })
+  })
+
+  // It said "pro_plus" to everyone. FREE's next step is PRO; PRO's is PRO+.
+  it("names the plan that gives more to this account, and counts the wall", async () => {
+    getOwnedPlaylistWithTracks.mockResolvedValue(playlistOf(8, "playlist-quota-c"))
+    getProfileBilling.mockResolvedValue({ plan: "free", status: null })
+    readQuota.mockResolvedValue({ allowed: false, used: 1, limit: 1 })
+    captureServerEvent.mockClear()
+
+    const free = await call("playlist-quota-c")
+
+    await expect(free.json()).resolves.toMatchObject({ upgradeTo: "pro" })
+    expect(captureServerEvent).toHaveBeenCalledWith(expect.any(String), "sales_wall_shown", {
+      wall: "ai_ordering_limit",
+      plan: "free",
+      used: 1,
+      limit: 1,
+    })
+
+    getOwnedPlaylistWithTracks.mockResolvedValue(playlistOf(8, "playlist-quota-d"))
+    getProfileBilling.mockResolvedValue({ plan: "pro", status: "active" })
+    readQuota.mockResolvedValue({ allowed: false, used: 3, limit: 3 })
+
+    await expect((await call("playlist-quota-d")).json()).resolves.toMatchObject({
+      upgradeTo: "pro_plus",
+    })
   })
 })
