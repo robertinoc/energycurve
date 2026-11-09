@@ -53,6 +53,13 @@ export async function getGoogleAuthorizationRequest({
       value: sealedState,
       maxAge: 600,
       secure: redirectUri.startsWith("https://"),
+      // Must match authkit's own cookie scope: with WORKOS_COOKIE_DOMAIN set
+      // (the backstage subdomain), authkit reads, matches and DELETES this
+      // cookie with Domain=.energycurve.app. A host-only copy here means two
+      // cookies with the same name — the callback can read the stale twin
+      // ("OAuth state mismatch" → error=auth) and its cleanup never removes
+      // this one.
+      domain: process.env.WORKOS_COOKIE_DOMAIN || undefined,
     },
   }
 }
