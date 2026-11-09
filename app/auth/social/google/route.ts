@@ -33,6 +33,7 @@ export async function GET(request: Request) {
       sameSite: "lax",
       secure: pkceCookie.secure,
       path: "/",
+      domain: pkceCookie.domain,
     })
 
     return response
