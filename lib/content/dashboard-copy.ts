@@ -87,7 +87,7 @@ export const DASHBOARD_COPY = {
   home: {
     heroSubtitle: {
       en: "Upload a set, get its energy curve, set score, and concrete fixes per track.",
-      es: "Subí un set y recibí su curva de energía, el puntaje y arreglos concretos por track.",
+      es: "Subí un set y recibí su curva de energía, el puntaje y arreglos concretos por tema.",
     },
     dbAlertTitle: {
       en: "Database setup still needs attention",
@@ -176,7 +176,7 @@ export const DASHBOARD_COPY = {
     viewAll: { en: "View all", es: "Ver todas" },
     trackCount: {
       en: "{count} track{plural}",
-      es: "{count} track{plural}",
+      es: "{count} tema{plural}",
     },
     edit: { en: "Edit", es: "Editar" },
     analyze: { en: "Analyze", es: "Analizar" },
@@ -191,9 +191,9 @@ export const DASHBOARD_COPY = {
     emptyTitle: { en: "No playlists yet", es: "Todavía no hay playlists" },
     emptyDescription: {
       en: "Create your first one above — then add tracks manually or paste a full tracklist.",
-      es: "Creá la primera acá arriba — después sumá tracks a mano o pegá un tracklist completo.",
+      es: "Creá la primera acá arriba — después sumá temas a mano o pegá un tracklist completo.",
     },
-    trackCount: { en: "{count} track(s)", es: "{count} track(s)" },
+    trackCount: { en: "{count} track(s)", es: "{count} tema(s)" },
     yourSets: { en: "Your sets", es: "Tus sets" },
     searchPlaceholder: { en: "Search sets…", es: "Buscar sets…" },
     viewRecent: { en: "Recent", es: "Recientes" },
@@ -278,14 +278,14 @@ export const DASHBOARD_COPY = {
   publicCurve: {
     eyebrow: { en: "The shape of a set", es: "La forma de un set" },
     scoreLabel: { en: "Set score", es: "Puntaje del set" },
-    trackCount: { en: "{count} tracks", es: "{count} tracks" },
+    trackCount: { en: "{count} tracks", es: "{count} temas" },
     /**
      * Named on the page a DJ sends to other people. The reader has no idea what
      * was imported, so the hollow rings need a sentence or they're just decoration.
      */
     estimatedNote: {
       en: "{count} of {total} points are estimated from the track's position — those tracks carried no BPM or audio data. The hollow rings mark them.",
-      es: "{count} de {total} puntos están estimados por la posición del track — esos temas no traían BPM ni datos de audio. Los anillos huecos los marcan.",
+      es: "{count} de {total} puntos están estimados por la posición del tema — esos temas no traían BPM ni datos de audio. Los anillos huecos los marcan.",
     },
     privacyNote: {
       en: "The tracklist stays private — this page only shows the shape.",
@@ -317,7 +317,7 @@ export const DASHBOARD_COPY = {
     noScore: { en: "not scored", es: "sin puntaje" },
     restore: { en: "Restore", es: "Restaurar" },
     restoring: { en: "Restoring…", es: "Restaurando…" },
-    trackCount: { en: "{count} tracks", es: "{count} tracks" },
+    trackCount: { en: "{count} tracks", es: "{count} temas" },
     lockedTitle: {
       en: "Order history is a PRO feature",
       es: "El historial de órdenes es una función PRO",
@@ -350,7 +350,7 @@ export const DASHBOARD_COPY = {
     },
     diffCurveMissing: {
       en: "This version predates per-track energy capture, so only the score can be compared.",
-      es: "Esta versión es anterior a que guardáramos la energía por track, así que solo se puede comparar el puntaje.",
+      es: "Esta versión es anterior a que guardáramos la energía por tema, así que solo se puede comparar el puntaje.",
     },
     diffMovedBy: { en: "{from} → {to}", es: "{from} → {to}" },
     curveBefore: { en: "then", es: "entonces" },
@@ -405,7 +405,7 @@ export const DASHBOARD_COPY = {
     prev: { en: "Back", es: "Atrás" },
     next: { en: "Next track", es: "Siguiente" },
     restart: { en: "Back to the top", es: "Volver al principio" },
-    position: { en: "Track", es: "Track" },
+    position: { en: "Track", es: "Tema" },
     of: { en: "of", es: "de" },
     due: { en: "Due", es: "Va a las" },
     /**
@@ -418,7 +418,7 @@ export const DASHBOARD_COPY = {
     paceAhead: { en: "{gap} ahead of schedule", es: "{gap} adelantado" },
     paceRoom: {
       en: "{gap} left for {count} tracks — about {each} min each",
-      es: "Quedan {gap} para {count} tracks — unos {each} min cada uno",
+      es: "Quedan {gap} para {count} temas — unos {each} min cada uno",
     },
     paceSlotOver: {
       en: "Your slot ended {gap} ago",
@@ -445,12 +445,12 @@ export const DASHBOARD_COPY = {
     peak: { en: "Peak", es: "Pico" },
     hint: {
       en: "Tap the big button as each track ends. Your place is saved on this device, so locking the phone or losing signal doesn't lose it.",
-      es: "Tocá el botón grande cuando termina cada track. Tu posición se guarda en este dispositivo, así que bloquear el celular o perder señal no la pierde.",
+      es: "Tocá el botón grande cuando termina cada tema. Tu posición se guarda en este dispositivo, así que bloquear el celular o perder señal no la pierde.",
     },
-    emptyTitle: { en: "No tracks to play", es: "No hay tracks para tocar" },
+    emptyTitle: { en: "No tracks to play", es: "No hay temas para tocar" },
     emptyBody: {
       en: "Add tracks to this set and Gig Mode has something to walk you through.",
-      es: "Agregá tracks a este set y el modo cabina tiene algo para guiarte.",
+      es: "Agregá temas a este set y el modo cabina tiene algo para guiarte.",
     },
     lockedTitle: {
       en: "Gig Mode is a PRO+ feature",
@@ -471,9 +471,9 @@ export const DASHBOARD_COPY = {
       en: "One page for the booth. Print it, or save it as a PDF from the same dialog — it reads the same on paper and on a phone.",
       es: "Una página para la cabina. Imprimila, o guardala como PDF desde el mismo diálogo — se lee igual en papel que en el celular.",
     },
-    tracks: { en: "tracks", es: "tracks" },
+    tracks: { en: "tracks", es: "temas" },
     time: { en: "Time", es: "Hora" },
-    track: { en: "Track", es: "Track" },
+    track: { en: "Track", es: "Tema" },
     key: { en: "Key", es: "Tono" },
     energy: { en: "Energy", es: "Energía" },
     notes: { en: "Notes", es: "Notas" },
@@ -482,7 +482,7 @@ export const DASHBOARD_COPY = {
     emptyTitle: { en: "Nothing to print yet", es: "Todavía no hay nada que imprimir" },
     emptyBody: {
       en: "Add tracks to this set and the sheet builds itself.",
-      es: "Agregá tracks a este set y la hoja se arma sola.",
+      es: "Agregá temas a este set y la hoja se arma sola.",
     },
     lockedTitle: {
       en: "The set sheet is a PRO feature",
@@ -490,7 +490,7 @@ export const DASHBOARD_COPY = {
     },
     lockedBody: {
       en: "PRO turns any set into a one-page sheet for the booth: the tracklist with BPM and key, the curve, and the clock time each track lands on.",
-      es: "PRO convierte cualquier set en una hoja de una página para la cabina: el tracklist con BPM y tono, la curva, y la hora a la que cae cada track.",
+      es: "PRO convierte cualquier set en una hoja de una página para la cabina: el tracklist con BPM y tono, la curva, y la hora a la que cae cada tema.",
     },
     lockedCta: { en: "See plans", es: "Ver planes" },
   },
@@ -502,7 +502,7 @@ export const DASHBOARD_COPY = {
      */
     estimatedPoints: {
       en: "Hollow points are estimated from the track's position — those tracks carry no BPM or audio data.",
-      es: "Los puntos huecos están estimados por la posición del track — esos temas no tienen BPM ni datos de audio.",
+      es: "Los puntos huecos están estimados por la posición del tema — esos temas no tienen BPM ni datos de audio.",
     },
     curveEyebrow: { en: "Set energy curve", es: "Curva de energía del set" },
     curveTitle: { en: "The shape of the night", es: "La forma de la noche" },
@@ -521,7 +521,7 @@ export const DASHBOARD_COPY = {
       en: "Could not save order",
       es: "No se pudo guardar el orden",
     },
-    statsTracks: { en: "tracks", es: "tracks" },
+    statsTracks: { en: "tracks", es: "temas" },
     statsAvg: { en: "avg", es: "prom." },
     statsEnergy: { en: "energy", es: "energía" },
     minutesShort: { en: "{minutes} min", es: "{minutes} min" },
@@ -535,13 +535,13 @@ export const DASHBOARD_COPY = {
     optionalColumns: { en: "Optional columns", es: "Columnas opcionales" },
     emptyState: {
       en: "No tracks yet. Add one below, or paste a full tracklist in the import panel.",
-      es: "Todavía no hay tracks. Sumá uno abajo, o pegá un tracklist completo en el panel de import.",
+      es: "Todavía no hay temas. Sumá uno abajo, o pegá un tracklist completo en el panel de import.",
     },
     headerEnergy: { en: "Energy", es: "Energía" },
     headerArtist: { en: "Artist", es: "Artista" },
     headerTitle: { en: "Title", es: "Título" },
     headerBpm: { en: "BPM", es: "BPM" },
-    headerKey: { en: "Key", es: "Key" },
+    headerKey: { en: "Key", es: "Tonalidad" },
     /**
      * One Key column in the notation the DJ reads, switched from its own
      * header. Was two columns — Camelot and the raw imported string — which
@@ -549,7 +549,7 @@ export const DASHBOARD_COPY = {
      */
     keyNotationAria: {
       en: "Change key notation (currently {current})",
-      es: "Cambiar la notación de key (ahora {current})",
+      es: "Cambiar la notación de tonalidad (ahora {current})",
     },
     keyNotationCamelot: { en: "Camelot", es: "Camelot" },
     keyNotationOpenKey: { en: "Open Key", es: "Open Key" },
@@ -559,22 +559,22 @@ export const DASHBOARD_COPY = {
     keyAsImported: { en: "In your library: {value}", es: "En tu librería: {value}" },
     headerComment: { en: "Comment", es: "Comentario" },
     fieldArtist: { en: "Artist", es: "Artista" },
-    fieldTrack: { en: "Track", es: "Track" },
-    fieldTrackPlaceholder: { en: "Track title", es: "Título del track" },
+    fieldTrack: { en: "Track", es: "Tema" },
+    fieldTrackPlaceholder: { en: "Track title", es: "Título del tema" },
     fieldEnergy: { en: "Energy (1–10)", es: "Energía (1–10)" },
-    fieldKey: { en: "Key", es: "Key" },
+    fieldKey: { en: "Key", es: "Tonalidad" },
     fieldGenre: { en: "Genre", es: "Género" },
     fieldComment: { en: "Comment", es: "Comentario" },
     fieldEnergyPlaceholder: { en: "Optional", es: "Opcional" },
-    addTrack: { en: "Add track", es: "Agregar track" },
+    addTrack: { en: "Add track", es: "Agregar tema" },
     adding: { en: "Adding…", es: "Agregando…" },
     saveChanges: { en: "Save changes", es: "Guardar cambios" },
     saving: { en: "Saving…", es: "Guardando…" },
     cancel: { en: "Cancel", es: "Cancelar" },
     close: { en: "Close", es: "Cerrar" },
     confirm: { en: "Confirm", es: "Confirmar" },
-    editTrack: { en: "Edit track", es: "Editar track" },
-    removeTrack: { en: "Remove track", es: "Quitar track" },
+    editTrack: { en: "Edit track", es: "Editar tema" },
+    removeTrack: { en: "Remove track", es: "Quitar tema" },
     cancelRemove: { en: "Cancel remove", es: "Cancelar quitar" },
     dragToReorder: { en: "Drag to reorder", es: "Arrastrá para reordenar" },
     energySource: {
@@ -598,11 +598,11 @@ export const DASHBOARD_COPY = {
     // Per-method subtitles — the card hosts three entry ways (tabs).
     subtitle: {
       en: "Export from Rekordbox or Traktor and we chart the whole set — BPM, keys, genres and Mixed In Key energies included.",
-      es: "Exportá desde Rekordbox o Traktor y graficamos el set completo — BPM, keys, géneros y energías de Mixed In Key incluidos.",
+      es: "Exportá desde Rekordbox o Traktor y graficamos el set completo — BPM, tonalidades, géneros y energías de Mixed In Key incluidos.",
     },
     subtitleAudio: {
       en: "Pick tracks (or a whole folder) from your computer — we read BPM, keys, genres and Mixed In Key energies from the files' tags. Your audio never leaves your machine.",
-      es: "Elegí tracks (o una carpeta entera) de tu computadora — leemos BPM, keys, géneros y energías de Mixed In Key de los tags. Tu audio nunca sale de tu máquina.",
+      es: "Elegí temas (o una carpeta entera) de tu computadora — leemos BPM, tonalidades, géneros y energías de Mixed In Key de los tags. Tu audio nunca sale de tu máquina.",
     },
     subtitleManual: {
       en: "Name your set, pick genre and context, and optionally paste a tracklist — the analysis engine adapts to both.",
@@ -648,7 +648,7 @@ export const DASHBOARD_COPY = {
       es: "No pudimos leer este archivo: parece cortado o dañado. Volvé a exportarlo desde tu software de DJ.",
     },
     readsLabel: { en: "We read for you", es: "Leemos por vos" },
-    readKey: { en: "Key → Camelot", es: "Key → Camelot" },
+    readKey: { en: "Key → Camelot", es: "Tonalidad → Camelot" },
     readGenres: { en: "Genre tags", es: "Tags de género" },
     /**
      * Was "Mixed In Key energy", which was both too narrow and the reason an
@@ -662,7 +662,7 @@ export const DASHBOARD_COPY = {
     /** Said before the upload, not after: M3U8 carries almost nothing. */
     m3u8Heads: {
       en: "Rekordbox XML, Traktor NML, CSV and the .txt export carry all of this. An M3U8 carries only file paths and track lengths — no BPM, key, genre or energy.",
-      es: "El XML de Rekordbox, el NML de Traktor, un CSV y el export .txt traen todo esto. Un M3U8 sólo trae rutas de archivo y duraciones — sin BPM, key, género ni energía.",
+      es: "El XML de Rekordbox, el NML de Traktor, un CSV y el export .txt traen todo esto. Un M3U8 sólo trae rutas de archivo y duraciones — sin BPM, tonalidad, género ni energía.",
     },
     /** Links the format reference, which is also the CSV column spec. */
     formatsHelp: {
@@ -798,7 +798,7 @@ export const DASHBOARD_COPY = {
     },
     lockedBody: {
       en: "PRO+ judges every mix in the set on its own — the key relationship and whether the energy step is one your genre tolerates — and names a track you already have that would sit better.",
-      es: "PRO+ juzga cada mezcla del set por separado — la relación de tonalidades y si el salto de energía es de los que tu género tolera — y te dice qué track que ya tenés encajaría mejor.",
+      es: "PRO+ juzga cada mezcla del set por separado — la relación de tonalidades y si el salto de energía es de los que tu género tolera — y te dice qué tema que ya tenés encajaría mejor.",
     },
     lockedCta: { en: "See plans", es: "Ver planes" },
   },
@@ -817,7 +817,7 @@ export const DASHBOARD_COPY = {
     createCta: { en: "Create playlist", es: "Crear playlist" },
     createWithTracksCta: {
       en: "Create playlist · {count} tracks",
-      es: "Crear playlist · {count} tracks",
+      es: "Crear playlist · {count} temas",
     },
     creating: { en: "Creating…", es: "Creando…" },
   },
@@ -848,9 +848,9 @@ export const DASHBOARD_COPY = {
     },
     analyzeBody: {
       en: "{count} of these tracks carry no BPM tag, so their energy is being guessed from position alone. Analysing the audio measures it. Takes a couple of seconds per track and happens on your machine — nothing is uploaded.",
-      es: "{count} de estos tracks no traen BPM en los tags, así que su energía se está adivinando solo por la posición. Analizar el audio la mide. Tarda un par de segundos por track y pasa en tu máquina — no se sube nada.",
+      es: "{count} de estos temas no traen BPM en los tags, así que su energía se está adivinando solo por la posición. Analizar el audio la mide. Tarda un par de segundos por tema y pasa en tu máquina — no se sube nada.",
     },
-    analyzeCta: { en: "Analyse {count} tracks", es: "Analizar {count} tracks" },
+    analyzeCta: { en: "Analyse {count} tracks", es: "Analizar {count} temas" },
     /**
      * Shown when every file already has a BPM tag, where the original pitch —
      * "your energy is being guessed" — would be false. What tags never carry is the
@@ -858,7 +858,7 @@ export const DASHBOARD_COPY = {
      */
     analyzeFeaturesBody: {
       en: "These tracks all carry a BPM tag, but no tag format carries what the audio sounds like — how loud it is, how fast the spectrum moves, how many attacks per second. Measuring it on {count} tracks takes about a second each, on your machine, and is what the next energy model reads. Nothing is uploaded.",
-      es: "Estos tracks ya traen BPM en los tags, pero ningún formato de tags guarda cómo suena el audio — cuán fuerte es, cuánto se mueve el espectro, cuántos ataques por segundo tiene. Medirlo en {count} tracks tarda alrededor de un segundo cada uno, en tu máquina, y es lo que lee el próximo modelo de energía. No se sube nada.",
+      es: "Estos temas ya traen BPM en los tags, pero ningún formato de tags guarda cómo suena el audio — cuán fuerte es, cuánto se mueve el espectro, cuántos ataques por segundo tiene. Medirlo en {count} temas tarda alrededor de un segundo cada uno, en tu máquina, y es lo que lee el próximo modelo de energía. No se sube nada.",
     },
     analyzeAllCta: {
       en: "Measure all {count}",
@@ -881,7 +881,7 @@ export const DASHBOARD_COPY = {
     analyzeLockedCta: { en: "See plans", es: "Ver planes" },
     dropzoneMain: {
       en: "Drag your tracks here, or",
-      es: "Arrastrá tus tracks acá, o",
+      es: "Arrastrá tus temas acá, o",
     },
     browse: { en: "choose files", es: "elegí los archivos" },
     chooseFolder: { en: "Choose a folder", es: "Elegir una carpeta" },
@@ -911,7 +911,7 @@ export const DASHBOARD_COPY = {
     },
     missingTagsNote: {
       en: "{noBpm} of {total} tracks missing BPM · {noKey} missing key — analysis quality depends on your tags",
-      es: "{noBpm} de {total} tracks sin BPM · {noKey} sin key — la calidad del análisis depende de tus tags",
+      es: "{noBpm} de {total} temas sin BPM · {noKey} sin tonalidad — la calidad del análisis depende de tus tags",
     },
     fromFilename: { en: "from filename", es: "del nombre de archivo" },
     excludeAria: {
@@ -926,7 +926,7 @@ export const DASHBOARD_COPY = {
     clearSelection: { en: "Start over", es: "Empezar de nuevo" },
     createCta: {
       en: "Create set with {count} tracks",
-      es: "Crear set con {count} tracks",
+      es: "Crear set con {count} temas",
     },
     creating: { en: "Creating…", es: "Creando…" },
   },
@@ -938,12 +938,12 @@ export const DASHBOARD_COPY = {
       es: 'Un track por línea. Los prefijos numerados y un "(128 bpm)" al final se detectan solos. Cambiá el formato si la vista previa se ve invertida.',
     },
     lineFormat: { en: "Line format", es: "Formato de línea" },
-    formatArtistTrack: { en: "Artist – Track", es: "Artista – Track" },
-    formatTrackArtist: { en: "Track – Artist", es: "Track – Artista" },
+    formatArtistTrack: { en: "Artist – Track", es: "Artista – Tema" },
+    formatTrackArtist: { en: "Track – Artist", es: "Tema – Artista" },
     tracklist: { en: "Tracklist", es: "Tracklist" },
     preview: {
       en: "Preview — {count} track(s)",
-      es: "Vista previa — {count} track(s)",
+      es: "Vista previa — {count} tema(s)",
     },
     skippedSuffix: {
       en: ", {count} skipped line(s)",
@@ -952,16 +952,16 @@ export const DASHBOARD_COPY = {
     andMore: { en: "…and {count} more", es: "…y {count} más" },
     lineError: {
       en: "Line {line}: no “Artist – Track” separator found — it will be skipped.",
-      es: "Línea {line}: no se encontró el separador “Artista – Track” — se va a saltear.",
+      es: "Línea {line}: no se encontró el separador “Artista – Tema” — se va a saltear.",
     },
     replacesWarning: {
       en: "Importing replaces the {count} track(s) currently in this playlist.",
-      es: "Importar reemplaza los {count} track(s) que tiene esta playlist ahora.",
+      es: "Importar reemplaza los {count} tema(s) que tiene esta playlist ahora.",
     },
     importing: { en: "Importing…", es: "Importando…" },
     importCta: {
       en: "Import {count} track(s)",
-      es: "Importar {count} track(s)",
+      es: "Importar {count} tema(s)",
     },
   },
 
@@ -981,16 +981,16 @@ export const DASHBOARD_COPY = {
     /** Shown when the playlist came from local audio files. */
     filesWarningTitle: {
       en: "Rekordbox and Traktor won't find these tracks",
-      es: "Rekordbox y Traktor no van a encontrar estos tracks",
+      es: "Rekordbox y Traktor no van a encontrar estos temas",
     },
     filesWarningBody: {
       en: "This playlist came from files on your computer, so we only know their names — not where they live. Those two formats will open with every track missing. Use M3U8 and save it in the same folder as your music.",
-      es: "Esta playlist salió de archivos de tu computadora, así que sólo conocemos sus nombres — no dónde están. Esos dos formatos van a abrir con todos los tracks en missing. Usá M3U8 y guardalo en la misma carpeta que tu música.",
+      es: "Esta playlist salió de archivos de tu computadora, así que sólo conocemos sus nombres — no dónde están. Esos dos formatos van a abrir con todos los temas en missing. Usá M3U8 y guardalo en la misma carpeta que tu música.",
     },
     /** Hover/aria label on the affected rows; the block above explains why. */
     willBeMissing: {
       en: "Tracks will show as missing in this format",
-      es: "Los tracks van a aparecer como missing en este formato",
+      es: "Los temas van a aparecer como missing en este formato",
     },
     /**
      * Shown when we still hold the library entries this playlist was imported
@@ -1000,7 +1000,7 @@ export const DASHBOARD_COPY = {
      */
     preservedTitle: {
       en: "Your track data comes back untouched",
-      es: "Tus datos de los tracks vuelven intactos",
+      es: "Tus datos de los temas vuelven intactos",
     },
     preservedBody: {
       en: "Only the order changes. Hotcues, cue points, comments, ratings, album and label tags and the analysis are written back exactly as they came out of your library.",
@@ -1018,12 +1018,12 @@ export const DASHBOARD_COPY = {
     },
     staleImportBody: {
       en: "So this export rebuilds each track from what we store, and your hotcues, comments and album tags won't be in it. Import the same file again and they will be — nothing else about the set changes.",
-      es: "Así que este export reconstruye cada track con lo que guardamos, y tus hotcues, comentarios y tags de álbum no van a estar. Importá el mismo archivo de nuevo y sí van a estar — no cambia nada más del set.",
+      es: "Así que este export reconstruye cada tema con lo que guardamos, y tus hotcues, comentarios y tags de álbum no van a estar. Importá el mismo archivo de nuevo y sí van a estar — no cambia nada más del set.",
     },
     /** Partial: some tracks preserved, some added by hand afterwards. */
     partialPreservedBody: {
       en: "{preserved} of {total} tracks come back untouched. The rest were added by hand, so we rebuild those from what we store.",
-      es: "{preserved} de {total} tracks vuelven intactos. El resto se agregaron a mano, así que esos los reconstruimos con lo que guardamos.",
+      es: "{preserved} de {total} temas vuelven intactos. El resto se agregaron a mano, así que esos los reconstruimos con lo que guardamos.",
     },
     /** The one write into the DJ's library we offer, and never by default. */
     writeEnergyLabel: {
@@ -1058,12 +1058,12 @@ export const DASHBOARD_COPY = {
 
   importSummary: {
     title: { en: "What we read from your file", es: "Qué leímos de tu archivo" },
-    tracks: { en: "{count} tracks", es: "{count} tracks" },
+    tracks: { en: "{count} tracks", es: "{count} temas" },
     ofTracks: { en: "{count} of {total}", es: "{count} de {total}" },
     all: { en: "all {total}", es: "las {total}" },
     none: { en: "none", es: "ninguno" },
     bpm: { en: "BPM", es: "BPM" },
-    key: { en: "Key", es: "Key" },
+    key: { en: "Key", es: "Tonalidad" },
     genre: { en: "Genre", es: "Género" },
     energy: { en: "Energy", es: "Energía" },
     duration: { en: "Length", es: "Duración" },
@@ -1074,7 +1074,7 @@ export const DASHBOARD_COPY = {
     },
     m3u8Note: {
       en: "An M3U8 only carries file paths and track lengths — there is no BPM, key, genre or energy in the format itself, so there was nothing for us to read. To bring those across, export the same playlist as Rekordbox XML or Traktor NML, or import the audio files directly.",
-      es: "Un M3U8 sólo lleva rutas de archivo y duraciones — el formato no tiene BPM, key, género ni energía, así que no había nada que leer. Para traer todo eso, exportá la misma playlist como XML de Rekordbox o NML de Traktor, o importá los archivos de audio directamente.",
+      es: "Un M3U8 sólo lleva rutas de archivo y duraciones — el formato no tiene BPM, tonalidad, género ni energía, así que no había nada que leer. Para traer todo eso, exportá la misma playlist como XML de Rekordbox o NML de Traktor, o importá los archivos de audio directamente.",
     },
     energyFrom: {
       en: "Energy read from the {field} tag.",
@@ -1148,10 +1148,10 @@ export const DASHBOARD_COPY = {
       es: "Para cambiar tu email, escribinos — también es tu usuario, y los sets compartidos con vos se asocian por dirección.",
     },
     languageLabel: { en: "Language", es: "Idioma" },
-    keyNotationLabel: { en: "Key notation", es: "Notación de key" },
+    keyNotationLabel: { en: "Key notation", es: "Notación de tonalidad" },
     keyNotationHint: {
       en: "Switched from the Key column header on any tracklist.",
-      es: "Se cambia desde el encabezado de la columna Key en cualquier tracklist.",
+      es: "Se cambia desde el encabezado de la columna Tonalidad en cualquier tracklist.",
     },
     planHeading: { en: "Plan", es: "Plan" },
     contactHeading: { en: "Talk to us", es: "Escribinos" },
@@ -1362,7 +1362,7 @@ export const DASHBOARD_COPY = {
     },
     versionStale: {
       en: "This version is from before you added a track, so restoring it would leave that track out. Reorder by hand instead.",
-      es: "Esta versión es de antes de que agregaras un track, así que restaurarla lo dejaría afuera. Reordená a mano.",
+      es: "Esta versión es de antes de que agregaras un tema, así que restaurarla lo dejaría afuera. Reordená a mano.",
     },
     rateLimited: {
       en: "Too many changes in a short time. Wait a moment and try again.",
@@ -1373,14 +1373,14 @@ export const DASHBOARD_COPY = {
       es: "Revisá los campos marcados.",
     },
     playlistDeleted: { en: "Playlist deleted.", es: "Playlist eliminada." },
-    trackAdded: { en: "Track added.", es: "Track agregado." },
-    trackUpdated: { en: "Track updated.", es: "Track actualizado." },
-    trackRemoved: { en: "Track removed.", es: "Track eliminado." },
-    trackMoved: { en: "Track moved.", es: "Track movido." },
+    trackAdded: { en: "Track added.", es: "Tema agregado." },
+    trackUpdated: { en: "Track updated.", es: "Tema actualizado." },
+    trackRemoved: { en: "Track removed.", es: "Tema eliminado." },
+    trackMoved: { en: "Track moved.", es: "Tema movido." },
     detailsSaved: { en: "Playlist updated.", es: "Playlist actualizada." },
     importedTracks: {
       en: "Imported {count} track(s).{skipped}",
-      es: "Se importaron {count} track(s).{skipped}",
+      es: "Se importaron {count} tema(s).{skipped}",
     },
     chooseFile: {
       en: "Choose a Rekordbox XML or Traktor NML file to import.",
@@ -1533,7 +1533,7 @@ export const DASHBOARD_COPY = {
     /** Shown on the button, so the count is the last thing read before clicking. */
     lookUp: {
       en: "Look up {count} tracks",
-      es: "Buscar {count} tracks",
+      es: "Buscar {count} temas",
     },
     looking: { en: "Looking up…", es: "Buscando…" },
     /** Both numbers, because a partial result reads as a bug otherwise. */
@@ -1553,7 +1553,7 @@ export const DASHBOARD_COPY = {
     title: { en: "Measure the audio", es: "Medir el audio" },
     intro: {
       en: "Point at the folder with these tracks and we read real BPM, key and energy from the files. The audio never leaves your machine — only the numbers are saved. You review which file goes with which track before anything is written.",
-      es: "Apuntá a la carpeta con estos temas y leemos BPM, tonalidad y energía reales de los archivos. El audio nunca sale de tu máquina — sólo se guardan los números. Vos revisás qué archivo va con cada track antes de que se escriba nada.",
+      es: "Apuntá a la carpeta con estos temas y leemos BPM, tonalidad y energía reales de los archivos. El audio nunca sale de tu máquina — sólo se guardan los números. Vos revisás qué archivo va con cada tema antes de que se escriba nada.",
     },
     pickFolder: { en: "Choose folder", es: "Elegir carpeta" },
     reading: { en: "Reading tags", es: "Leyendo tags" },
@@ -1568,16 +1568,16 @@ export const DASHBOARD_COPY = {
     },
     leftOut: {
       en: "{unmatched} tracks had no matching file, and {ambiguous} matched more than one. Those are left exactly as they are.",
-      es: "{unmatched} tracks no encontraron archivo, y {ambiguous} coincidieron con más de uno. Esos quedan exactamente como están.",
+      es: "{unmatched} temas no encontraron archivo, y {ambiguous} coincidieron con más de uno. Esos quedan exactamente como están.",
     },
     measureCount: {
       en: "Measure {count} tracks",
-      es: "Medir {count} tracks",
+      es: "Medir {count} temas",
     },
     cancel: { en: "Start over", es: "Empezar de nuevo" },
     doneCount: {
       en: "{count} tracks updated",
-      es: "{count} tracks actualizados",
+      es: "{count} temas actualizados",
     },
     noAudioFiles: {
       en: "That folder has no audio files we can read.",
@@ -1591,7 +1591,7 @@ export const DASHBOARD_COPY = {
     // are already saved. Naming that beats an error that implies nothing worked.
     partiallySaved: {
       en: "Some tracks were saved and some couldn't be. Run it again to finish the rest.",
-      es: "Algunos tracks se guardaron y otros no. Volvé a correrlo para terminar el resto.",
+      es: "Algunos temas se guardaron y otros no. Volvé a correrlo para terminar el resto.",
     },
   },
 
@@ -1602,11 +1602,11 @@ export const DASHBOARD_COPY = {
   editTurn: {
     free: {
       en: "Nobody is editing right now. Take a turn and you can move tracks.",
-      es: "Nadie está editando ahora. Tomá un turno y podés mover tracks.",
+      es: "Nadie está editando ahora. Tomá un turno y podés mover temas.",
     },
     youHaveIt: {
       en: "You have the set. Move tracks freely — your turn renews with every change and lapses after {minutes} minutes idle.",
-      es: "Tenés el set. Mové tracks libremente — tu turno se renueva con cada cambio y se vence a los {minutes} minutos sin actividad.",
+      es: "Tenés el set. Mové temas libremente — tu turno se renueva con cada cambio y se vence a los {minutes} minutos sin actividad.",
     },
     theyHaveIt: {
       en: "{owner} is editing right now. You'll be able to take a turn when they hand it back, or shortly after they stop.",
@@ -1655,7 +1655,7 @@ export const DASHBOARD_COPY = {
     },
     resolve: { en: "Mark as handled", es: "Marcar como resuelta" },
     resolved: { en: "Handled", es: "Resuelta" },
-    aboutTrack: { en: "About track {position}", es: "Sobre el track {position}" },
+    aboutTrack: { en: "About track {position}", es: "Sobre el tema {position}" },
     sharedIndexTitle: { en: "Shared with me", es: "Compartidos conmigo" },
     sharedIndexIntro: {
       en: "Sets other DJs shared with you. Read-only — you can leave suggestions.",
