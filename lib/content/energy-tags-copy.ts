@@ -92,7 +92,7 @@ const FIELDS: EnergyFieldRow[] = [
 
 const FORMATS: EnergyFormatRow[] = [
   { written: "Energy 7", reads: "7", note: { en: "Mixed In Key's own format.", es: "El formato de Mixed In Key." } },
-  { written: "8A - Energy 7", reads: "7", note: { en: "Key and energy in one comment — read fine.", es: "Key y energía en un comentario — se lee bien." } },
+  { written: "8A - Energy 7", reads: "7", note: { en: "Key and energy in one comment — read fine.", es: "Tonalidad y energía en un comentario — se lee bien." } },
   { written: "Energy: 7", reads: "7", note: { en: "", es: "" } },
   { written: "Energy=7", reads: "7", note: { en: "", es: "" } },
   { written: "Energy 7/10", reads: "7", note: { en: "", es: "" } },
@@ -209,12 +209,12 @@ export function getEnergyTagsCopy(locale: SiteLocale) {
     provenanceHeading: locale === "es" ? "Te decimos de dónde salió" : "We tell you where it came from",
     provenanceBody:
       locale === "es"
-        ? "Después de importar, EnergyCurve muestra para cuántos tracks encontró energía y de qué campo la leyó. Si dice 0 de 24, el problema es de formato y no tuyo — y esta página te dice cuál cambiar."
+        ? "Después de importar, EnergyCurve muestra para cuántos temas encontró energía y de qué campo la leyó. Si dice 0 de 24, el problema es de formato y no tuyo — y esta página te dice cuál cambiar."
         : "After an import, EnergyCurve shows how many tracks it found energy for and which field it read. If it says 0 of 24, that's a format mismatch and not your fault — and this page tells you which one to change.",
     noEnergyHeading: locale === "es" ? "Si no tenés energía en ningún tag" : "If you have no energy tags at all",
     noEnergyBody:
       locale === "es"
-        ? "No pasa nada: EnergyCurve estima la curva por BPM, género y posición, y podés editar cualquier valor a mano en la tabla de tracks. Los valores de tus tags simplemente hacen que el análisis arranque de datos reales en lugar de una estimación."
+        ? "No pasa nada: EnergyCurve estima la curva por BPM, género y posición, y podés editar cualquier valor a mano en la tabla de temas. Los valores de tus tags simplemente hacen que el análisis arranque de datos reales en lugar de una estimación."
         : "That's fine: EnergyCurve estimates the curve from BPM, genre and position, and you can edit any value by hand in the track table. Tags just let the analysis start from real data instead of an estimate.",
     fields: FIELDS.map((row) => ({
       field: pick(row.field),
