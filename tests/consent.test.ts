@@ -25,7 +25,10 @@ import { redactUrl } from "@/components/analytics/analytics-tracker"
 
 const store = new Map<string, string>()
 
-function installBrowser({ dnt = null }: { dnt?: string | null } = {}) {
+function installBrowser({
+  dnt = null,
+  gpc,
+}: { dnt?: string | null; gpc?: boolean } = {}) {
   const listeners = new Map<string, Set<(event: Event) => void>>()
 
   vi.stubGlobal("window", {
@@ -34,7 +37,7 @@ function installBrowser({ dnt = null }: { dnt?: string | null } = {}) {
       setItem: (key: string, value: string) => void store.set(key, value),
       removeItem: (key: string) => void store.delete(key),
     },
-    navigator: { doNotTrack: dnt },
+    navigator: { doNotTrack: dnt, globalPrivacyControl: gpc },
     addEventListener: (type: string, fn: (event: Event) => void) => {
       if (!listeners.has(type)) listeners.set(type, new Set())
       listeners.get(type)!.add(fn)
@@ -102,6 +105,32 @@ describe("Do Not Track answers on the visitor's behalf", () => {
     installBrowser({ dnt: "yes" })
 
     expect(hasDoNotTrack()).toBe(true)
+  })
+})
+
+describe("Global Privacy Control rides the same rail as DNT", () => {
+  it("beats a yes stored before the signal was turned on", () => {
+    installBrowser({ gpc: true })
+    // Accepted six months ago, enabled GPC today: the signal is the newer
+    // answer, and in California it is a binding opt-out, not a preference.
+    store.set(CONSENT_STORAGE_KEY, "granted")
+
+    expect(hasDoNotTrack()).toBe(true)
+    expect(readConsent()).toBe("denied")
+    expect(analyticsAllowed(readConsent())).toBe(false)
+  })
+
+  it("keeps the banner off screen, because the question is answered", () => {
+    installBrowser({ gpc: true })
+
+    expect(shouldAskForConsent(readConsent())).toBe(false)
+  })
+
+  it("only the spec value counts: false and absent change nothing", () => {
+    installBrowser({ gpc: false })
+
+    expect(hasDoNotTrack()).toBe(false)
+    expect(readConsent()).toBe("unset")
   })
 })
 
