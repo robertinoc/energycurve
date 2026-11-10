@@ -1,7 +1,9 @@
 import { Check } from "lucide-react"
 
+import { ExampleSetPreview } from "@/components/dashboard/example-set-preview"
 import { DASHBOARD_COPY } from "@/lib/content/dashboard-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
+import type { ExampleSetView } from "@/lib/product/example-set-analysis"
 import type { FirstRunState, FirstRunStepId } from "@/lib/product/first-run"
 import { cn } from "@/lib/utils"
 
@@ -26,13 +28,24 @@ const STEP_COPY: Record<
  * Deliberately not a modal or a tour. Someone who just signed up came to do a
  * thing, and the fastest way to be useful is to name the three steps and get out
  * of the way — not to trap them behind an overlay they'll dismiss unread.
+ *
+ * The one thing to open is the example set beside the first step (step 1.1 of
+ * docs/conversion-plan.md), for someone who has nothing imported: the product
+ * working on a set before they have to bring one. It goes when the first import
+ * lands, with the step it belongs to.
  */
 export function FirstRunGuide({
   state,
   locale,
+  example = null,
+  importHref = "#import",
 }: {
   state: FirstRunState
   locale: SiteLocale
+  /** The example set, read by the engine on the server; null hides it. */
+  example?: ExampleSetView | null
+  /** Where the example's "try it with yours" lands: this page's import form. */
+  importHref?: string
 }) {
   if (!state.visible) {
     return null
@@ -88,6 +101,9 @@ export function FirstRunGuide({
                     {COPY[copy.body][locale]}
                   </p>
                 )}
+                {step.id === "import" && !step.done && example ? (
+                  <ExampleSetPreview example={example} locale={locale} importHref={importHref} />
+                ) : null}
               </div>
             </li>
           )
