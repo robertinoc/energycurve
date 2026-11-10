@@ -110,8 +110,8 @@ export const TOOL_COPY = {
     browse: { en: "Choose a file", es: "Elegir un archivo" },
     orPaste: { en: "or paste a tracklist", es: "o pegá una lista de temas" },
     pastePlaceholder: {
-      en: "Nite Fleit - First Light\nOr:la - Slow Burn\nAnetha - Pressure Drop",
-      es: "Nite Fleit - First Light\nOr:la - Slow Burn\nAnetha - Pressure Drop",
+      en: "Halvard Esk - First Light\nMirela Sond - Slow Burn\nTeo Vaasko - Pressure Drop",
+      es: "Halvard Esk - First Light\nMirela Sond - Slow Burn\nTeo Vaasko - Pressure Drop",
     },
     pasteHint: {
       en: "One track per line, “Artist - Title”.",
