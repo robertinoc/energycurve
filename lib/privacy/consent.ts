@@ -16,9 +16,26 @@
  * 3. **Do Not Track decides on its own.** A browser sending DNT has already
  *    answered, and asking again is asking someone to repeat themselves.
  *
- * Deliberately `localStorage` and not a cookie: the choice is per browser and
- * never needs to reach the server, and a consent cookie that rides on every
- * request is the small irony this file exists to avoid.
+ * The answer lives in `localStorage`, per browser. Until November 2026 it
+ * never needed to reach the server, and a consent cookie riding on every
+ * request was the small irony this file existed to avoid.
+ *
+ * Then the server started emitting conversion events of its own (the sales
+ * walls and the score gain, docs/conversion-plan.md step 3.1), which is
+ * exactly what the banner asks about — and those are born in page renders,
+ * server actions and a redirect, where no script of ours runs first and the
+ * only thing the browser sends is its cookies. So one bit now does reach the
+ * server, as a mirror and not as the source of truth:
+ *
+ * - `ec_analytics_consent` exists **only while the answer is "granted"**.
+ *   Someone who refused, never answered or sends Do Not Track carries no
+ *   consent cookie at all — the irony is still avoided for them, which is
+ *   everyone the banner was protecting.
+ * - It is written and removed together with the stored answer, and re-synced
+ *   from it whenever a page subscribes, so a stale cookie lives at most until
+ *   the next page view.
+ * - The server reads it in `lib/privacy/server-consent.ts`, and anything it
+ *   cannot read with certainty counts as no consent.
  */
 
 export type ConsentState = "unset" | "granted" | "denied"
@@ -36,6 +53,47 @@ export const CONSENT_STORAGE_KEY = `ec.analytics-consent.v${CONSENT_VERSION}`
 
 /** Fired on the window so a listener can react without polling storage. */
 export const CONSENT_CHANGE_EVENT = "ec:analytics-consent-change"
+
+/**
+ * The server's copy of a "yes", and nothing else (see the header).
+ *
+ * The value carries the version so a bump re-asks the server too: a cookie
+ * left over from the previous version no longer matches and reads as no.
+ */
+export const CONSENT_COOKIE_NAME = "ec_analytics_consent"
+export const CONSENT_COOKIE_VALUE = `granted.v${CONSENT_VERSION}`
+
+/** Renewed on every page that subscribes, so this is idle time, not lifetime. */
+const CONSENT_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 180
+
+/**
+ * Makes the cookie say what `state` says: present for "granted", gone for
+ * anything else.
+ *
+ * Host-only and `Path=/`, like the rest of the app's cookies; `SameSite=Lax` so
+ * it reaches the top-level navigation of a sales-wall click; `Secure` wherever
+ * the page is. Guarded like every storage access here: a browser that refuses
+ * cookies leaves the server without a yes, which is the safe direction.
+ */
+export function mirrorConsentToCookie(state: ConsentState): void {
+  if (typeof document === "undefined") {
+    return
+  }
+
+  const secure =
+    typeof window !== "undefined" && window.location?.protocol === "https:"
+      ? "; Secure"
+      : ""
+
+  try {
+    document.cookie =
+      state === "granted"
+        ? `${CONSENT_COOKIE_NAME}=${CONSENT_COOKIE_VALUE}; Path=/; Max-Age=${CONSENT_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${secure}`
+        : `${CONSENT_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${secure}`
+  } catch {
+    // Same reasoning as the storage guards below.
+  }
+}
 
 function isConsentState(value: unknown): value is ConsentState {
   return value === "granted" || value === "denied" || value === "unset"
@@ -82,6 +140,10 @@ export function writeConsent(state: Exclude<ConsentState, "unset">): void {
     // right failure: re-asking is a nuisance, assuming yes is a violation.
   }
 
+  // What the browser now reports, not `state`: under Do Not Track a "granted"
+  // that somehow got written still reads as denied, and the server must agree.
+  mirrorConsentToCookie(readConsent())
+
   window.dispatchEvent(new CustomEvent(CONSENT_CHANGE_EVENT, { detail: state }))
 }
 
@@ -96,6 +158,8 @@ export function clearConsent(): void {
   } catch {
     // Same reasoning as above.
   }
+
+  mirrorConsentToCookie("unset")
 
   window.dispatchEvent(new CustomEvent(CONSENT_CHANGE_EVENT, { detail: "unset" }))
 }
@@ -147,6 +211,12 @@ export function subscribeToConsent(onChange: () => void): () => void {
   if (typeof window === "undefined") {
     return () => {}
   }
+
+  // Every page subscribes (the banner and the tracker live in the root
+  // layout), so this is where the server's copy is brought back in line: a
+  // browser that said yes before the cookie existed gets it on its next page,
+  // and one whose answer was cleared or turned into Do Not Track loses it.
+  mirrorConsentToCookie(readConsent())
 
   function onStorage(event: StorageEvent) {
     // A null key means the whole store was cleared, which counts.

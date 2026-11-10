@@ -3,6 +3,7 @@ import "server-only"
 import { PostHog } from "posthog-node"
 
 import { logWarn } from "@/lib/observability/logger"
+import { readServerConsent } from "@/lib/privacy/server-consent"
 
 /**
  * Product analytics events (roadmap section 9). The PostHog project key is
@@ -94,20 +95,70 @@ export function isAnalyticsEnabled() {
 }
 
 /**
+ * Events that only leave the server when the browser that caused them said yes
+ * to analytics (Robertino's decision of 10/11/2026).
+ *
+ * These three exist to optimise conversion, which is exactly what the consent
+ * banner asks about. The rest of the union is deliberately not here: the
+ * billing events and `plan_limit_reached` describe the running of the service,
+ * and `signup` and the playlist and analysis events were left as they were by
+ * the same decision. Moving one into this set is a decision, not a refactor.
+ *
+ * Gated here rather than at each call site so that a fifth place emitting a
+ * sales wall cannot forget to ask.
+ */
+const CONSENT_REQUIRED: ReadonlySet<AnalyticsEvent> = new Set<AnalyticsEvent>([
+  "score_improved",
+  "sales_wall_shown",
+  "sales_wall_clicked",
+])
+
+/** Exported for tests and for anyone reading the analytics inventory. */
+export function requiresConsent(event: AnalyticsEvent): boolean {
+  return CONSENT_REQUIRED.has(event)
+}
+
+/**
  * Fire-and-forget event capture keyed by the app profile id (the same
  * distinct id the browser SDK identifies with).
+ *
+ * For the events in `CONSENT_REQUIRED` the capture waits for the consent of the
+ * request first. Still fire-and-forget: the caller is not awaited on, and a
+ * consent read that fails or is uncertain drops the event — never the action.
+ * The returned promise exists for tests; callers ignore it.
  */
 export function captureServerEvent(
   profileId: string,
   event: AnalyticsEvent,
   properties: AnalyticsProperties = {}
-) {
+): Promise<void> | void {
   const posthog = getPostHogServerClient()
 
   if (!posthog) {
     return
   }
 
+  if (CONSENT_REQUIRED.has(event)) {
+    return readServerConsent()
+      .then((consent) => {
+        if (consent === "granted") {
+          send(posthog, profileId, event, properties)
+        }
+      })
+      .catch(() => {
+        // readServerConsent does not throw; this is for whatever it calls.
+      })
+  }
+
+  send(posthog, profileId, event, properties)
+}
+
+function send(
+  posthog: PostHog,
+  profileId: string,
+  event: AnalyticsEvent,
+  properties: AnalyticsProperties
+) {
   try {
     posthog.capture({ distinctId: profileId, event, properties })
   } catch (error) {
