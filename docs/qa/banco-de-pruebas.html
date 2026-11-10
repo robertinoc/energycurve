@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">146</strong>
+      <strong id="tally-total">147</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1592,6 +1592,20 @@
           steps: ["En un navegador donde ya hayas elegido <strong>«Aceptar»</strong> (la cookie <code>ec_analytics_consent</code> existe), activá GPC: en Firefox, <code>about:config</code> → <code>privacy.globalprivacycontrol.enabled</code> = true; en Chrome sirve una extensión como Privacy Badger", "Recargá cualquier página del sitio y mirá DevTools → Application → Cookies", "Sin cerrar sesión, provocá un muro como en MUROS.4 y buscá sus eventos en PostHog → Activity", "Verificá que el banner no reaparece pidiendo de nuevo"],
           expect: "La cookie <code>ec_analytics_consent</code> desaparece en la recarga, no llega ningún evento de muro a PostHog, y el banner queda callado: GPC ya respondió por vos. Que la señal pisa al «sí» guardado lo afirman los tests de los dos lados (<code>tests/consent.test.ts</code>, <code>tests/server-event-consent.test.ts</code>); lo que ningún test mira es un navegador real mandando <code>Sec-GPC: 1</code> de verdad.",
           ifNot: "Si la cookie sobrevive a la recarga con GPC activo, el espejo del navegador no está respetando la señal (lib/privacy/consent.ts). Si la cookie murió pero el evento igual llegó, el servidor no está leyendo <code>Sec-GPC</code> (lib/privacy/server-consent.ts). Anotá cuál de las dos fue."
+        }
+      ]
+    },
+    {
+      code: "MUESTRA",
+      title: "El set de ejemplo del dashboard",
+      meta: "~10 min · necesita el deploy · una cuenta sin playlists · el teléfono con la app instalada",
+      why: "Paso 1.1 de <code>docs/conversion-plan.md</code>: de 188 registrados, 67 nunca usaron nada. La hipótesis es que el primer import es trabajo, y que alguien con curiosidad lo deja para después y no vuelve. El ejemplo muestra el producto funcionando sobre un set antes de que tengas que traer el tuyo, y termina en tu import. La curva, el puntaje y los problemas salen del motor real; los tests afirman que no guarda nada, que se ve sólo sin playlists, que entra a 375 px y que termina en el import. Lo que ningún test dice es si se entiende en diez segundos. <strong>Antes de desplegar, el set de ejemplo tiene que ser uno real</strong>: el de ahora es un placeholder (<code>lib/product/example-set.ts</code>).",
+      tests: [
+        {
+          code: "MUESTRA.1", title: "Entenderlo en diez segundos, sin subir nada", sub: "Una cuenta sin playlists · desde la app instalada",
+          steps: ["Con una cuenta que no tenga ninguna playlist, abrí el dashboard desde la app instalada", "Tocá «¿No tenés un export a mano? Mirá primero un set de ejemplo» y contá cuánto tardás en entender qué hace el producto", "Bajá hasta el final y tocá «Ahora probá con lo tuyo»", "Volvé a abrir la cuenta después de importar algo", "En una ventana con la analítica aceptada, abrí el ejemplo y tocá el botón; en PostHog buscá <code>example_set_opened</code> y <code>example_set_import_click</code>. Repetí con la analítica rechazada"],
+          expect: "En ningún momento parece un set tuyo: dice «Ejemplo», «no es tuyo» y que no se guarda en tu cuenta. Se ven el puntaje, la curva y tres problemas con su arreglo, sin scroll horizontal ni nada tapado por la muesca. «Ahora probá con lo tuyo» te deja en el formulario de import. Con una playlist ya importada, el ejemplo desaparece. Con la analítica aceptada llegan los dos eventos, sólo con el idioma; con la analítica rechazada, ninguno. Esto último sólo se puede ver acá: en el build de las E2E no sale ningún evento de PostHog, así que la suite no lo prueba.",
+          ifNot: "Si tardaste más de diez segundos en entender qué hace, anotá qué te frenó: es exactamente lo que este paso tiene que resolver. Si el set de ejemplo todavía dice «Example track 01», el placeholder llegó a producción."
         }
       ]
     }
