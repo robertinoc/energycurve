@@ -22,6 +22,7 @@ import {
 import { isBillingConfigured } from "@/lib/billing/config"
 import { can } from "@/lib/product/capabilities"
 import { computeFirstRun } from "@/lib/product/first-run"
+import { analyzeExampleSet } from "@/lib/product/example-set-analysis"
 import { getInfrastructureStatus } from "@/lib/config/infrastructure-status"
 import { logWarn } from "@/lib/observability/logger"
 import { cn } from "@/lib/utils"
@@ -200,11 +201,22 @@ export default async function DashboardPage({
 
         {/* Above the import card on purpose: it names what the import is *for*,
             and a new account has nothing else on this page to read. */}
-        <FirstRunGuide state={firstRun} locale={locale} />
+        <FirstRunGuide
+          state={firstRun}
+          locale={locale}
+          // Only for someone with nothing imported: the example is the way in,
+          // not a feature, and it is the same on every plan.
+          example={
+            firstRun.steps.find((step) => step.id === "import")?.done === false
+              ? analyzeExampleSet(locale)
+              : null
+          }
+          importHref="#import"
+        />
 
         {/* Primary action: upload a playlist. New-from-scratch is the quieter,
             secondary path underneath. */}
-        <section className="space-y-3">
+        <section id="import" className="scroll-mt-6 space-y-3">
           <PlaylistImportUpload
             locale={locale}
             customContexts={customContexts}

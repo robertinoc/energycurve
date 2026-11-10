@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">145</strong>
+      <strong id="tally-total">146</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1586,6 +1586,20 @@
           steps: ["Con el deploy de la compuerta: ventana privada, entrá con la cuenta FREE y en el banner elegí <strong>«No, gracias»</strong>", "Provocá un muro: abrí el análisis de un set con el ordenamiento del mes ya gastado, y tocá el botón del muro", "En PostHog → Activity, buscá <code>sales_wall_shown</code> y <code>sales_wall_clicked</code> de esa cuenta en los últimos minutos", "Repetí en otra ventana privada eligiendo <strong>«Aceptar»</strong>"],
           expect: "Con «No»: ningún evento de muro de esa cuenta. Con «Aceptar»: los dos, con la misma propiedad <code>wall</code>. Que el servidor sólo emite con la cookie <code>ec_analytics_consent</code> lo afirman los tests (<code>tests/server-event-consent.test.ts</code>, <code>e2e/consent-cookie.spec.ts</code>); lo que no pueden ver es lo que llega a PostHog de verdad.",
           ifNot: "Si con «No» aparece un evento de muro, es la promesa del banner rota: anotá la hora, el evento y la cuenta. Si con «Aceptar» no aparece ninguno, mirá en las DevTools → Application → Cookies si está <code>ec_analytics_consent</code>: sin ella el servidor no emite, a propósito."
+        }
+      ]
+    },
+    {
+      code: "MUESTRA",
+      title: "El set de ejemplo del dashboard",
+      meta: "~10 min · necesita el deploy · una cuenta sin playlists · el teléfono con la app instalada",
+      why: "Paso 1.1 de <code>docs/conversion-plan.md</code>: de 188 registrados, 67 nunca usaron nada. La hipótesis es que el primer import es trabajo, y que alguien con curiosidad lo deja para después y no vuelve. El ejemplo muestra el producto funcionando sobre un set antes de que tengas que traer el tuyo, y termina en tu import. La curva, el puntaje y los problemas salen del motor real; los tests afirman que no guarda nada, que se ve sólo sin playlists, que entra a 375 px y que termina en el import. Lo que ningún test dice es si se entiende en diez segundos. <strong>Antes de desplegar, el set de ejemplo tiene que ser uno real</strong>: el de ahora es un placeholder (<code>lib/product/example-set.ts</code>).",
+      tests: [
+        {
+          code: "MUESTRA.1", title: "Entenderlo en diez segundos, sin subir nada", sub: "Una cuenta sin playlists · desde la app instalada",
+          steps: ["Con una cuenta que no tenga ninguna playlist, abrí el dashboard desde la app instalada", "Tocá «¿No tenés un export a mano? Mirá primero un set de ejemplo» y contá cuánto tardás en entender qué hace el producto", "Bajá hasta el final y tocá «Ahora probá con lo tuyo»", "Volvé a abrir la cuenta después de importar algo"],
+          expect: "En ningún momento parece un set tuyo: dice «Ejemplo», «no es tuyo» y que no se guarda en tu cuenta. Se ven el puntaje, la curva y tres problemas con su arreglo, sin scroll horizontal ni nada tapado por la muesca. «Ahora probá con lo tuyo» te deja en el formulario de import. Con una playlist ya importada, el ejemplo desaparece.",
+          ifNot: "Si tardaste más de diez segundos en entender qué hace, anotá qué te frenó: es exactamente lo que este paso tiene que resolver. Si el set de ejemplo todavía dice «Example track 01», el placeholder llegó a producción."
         }
       ]
     }
