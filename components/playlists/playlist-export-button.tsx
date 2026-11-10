@@ -26,6 +26,22 @@ const COPY = DASHBOARD_COPY.exportMenu
 interface PlaylistExportButtonProps {
   playlist: ExportPlaylist
   locale: SiteLocale
+  /**
+   * Drawn like the other secondary actions instead of as an outlined button.
+   * For a set that was never analysed, where exporting is not the next step
+   * and should not look like a sibling of the one that is. Export itself is
+   * unchanged and stays free on every plan.
+   */
+  quiet?: boolean
+  /**
+   * On a phone, open the menu across the row of actions the button sits in
+   * instead of hanging it from the button's right edge. The menu is 288px wide
+   * and right-aligned to the button; once the playlist page's actions wrap,
+   * Export can land anywhere in its line and the menu ran off the left of a
+   * 375px screen. The row must be positioned (`relative`) for this to work,
+   * which is why it is asked for and not assumed.
+   */
+  menuSpansRow?: boolean
 }
 
 interface MenuItem {
@@ -46,6 +62,8 @@ const MENU_ITEMS: MenuItem[] = [
 export function PlaylistExportButton({
   playlist,
   locale,
+  quiet = false,
+  menuSpansRow = false,
 }: PlaylistExportButtonProps) {
   const [open, setOpen] = useState(false)
   // Default off, and deliberately not remembered across opens: it writes into
@@ -75,15 +93,21 @@ export function PlaylistExportButton({
   const plainItems = MENU_ITEMS.filter((i) => i.group === "plain")
 
   return (
-    <div className="relative">
+    <div className={cn("relative", menuSpansRow && "max-sm:static")}>
       <Button
         type="button"
-        variant="outline"
+        variant={quiet ? "ghost" : "outline"}
         size="sm"
         disabled={disabled}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
+        className={
+          // Quiet is the same ghost button as Gig Mode, Set sheet and Compare
+          // next to it, so the group reads as one set of equals.
+          quiet
+            ? "text-white/58 hover:text-white"
+            : "border-white/10 bg-white/[0.04] text-white hover:border-white/16 hover:bg-white/[0.07]"
+        }
       >
         <Download className="size-3.5" />
         {COPY.export[locale]}
@@ -99,7 +123,13 @@ export function PlaylistExportButton({
             className="fixed inset-0 z-10 cursor-default"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 z-20 mt-1 w-72 rounded-xl border border-white/12 bg-[#17121f] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          <div
+            data-testid="export-menu"
+            className={cn(
+              "absolute right-0 z-20 mt-1 w-72 rounded-xl border border-white/12 bg-[#17121f] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+              menuSpansRow && "max-sm:left-0 max-sm:w-auto"
+            )}
+          >
             <p className="px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/40">
               {COPY.djSoftware[locale]}
             </p>

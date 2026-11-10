@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">147</strong>
+      <strong id="tally-total">150</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1606,6 +1606,32 @@
           steps: ["Con una cuenta que no tenga ninguna playlist, abrí el dashboard desde la app instalada", "Tocá «¿No tenés un export a mano? Mirá primero un set de ejemplo» y contá cuánto tardás en entender qué hace el producto", "Bajá hasta el final y tocá «Ahora probá con lo tuyo»", "Volvé a abrir la cuenta después de importar algo", "En una ventana con la analítica aceptada, abrí el ejemplo y tocá el botón; en PostHog buscá <code>example_set_opened</code> y <code>example_set_import_click</code>. Repetí con la analítica rechazada"],
           expect: "En ningún momento parece un set tuyo: dice «Ejemplo», «no es tuyo» y que no se guarda en tu cuenta. Se ven el puntaje, la curva y tres problemas con su arreglo, sin scroll horizontal ni nada tapado por la muesca. «Ahora probá con lo tuyo» te deja en el formulario de import. Con una playlist ya importada, el ejemplo desaparece. Con la analítica aceptada llegan los dos eventos, sólo con el idioma; con la analítica rechazada, ninguno. Esto último sólo se puede ver acá: en el build de las E2E no sale ningún evento de PostHog, así que la suite no lo prueba.",
           ifNot: "Si tardaste más de diez segundos en entender qué hace, anotá qué te frenó: es exactamente lo que este paso tiene que resolver. Si el set de ejemplo todavía dice «Example track 01», el placeholder llegó a producción."
+        }
+      ]
+    },
+    {
+      code: "ANALIZAR",
+      title: "Del import al análisis",
+      meta: "~20 min · necesita el deploy · cualquier cuenta (analizar es gratis en todos los planes) · el teléfono con la app instalada",
+      why: "Paso 1.2 de <code>docs/conversion-plan.md</code>. En los 7 días al 10/11 se crearon 105 playlists y se corrieron 49 análisis: la gente importa y no analiza. La pantalla de un set que nunca se analizó ahora pone «Analizar set» primero y las demás acciones debajo, y el resumen del import termina en «Lo que sigue» en vez de en un enlace a la documentación. Los tests afirman el orden, que los dos estados ofrecen cosas distintas, que no hay scroll horizontal a 375 px y que el recorrido llega a la curva (<code>e2e/import-to-analysis.auth.spec.ts</code>). Lo que no pueden decir es cómo se ve en la app instalada de verdad, ni si el texto se lee como una guía o como un empujón.",
+      tests: [
+        {
+          code: "ANALIZAR.1", title: "Importar y llegar a la curva, en la app instalada", sub: "PWA en el teléfono · lo que el emulador no muestra",
+          steps: ["Desde la app instalada en el teléfono, importá un set que nunca hayas subido", "Al llegar a la pantalla del set, mirá qué es lo primero que se ve sin hacer scroll", "Tocá «Exportar» y mirá si el menú entra entero en la pantalla; cerralo", "Bajá hasta el recuadro «Qué leímos de tu archivo» y tocá el botón con el que termina", "Girá el teléfono y repetí el vistazo"],
+          expect: "Arriba, «Analizar set» ocupa el ancho de la pantalla, con una línea debajo que dice qué da; Gig Mode, hoja del set, comparar y exportar están debajo, más chicos. Nada queda tapado por la barra de estado ni por la barra de inicio, y la pantalla no se mueve de costado. El menú de Exportar no se corta. El recuadro «Qué leímos de tu archivo» termina en «Lo que sigue» y su botón abre el análisis con la curva dibujada.",
+          ifNot: "Captura y modelo de teléfono. Si la pantalla se desliza de costado, anotá qué botón quedó cortado. Si el menú de Exportar se sale por la izquierda, es el arreglo de este paso que no llegó."
+        },
+        {
+          code: "ANALIZAR.2", title: "Empuja, no persigue", sub: "El tono · y que no vuelva a aparecer",
+          steps: ["Importá otro set y leé «Lo que sigue» en español; cambiá el idioma y leelo en inglés", "Sin analizarlo, andá a la lista de playlists y volvé a entrar al set", "Ahora sí analizalo, y volvé a la pantalla del set", "Abrí un set viejo que ya tenías analizado"],
+          expect: "El texto dice qué va a pasar —la curva, el puntaje, los saltos, qué temas mover— y que es gratis; no menciona planes ni PRO. Al volver a entrar sin haber analizado, «Analizar set» sigue primero pero la nota ya no está: se dijo una vez. Después de analizar, y en el set viejo, la pantalla es la de siempre: todas las acciones en una fila, «Analizar set» como una más. Nada tapa la pantalla ni hay que cerrarlo para seguir.",
+          ifNot: "Si la nota reaparece en un set ya analizado, o en cada visita, es el defecto más serio de esta sección: anotá qué set y si venías de importar. Si el texto te suena a aviso de venta, copiá la frase."
+        },
+        {
+          code: "ANALIZAR.3", title: "La línea de base y el evento, en producción", sub: "Medición · necesita Supabase y PostHog de producción",
+          steps: ["En el SQL Editor de Supabase de producción, corré la consulta de la sección 6 de <code>docs/conversion-plan.md</code> (es de sólo lectura)", "Anotá los cuatro números en esa sección", "Con el deploy hecho y habiendo aceptado la analítica, entrá a un análisis desde el botón de arriba y desde «Lo que sigue»", "En PostHog → Activity, buscá <code>analyze_cta_click</code>"],
+          expect: "La consulta devuelve cuántas playlists de la semana del 04/11 al 10/11 se analizaron, cuántas en los primeros diez minutos y la mediana de minutos hasta el primer análisis. En PostHog aparecen los clics con <code>placement</code> distinto según el lugar (<code>header</code>, <code>import_summary</code>, <code>next_step</code>). Con «No, gracias» en el banner, ninguno.",
+          ifNot: "Si la consulta falla, copiá el error: puede ser un nombre de columna. Si no aparece ningún evento habiendo aceptado, anotá el navegador y si estaba la cookie <code>ec_analytics_consent</code>."
         }
       ]
     }
