@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">144</strong>
+      <strong id="tally-total">145</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1580,6 +1580,12 @@
           steps: ["Con la cuenta FREE, abrí el análisis de un set y anotá el score", "Volvé al set y cambiá el orden siguiendo uno de los arreglos que propone (moviendo temas, sin tocar el género ni el contexto)", "Abrí el análisis otra vez desde la app instalada", "Repetí con un cambio que empeore el score"],
           expect: "Cuando subió: debajo del score, una franja discreta —no un cartel que tape la curva— con «Subiste el score de X a Y.», la insignia PRO y qué agrega PRO (ver cada versión y comparar lo planeado con lo tocado). Cuando bajó o quedó igual: nada. Lo que hay que juzgar es si se lee como un logro tuyo o como un aviso de venta.",
           ifNot: "Si aparece cuando el score bajó, o al cambiar sólo el género, es el defecto más serio de esta sección: anotá los dos scores y qué cambiaste."
+        },
+        {
+          code: "MUROS.4", title: "Los eventos de los muros respetan tu «no», en PostHog", sub: "Consentimiento · lo que ningún test puede mirar es la consola de PostHog",
+          steps: ["Con el deploy de la compuerta: ventana privada, entrá con la cuenta FREE y en el banner elegí <strong>«No, gracias»</strong>", "Provocá un muro: abrí el análisis de un set con el ordenamiento del mes ya gastado, y tocá el botón del muro", "En PostHog → Activity, buscá <code>sales_wall_shown</code> y <code>sales_wall_clicked</code> de esa cuenta en los últimos minutos", "Repetí en otra ventana privada eligiendo <strong>«Aceptar»</strong>"],
+          expect: "Con «No»: ningún evento de muro de esa cuenta. Con «Aceptar»: los dos, con la misma propiedad <code>wall</code>. Que el servidor sólo emite con la cookie <code>ec_analytics_consent</code> lo afirman los tests (<code>tests/server-event-consent.test.ts</code>, <code>e2e/consent-cookie.spec.ts</code>); lo que no pueden ver es lo que llega a PostHog de verdad.",
+          ifNot: "Si con «No» aparece un evento de muro, es la promesa del banner rota: anotá la hora, el evento y la cuenta. Si con «Aceptar» no aparece ninguno, mirá en las DevTools → Application → Cookies si está <code>ec_analytics_consent</code>: sin ella el servidor no emite, a propósito."
         }
       ]
     }
