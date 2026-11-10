@@ -218,7 +218,7 @@ export const DASHBOARD_COPY = {
     analyzeTitle: { en: "See the shape of it", es: "Mirá qué forma tiene" },
     analyzeBody: {
       en: "The curve, a score out of ten, and the specific tracks that break it.",
-      es: "La curva, un puntaje sobre diez, y los tracks concretos que la rompen.",
+      es: "La curva, un puntaje sobre diez, y los temas concretos que la rompen.",
     },
     improveTitle: { en: "Change something and run it again", es: "Cambiá algo y analizalo de nuevo" },
     improveBody: {

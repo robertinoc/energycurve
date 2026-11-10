@@ -18,6 +18,7 @@ const posthog = vi.hoisted(() => ({ captured: [] as Array<{ distinctId: string; 
 const request = vi.hoisted(() => ({
   cookie: undefined as string | undefined,
   dnt: null as string | null,
+  gpc: null as string | null,
   fails: false,
 }))
 
@@ -41,7 +42,13 @@ vi.mock("next/headers", () => ({
   },
   headers: async () => {
     if (request.fails) throw new Error("headers() was called outside a request scope")
-    return { get: (name: string) => (name === "dnt" ? request.dnt : null) }
+    return {
+      get: (name: string) => {
+        if (name === "dnt") return request.dnt
+        if (name === "sec-gpc") return request.gpc
+        return null
+      },
+    }
   },
 }))
 
@@ -63,6 +70,7 @@ beforeEach(() => {
   posthog.captured.length = 0
   request.cookie = undefined
   request.dnt = null
+  request.gpc = null
   request.fails = false
 })
 
@@ -78,6 +86,27 @@ describe("the consent decision on the server", () => {
     expect(consentFromRequest(CONSENT_COOKIE_VALUE, "1")).toBe("absent")
     expect(consentFromRequest(CONSENT_COOKIE_VALUE, "yes")).toBe("absent")
     expect(consentFromRequest(CONSENT_COOKIE_VALUE, "0")).toBe("granted")
+  })
+
+  it("treats Sec-GPC as a no, even over a yes stored before the signal", async () => {
+    const { consentFromRequest } = await import("@/lib/privacy/server-consent")
+
+    // The mirrored cookie can be months old; GPC turned on today is the
+    // person withdrawing. The signal wins, exactly like DNT above.
+    expect(consentFromRequest(CONSENT_COOKIE_VALUE, null, "1")).toBe("absent")
+    expect(consentFromRequest(undefined, null, "1")).toBe("absent")
+    // Only the spec value "1" counts; anything else is not the signal.
+    expect(consentFromRequest(CONSENT_COOKIE_VALUE, null, "0")).toBe("granted")
+    expect(consentFromRequest(CONSENT_COOKIE_VALUE, null, null)).toBe("granted")
+  })
+
+  it("reads Sec-GPC from the live request too", async () => {
+    const { readServerConsent } = await import("@/lib/privacy/server-consent")
+
+    request.cookie = CONSENT_COOKIE_VALUE
+    request.gpc = "1"
+
+    await expect(readServerConsent()).resolves.toBe("absent")
   })
 
   it("says unknown, without throwing, when the request cannot be read", async () => {

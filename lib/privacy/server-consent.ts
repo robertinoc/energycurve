@@ -9,8 +9,8 @@ import { CONSENT_COOKIE_NAME, CONSENT_COOKIE_VALUE } from "@/lib/privacy/consent
  * the current request.
  *
  * - `granted` — the browser mirrored a "yes" for the current consent version
- *   and is not sending Do Not Track.
- * - `absent` — no such cookie, a different value, or Do Not Track. Refused,
+ *   and is not sending Do Not Track or Global Privacy Control.
+ * - `absent` — no such cookie, a different value, DNT or Sec-GPC. Refused,
  *   never answered and an old version all land here, on purpose: the server
  *   cannot tell them apart and does not need to.
  * - `unknown` — the request could not be read at all (outside a request, a
@@ -26,12 +26,20 @@ export type ServerConsent = "granted" | "absent" | "unknown"
 /** The decision, without the framework — what the tests pin. */
 export function consentFromRequest(
   cookieValue: string | undefined,
-  doNotTrack: string | null
+  doNotTrack: string | null,
+  globalPrivacyControl: string | null = null
 ): ServerConsent {
-  // The header is the browser answering on the person's behalf, exactly as
-  // `readConsent` treats it in the browser. A cookie that outlived a DNT
-  // setting turned on later does not outrank it.
+  // Either header is the browser answering on the person's behalf, exactly
+  // as `readConsent` treats them in the browser. A cookie that outlived a
+  // signal turned on later does not outrank it: someone who accepted months
+  // ago and enables GPC today has withdrawn, and in California the signal is
+  // a legally binding opt-out, not a preference. The spec value for Sec-GPC
+  // is exactly "1".
   if (doNotTrack === "1" || doNotTrack === "yes") {
+    return "absent"
+  }
+
+  if (globalPrivacyControl === "1") {
     return "absent"
   }
 
@@ -48,7 +56,8 @@ export async function readServerConsent(): Promise<ServerConsent> {
 
     return consentFromRequest(
       cookieStore.get(CONSENT_COOKIE_NAME)?.value,
-      headerStore.get("dnt")
+      headerStore.get("dnt"),
+      headerStore.get("sec-gpc")
     )
   } catch {
     return "unknown"

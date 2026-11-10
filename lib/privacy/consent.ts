@@ -13,7 +13,8 @@
  * 2. **Refusing is as cheap as accepting.** One click either way, same weight.
  *    A "reject" hidden behind a settings panel is a dark pattern with a legal
  *    name.
- * 3. **Do Not Track decides on its own.** A browser sending DNT has already
+ * 3. **Do Not Track decides on its own.** A browser sending DNT — or Global
+ *    Privacy Control, honoured the same way since 10/11/2026 — has already
  *    answered, and asking again is asking someone to repeat themselves.
  *
  * The answer lives in `localStorage`, per browser. Until November 2026 it
@@ -165,15 +166,27 @@ export function clearConsent(): void {
 }
 
 /**
- * True when the browser is asking not to be tracked.
+ * True when the browser is asking not to be tracked — Do Not Track or
+ * Global Privacy Control, which ride the same rail here because they are the
+ * same gesture. GPC is the stricter of the two: in California it is a legally
+ * binding opt-out, so it also beats a "yes" stored before it was turned on
+ * (readConsent checks this before looking at storage).
  *
- * Reads all three spellings because they are all still in the wild: the
+ * Reads all three DNT spellings because they are all still in the wild: the
  * standard `navigator.doNotTrack`, IE's `window.doNotTrack`, and Safari's old
- * `navigator.msDoNotTrack`. "1" and "yes" both mean yes.
+ * `navigator.msDoNotTrack`. "1" and "yes" both mean yes. GPC is the standard
+ * `navigator.globalPrivacyControl`, a boolean.
  */
 export function hasDoNotTrack(): boolean {
   if (typeof window === "undefined") {
     return false
+  }
+
+  if (
+    (window.navigator as unknown as { globalPrivacyControl?: boolean })
+      .globalPrivacyControl === true
+  ) {
+    return true
   }
 
   const candidates = [
