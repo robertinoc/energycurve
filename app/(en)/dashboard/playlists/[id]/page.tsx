@@ -11,7 +11,10 @@ import {
 } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
 
+import { AnalyzeLink } from "@/components/playlists/analyze-link"
+import { AnalyzeNextStep } from "@/components/playlists/analyze-next-step"
 import { PlaylistExportButton } from "@/components/playlists/playlist-export-button"
+import { PlaylistHeaderBar } from "@/components/playlists/playlist-header-bar"
 import { PlaylistHeaderEdit } from "@/components/playlists/playlist-header-edit"
 import { ImportSummary } from "@/components/playlists/import-summary"
 import { PlaylistStatsPills } from "@/components/playlists/playlist-stats-pills"
@@ -69,6 +72,11 @@ import { listVersions } from "@/services/version-service"
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
 import { ImportArriving } from "@/components/playlists/import-arriving"
 import { importStillArriving } from "@/lib/playlists/import-arrival"
+import {
+  analyzeEmphasis,
+  showsAnalyzeNextStep,
+} from "@/lib/playlists/analyze-prompt"
+import { getAnalysisStatus } from "@/services/analysis-history-service"
 import { getResidencySummary } from "@/services/residency-service"
 
 export const metadata: Metadata = {
@@ -102,10 +110,12 @@ export default async function PlaylistDetailPage({
     lastName: user.lastName ?? null,
   })
 
-  const [playlist, billing, keyNotation] = await Promise.all([
+  const [playlist, billing, keyNotation, analysisStatus] = await Promise.all([
     getOwnedPlaylistWithTracks(profile.id, id),
     getProfileBilling(profile.id),
     getProfileKeyNotation(profile.id),
+    // Whether this set was ever analysed: it decides what the page leads with.
+    getAnalysisStatus(profile.id, id),
   ])
 
   if (!playlist) {
@@ -159,6 +169,21 @@ export default async function PlaylistDetailPage({
     : [[], []]
 
   const copy = DASHBOARD_COPY.playlistDetail
+
+  // A set nobody analysed yet leads with the analysis; one that has an analysis
+  // keeps the row it always had. And what the analysis gives is said once, on
+  // arrival — see lib/playlists/analyze-prompt.ts for why those are two things.
+  const analyzePrompt = {
+    status: analysisStatus,
+    trackCount: playlist.tracks.length,
+  }
+  const emphasis = analyzeEmphasis(analyzePrompt)
+  const neverAnalyzed = emphasis === "lead"
+  const showNextStep = showsAnalyzeNextStep({ ...analyzePrompt, justImported })
+  // The import summary is only for files: a pasted tracklist has no tags to
+  // have read. When it shows, the next step is how it ends; when it does not,
+  // the same note stands on its own.
+  const showImportSummary = justImported && playlist.import_source !== "text"
   const canPrintSetSheet = can(
     billing.plan,
     billing.status,
@@ -262,99 +287,118 @@ export default async function PlaylistDetailPage({
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
       <header className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <Link
-              href="/dashboard/playlists"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                "w-fit text-white/58 hover:text-white"
-              )}
-            >
-              <ArrowLeft className="size-3.5" />
-              {copy.back[locale]}
-            </Link>
-
-            <div className="flex items-center gap-2">
-              {/*
-                Shown to everyone, PRO or not. A feature nobody can see converts
-                nobody — an unentitled DJ lands on the page that explains it
-                instead of on the sheet, and the route enforces that itself.
-              */}
-              {/* Same shape as the set sheet below: visible to everyone, and the
-                  route — not this link — is what enforces the plan. */}
+          <PlaylistHeaderBar
+            emphasis={emphasis}
+            hint={DASHBOARD_COPY.analyzeNext.hint[locale]}
+            moreLabel={DASHBOARD_COPY.analyzeNext.moreActions[locale]}
+            back={
               <Link
-                href={
-                  canUseGigMode
-                    ? `/dashboard/playlists/${playlist.id}/gig`
-                    : "/pricing"
-                }
+                href="/dashboard/playlists"
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "sm" }),
                   "w-fit text-white/58 hover:text-white"
                 )}
               >
-                <Radio className="size-4" />
-                {copy.gigMode[locale]}
-                {canUseGigMode ? null : (
-                  <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
-                    pro+
-                  </span>
-                )}
+                <ArrowLeft className="size-3.5" />
+                {copy.back[locale]}
               </Link>
-              <Link
-                href={
-                  canPrintSetSheet
-                    ? `/dashboard/playlists/${playlist.id}/set-sheet`
-                    : "/pricing"
-                }
+            }
+            analyze={
+              <AnalyzeLink
+                playlistId={playlist.id}
+                placement="header"
+                firstAnalysis={neverAnalyzed}
+                locale={locale}
                 className={cn(
-                  buttonVariants({ variant: "ghost", size: "sm" }),
-                  "w-fit text-white/58 hover:text-white"
+                  buttonVariants({ size: neverAnalyzed ? "lg" : "default" }),
+                  neverAnalyzed && "w-full sm:w-auto"
                 )}
-              >
-                <Printer className="size-4" />
-                {copy.setSheet[locale]}
-                {canPrintSetSheet ? null : (
-                  <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
-                    pro
-                  </span>
-                )}
-              </Link>
-              <Link
-                href={
-                  canCompareSets
-                    ? `/dashboard/playlists/${playlist.id}/compare`
-                    : "/pricing"
-                }
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "sm" }),
-                  "w-fit text-white/58 hover:text-white"
-                )}
-              >
-                <GitCompare className="size-4" />
-                {DASHBOARD_COPY.compare.title[locale]}
-                {canCompareSets ? null : (
-                  <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
-                    pro+
-                  </span>
-                )}
-              </Link>
-              {shareUrl ? (
-                <ShareCurveButton url={shareUrl} locale={locale} />
-              ) : null}
-              {canSaveShapes ? (
-                <SaveShapeButton playlistId={playlist.id} locale={locale} />
-              ) : null}
-              <PlaylistExportButton playlist={exportPlaylist} locale={locale} />
-              <Link
-                href={`/dashboard/playlists/${playlist.id}/analysis`}
-                className={cn(buttonVariants({ size: "default" }))}
               >
                 <AudioWaveform className="size-4" />
                 {copy.analyzeSet[locale]}
-              </Link>
-            </div>
-          </div>
+              </AnalyzeLink>
+            }
+            secondary={
+              <>
+                {/*
+                  Shown to everyone, PRO or not. A feature nobody can see converts
+                  nobody — an unentitled DJ lands on the page that explains it
+                  instead of on the sheet, and the route enforces that itself.
+                */}
+                {/* Same shape as the set sheet below: visible to everyone, and the
+                    route — not this link — is what enforces the plan. */}
+                <Link
+                  href={
+                    canUseGigMode
+                      ? `/dashboard/playlists/${playlist.id}/gig`
+                      : "/pricing"
+                  }
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "w-fit text-white/58 hover:text-white"
+                  )}
+                >
+                  <Radio className="size-4" />
+                  {copy.gigMode[locale]}
+                  {canUseGigMode ? null : (
+                    <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                      pro+
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  href={
+                    canPrintSetSheet
+                      ? `/dashboard/playlists/${playlist.id}/set-sheet`
+                      : "/pricing"
+                  }
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "w-fit text-white/58 hover:text-white"
+                  )}
+                >
+                  <Printer className="size-4" />
+                  {copy.setSheet[locale]}
+                  {canPrintSetSheet ? null : (
+                    <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                      pro
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  href={
+                    canCompareSets
+                      ? `/dashboard/playlists/${playlist.id}/compare`
+                      : "/pricing"
+                  }
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "w-fit text-white/58 hover:text-white"
+                  )}
+                >
+                  <GitCompare className="size-4" />
+                  {DASHBOARD_COPY.compare.title[locale]}
+                  {canCompareSets ? null : (
+                    <span className="rounded border border-white/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                      pro+
+                    </span>
+                  )}
+                </Link>
+                {shareUrl ? (
+                  <ShareCurveButton url={shareUrl} locale={locale} />
+                ) : null}
+                {canSaveShapes ? (
+                  <SaveShapeButton playlistId={playlist.id} locale={locale} />
+                ) : null}
+                <PlaylistExportButton
+                  playlist={exportPlaylist}
+                  locale={locale}
+                  quiet={neverAnalyzed}
+                  menuSpansRow
+                />
+              </>
+            }
+          />
 
           <div className="space-y-3">
             <PlaylistHeaderEdit
@@ -406,7 +450,7 @@ export default async function PlaylistDetailPage({
         {/* Not for pasted tracklists: a paste has no tags to have read, so
             "no energy found in your tags" would be an answer to a question
             nobody asked. */}
-        {justImported && playlist.import_source !== "text" ? (
+        {showImportSummary ? (
           <ImportSummary
             coverage={importCoverage(
               playlist.tracks.map((track) => ({
@@ -420,7 +464,14 @@ export default async function PlaylistDetailPage({
             )}
             importSource={playlist.import_source}
             locale={locale}
+            nextStep={
+              showNextStep ? (
+                <AnalyzeNextStep playlistId={playlist.id} locale={locale} embedded />
+              ) : null
+            }
           />
+        ) : showNextStep ? (
+          <AnalyzeNextStep playlistId={playlist.id} locale={locale} />
         ) : null}
 
       {/* Residency warnings, right under the header: they change what the DJ does
