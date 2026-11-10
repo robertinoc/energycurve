@@ -23,7 +23,7 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
   "/": {
     title: {
       en: "EnergyCurve — DJ Set Energy Analysis & Track Order",
-      es: "EnergyCurve — Análisis de energía y orden de tracks para DJs",
+      es: "EnergyCurve — Análisis de energía y orden de temas para DJs",
     },
     description: {
       en: "Analyze your DJ set's energy curve, score it 1–10, and get the exact track moves that fix it. Imports Rekordbox, Traktor, M3U8, and your own audio files — exports the corrected order back.",
@@ -64,7 +64,7 @@ export const PAGE_METADATA: Record<LocalizedPath, PageMeta> = {
     },
     description: {
       en: "Which tag EnergyCurve reads a track's energy from, and in exactly which format — for Mixed In Key, Lexicon DJ, Serato, Rekordbox and hand-written tags.",
-      es: "De qué tag lee EnergyCurve la energía de un track, y con qué formato exacto — para Mixed In Key, Lexicon DJ, Serato, Rekordbox y tags escritos a mano.",
+      es: "De qué tag lee EnergyCurve la energía de un tema, y con qué formato exacto — para Mixed In Key, Lexicon DJ, Serato, Rekordbox y tags escritos a mano.",
     },
   },
   "/import-formats": {
@@ -254,12 +254,12 @@ export function pageMetadata(path: LocalizedPath, locale: SiteLocale) {
  * the four legal pages are one copy file and one edit.
  */
 export const PAGE_LAST_MODIFIED: Record<LocalizedPath, string> = {
-  "/": "2026-09-19",
+  "/": "2026-11-10",
   "/pricing": "2026-09-11",
   // The hub lists a fourth tool since 30/09; the three older tools gained a
   // cross-link to it the same day.
   "/tools": "2026-09-30",
-  "/tools/energy-curve": "2026-09-19",
+  "/tools/energy-curve": "2026-11-10",
   "/tools/camelot-wheel": "2026-09-30",
   "/tools/key-bpm-compatibility": "2026-09-30",
   "/tools/traktor-rekordbox-converter": "2026-09-30",
