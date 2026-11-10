@@ -99,6 +99,7 @@ en producción, se dice al lado.
 | 2.1 | CUE sugeridos en PRO | Claude Code | **Frenado (01/11)**, por la decisión de la sección 5. La fila pública y el registro `cue_points` se sacaron: `/pricing` ya no los promete. El tier sigue decidido (PRO) y está anotado en la sección 5. Se retoma cuando se cumpla el prerrequisito de esa sección |
 | 2.2 | Gating de varios sets a PRO | Claude Code | Hecho en el código (01/11): fila pública con «no» en FREE y «yes» en PRO y PRO+, registro `multi_set_split` con `minPlan: "pro"` y `status: "shipped"`. El servidor rechaza la división de una cuenta FREE antes de crear nada (`importAsSplitSets`), y el formulario le muestra la división como muro de venta: cuánto suena la lista, en cuántos sets se partiría, qué hace cada criterio, la insignia PRO y el enlace a los planes. La lista se sigue importando entera como un solo set |
 | 1.1 | Set de ejemplo precargado | Claude Code | Pendiente |
+| 1.2 | Del import al análisis: que analizar sea el paso obvio | Claude Code | Hecho en el código (10/11), sin desplegar. La pantalla de una playlist distingue dos estados. **Set que nunca se analizó** (y tiene al menos dos temas): «Analizar set» va primero, grande y a todo el ancho en el teléfono, con una línea que dice qué da; las demás acciones (Gig Mode, hoja del set, comparar, compartir, guardar forma, exportar) quedan debajo, agrupadas y con menos peso, todas a un toque. **Set ya analizado**: la fila de siempre. Además, el resumen del import ya no termina en el enlace a la documentación de energy tags: termina en «Lo que sigue», que dice qué hace el análisis (dibuja la curva, pone un puntaje, muestra los saltos y qué temas mover) y lleva a él; el enlace a energy tags sigue cuando corresponde. Esa nota aparece una sola vez, al llegar del import, y no vuelve. No es un modal ni un tour, no se guarda nada, y no es un muro: analizar es gratis en todos los planes y la nota lo dice. De paso, la fila de acciones ahora baja de línea en el teléfono en vez de empujar la pantalla de costado. Cómo se mide y la línea de base, en la sección 6 |
 | 3.1 | Los tres muros de venta en la app | Claude Code | Hecho en el código (02/11), sin desplegar. Los tres muros dicen qué cambia con el plan, muestran la insignia y llevan a los planes por `/api/sales-wall`. (1) La cuarta playlist en FREE, en los tres caminos de creación. (2) El ordenamiento con IA del mes gastado, debajo del botón apagado: PRO para FREE, PRO+ para PRO. (3) Una franja debajo del score cuando un reanálisis lo subió porque cambió el set (mismo algoritmo, género y contexto); si bajó o quedó igual, nada. Se mide con dos eventos por muro, con la misma propiedad `wall` (`playlist_limit`, `ai_ordering_limit`, `score_improved`): `sales_wall_shown` y `sales_wall_clicked`. Además, `score_improved` registra cada mejora en todos los planes, con `wallShown`. **Desde el 10/11 los tres eventos respetan el consentimiento de analítica** (decisión de Robertino): el servidor los emite sólo si el navegador aceptó en el banner, y si no lo puede saber, no los emite. Los embudos de los muros cuentan entonces a quienes aceptaron, no a todos: comparar muros entre sí sigue valiendo, sumarlos como total de personas no |
 | 4.1 | Mail a los 48 que corrieron un análisis | Robertino | Pendiente |
 
@@ -140,3 +141,66 @@ del PR #292, sección «Fase de `guess()` (error en ms)». Lo que dice:
 El umbral que tendría que alcanzar la fase para retomar los CUE **no está
 decidido** en ningún lado del repo ni del PR. Es lo primero a fijar antes de
 volver a medir.
+
+## 6. Del import al análisis (paso 1.2): línea de base y cómo se mide
+
+**La línea de base.** En los 7 días al 10/11/2026 el backstage mostró **105
+playlists creadas** (+57 % contra los 7 días anteriores) y **49 análisis
+corridos** (−34 %), con 37 usuarios activos (1,3 análisis por activo) y 4 de 34
+que volvieron. Cada vez más gente importa y cada vez menos analiza: la fuga está
+entre un paso y el otro, y es lo que el paso 1.2 ataca.
+
+**Qué son esos dos números, para no compararlos mal.** Son conteos de eventos de
+PostHog (`lib/backstage/posthog-reporting.ts`): `playlist_created` y
+`analysis_completed`. No son playlists distintas analizadas: `analysis_completed`
+se emite cada vez que alguien abre la pantalla del análisis, así que un mismo set
+abierto tres veces cuenta tres. 49 de 105 **no** quiere decir «el 47 % de las
+playlists se analiza». La divergencia entre las dos curvas es el diagnóstico; el
+cociente no es una tasa de conversión.
+
+**La pregunta de verdad** es otra: de las playlists que se crean, cuántas
+terminan analizadas y cuánto tardan. Con los eventos no se puede contestar por
+playlist: el `playlist_created` del import no lleva el id de la playlist (el de
+la creación a mano sí), y un import que se divide en varios sets emite un solo
+evento. Ese código (`app/(en)/dashboard/playlists/actions.ts`) quedó fuera de
+este paso y no se tocó.
+
+No hace falta: la respuesta exacta, y para todos los usuarios, está en la base.
+Cada playlist tiene su `created_at`, y la primera vez que se abre su análisis se
+escribe una fila en `analyses`. Esta consulta, corrida en producción (sólo
+lectura), da la línea de base por playlist para la misma semana:
+
+```sql
+with ventana as (
+  select
+    p.id,
+    p.created_at,
+    (select min(a.created_at) from analyses a where a.playlist_id = p.id) as primer_analisis
+  from playlists p
+  where p.created_at >= '2026-11-04' and p.created_at < '2026-11-11'
+)
+select
+  count(*) as playlists_creadas,
+  count(primer_analisis) as analizadas,
+  round(100.0 * count(primer_analisis) / nullif(count(*), 0), 1) as pct_analizadas,
+  count(*) filter (where primer_analisis - created_at <= interval '10 minutes') as analizadas_en_10_min,
+  percentile_cont(0.5) within group (
+    order by extract(epoch from primer_analisis - created_at) / 60
+  ) filter (where primer_analisis is not null) as mediana_minutos_al_primer_analisis
+from ventana;
+```
+
+Tres cosas para leerla bien: las fechas son UTC, así que el borde de la semana
+puede diferir en horas del backstage; una playlist que se borró ya no está (y sus
+análisis tampoco), así que el total va a dar menos que 105; y cuando salga el set
+de ejemplo (paso 1.1), ese set se crea solo y hay que dejarlo afuera para no
+inflar el denominador. **Falta correrla**: es un paso de Robertino, porque Claude
+Code no lee producción. Cuando esté, los cuatro números se anotan acá, y la misma
+consulta con la semana posterior al despliegue dice si el paso sirvió.
+
+**El evento nuevo.** `analyze_cta_click`, emitido desde el navegador
+(`lib/analytics/analyze-cta-events.ts`) y por eso sólo para quien aceptó la
+analítica. Lleva `placement` (`header`, `import_summary`, `next_step`),
+`firstAnalysis` y `locale`, y nada del set. Contesta una sola cosa: desde cuál de
+los lugares entra la gente al análisis. Sirve para comparar lugares entre sí, no
+como total.
