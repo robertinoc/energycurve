@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef } from "react"
 import { ChevronDown } from "lucide-react"
 
 import { SetCurve } from "@/components/playlists/set-curve"
@@ -9,6 +10,7 @@ import { formatTemplate } from "@/lib/content/analysis-copy"
 import { CONTEXT_LABELS } from "@/lib/content/analysis-copy"
 import { EXAMPLE_SET_COPY } from "@/lib/content/example-set-copy"
 import type { SiteLocale } from "@/lib/content/site-copy"
+import { captureExampleSetEvent } from "@/lib/analytics/example-set-events"
 import type { ExampleSetView } from "@/lib/product/example-set-analysis"
 import { GENRE_LABELS } from "@/lib/product/strategy"
 import { cn } from "@/lib/utils"
@@ -20,7 +22,8 @@ const COPY = EXAMPLE_SET_COPY
  * step, for someone who hasn't imported anything.
  *
  * A native <details>: it opens without JavaScript, stays inside the first-run
- * guide instead of a screen of its own, and costs nothing to ignore.
+ * guide instead of a screen of its own, and costs nothing to ignore. The only
+ * script is the event on opening, gated on consent like every browser event.
  *
  * Read-only by construction — it receives an analysis computed on the server
  * from lib/product/example-set.ts and has nothing to save — and labelled an
@@ -40,10 +43,20 @@ export function ExampleSetPreview({
   /** Where "try it with yours" goes: the import form on this page. */
   importHref: string
 }) {
+  // One event per page view: closing and reopening is the same person
+  // reading the same example.
+  const opened = useRef(false)
+
   return (
     <details
       className="group mt-3"
       data-example-set
+      onToggle={(event) => {
+        if ((event.currentTarget as HTMLDetailsElement).open && !opened.current) {
+          opened.current = true
+          captureExampleSetEvent("example_set_opened", locale)
+        }
+      }}
     >
       <summary
         className={cn(
@@ -121,6 +134,7 @@ export function ExampleSetPreview({
         <div className="space-y-1.5 border-t border-ec-border pt-4">
           <a
             href={importHref}
+            onClick={() => captureExampleSetEvent("example_set_import_click", locale)}
             className={cn(buttonVariants({ size: "sm" }), "w-fit")}
           >
             {COPY.cta[locale]}

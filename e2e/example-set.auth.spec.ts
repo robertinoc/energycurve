@@ -20,6 +20,13 @@ import {
  * What it must do: open in one click from the first step, say at every level
  * that it is an example, show the engine's read (score, curve, problems), fit a
  * phone without pushing the page sideways, save nothing, and end on the import.
+ *
+ * Not here: the two analytics events. In this build no PostHog event leaves the
+ * browser at all — not even the app's own $pageview — partly because the CSP
+ * only allows the production host and partly for a reason not found on
+ * 10/11/2026; with nothing ever sent, a "declined sends nothing" test passes
+ * whatever the code does. The consent gate is covered in
+ * tests/example-set-preview.test.ts instead.
  */
 
 const free = accountFor("free")
