@@ -58,6 +58,17 @@ const SUBPROCESSORS_UPDATED = {
   es: "Última actualización: octubre 2026",
 }
 
+/**
+ * Only the cookie policy changed on 10/11/2026 — the `ec_analytics_consent`
+ * mirror cookie shipped with PR #301 and must be declared where cookies are
+ * declared. Same reasoning as SUBPROCESSORS_UPDATED: moving the shared date
+ * would tell readers the privacy policy and the terms changed too.
+ */
+const COOKIES_UPDATED = {
+  en: "Last updated: November 2026",
+  es: "Última actualización: noviembre 2026",
+}
+
 const en: Record<LegalDocId, LegalDoc> = {
   privacy: {
     title: "Privacy Policy",
@@ -254,7 +265,7 @@ const en: Record<LegalDocId, LegalDoc> = {
   },
   cookies: {
     title: "Cookie Policy",
-    updated: UPDATED.en,
+    updated: COOKIES_UPDATED.en,
     intro:
       "This policy explains how EnergyCurve uses cookies and similar storage in your browser.",
     sections: [
@@ -262,6 +273,7 @@ const en: Record<LegalDocId, LegalDoc> = {
         heading: "Essential",
         body: [
           "Needed for the app to work — keeping you signed in (session) and remembering your language choice. These can't be turned off.",
+          "ec_analytics_consent — Records that you accepted analytics, so the server honours your choice as well as the browser. It only exists if you accepted: nothing is stored if you declined, if you haven't answered, or if your browser asks not to be tracked. It renews while you use the site and expires on its own after 180 days without activity, or the moment you withdraw consent.",
         ],
       },
       {
@@ -480,7 +492,7 @@ const es: Record<LegalDocId, LegalDoc> = {
   },
   cookies: {
     title: "Política de Cookies",
-    updated: UPDATED.es,
+    updated: COOKIES_UPDATED.es,
     intro:
       "Esta política explica cómo EnergyCurve usa cookies y almacenamiento similar en tu navegador.",
     sections: [
@@ -488,6 +500,7 @@ const es: Record<LegalDocId, LegalDoc> = {
         heading: "Esenciales",
         body: [
           "Necesarias para que la app funcione — mantenerte con sesión iniciada y recordar tu idioma. No se pueden desactivar.",
+          "ec_analytics_consent — Guarda que aceptaste la analítica, para que el servidor respete tu elección además del navegador. Solo existe si aceptaste: no se crea si rechazaste, si todavía no respondiste, o si tu navegador pide no ser rastreado. Se renueva mientras usás el sitio y se borra sola a los 180 días sin actividad, o en el momento en que retirás el consentimiento.",
         ],
       },
       {
