@@ -365,6 +365,33 @@ export const DASHBOARD_COPY = {
   },
 
   /**
+   * The step after bringing a set in (lib/playlists/analyze-prompt.ts).
+   *
+   * The verb alone explains nothing, so every string here says what the
+   * analysis *gives*: the curve, a score, the jumps, what to move — the same
+   * three things the first-run guide promises on the dashboard, said where the
+   * person actually is. Nothing here sells: analysing is free on every plan,
+   * and the note says so because the screens around it now carry sales walls.
+   */
+  analyzeNext: {
+    eyebrow: { en: "Next step", es: "Lo que sigue" },
+    title: {
+      en: "See your set's energy curve",
+      es: "Mirá la curva de energía de tu set",
+    },
+    body: {
+      en: "The analysis draws the curve, scores the set out of ten, and shows where the jumps are and which tracks to move. It's free and takes a few seconds.",
+      es: "El análisis dibuja la curva, le pone al set un puntaje sobre diez y te muestra dónde están los saltos y qué temas conviene mover. Es gratis y tarda unos segundos.",
+    },
+    /** Beside the button on a set that was never analysed. Short on purpose. */
+    hint: {
+      en: "The curve, a score, and what to move",
+      es: "La curva, un puntaje y qué mover",
+    },
+    moreActions: { en: "More actions", es: "Más acciones" },
+  },
+
+  /**
    * Gig Mode. Written for someone reading a phone at arm's length, in the dark,
    * with a monitor going — so the strings are short and say one thing each.
    */

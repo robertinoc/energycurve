@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import Link from "next/link"
 import { Check, Info, Minus, TriangleAlert, X } from "lucide-react"
 
@@ -37,15 +37,24 @@ const FIELD_LABELS: Record<string, string> = {
  * "this file format cannot express this". An alpha user hit the second case
  * with an M3U8, was told nothing, and concluded the reader was broken. A zero
  * with no explanation is the defect; a zero with a reason is information.
+ *
+ * `nextStep` is how the summary ends. This is the one moment the product has
+ * the person's full attention, and for a long time the only thing to click in
+ * it was a link to the energy-tags documentation — out of the app. The link is
+ * still here for the import it helps, but the summary now closes on what to do
+ * with the set that just arrived (components/playlists/analyze-next-step.tsx).
  */
 export function ImportSummary({
   coverage,
   importSource,
   locale,
+  nextStep,
 }: {
   coverage: ImportCoverage
   importSource: string | null
   locale: SiteLocale
+  /** Rendered last, inside the card. Omitted when there is no step to offer. */
+  nextStep?: ReactNode
 }) {
   const [dismissed, setDismissed] = useState(false)
 
@@ -58,7 +67,10 @@ export function ImportSummary({
     coverageStatus(coverage, "energy", importSource) === "unsupported"
 
   return (
-    <section className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+    <section
+      data-testid="import-summary"
+      className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
+    >
       <div className="flex items-start gap-2">
         <Info aria-hidden className="mt-0.5 size-3.5 shrink-0 text-white/40" />
         <h2 className="text-[12.5px] font-medium text-white/82">
@@ -134,6 +146,8 @@ export function ImportSummary({
           {COPY.energyDocsLink[locale]} →
         </Link>
       ) : null}
+
+      {nextStep}
     </section>
   )
 }
