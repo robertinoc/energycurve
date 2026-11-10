@@ -268,7 +268,7 @@ export const PAGE_LAST_MODIFIED: Record<LocalizedPath, string> = {
   "/guide": "2026-09-19",
   "/install": "2026-08-18",
   "/energy-tags": "2026-09-07",
-  "/import-formats": "2026-09-11",
+  "/import-formats": "2026-11-10",
   "/harmonic-mixing-cheat-sheet": "2026-09-27",
   // One copy file, one edit: these four genuinely changed together.
   "/privacy": "2026-09-11",
