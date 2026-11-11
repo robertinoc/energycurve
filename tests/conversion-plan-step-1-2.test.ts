@@ -24,9 +24,48 @@ describe("step 1.2 in the conversion plan", () => {
   })
 
   it("records the baseline it was built against", () => {
-    expect(section).toMatch(/105\s+playlists creadas/)
-    expect(section).toMatch(/49 análisis\s+corridos/)
+    expect(section).toMatch(/105 eventos de playlist creada/)
+    expect(section).toMatch(/49 eventos de\s+análisis corrido/)
     expect(section).toContain("10/11/2026")
+  })
+
+  it("says what the baseline is before anyone can divide it", () => {
+    const flat = section.replace(/\s+/g, " ")
+
+    // The two figures are PostHog event counts. Written as "105 playlists and
+    // 49 analyses" they read as 47 % of playlists analysed, which nothing
+    // measured. The numbers were right; the sentence was not.
+    expect(flat.indexOf("conteos de eventos")).toBeGreaterThan(-1)
+    expect(flat.indexOf("conteos de eventos")).toBeLessThan(flat.indexOf("105 eventos"))
+    expect(flat).toContain("49 sobre 105 no es una tasa de conversión")
+
+    // What does compare across windows: each series' own change.
+    expect(flat).toContain("+57 %")
+    expect(flat).toContain("−34 %")
+    expect(flat).toMatch(/se compara entre una ventana y otra es la variación/)
+
+    // And where the per-playlist answer comes from.
+    expect(flat).toMatch(/sale sólo de la base/)
+    expect(flat.indexOf("sale sólo de la base")).toBeLessThan(flat.indexOf("```sql"))
+  })
+
+  it("does not hand anyone the quotient", () => {
+    expect(section).not.toMatch(/4[67](,\d)? ?%/)
+  })
+
+  it("says the imports carry the playlist id only if the code sends it", () => {
+    const actions = read("app/(en)/dashboard/playlists/actions.ts")
+    const emitters = [
+      ...actions.matchAll(/captureServerEvent\(\s*[\w.]+,\s*"playlist_created",\s*\{([^}]*)\}/g),
+    ].map((match) => match[1])
+
+    expect(section).toMatch(/lleva `playlistId` en los cuatro caminos/)
+    expect(emitters).toHaveLength(4)
+    for (const body of emitters) {
+      expect(body).toMatch(/^\s*playlistId[,:]/m)
+    }
+    expect(actions).toContain("playlistIds: created.join")
+    expect(section).toContain("`playlistIds`")
   })
 
   it("names the event the browser really sends, with its real properties", () => {

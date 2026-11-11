@@ -144,28 +144,42 @@ volver a medir.
 
 ## 6. Del import al análisis (paso 1.2): línea de base y cómo se mide
 
-**La línea de base.** En los 7 días al 10/11/2026 el backstage mostró **105
-playlists creadas** (+57 % contra los 7 días anteriores) y **49 análisis
-corridos** (−34 %), con 37 usuarios activos (1,3 análisis por activo) y 4 de 34
-que volvieron. Cada vez más gente importa y cada vez menos analiza: la fuga está
-entre un paso y el otro, y es lo que el paso 1.2 ataca.
+**La línea de base son dos conteos de eventos, no playlists.** En los 7 días
+al 10/11/2026 PostHog registró **105 eventos de playlist creada**
+(`playlist_created`, +57 % contra los 7 días anteriores) y **49 eventos de
+análisis corrido** (`analysis_completed`, −34 %). En la misma ventana hubo 37
+usuarios activos (1,3 análisis por activo) y 4 de 34 que volvieron. Es lo que
+muestra el backstage (`lib/backstage/posthog-reporting.ts`).
 
-**Qué son esos dos números, para no compararlos mal.** Son conteos de eventos de
-PostHog (`lib/backstage/posthog-reporting.ts`): `playlist_created` y
-`analysis_completed`. No son playlists distintas analizadas: `analysis_completed`
-se emite cada vez que alguien abre la pantalla del análisis, así que un mismo set
-abierto tres veces cuenta tres. 49 de 105 **no** quiere decir «el 47 % de las
-playlists se analiza». La divergencia entre las dos curvas es el diagnóstico; el
-cociente no es una tasa de conversión.
+**49 sobre 105 no es una tasa de conversión, y no hay que dividirlos.**
+`analysis_completed` se emite cada vez que alguien abre la pantalla del
+análisis: un mismo set abierto tres veces cuenta tres, y un set analizado esta
+semana pudo haberse creado el mes pasado. El cociente mezcla repeticiones con
+sets de otras semanas; no dice qué parte de las playlists se analiza.
 
-**La pregunta de verdad** es otra: de las playlists que se crean, cuántas
-terminan analizadas y cuánto tardan. Con los eventos no se puede contestar por
-playlist: el `playlist_created` del import no lleva el id de la playlist (el de
-la creación a mano sí), y un import que se divide en varios sets emite un solo
-evento. Ese código (`app/(en)/dashboard/playlists/actions.ts`) quedó fuera de
-este paso y no se tocó.
+**Lo que sí se compara entre una ventana y otra es la variación de cada
+serie**: +57 % en playlists creadas, −34 % en análisis. Ese es el diagnóstico
+—cada vez más gente importa y cada vez menos analiza— y es lo que hay que
+volver a mirar después del despliegue del paso 1.2: si las dos series dejan de
+separarse.
 
-No hace falta: la respuesta exacta, y para todos los usuarios, está en la base.
+**Cuántas playlists terminan analizadas, y cuánto tardan, sale sólo de la
+base**, con la consulta de más abajo. Los eventos no lo contestan para la
+semana de la línea de base: hasta el 10/11 el `playlist_created` de los imports
+no llevaba el id de la playlist (el de la creación a mano sí), así que no había
+forma de seguir un set importado hasta su análisis.
+
+**Desde el cambio siguiente al paso 1.2, los eventos también siguen a una
+playlist.** `playlist_created` lleva `playlistId` en los cuatro caminos (a mano,
+import de archivo, import dividido en sets, archivos de audio), con el mismo
+nombre que ya usaban `analysis_started` y `analysis_completed`. Vale para las
+playlists creadas después de ese despliegue, no para atrás. Un límite que hay
+que tener presente al armar un embudo: un import dividido en varios sets sigue
+siendo un solo evento —para que el conteo de playlists creadas no salte—, con
+el primer set en `playlistId` y todos en `playlistIds`; un embudo por
+`playlistId` ve uno solo de esos sets.
+
+La respuesta exacta, y para todos los usuarios, está en la base.
 Cada playlist tiene su `created_at`, y la primera vez que se abre su análisis se
 escribe una fila en `analyses`. Esta consulta, corrida en producción (sólo
 lectura), da la línea de base por playlist para la misma semana:
