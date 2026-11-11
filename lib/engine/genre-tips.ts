@@ -53,7 +53,7 @@ const SUSTAINED_PEAK_SUFFIX: Record<SiteLocale, string> = {
 
 const SOFT_LANDING_SUFFIX: Record<SiteLocale, string> = {
   en: "; you can land the final track a touch below the peak",
-  es: "; podés aterrizar el último track apenas por debajo del pico",
+  es: "; podés aterrizar el último tema apenas por debajo del pico",
 }
 
 function buildAdvice(character: CurveCharacter, locale: SiteLocale): string {
@@ -92,7 +92,7 @@ export function genreTip(
   if (belowPocket > 0) {
     parts.push(
       locale === "es"
-        ? `${belowPocket} track${belowPocket === 1 ? " queda" : "s quedan"} por debajo del pocket del género (menos de ${bpm.bpmLow} BPM) — vale la pena repasarlo${belowPocket === 1 ? "" : "s"}.`
+        ? `${belowPocket} tema${belowPocket === 1 ? " queda" : "s quedan"} por debajo del pocket del género (menos de ${bpm.bpmLow} BPM) — vale la pena repasarlo${belowPocket === 1 ? "" : "s"}.`
         : `${belowPocket} track${belowPocket === 1 ? "" : "s"} sit${belowPocket === 1 ? "s" : ""} below the genre's pocket (under ${bpm.bpmLow} BPM) — worth a second look.`
     )
   }

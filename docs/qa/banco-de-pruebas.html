@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">150</strong>
+      <strong id="tally-total">151</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -738,6 +738,12 @@
           steps: ["Confirmá que las 4 URLs nuevas estén en el sitemap y devuelvan 200", "Subilas en Search Console", "Volvé en unos días: indexación, y si aparece el rich result de FAQ"],
           expect: "Las cuatro indexadas, y el FAQ mostrándose como rich result en la página de la herramienta.",
           ifNot: "Toda la página existe para esto. Si no entra al índice, es el hallazgo más importante de la sesión."
+        },
+        {
+          code: "TOOL.10", title: "Los nombres del set de ejemplo, leídos por un DJ", sub: "Dejaron de ser artistas reales el 10/11",
+          steps: ["Abrí <code>/es/herramientas/curva-de-energia</code> y leé el texto de ejemplo del campo para pegar una lista", "Tocá «Probar con un set de ejemplo», después «Ver cómo arreglarlo», registrate con una cuenta descartable y mirá los nombres del set en el import del dashboard", "Buscá dos o tres de esos nombres en Beatport, Resident Advisor o Discogs"],
+          expect: "Los doce artistas son inventados y suenan como gente de la escena techno, sin ser nadie: ninguno aparece en Beatport, Resident Advisor ni Discogs. Los títulos tampoco existen. La curva sigue siendo la misma, con el pico en el tema 4 de 12 y el salto de 8 a 4.",
+          ifNot: "Si un nombre resulta ser un artista real, cambialo en <code>lib/tools/example-set.ts</code> (y en <code>lib/content/tools-copy.ts</code> si está en el texto de ejemplo): a ese artista se le estaría atribuyendo un set mal armado a propósito. Si un nombre suena a chiste o a placeholder, anotalo: el ejemplo tiene que parecer de verdad. Borrá la cuenta descartable al terminar."
         }
       ]
     },

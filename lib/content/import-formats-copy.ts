@@ -27,7 +27,7 @@ const FORMATS: FormatRow[] = [
     format: "Traktor NML",
     carries: {
       en: "Everything: BPM, key, genre, energy, length and the file path. Your hotcues, comments and tags come back untouched on export.",
-      es: "Todo: BPM, key, género, energía, duración y la ruta del archivo. Tus hotcues, comentarios y tags vuelven intactos al exportar.",
+      es: "Todo: BPM, tonalidad, género, energía, duración y la ruta del archivo. Tus hotcues, comentarios y tags vuelven intactos al exportar.",
     },
     relinks: true,
   },
@@ -51,7 +51,7 @@ const FORMATS: FormatRow[] = [
     format: "Rekordbox TXT",
     carries: {
       en: "BPM, key, genre and length. Rekordbox' own TXT has no file path, so a native re-export can't relink.",
-      es: "BPM, key, género y duración. El TXT de Rekordbox no trae la ruta del archivo, así que un re-export nativo no puede reconectar.",
+      es: "BPM, tonalidad, género y duración. El TXT de Rekordbox no trae la ruta del archivo, así que un re-export nativo no puede reconectar.",
     },
     relinks: false,
   },
@@ -59,7 +59,7 @@ const FORMATS: FormatRow[] = [
     format: "M3U8 / M3U",
     carries: {
       en: "File paths and track lengths. That is all the format has — there is no BPM, key, genre or energy in an M3U8, so there is nothing for us to read.",
-      es: "Rutas de archivo y duraciones. Eso es todo lo que el formato tiene — un M3U8 no lleva BPM, key, género ni energía, así que no hay nada que leer.",
+      es: "Rutas de archivo y duraciones. Eso es todo lo que el formato tiene — un M3U8 no lleva BPM, tonalidad, género ni energía, así que no hay nada que leer.",
     },
     relinks: true,
   },
@@ -87,7 +87,7 @@ const COLUMNS: ColumnRow[] = [
     required: true,
     note: {
       en: "The only column we insist on. A row with no title isn't a track.",
-      es: "La única columna que exigimos. Una fila sin título no es un track.",
+      es: "La única columna que exigimos. Una fila sin título no es un tema.",
     },
   },
   {
@@ -109,7 +109,7 @@ const COLUMNS: ColumnRow[] = [
     },
   },
   {
-    field: { en: "Key", es: "Key" },
+    field: { en: "Key", es: "Tonalidad" },
     accepted: "Key · Tonality · Camelot · Open Key · Tonalidad · Clave",
     required: false,
     note: {
@@ -193,7 +193,7 @@ export const IMPORT_FORMATS_FAQ: FaqEntry[] = [
     },
     answer: {
       en: "A title column. That is the only one we insist on — a row with no title is not a track. Everything else (artist, BPM, key, genre, energy, length) is optional and simply gives the analysis more to work with. Row order is play order.",
-      es: "Una columna de título. Es la única que exigimos — una fila sin título no es un track. Todo lo demás (artista, BPM, tonalidad, género, energía, duración) es opcional y sólo le da más material al análisis. El orden de las filas es el orden de reproducción.",
+      es: "Una columna de título. Es la única que exigimos — una fila sin título no es un tema. Todo lo demás (artista, BPM, tonalidad, género, energía, duración) es opcional y sólo le da más material al análisis. El orden de las filas es el orden de reproducción.",
     },
   },
   {
