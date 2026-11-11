@@ -98,6 +98,16 @@ jobs:
         # to make a run pass.
         run: npm run test:coverage
 
+      - name: CPU budgets, without coverage
+        # Its own step on purpose. Coverage instruments every line and makes a
+        # tight loop about three times slower, so a time budget asserted inside
+        # the coverage run is a budget for the instrumentation — it failed at
+        # random on #296, #299 and #304 with the code untouched. These run
+        # plain, one file at a time, and print what they measured.
+        # `!cancelled()` so a coverage failure does not hide this result.
+        if: ${{ !cancelled() }}
+        run: npm run test:budget
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

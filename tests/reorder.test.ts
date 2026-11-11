@@ -180,23 +180,9 @@ describe("length cap on the reorder search", () => {
     ).toBeNull()
   })
 
-  it("stays inside a server render's budget at the cap", () => {
-    // CPU time of this process, not wall time. Vitest runs each file in its
-    // own fork, and on a CI runner with few cores the wall clock also counts
-    // the time spent waiting while other files compute. From PR #292 on, the
-    // audio baseline test (26 s of synthesis on CI) ran alongside this one and
-    // pushed the wall clock from about 12.5 s to 15.4–16.9 s with the
-    // optimizer unchanged, on main and on every PR. Measured locally with all
-    // cores saturated: 17.0 s of wall clock against 8.5 s of CPU. Without
-    // contention the two agree (5.9 s each under coverage), so a real
-    // slowdown in the search still lands here in full.
-    const start = process.cpuUsage()
-    optimizeOrder(energies(REORDER_MAX_TRACKS), "house", "main", null)
-    const used = process.cpuUsage(start)
-    const ms = (used.user + used.system) / 1000
-
-    // Generous ceiling — CI machines vary — but it fails loudly if the cost
-    // at the cap ever climbs back into "the page hangs" territory.
-    expect(ms).toBeLessThan(15_000)
-  }, 60_000)
+  // How long the search takes at the cap is asserted in
+  // tests/budget/reorder.budget.ts, run by `npm run test:budget`. It is not
+  // here because this file runs under coverage in CI, and coverage makes the
+  // loop about three times slower: a budget measured that way is a budget for
+  // the instrumentation (vitest.budget.config.ts).
 })

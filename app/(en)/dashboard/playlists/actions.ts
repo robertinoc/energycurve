@@ -803,7 +803,12 @@ export async function importPlaylistAction(
     return failure(ACTION_COPY.genericError[locale])
   }
 
+  // `playlistId` on every path that creates a playlist, under the same name:
+  // it is what lets one set be followed from here to `analysis_completed`.
+  // The imports used to leave it out, so a funnel keyed on it counted only
+  // the sets built by hand — and said nothing about having done so.
   captureServerEvent(profile.id, "playlist_created", {
+    playlistId,
     via: "import",
     source: parsed.source,
     trackCount: tracks.length,
@@ -964,7 +969,13 @@ async function importAsSplitSets(
     return failure(ACTION_COPY.genericError[locale])
   }
 
+  // Still one event for the whole import, so the count of `playlist_created`
+  // means what it meant before. `playlistId` is the first set — the one the
+  // night starts with — and `playlistIds` names all of them, in playing order,
+  // because a funnel that follows only `playlistId` sees one set of several.
   captureServerEvent(profileId, "playlist_created", {
+    playlistId: created[0],
+    playlistIds: created.join(","),
     via: "import",
     source: input.source,
     trackCount: tracks.length,
@@ -1100,6 +1111,7 @@ export async function importAudioFilesAction(
   }
 
   captureServerEvent(profile.id, "playlist_created", {
+    playlistId,
     via: "files",
     trackCount: tracks.length,
     genre,
