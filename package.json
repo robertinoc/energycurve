@@ -13,6 +13,7 @@
     "test:e2e": "node scripts/e2e-sharded.mjs",
     "test:e2e:one": "playwright test",
     "test:coverage": "vitest run --coverage",
+    "test:budget": "vitest run --config vitest.budget.config.ts",
     "db:status": "node scripts/migration-status.mjs",
     "db:seed": "psql \"$MIGRATION_DB_URL\" -v ON_ERROR_STOP=1 -f supabase/seed.sql",
     "lhci": "lhci autorun",
