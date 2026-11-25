@@ -18,17 +18,18 @@ import type { PlaylistContext, SupportedGenre } from "@/lib/product/strategy"
  * Nothing else changes: the curve, the score and the problems are recomputed.
  *
  * ── What is here now ──────────────────────────────────────────────────────────
- * A PLACEHOLDER, to be replaced before this ships. Invented and illustrative on
- * purpose: generic names that are nobody's tracklist and attribute nothing to
- * any real artist. The numbers are not: a house main-time set of fourteen
- * tracks, 122 → 126 BPM, six-to-seven-minute tracks, keys that mostly move one
- * step on the wheel, with the flaws a real set has — a jump too early and a
- * stretch that stalls. A demo that scores 9.8 draws a chart and teaches nothing.
+ * A real set: tracks 18 to 28, in playing order, of Robertino's "MINITEL RBRTN
+ * - FULL SET", loaded on 25/11/2026 from its Traktor NML export with the repo's
+ * own reader (lib/playlists/parse-traktor.ts). Keys are Traktor's Open Key
+ * converted with toCamelot (lib/music/camelot.ts); energy is the "Energy N" in
+ * each track's comment; lengths are the file's own. Real tracks by their real
+ * artists — which is the point: the example is a set somebody played, not a
+ * made-up work under someone's name. Hard techno, the middle of the night.
  */
 
-export const EXAMPLE_SET_IS_PLACEHOLDER = true
+export const EXAMPLE_SET_IS_PLACEHOLDER = false
 
-export const EXAMPLE_SET_GENRE: SupportedGenre = "house"
+export const EXAMPLE_SET_GENRE: SupportedGenre = "hard-techno"
 export const EXAMPLE_SET_CONTEXT: PlaylistContext = "main"
 
 export interface ExampleSetTrack {
@@ -42,34 +43,16 @@ export interface ExampleSetTrack {
   durationSeconds: number | null
 }
 
-const row = (
-  n: number,
-  bpm: number,
-  key: string,
-  energy: number,
-  durationSeconds: number
-): ExampleSetTrack => ({
-  artist: "Example artist",
-  name: `Example track ${String(n).padStart(2, "0")}`,
-  bpm,
-  key,
-  energy,
-  durationSeconds,
-})
-
 export const EXAMPLE_SET_TRACKS: ExampleSetTrack[] = [
-  row(1, 122, "8A", 6, 412),
-  row(2, 122, "8A", 6, 388),
-  row(3, 123, "9A", 9, 371),
-  row(4, 123, "9A", 7, 395),
-  row(5, 124, "10A", 7, 402),
-  row(6, 124, "10A", 7, 366),
-  row(7, 124, "10A", 7, 418),
-  row(8, 125, "11A", 7, 379),
-  row(9, 125, "11A", 8, 391),
-  row(10, 125, "12A", 8, 384),
-  row(11, 126, "12A", 9, 405),
-  row(12, 126, "1A", 9, 372),
-  row(13, 125, "1A", 8, 398),
-  row(14, 124, "12A", 7, 421),
+  { artist: "Laxter", name: "Lick It Harder", bpm: 155, key: "7A", energy: 8, durationSeconds: 272 },
+  { artist: "KX CHR", name: "JUMP (Original Mix)", bpm: 155, key: "1A", energy: 8, durationSeconds: 221 },
+  { artist: "KX CHR", name: "DARK SIDE Original Mix", bpm: 155, key: "12B", energy: 8, durationSeconds: 291 },
+  { artist: "Vortek's, OMAKS, ENERGIC", name: "Morning Rave (Original Mix) [ENERGIC]", bpm: 158, key: "7B", energy: 9, durationSeconds: 262 },
+  { artist: "AREA ØNE", name: "Psychedelics (Original Mix)", bpm: 155, key: "7B", energy: 8, durationSeconds: 301 },
+  { artist: "Avicii", name: "Levels (CIRCO Edit)", bpm: 150, key: "7B", energy: 7, durationSeconds: 231 },
+  { artist: "Koffeintablette, THE MANAGER", name: "BANG (Master)", bpm: 160, key: "6A", energy: 9, durationSeconds: 308 },
+  { artist: "Brutalismus 3000", name: "Satan Was a Baby Boomer", bpm: 155, key: "5A", energy: 8, durationSeconds: 427 },
+  { artist: "Timmy Trumpet, BENNETT (DE)", name: "Diamond Heart (Extended Mix)", bpm: 155, key: "5A", energy: 8, durationSeconds: 205 },
+  { artist: "Bassjackers", name: "Beethoven's Aria Fur Elise (Extended Mix)", bpm: 145, key: "2A", energy: 5, durationSeconds: 241 },
+  { artist: "Binary Squad", name: "Reincarnate (Original Mix) [No Mercy]", bpm: 160, key: "11A", energy: 9, durationSeconds: 288 },
 ]
