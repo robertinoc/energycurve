@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">151</strong>
+      <strong id="tally-total">152</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1612,6 +1612,20 @@
           steps: ["Con una cuenta que no tenga ninguna playlist, abrí el dashboard desde la app instalada", "Tocá «¿No tenés un export a mano? Mirá primero un set de ejemplo» y contá cuánto tardás en entender qué hace el producto", "Bajá hasta el final y tocá «Ahora probá con lo tuyo»", "Volvé a abrir la cuenta después de importar algo", "En una ventana con la analítica aceptada, abrí el ejemplo y tocá el botón; en PostHog buscá <code>example_set_opened</code> y <code>example_set_import_click</code>. Repetí con la analítica rechazada"],
           expect: "En ningún momento parece un set tuyo: dice «Ejemplo», «no es tuyo» y que no se guarda en tu cuenta. Se ven el puntaje, la curva y tres problemas con su arreglo, sin scroll horizontal ni nada tapado por la muesca. «Ahora probá con lo tuyo» te deja en el formulario de import. Con una playlist ya importada, el ejemplo desaparece. Con la analítica aceptada llegan los dos eventos, sólo con el idioma; con la analítica rechazada, ninguno. Esto último sólo se puede ver acá: en el build de las E2E no sale ningún evento de PostHog, así que la suite no lo prueba.",
           ifNot: "Si tardaste más de diez segundos en entender qué hace, anotá qué te frenó: es exactamente lo que este paso tiene que resolver. Si el ejemplo todavía dice «Example track 01» o «14 temas · House», producción no tiene el set real del 25/11: anotá qué commit sirve."
+        }
+      ]
+    },
+    {
+      code: "FALLBACK",
+      title: "Que una caída de la ordenación inteligente se vea",
+      meta: "~10 min · necesita el deploy y la migración 0035 aplicada · cualquier cuenta · el backstage, en la compu y en el teléfono",
+      why: "Paso 0.4 y sección 7 de <code>docs/conversion-plan.md</code>. La ordenación inteligente cayó al heurístico por lo menos del 12/09 al 25/11 porque la cuenta de Anthropic no tiene saldo, y nada lo dijo: el DJ recibía un orden usable y un cartel cortés. Ahora cada ordenación queda registrada en <code>smart_order_runs</code> y el panel Users del backstage la lee arriba de todo. Los tests afirman cada estado del panel y que la ruta registra el fallback. Lo que ninguno dice es si el aviso salta a la vista entrando al backstage, que es para lo que está.",
+      tests: [
+        {
+          code: "FALLBACK.1", title: "El aviso del backstage, con ojos humanos", sub: "Backstage → Users · lo primero de la página",
+          steps: ["Antes de aplicar la 0035 (o en un entorno sin ella), abrí backstage → Users y leé el recuadro de arriba", "Con la 0035 aplicada, volvé a abrirlo antes de que nadie haya pedido una ordenación", "Con cualquier cuenta, abrí el análisis de un set y tocá «Ordenación inteligente»; mirá el botón y el cartel cuando termina", "Recargá backstage → Users", "Abrí backstage → Users desde el teléfono"],
+          expect: "Sin la 0035 dice «Smart ordering: can't tell whether it works» y aclara que eso no es lo mismo que cero fallas. Con la 0035 y sin pedidos dice «nothing to report», y que eso quiere decir que no hubo pedidos, no que falten datos. Mientras la cuenta no tenga saldo, el botón termina diciendo «Ordenado sin IA» (nunca «Reordenado con IA»), y el backstage muestra arriba de todo un recuadro rojo: «Smart ordering is down: the Anthropic account has no credit», cuántas seguidas cayeron, desde cuándo, y qué hacer. Ese recuadro tiene que ser lo primero que se ve al entrar, sin buscarlo. Con saldo, el botón dice «Reordenado con IA» y el panel pasa a «working» con el reparto. En el teléfono, nada se sale de la pantalla.",
+          ifNot: "Si el recuadro rojo no es lo primero que mirás al entrar, anotá qué te llamó la atención antes: es exactamente lo que falló durante 74 días. Si con saldo cargado sigue en rojo, mirá la hora de la última fila: el panel se pone en verde recién con la primera ordenación que haga la IA. Si ya cargaste saldo antes de correr esta fila, el rojo se ve igual en local sin <code>ANTHROPIC_API_KEY</code> (el motivo es «key isn't set»)."
         }
       ]
     },

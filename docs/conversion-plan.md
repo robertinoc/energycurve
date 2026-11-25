@@ -27,6 +27,11 @@ Según el código, entonces, son 48 de 188. Igual queda como paso de Robertino
 (0.2) confirmarlo contra lo que ve, porque el panel lo presenta en un lugar que
 invita a leerlo de la otra manera.
 
+**Cualquier número que toque la ordenación inteligente, de antes del 25/11, está
+contaminado.** La función que sostiene PRO estuvo caída por lo menos del 12/09
+al 25/11 y cada pedido cayó al heurístico sin que nada avisara; los datos de uso
+de esa función no se pueden leer como demanda. Ver la sección 7.
+
 ## 2. Diagnóstico
 
 **El plan gratis hace el trabajo completo de un DJ.** Import, análisis, curva,
@@ -96,6 +101,7 @@ en producción, se dice al lado.
 | 0.1 | Cargar las dos variables de PostHog en producción | Robertino | Pendiente |
 | 0.2 | Confirmar si el 48 es sobre 188 o sobre 99 | Robertino | Pendiente. El código dice 188 (ver la sección 1); falta que Robertino lo confirme contra el panel |
 | 0.3 | Instrumentar el embudo de activación | Claude Code | Hecho en el código, verificado el 10/11 leyendo dónde se emite cada uno: `signup` (`lib/auth/password-auth.ts` y `lib/auth/email-verification.ts`), `playlist_created` (los cuatro caminos de creación en `app/(en)/dashboard/playlists/actions.ts`), `analysis_started` y `analysis_completed` (`services/analysis-service.ts`), `plan_limit_reached` (`services/playlist-service.ts`, `services/taxonomy-service.ts` y la ruta de smart-order) y `checkout_started` (`app/api/billing/checkout/route.ts`). El backstage ya arma registro → primer análisis y Free → Pro desde Supabase, sin PostHog (lote 20). **Lo que falta es leerlos de vuelta**: los paneles del backstage que leen de PostHog (actividad, herramientas, hechos por persona) quedan vacíos hasta que estén las dos variables del paso 0.1, que es de Robertino. `plan_limit_reached` y `checkout_started` no los lee ningún panel: hoy se ven sólo en la consola de PostHog |
+| 0.4 | Que una caída de la ordenación inteligente se vea el mismo día | Claude Code | Hecho en el código (25/11), sin desplegar. El botón deja de decir «Reordenado con IA» cuando el orden lo hizo el heurístico: dice «Ordenado sin IA». La ruta registra cada ordenación en `smart_order_runs` (migración 0035, sin datos personales), y el backstage la lee arriba de todo en Users: grita en rojo si la última cayó por un motivo que no se arregla reintentando (sin saldo, sin key, key rechazada, modelo no disponible), y distingue «nadie pidió ninguna» de «no lo puedo saber». No depende de PostHog. **Empieza a contar cuando Robertino aplique la 0035** (pendientes, fila 35), y no reconstruye el pasado. Ver la sección 7 |
 | 2.1 | CUE sugeridos en PRO | Claude Code | **Frenado (01/11)**, por la decisión de la sección 5. La fila pública y el registro `cue_points` se sacaron: `/pricing` ya no los promete. El tier sigue decidido (PRO) y está anotado en la sección 5. Se retoma cuando se cumpla el prerrequisito de esa sección |
 | 2.2 | Gating de varios sets a PRO | Claude Code | Hecho en el código (01/11): fila pública con «no» en FREE y «yes» en PRO y PRO+, registro `multi_set_split` con `minPlan: "pro"` y `status: "shipped"`. El servidor rechaza la división de una cuenta FREE antes de crear nada (`importAsSplitSets`), y el formulario le muestra la división como muro de venta: cuánto suena la lista, en cuántos sets se partiría, qué hace cada criterio, la insignia PRO y el enlace a los planes. La lista se sigue importando entera como un solo set |
 | 1.1 | Set de ejemplo precargado | Claude Code | Hecho en el código (10/11), sin desplegar: en la guía de primeros pasos, al lado del paso de importar y sólo para quien no importó nada, «Mirá primero un set de ejemplo» abre en un clic la curva, el puntaje y los problemas que el motor real encuentra en ese set, y termina en «Ahora probá con lo tuyo», que lleva al import de la misma página. Es de sólo lectura (no crea nada en la cuenta ni cuenta como playlist) y es igual en todos los planes. El set es real desde el 25/11: los temas 18 a 28 del «MINITEL RBRTN - FULL SET» de Robertino, hard techno, en horario central (`lib/product/example-set.ts`, `EXAMPLE_SET_IS_PLACEHOLDER = false`). Entre el 10/11 y el 25/11 estuvo mergeado con el placeholder. Se mide desde el navegador, con el mismo filtro de consentimiento que el resto de los eventos del navegador: `example_set_opened` (abrió el ejemplo) y `example_set_import_click` (tocó «Ahora probá con lo tuyo»). Cuántos importan después sale de un embudo de PostHog `example_set_opened` → `playlist_created`, que ya existe y comparte el id de la persona. Cuenta sólo a quien aceptó la analítica. La compuerta está probada en unidad; que los eventos lleguen a PostHog **no está verificado**: en el build de las E2E no sale ningún evento de PostHog (la CSP sólo permite el host de producción, y algo más que no se encontró), y queda para la fila MUESTRA.1 del banco |
@@ -218,3 +224,66 @@ analítica. Lleva `placement` (`header`, `import_summary`, `next_step`),
 `firstAnalysis` y `locale`, y nada del set. Contesta una sola cosa: desde cuál de
 los lugares entra la gente al análisis. Sirve para comparar lugares entre sí, no
 como total.
+
+## 7. La ordenación inteligente estuvo caída
+
+Anotado el 25/11/2026. **Lo que dice esta sección hay que tenerlo delante al
+leer cualquier métrica anterior** que toque la ordenación inteligente: usos,
+cupo, el muro 2 o una conversión atribuida a la IA.
+
+**Qué pasó.** La cuenta de Anthropic que usa el producto no tiene saldo, así que
+cada «Ordenación inteligente» cae al heurístico. El DJ recibe un orden usable y
+un cartel cortés, y por eso nadie se quejó. El 25/11 Robertino apretó el botón
+sobre un set propio en producción y recibió el cartel de `smartFallbackUnfunded`.
+
+### Desde cuándo: lo que se puede probar
+
+| Fecha | Qué hay | Fuente |
+|---|---|---|
+| 01/08/2026 | Sale la ordenación inteligente | Commit `14e95ec` |
+| 14/08/2026 | Empieza a cobrarse el cupo (`feature_usage`). Antes, un uso que funcionaba no dejaba registro | Migración 0014, commit `e024ca7` |
+| 12/09/2026 | **Primera vez que se ve la falla**, en la primera ronda de pruebas contra producción: `400 invalid_request_error`, «Your credit balance is too low…». La tanda dice que para entonces llevaba «semanas»; el día que empezó no quedó escrito | `docs/qa/output-test-tanda-01.md`, H-9 y H-10 |
+| 20/09, 02/10, 06/10, 21/10 | Cuatro documentos dicen que sigue sin crédito | PR #246; `docs/qa/carga-2026-10.md`; `docs/qa/quality-report-2026-09.md` (F2-01); `docs/pendientes-robertino.md` (fila 4) |
+| 25/11/2026 | Sigue caída: Robertino ve el cartel de «sin crédito» en producción | Este cambio |
+
+**Lo que se puede afirmar: caída como mínimo del 12/09/2026 al 25/11/2026, 74
+días, y sigue.** Ningún documento del repo registra que haya funcionado en el
+medio.
+
+**Lo que no se puede saber desde acá, y por eso no se estima:**
+
+- **El día en que empezó.** Los logs de `smart_order.completed` llevan el
+  `reason`, pero los de esa época no están al alcance de esta sesión: `vercel
+  logs` sólo muestra logs nuevos, y no hay credenciales de producción.
+- **La fecha del único uso que funcionó.** Está en `feature_usage` de producción.
+  Para leerla, en el SQL Editor de producción:
+  `select period_start, updated_at, used from public.feature_usage where capability = 'ai_ordering' order by updated_at;`
+  `updated_at` es la hora del último uso cobrado de esa fila. Si es anterior al
+  12/09, acota el comienzo de la caída entre esa fecha y el 12/09. Si es
+  posterior, la cuenta tuvo saldo en algún momento entre el 12/09 y el 25/11, y
+  el rango de arriba no fue continuo.
+
+### Por qué los datos de uso de esa función no se pueden leer como demanda
+
+**La cuota se cobra sólo cuando el orden lo hizo la IA** (`if (result.source ===
+"claude")` en `app/api/playlists/[id]/smart-order/route.ts`). Es a propósito:
+no se le gasta a nadie un uso que no recibió. Pero tiene estas consecuencias:
+
+- `feature_usage` cuenta los éxitos de la IA, no los pedidos. Durante la caída
+  marca cero aunque la gente apriete el botón. Que haya un solo registro en toda
+  la historia no dice que la función no interese: dice que casi nunca funcionó.
+- Tampoco cuenta los éxitos de PRO+: con cupo ilimitado, la ruta no escribe fila.
+  Un registro en `feature_usage` es como mucho un piso, nunca un total.
+- El muro 2 (`ai_ordering_limit`) y `plan_limit_reached` para `ai_ordering` no
+  se pueden disparar durante la caída, porque el cupo nunca se gasta. Cero de esos
+  eventos en ese período no es falta de interés.
+- Todo lo que mida la ordenación inteligente antes del 25/11 mide un producto
+  cuya función de pago no funcionaba.
+
+### Desde el 25/11
+
+`smart_order_runs` (migración 0035) registra cada ordenación con quién la hizo y,
+si fue el heurístico, por qué. No depende de PostHog, así que cuenta a todos y no
+sólo a quien aceptó la analítica. El panel Users del backstage lo lee y avisa
+(paso 0.4). Empieza a contar cuando la 0035 esté aplicada: el pasado no se
+reconstruye.

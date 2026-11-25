@@ -31,6 +31,7 @@ import {
 import { getOwnedPlaylistWithTracks } from "@/services/playlist-service"
 import { getProfileBilling } from "@/services/billing-service"
 import { consumeQuota, readQuota } from "@/services/usage-service"
+import { recordSmartOrderRun } from "@/services/smart-order-run-service"
 import { syncProfileFromWorkOSUser } from "@/services/profile-service"
 import type { ResolvedTrackEnergy } from "@/types/analysis"
 
@@ -629,6 +630,15 @@ export async function POST(
       if (result.source === "claude") {
         await consumeQuota(profile.id, "ai_ordering", aiLimit)
       }
+
+      // The record the backstage reads to say whether smart ordering works.
+      // The log line below says the same thing, but nobody reads logs, and the
+      // quota above can't stand in for it: it is charged only on the Claude
+      // path, so a fallback leaves no trace there. Never throws.
+      await recordSmartOrderRun({
+        source: result.source,
+        reason: result.reason ?? null,
+      })
 
       logInfo("smart_order.completed", {
         profileId: profile.id,
