@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { listPendingDeletions } from "@/services/account-deletion-service"
 import { getRecentAdminActions } from "@/services/admin-audit-service"
 import { listOpenPrivacyRequests } from "@/services/privacy-request-service"
+import { readRecentSmartOrderRuns } from "@/services/smart-order-run-service"
+import { smartOrderHealth } from "@/lib/backstage/smart-order-health"
 import {
   getBackstageUsersSnapshot,
   getRecentAnalyses,
@@ -12,6 +14,7 @@ import { ActivityFeed } from "./ActivityFeed"
 import { Bento, BentoLabel } from "./BackstagePrimitives"
 import { PendingDeletions } from "./PendingDeletions"
 import { PrivacyRequestQueue } from "./PrivacyRequestQueue"
+import { SmartOrderHealthPanel } from "./SmartOrderHealthPanel"
 import { AcquisitionDashboard } from "./AcquisitionDashboard"
 import { UsersDashboard } from "./UsersDashboard"
 import { UsersTable } from "./UsersTable"
@@ -76,6 +79,7 @@ export default async function BackstageUsersPage() {
     privacyRequests,
     pendingDeletions,
     toolUsage,
+    smartOrderRuns,
   ] = await Promise.all([
     getBackstageUsersSnapshot(),
     getRecentAnalyses(),
@@ -83,6 +87,7 @@ export default async function BackstageUsersPage() {
     listOpenPrivacyRequests(),
     listPendingDeletions(),
     fetchToolUsage(),
+    readRecentSmartOrderRuns(),
   ])
 
   return (
@@ -93,6 +98,10 @@ export default async function BackstageUsersPage() {
           Every registered profile, with product activity and account controls.
         </p>
       </div>
+
+      {/* First, above everything: the feature that carries the paid plans can
+          fall back for weeks without anyone noticing, and did. */}
+      <SmartOrderHealthPanel health={smartOrderHealth(smartOrderRuns)} />
 
       {!isPostHogReportingConfigured() ? (
         <Alert>

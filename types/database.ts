@@ -43,6 +43,27 @@ export interface Database {
           },
         ]
       }
+      smart_order_runs: {
+        Row: {
+          id: string
+          created_at: string
+          source: "claude" | "fallback"
+          reason: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          source: "claude" | "fallback"
+          reason?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          source?: "claude" | "fallback"
+          reason?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           id: string
