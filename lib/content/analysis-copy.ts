@@ -628,6 +628,12 @@ export const ANALYSIS_UI = {
   },
   smartOrderThinking: { en: "Thinking the order…", es: "Pensando el orden…" },
   smartOrderDone: { en: "Reordered with AI", es: "Reordenado con IA" },
+  /**
+   * The button after a fallback. Not `smartOrderDone`: there the AI did the
+   * order, here it didn't, and the banner above already says so. A label that
+   * claimed otherwise made the screen contradict itself.
+   */
+  smartOrderFallbackDone: { en: "Ordered without AI", es: "Ordenado sin IA" },
   smartThinkingBanner: {
     en: "Testing orders against the ideal {context} curve and the Camelot wheel…",
     es: "Probando órdenes contra la curva ideal de {context} y la rueda de Camelot…",
@@ -661,9 +667,17 @@ export const ANALYSIS_UI = {
    * it can change, and a DJ has no use for the information — "the AI service"
    * is both the honest description and the one that stays true.
    */
+  /**
+   * Says who made the order and nothing about how, because "how" depends on the
+   * set. This used to describe the old fallback — ascending energy with two
+   * breathers — long after the route switched to `optimizeOrder` (energy curve
+   * plus key compatibility), which only reverts to the energy ramp for sets too
+   * long to search. A banner that describes a method the set didn't get is the
+   * same false claim as the button's, one line lower.
+   */
   smartFallbackBanner: {
-    en: "The automatic order was used instead: ascending energy with two deliberate breathers. You can keep editing by hand.",
-    es: "Se usó el orden automático: energía ascendente con dos respiros intencionales. Podés seguir editando a mano.",
+    en: "EnergyCurve made this order on its own, without AI: it follows the energy curve and keeps keys compatible where it can. You can keep editing by hand.",
+    es: "Este orden lo armó EnergyCurve sin IA: sigue la curva de energía y cuida la tonalidad donde puede. Podés seguir editando a mano.",
   },
   smartFallbackTimeout: {
     en: "The AI service is busy right now.",

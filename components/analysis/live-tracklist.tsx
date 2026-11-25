@@ -63,6 +63,28 @@ interface LiveTracklistProps {
 }
 
 /**
+ * What the Smart ordering button says, per state.
+ *
+ * `fallback` has its own label, and it must never share `done`'s. It used to:
+ * after a fallback the button read "Reordered with AI" while the banner above
+ * it said the AI service was unavailable, so the same screen asserted both. The
+ * order on screen came from the local heuristic, and the button is the one
+ * place the DJ looks to know what produced it.
+ */
+export function smartOrderLabel(status: SmartOrderStatus, locale: SiteLocale): string {
+  switch (status) {
+    case "thinking":
+      return ANALYSIS_UI.smartOrderThinking[locale]
+    case "done":
+      return ANALYSIS_UI.smartOrderDone[locale]
+    case "fallback":
+      return ANALYSIS_UI.smartOrderFallbackDone[locale]
+    case "idle":
+      return ANALYSIS_UI.smartOrderCta[locale]
+  }
+}
+
+/**
  * Zone 3 of the analysis redesign: the single live tracklist that replaces
  * the two side-by-side 48-row lists. Purely presentational — the order is
  * derived upstream (original order + applied fix operations + smart order),
@@ -105,12 +127,7 @@ export function LiveTracklist({
         })
       : ANALYSIS_UI.unmovedSubtitle[locale]
 
-  const smartLabel =
-    smartStatus === "thinking"
-      ? ANALYSIS_UI.smartOrderThinking[locale]
-      : smartStatus === "done" || smartStatus === "fallback"
-        ? ANALYSIS_UI.smartOrderDone[locale]
-        : ANALYSIS_UI.smartOrderCta[locale]
+  const smartLabel = smartOrderLabel(smartStatus, locale)
 
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
