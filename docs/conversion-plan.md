@@ -242,6 +242,7 @@ sobre un set propio en producción y recibió el cartel de `smartFallbackUnfunde
 |---|---|---|
 | 01/08/2026 | Sale la ordenación inteligente | Commit `14e95ec` |
 | 14/08/2026 | Empieza a cobrarse el cupo (`feature_usage`). Antes, un uso que funcionaba no dejaba registro | Migración 0014, commit `e024ca7` |
+| 20/08/2026, 07:18 UTC | **Último uso cobrado**: el único registro de `ai_ordering` en toda la tabla (período agosto, `used = 1`). Ese día la IA todavía ordenaba | `feature_usage` de producción, consultado por Robertino el 26/11 |
 | 12/09/2026 | **Primera vez que se ve la falla**, en la primera ronda de pruebas contra producción: `400 invalid_request_error`, «Your credit balance is too low…». La tanda dice que para entonces llevaba «semanas»; el día que empezó no quedó escrito | `docs/qa/output-test-tanda-01.md`, H-9 y H-10 |
 | 20/09, 02/10, 06/10, 21/10 | Cuatro documentos dicen que sigue sin crédito | PR #246; `docs/qa/carga-2026-10.md`; `docs/qa/quality-report-2026-09.md` (F2-01); `docs/pendientes-robertino.md` (fila 4) |
 | 25/11/2026 | Sigue caída: Robertino ve el cartel de «sin crédito» en producción | PR #308 |
@@ -249,7 +250,10 @@ sobre un set propio en producción y recibió el cartel de `smartFallbackUnfunde
 | 26/11/2026, 10:34 UTC | **Primera ordenación hecha por la IA** que queda registrada: 21 temas, el score pasa de 5.5 a 8.8 | `smart_order_runs`, panel Users del backstage; PR #311 |
 
 **Lo que se puede afirmar: caída como mínimo del 12/09/2026 al 26/11/2026, 75
-días.** Ningún documento del repo registra que haya funcionado en el medio.
+días.** Ningún documento del repo registra que haya funcionado en el medio. **Empezó
+entre el 20/08 a las 07:18 UTC (último uso cobrado) y el 12/09 (primera vez que se
+vio)**, así que como máximo fueron 98 días. El día exacto no se puede saber: un
+plan con cupo ilimitado pudo usarla después del 20/08 sin dejar fila.
 
 ### Cómo volvió
 
@@ -272,16 +276,9 @@ producto que quedó abierta en #311.
 
 **Lo que no se puede saber desde acá, y por eso no se estima:**
 
-- **El día en que empezó.** Los logs de `smart_order.completed` llevan el
-  `reason`, pero los de esa época no están al alcance de esta sesión: `vercel
-  logs` sólo muestra logs nuevos, y no hay credenciales de producción.
-- **La fecha del único uso que funcionó.** Está en `feature_usage` de producción.
-  Para leerla, en el SQL Editor de producción:
-  `select period_start, updated_at, used from public.feature_usage where capability = 'ai_ordering' order by updated_at;`
-  `updated_at` es la hora del último uso cobrado de esa fila. Si es anterior al
-  12/09, acota el comienzo de la caída entre esa fecha y el 12/09. Si es
-  posterior, la cuenta tuvo saldo en algún momento entre el 12/09 y el 25/11, y
-  el rango de arriba no fue continuo.
+- **El día exacto en que empezó**, dentro del rango de arriba. Los logs de
+  `smart_order.completed` llevan el `reason`, pero los de esa época no están al
+  alcance: `vercel logs` sólo muestra logs nuevos.
 
 ### Por qué los datos de uso de esa función no se pueden leer como demanda
 
@@ -293,7 +290,10 @@ no se le gasta a nadie un uso que no recibió. Pero tiene estas consecuencias:
   marca cero aunque la gente apriete el botón. Que haya un solo registro en toda
   la historia no dice que la función no interese: dice que casi nunca funcionó.
 - Tampoco cuenta los éxitos de PRO+: con cupo ilimitado, la ruta no escribe fila.
-  Un registro en `feature_usage` es como mucho un piso, nunca un total.
+  Un registro en `feature_usage` es como mucho un piso, nunca un total. El 26/11,
+  la primera ordenación de la IA después de la caída no dejó fila de noviembre:
+  es lo esperable si la cuenta de Robertino tiene cupo ilimitado, pero su plan no
+  se verificó.
 - El muro 2 (`ai_ordering_limit`) y `plan_limit_reached` para `ai_ordering` no
   se pueden disparar durante la caída, porque el cupo nunca se gasta. Cero de esos
   eventos en ese período no es falta de interés.
