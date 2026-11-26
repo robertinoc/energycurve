@@ -272,11 +272,15 @@ async function claudeOrder(
        * available, for a task whose hard part is a constraint shuffle rather
        * than a chain of inference.
        *
-       * `medium` keeps the judgement that matters (harmonic transitions, where
-       * the breathers land) and gets the answer back inside the request budget.
+       * `medium` was the first step down, and it was not enough: on 26/11/2026,
+       * the day the account had credit again, three 21-track orderings in
+       * production ran past the function's 60s ceiling without placing a single
+       * track. `low` is the next step. The rules the model has to keep are
+       * spelled out in the system prompt; the task is a constraint shuffle over
+       * a few dozen items, not a long chain of inference.
        */
       output_config: {
-        effort: "medium",
+        effort: "low",
         format: { type: "json_schema", schema: RESPONSE_SCHEMA },
       },
       system:
