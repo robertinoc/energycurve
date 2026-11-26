@@ -5,9 +5,10 @@ tabla ordenada por **lo que destraba**, no por antigüedad ni por número. El
 número de cada fila es su nombre, no su puesto: no se renumera, para no romper
 las referencias de otros documentos («fila 10», «fila 16», «fila 20»).
 
-**25/11/2026, sin re-verificar el resto de la tabla:** entra la **35** (aplicar
+**25/11/2026, sin re-verificar el resto de la tabla:** la **35** (aplicar
 la 0035, la tabla que alimenta el aviso de ordenación inteligente del
-backstage) y **la 4 pasa al frente y se simplifica**: el 25/11 viste en
+backstage) entró y salió el 26/11 (ver «Resuelto»), y **la 4 pasa al frente y
+se simplifica**: el 25/11 viste en
 producción el cartel de `smartFallbackUnfunded`, que es lo que J.4 pedía ver
 antes de cargar crédito, así que ya no hay nada que esperar para cargarlo.
 
@@ -36,7 +37,6 @@ la estimación es floja, lo dice.
 | # | Qué | Qué destraba | Tu costo | Esperando desde | Detalle |
 |---|---|---|---|---|---|
 | 4 | **CARGAR CRÉDITO EN LA CUENTA DE ANTHROPIC** (H-9) | El orden inteligente vuelve a ser IA. Hoy **todas** las ordenaciones caen al heurístico, en todos los planes, y la cuota no se cobra en ese camino: los datos de uso de la función no se pueden leer como demanda (`docs/conversion-plan.md`, «La ordenación inteligente estuvo caída»). Desde el PR del 25/11, el backstage lo grita arriba de todo en Users mientras dure. La mitad de J.4 que pedía ver el cartel de «sin crédito» quedó vista el 25/11 | 5 min + el dinero | 20/09 | Tanda 01 §H-9 y §H-10; banco J.4 y FALLBACK.1 |
-| 35 | **Aplicar la 0035 en dev y en producción**: pegar `supabase/migrations/0035_smart_order_runs.sql` en el SQL Editor de cada proyecto, y después correr la consulta de `node scripts/migration-status.mjs --sql`: la fila de la 0035 tiene que decir `applied` | Que el aviso de ordenación inteligente del backstage tenga de dónde leer. Sin la tabla, el panel dice «can't tell whether it works» (no «cero fallas»), y la ruta registra en el log que no pudo escribir, sin afectar el orden que recibe el DJ. Crea una tabla sin datos personales | 5 min | 25/11 | La migración misma; banco FALLBACK.1 |
 | 34 | **Aplicar la 0032 en producción**: en el SQL Editor de `iwzkzybzadsmnwilcity`, `drop policy if exists feature_usage_own_rows on public.feature_usage;` y volver a correr la consulta de `node scripts/migration-status.mjs --sql`: la fila de la 0032 tiene que decir `applied` | Que el esquema de producción deje de mostrar un control de dueño que no existe (H-26). **No se perdió ningún dato**: la política no matchea nunca. Encontrado el 21/10 (lote 22): producción tiene 33 de 34 migraciones, la 0032 salteada | 2 min | 21/10 | `docs/qa/migraciones-revision-2026-10.md`; tanda 01 §H-26 |
 | 29 | **Aprobar la frase de la política** sobre el primer contacto. Propuesta, sin aplicar: «Si aceptás la analítica, guardamos además, con tu cuenta, de dónde llegó tu primera visita: el sitio o la campaña que te trajo (por ejemplo, Instagram o Google), la página pública por la que entraste y cuándo. Nunca la dirección completa de la que venías. Lo usamos sólo para contar, en conjunto, qué canales traen gente a EnergyCurve.» / «If you accept analytics, we also keep, with your account, where your first visit came from: the site or campaign that sent you (for example Instagram or Google), the public page you arrived on, and when. Never the full address you came from. We use it only to count, in aggregate, which channels bring people to EnergyCurve.» | Que la política diga lo que el producto guarda. **Desde el 21/10 corre en producción**: con la 0034 aplicada, cada registro que aceptó la analítica guarda su primer contacto, y la política todavía no lo menciona. El dato es nuevo; el consentimiento es el mismo de la analítica, y el banner no se tocó. **No es asesoramiento legal** | 10 min de lectura | 20/10 | `docs/seo/primer-contacto.md`; RoPA T5, fila «Primer contacto» |
 | 1 | **PostHog → Settings → Project → «Discard client IP data»**: confirmar que está prendido, y si no, prenderlo | Que el banner y la política digan algo verdadero hoy. El código ya no manda `$ip` en el evento (lote 16), pero la IP llega igual en la conexión, y si PostHog la guarda depende **sólo** de este ajuste | 2 min | 02/10 | `docs/qa/output-test-tanda-01.md` §H-17 |
@@ -70,6 +70,14 @@ la estimación es floja, lo dice.
 | 20 | **La palabra «AI»**: si el producto la quiere en su posicionamiento | Un hueco del mapa de keywords (`ai dj set planner free`) | La decisión | 27/09 | `docs/seo/keyword-map.md:251` |
 
 ## Resuelto
+
+**Resuelta el 26/11/2026, con lo que corrió Robertino:**
+
+- **35 · la migración 0035.** Pegada en el SQL Editor de dev y de producción:
+  «Success. No rows returned» en los dos. Como la migración es
+  `create table if not exists`, eso alcanza para saber que la tabla existe.
+  La consulta de control (`select count(*)`) no se corrió. Desde ahí la ruta
+  ya puede escribir en cuanto se despliegue #308.
 
 **Resueltas el 21/10/2026 (lote 22), con lo que corrió Robertino:**
 
