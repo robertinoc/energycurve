@@ -11,8 +11,11 @@ import { analyzePlaylist } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { optimizeOrder, REORDER_MAX_TRACKS } from "@/lib/engine/reorder"
 import { classifyFailure } from "@/lib/smart-order/classify-failure"
-import { finalMessageWithin } from "@/lib/smart-order/deadline"
-import type { SmartOrderFallbackReason } from "@/lib/smart-order/stream"
+import {
+  runSmartOrder,
+  type ClaudeCallOutcome,
+  type SmartOrderResult,
+} from "@/lib/smart-order/run"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { isSuspended, SUSPENDED_RESPONSE } from "@/lib/auth/suspension"
 import { consumeRateLimit } from "@/services/rate-limit-service"
@@ -39,12 +42,20 @@ import type { ResolvedTrackEnergy } from "@/types/analysis"
 export const dynamic = "force-dynamic"
 
 /**
- * Without this the platform decides, and its default (10-15s) is far below what
- * a reorder actually costs — so the function was being killed mid-flight and
- * every request fell back to the heuristic. 60s is the ceiling on every Vercel
- * plan including Hobby, so it needs no plan-specific tuning.
+ * Without this the platform decides; with it the platform still has the last
+ * word, so our own deadline below must fire first.
+ *
+ * 300 is the ceiling AND the default on this project's actual plan (Hobby with
+ * Fluid compute — read from the Vercel project API and the duration docs on
+ * 26/11/2026, not assumed). The previous value, 60, came with a comment
+ * claiming 60s was "the ceiling on every Vercel plan": it isn't, and that
+ * belief is what made the kill look unavoidable. The generation has no bound
+ * of its own while it streams (see SMART_ORDER_DEADLINE_MS), so the platform
+ * killed the function at 60s, the NDJSON stream ended without a terminal
+ * event, and the DJ paid for an attempt that delivered nothing — not even the
+ * heuristic this route exists to fall back to.
  */
-export const maxDuration = 60
+export const maxDuration = 300
 
 /**
  * Zone 4 of the analysis redesign: smart ordering. Calls the Claude API from
@@ -54,34 +65,36 @@ export const maxDuration = 60
  * breathers) when the API is unavailable, slow, or answers invalidly.
  */
 
-interface SmartOrderResult {
-  order: string[]
-  rationale: string
-  breathers: string[]
-  source: "claude" | "fallback"
-  /**
-   * Why the heuristic was used, when it was.
-   *
-   * The banner used to say "Claude didn't answer in time" for *every* fallback
-   * — a missing key, an invalid answer and a thrown error all rendered as a
-   * timeout. That is the product asserting a cause it doesn't know, and it made
-   * the one bug a user actually hit impossible to report accurately.
-   */
-  reason?: SmartOrderFallbackReason
-}
+// SmartOrderResult and the two guarantees around producing one (a terminal
+// event always goes out; the Claude call has a real wall-clock bound) live in
+// lib/smart-order/run.ts, where they are testable without HTTP or the SDK.
 
 /**
- * Deliberately below `maxDuration`, with room for what happens after the model
- * returns (quota write, cache, closing the stream). The platform killing the
- * function returns a 504 with no body, which the client can only report as
- * "unavailable"; aborting ourselves first means we still return the heuristic
- * order and can say why.
- *
- * 45s left no headroom at all: paired with the SDK's retry it could reach 90s
- * of wall clock against a 60s ceiling, so a single slow attempt guaranteed the
- * platform kill this constant exists to avoid. See `maxRetries` below.
+ * Bounds the time to response HEADERS only. The SDK's `timeout` option arms a
+ * timer around the fetch and clears it in the fetch's own `finally` — and
+ * `fetch()` resolves when headers arrive, not when the body ends (verified in
+ * `fetchWithTimeout`, `@anthropic-ai/sdk/client.mjs`, v0.115.0). On a
+ * streaming call that is a couple of seconds in, so this constant never fired
+ * mid-generation and was not the budget it read as. It stays because a
+ * connection that can't even produce headers in 40s deserves to fail fast.
  */
 const CLAUDE_TIMEOUT_MS = 40_000
+
+/**
+ * The real budget: wall clock over the WHOLE Claude call, stream included.
+ *
+ * When it expires, the upstream request is aborted (every extra second of an
+ * abandoned stream is billed — an aborted attempt costs the input tokens plus
+ * whatever output was generated up to the cut), the DJ gets the heuristic
+ * order with `reason: "timeout"`, and the stream still ends with `done`.
+ *
+ * The value comes from measurement (26/11/2026, claude-opus-5, low effort,
+ * short track aliases): 80 tracks — the REORDER_MAX_TRACKS ceiling — answered
+ * well under this, see the PR table. Margin to the 300s platform kill:
+ * deadline + heuristic for 80 tracks (~2s measured) + quota/record writes
+ * still leaves minutes to spare.
+ */
+const SMART_ORDER_DEADLINE_MS = 120_000
 
 const cache = new Map<string, SmartOrderResult>()
 const CACHE_MAX_ENTRIES = 200
@@ -228,26 +241,39 @@ async function claudeOrder(
   context: string,
   targetCurve: number[],
   /**
+   * Aborting this signal drops the upstream connection mid-stream — it is how
+   * the deadline in `runSmartOrder` stops a generation that won't finish in
+   * time from billing until it finishes on its own.
+   */
+  signal: AbortSignal,
+  /**
    * Called as the model commits each track id. Advisory only — the answer is
    * still validated in full below, so a run that reports 40/40 can still be
    * discarded and fall back to the heuristic.
    */
   onPlaced?: (placed: number) => void
-): Promise<
-  | { ok: true; value: Omit<SmartOrderResult, "source" | "reason"> }
-  | { ok: false; reason: SmartOrderFallbackReason }
-> {
+): Promise<ClaudeCallOutcome> {
   if (!process.env.ANTHROPIC_API_KEY) {
     return { ok: false, reason: "not_configured" }
   }
 
   /**
-   * No retry. The SDK retries timeouts, so with a 40s per-request budget one
-   * retry can spend 80s of wall clock against this function's 60s ceiling —
-   * the platform then kills us mid-flight and the caller gets a bodiless 504
-   * instead of the heuristic order we were holding all along. We already have a
-   * fallback; a second attempt inside the same request is strictly worse than
-   * using it.
+   * The model never sees the database uuids: each track is named by its
+   * 1-based position as a string ("1".."80"). A uuid is ~27 tokens and the
+   * model has to think about and then re-emit every one of them; at 80 tracks
+   * that alone was ~3,000 output tokens before a word of rationale. Short
+   * aliases cut the measured 80-track answer from ~98s to well inside the
+   * deadline (see the PR table) and make the order cheaper to produce —
+   * the answer is mapped back to real ids right below, and validation runs on
+   * the real ids, so nothing downstream changes.
+   */
+  const idOfAlias = new Map(tracks.map((track, index) => [String(index + 1), track.id]))
+
+  /**
+   * No retry. The SDK retries timeouts, so one retry doubles the wall clock
+   * this route has already budgeted with SMART_ORDER_DEADLINE_MS. We already
+   * have a fallback; a second attempt inside the same request is strictly
+   * worse than using it.
    */
   const client = new Anthropic({ maxRetries: 0 })
 
@@ -255,29 +281,29 @@ async function claudeOrder(
     {
       model: process.env.SMART_ORDER_MODEL || "claude-opus-5",
       /**
-       * Reasoning tokens are output tokens, so they draw from this budget too —
-       * and on this model thinking is on by default. At 16000 a long think plus
-       * a 26-id array plus the rationale could reach the cap, and a truncated
-       * answer is not a JSON document: it hit `JSON.parse` and surfaced as a
-       * generic error. There is no per-request cost to a ceiling that isn't
-       * reached, and this call streams, so nothing here risks an HTTP timeout.
+       * Reasoning tokens are output tokens, so they draw from this budget too.
+       * A ceiling that isn't reached costs nothing, and a truncated answer is
+       * not a JSON document — so the ceiling stays generous and the cost bound
+       * is the deadline, which cuts a runaway by wall clock rather than by
+       * leaving it a malformed answer to pay for.
        */
       max_tokens: 64000,
       /**
-       * `effort` matters here, and its absence was the other half of the
-       * timeouts. On Claude Opus 5 thinking is ON by default and the default
-       * effort is `high` — this route was written against the previous
-       * generation, where omitting `thinking` meant no thinking at all. So a
-       * 26-track reorder was silently running the deepest reasoning setting
-       * available, for a task whose hard part is a constraint shuffle rather
-       * than a chain of inference.
+       * `effort` matters here. On Claude Opus 5 thinking is ON by default and
+       * the default effort is `high` (per the current effort docs) — this
+       * route was written against the previous generation, where omitting
+       * `thinking` meant no thinking at all.
        *
-       * `medium` was the first step down, and it was not enough: on 26/11/2026,
-       * the day the account had credit again, three 21-track orderings in
-       * production ran past the function's 60s ceiling without placing a single
-       * track. `low` is the next step. The rules the model has to keep are
-       * spelled out in the system prompt; the task is a constraint shuffle over
-       * a few dozen items, not a long chain of inference.
+       * `medium` was the first step down, and production showed it was not
+       * enough: on 26/11/2026, the day the account had credit again, three
+       * 21-track orderings ran past the then-60s ceiling without placing a
+       * single track. `low` is a measured choice, not a guess: with short
+       * aliases it ordered 80 tracks — REORDER_MAX_TRACKS — validly and
+       * comfortably inside the deadline, where `medium` with uuids took ~98s
+       * for the same set (26/11 measurements, table in the PR). At low effort
+       * the model still thinks on hard inputs, just less; the order is
+       * validated either way, and an invalid answer falls back to the
+       * heuristic.
        */
       output_config: {
         effort: "low",
@@ -300,8 +326,8 @@ async function claudeOrder(
             context,
             genre,
             ideal_curve: targetCurve,
-            tracks: tracks.map(({ id, title, artist, bpm, key, energy }) => ({
-              id,
+            tracks: tracks.map(({ title, artist, bpm, key, energy }, index) => ({
+              id: String(index + 1),
               title,
               artist,
               bpm,
@@ -312,7 +338,7 @@ async function claudeOrder(
         },
       ],
     },
-    { timeout: CLAUDE_TIMEOUT_MS }
+    { timeout: CLAUDE_TIMEOUT_MS, signal }
   )
 
   if (onPlaced) {
@@ -332,10 +358,11 @@ async function claudeOrder(
     })
   }
 
-  // The `timeout` above only covers the wait for headers, which for a stream is
-  // the first second; this is what actually holds the call to its budget. See
-  // lib/smart-order/deadline.ts.
-  const response = await finalMessageWithin(stream, CLAUDE_TIMEOUT_MS)
+  // The `timeout` above only covers the wait for headers, which for a stream
+  // is the first second. The whole-call budget lives in runSmartOrder's race
+  // (SMART_ORDER_DEADLINE_MS): when it expires, the `signal` above aborts this
+  // stream and this await rejects with APIUserAbortError.
+  const response = await stream.finalMessage()
 
   if (response.stop_reason === "refusal") {
     return { ok: false, reason: "refusal" }
@@ -377,23 +404,34 @@ async function claudeOrder(
     return { ok: false, reason: "invalid_answer" }
   }
 
+  // The model answered in aliases; translate back to real ids before
+  // validating. An unknown alias maps to nothing and a duplicated alias maps
+  // to a duplicated id — both fail the same permutation check as before.
+  const order = Array.isArray(parsed.order)
+    ? parsed.order.map((alias) =>
+        typeof alias === "string" ? idOfAlias.get(alias) : undefined
+      )
+    : null
+
   const ids = new Set(tracks.map((track) => track.id))
 
   // Discard the whole answer if any id is missing, duplicated, or unknown.
-  if (!isValidOrder(parsed.order, ids)) {
+  if (!isValidOrder(order, ids)) {
     return { ok: false, reason: "invalid_answer" }
   }
 
   const breathers = Array.isArray(parsed.breathers)
-    ? parsed.breathers.filter(
-        (id): id is string => typeof id === "string" && ids.has(id)
-      )
+    ? parsed.breathers
+        .map((alias) =>
+          typeof alias === "string" ? idOfAlias.get(alias) : undefined
+        )
+        .filter((id): id is string => typeof id === "string" && ids.has(id))
     : []
 
   return {
     ok: true,
     value: {
-      order: parsed.order,
+      order,
       rationale: typeof parsed.rationale === "string" ? parsed.rationale : "",
       breathers,
     },
@@ -568,112 +606,132 @@ export async function POST(
 
   const body = new ReadableStream<Uint8Array>({
     async start(controller) {
+      let closed = false
       const send = (event: SmartOrderEvent) => {
-        controller.enqueue(encoder.encode(encodeSmartOrderEvent(event)))
+        // A progress callback can race the terminal event by a tick; writing
+        // into a closed controller would turn a finished order into a crash.
+        if (!closed) {
+          controller.enqueue(encoder.encode(encodeSmartOrderEvent(event)))
+        }
       }
 
-      send({ type: "start", total })
-
-      let result: SmartOrderResult
-
-      try {
-        const claude = await claudeOrder(
-          tracks,
-          genreName,
-          contextName,
-          analysis.targetCurve,
-          (placed) => send({ type: "progress", placed, total })
-        )
-        result = claude.ok
-          ? { ...claude.value, source: "claude" }
-          : {
-              ...heuristicOrder(tracks, energies, genre, context, shape),
-              reason: claude.reason,
+      await runSmartOrder(
+        {
+          total,
+          deadlineMs: SMART_ORDER_DEADLINE_MS,
+          callClaude: (signal, onPlaced) =>
+            claudeOrder(
+              tracks,
+              genreName,
+              contextName,
+              analysis.targetCurve,
+              signal,
+              onPlaced
+            ),
+          heuristic: () => heuristicOrder(tracks, energies, genre, context, shape),
+          classify: classifyFailure,
+          afterResult: async (result) => {
+            // Charged on the Claude path only. A fallback to the local
+            // heuristic still returns a usable order, but it cost nothing and
+            // shouldn't spend an allowance the user would rather keep for a
+            // real one.
+            if (result.source === "claude") {
+              await consumeQuota(profile.id, "ai_ordering", aiLimit)
             }
-      } catch (error) {
-        // An aborted request is the budget doing its job, not a fault — it is
-        // logged at info so a genuinely broken key or a schema change stays
-        // visible in the error stream instead of drowning in timeouts.
-        const reason = classifyFailure(error)
 
-        if (reason === "timeout") {
-          logInfo("smart_order.claude_timed_out", {
-            profileId: profile.id,
-            playlistId: playlist.id,
-            budgetMs: CLAUDE_TIMEOUT_MS,
-          })
-        } else if (reason === "unfunded") {
-          // Its own event name, not a `reason` field on the shared one. The
-          // banner deliberately tells the DJ nothing about this, so the log is
-          // the *only* place it surfaces — and it has to be greppable and
-          // alertable on its own, because unlike everything else in this chain
-          // it will not stop until somebody pays an invoice. Every smart order
-          // is silently running on the heuristic for as long as it is true.
-          logError("smart_order.claude_unfunded", error, {
-            profileId: profile.id,
-            playlistId: playlist.id,
-            status: error instanceof Anthropic.APIError ? error.status : null,
-            apiErrorType:
-              error instanceof Anthropic.APIError ? error.type : null,
-          })
-        } else {
-          logError("smart_order.claude_failed", error, {
-            profileId: profile.id,
-            playlistId: playlist.id,
-            reason,
-            status: error instanceof Anthropic.APIError ? error.status : null,
-            errorName: error instanceof Error ? error.name : null,
-          })
-        }
+            // The record the backstage reads to say whether smart ordering
+            // works. The log line below says the same thing, but nobody reads
+            // logs, and the quota above can't stand in for it: it is charged
+            // only on the Claude path, so a fallback leaves no trace there.
+            // Never throws.
+            await recordSmartOrderRun({
+              source: result.source,
+              reason: result.reason ?? null,
+            })
 
-        result = {
-          ...heuristicOrder(tracks, energies, genre, context, shape),
-          reason,
-        }
-      }
+            logInfo("smart_order.completed", {
+              profileId: profile.id,
+              playlistId: playlist.id,
+              source: result.source,
+              // The field that makes a fallback report actionable:
+              // "not_configured" is a deploy problem, "timeout" is a budget
+              // problem, and they were indistinguishable from the outside
+              // until now.
+              reason: result.reason ?? null,
+              trackCount: total,
+              quotaCharged: result.source === "claude",
+            })
 
-      // Charged on the Claude path only. A fallback to the local heuristic still
-      // returns a usable order, but it cost nothing and shouldn't spend an
-      // allowance the user would rather keep for a real one.
-      if (result.source === "claude") {
-        await consumeQuota(profile.id, "ai_ordering", aiLimit)
-      }
+            // Only an answer the model actually produced is worth keeping: the
+            // cache exists so the same tracklist isn't paid for twice. Caching
+            // a fallback made "try again in a minute" a lie — the retry hit
+            // the cached heuristic and Claude was never asked again for that
+            // tracklist as long as the process lived.
+            if (result.source === "claude") {
+              if (cache.size >= CACHE_MAX_ENTRIES) {
+                const oldest = cache.keys().next().value
+                if (oldest) {
+                  cache.delete(oldest)
+                }
+              }
+              cache.set(key, result)
+            }
+          },
+          // An expired budget is the deadline doing its job, not a fault — at
+          // info so a genuinely broken key or a schema change stays visible in
+          // the error stream instead of drowning in timeouts.
+          onTimeout: (deadlineMs) => {
+            logInfo("smart_order.claude_timed_out", {
+              profileId: profile.id,
+              playlistId: playlist.id,
+              budgetMs: deadlineMs,
+            })
+          },
+          onFailure: (error, reason) => {
+            if (reason === "timeout") {
+              // The SDK's own header timeout, as opposed to our stream
+              // deadline (that one reports through onTimeout).
+              logInfo("smart_order.claude_timed_out", {
+                profileId: profile.id,
+                playlistId: playlist.id,
+                budgetMs: CLAUDE_TIMEOUT_MS,
+              })
+            } else if (reason === "unfunded") {
+              // Its own event name, not a `reason` field on the shared one.
+              // The banner deliberately tells the DJ nothing about this, so
+              // the log is the *only* place it surfaces — and it has to be
+              // greppable and alertable on its own, because unlike everything
+              // else in this chain it will not stop until somebody pays an
+              // invoice. Every smart order is silently running on the
+              // heuristic for as long as it is true.
+              logError("smart_order.claude_unfunded", error, {
+                profileId: profile.id,
+                playlistId: playlist.id,
+                status: error instanceof Anthropic.APIError ? error.status : null,
+                apiErrorType:
+                  error instanceof Anthropic.APIError ? error.type : null,
+              })
+            } else {
+              logError("smart_order.claude_failed", error, {
+                profileId: profile.id,
+                playlistId: playlist.id,
+                reason,
+                status: error instanceof Anthropic.APIError ? error.status : null,
+                errorName: error instanceof Error ? error.name : null,
+              })
+            }
+          },
+          onUnexpected: (error) => {
+            logError("smart_order.stream_unexpected", error, {
+              profileId: profile.id,
+              playlistId: playlist.id,
+            })
+          },
+        },
+        send
+      )
 
-      // The record the backstage reads to say whether smart ordering works.
-      // The log line below says the same thing, but nobody reads logs, and the
-      // quota above can't stand in for it: it is charged only on the Claude
-      // path, so a fallback leaves no trace there. Never throws.
-      await recordSmartOrderRun({
-        source: result.source,
-        reason: result.reason ?? null,
-      })
-
-      logInfo("smart_order.completed", {
-        profileId: profile.id,
-        playlistId: playlist.id,
-        source: result.source,
-        // The field that makes a fallback report actionable: "not_configured"
-        // is a deploy problem, "timeout" is a budget problem, and they were
-        // indistinguishable from the outside until now.
-        reason: result.reason ?? null,
-        trackCount: total,
-        quotaCharged: result.source === "claude",
-      })
-
-      if (cache.size >= CACHE_MAX_ENTRIES) {
-        const oldest = cache.keys().next().value
-        if (oldest) {
-          cache.delete(oldest)
-        }
-      }
-      cache.set(key, result)
-
-      send({
-        type: "done",
-        order: result.order,
-        source: result.source,
-        reason: result.reason,
-      })
+      closed = true
       controller.close()
     },
   })

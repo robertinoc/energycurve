@@ -558,6 +558,18 @@ export const ANALYSIS_UI = {
     en: "Original order, no changes",
     es: "Orden original, sin cambios",
   },
+  /**
+   * An ordering DID run and moved nothing — the suggestion matched what the DJ
+   * already had. Separate from `unmovedSubtitle` because pairing "Ordered
+   * without AI" on the button with "Original order, no changes" in the header
+   * read as a contradiction (seen verbatim in a production screenshot): same
+   * fact, but one voice says "we did something" and the other "nothing
+   * happened". This sentence says both at once.
+   */
+  orderedUnmovedSubtitle: {
+    en: "The suggested order matches what you had",
+    es: "El orden sugerido coincide con el que tenías",
+  },
   fromChip: { en: "from {n}", es: "de {n}" },
   backToOriginal: { en: "Back to original", es: "Volver al original" },
   saveOrderCta: {
@@ -786,6 +798,17 @@ export const ANALYSIS_UI = {
   smartOrderError: {
     en: "Smart ordering is unavailable right now. Try again in a minute.",
     es: "La ordenación inteligente no está disponible ahora. Probá de nuevo en un minuto.",
+  },
+  /**
+   * The stream died mid-flight — cut without a terminal event, or the server's
+   * own error event. Distinct from `smartOrderError` on purpose: nothing was
+   * "unavailable", the attempt itself broke, and the DJ's order is untouched.
+   * This was production's daily failure while the route's platform limit could
+   * kill the function mid-generation, and the old sentence blamed availability.
+   */
+  smartOrderInterrupted: {
+    en: "The ordering was cut off before it finished — your current order is untouched. Try again.",
+    es: "La ordenación se cortó antes de terminar — tu orden actual quedó intacto. Probá de nuevo.",
   },
 
   /**

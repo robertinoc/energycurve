@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest"
 import {
   LiveTracklist,
   smartOrderLabel,
+  tracklistSubtitle,
   type SmartOrderStatus,
 } from "@/components/analysis/live-tracklist"
 import { ANALYSIS_UI } from "@/lib/content/analysis-copy"
@@ -63,4 +64,40 @@ describe("the Smart ordering button after a fallback", () => {
     expect(ANALYSIS_UI.smartFallbackBanner.en).not.toMatch(/ascending/i)
     expect(ANALYSIS_UI.smartFallbackBanner.es).not.toMatch(/ascendente/i)
   })
+})
+
+/**
+ * Production screenshot: the button said "Ordenado sin IA" while the header
+ * said "Orden original, sin cambios" — one voice claiming an ordering
+ * happened, the other that nothing did. An ordering can land on the order the
+ * DJ already had (the heuristic agreeing with the original, or a restored
+ * session), and the header has to tell that story, not contradict the button.
+ */
+describe("the tracklist subtitle next to the Smart ordering button", () => {
+  for (const locale of LOCALES) {
+    it(`never denies an ordering that the button asserts (${locale})`, () => {
+      for (const status of ["done", "fallback"] as const) {
+        expect(tracklistSubtitle(0, 21, status, locale)).toBe(
+          ANALYSIS_UI.orderedUnmovedSubtitle[locale]
+        )
+        expect(tracklistSubtitle(0, 21, status, locale)).not.toBe(
+          ANALYSIS_UI.unmovedSubtitle[locale]
+        )
+      }
+    })
+
+    it(`keeps the plain wording when no ordering ran (${locale})`, () => {
+      expect(tracklistSubtitle(0, 21, "idle", locale)).toBe(
+        ANALYSIS_UI.unmovedSubtitle[locale]
+      )
+      expect(tracklistSubtitle(0, 21, "thinking", locale)).toBe(
+        ANALYSIS_UI.unmovedSubtitle[locale]
+      )
+    })
+
+    it(`counts moved tracks whatever the status (${locale})`, () => {
+      expect(tracklistSubtitle(3, 21, "done", locale)).toContain("3")
+      expect(tracklistSubtitle(3, 21, "idle", locale)).toContain("21")
+    })
+  }
 })
