@@ -21,6 +21,10 @@ import type { SmartOrderFallbackReason } from "@/lib/smart-order/stream"
 export function classifyFailure(error: unknown): SmartOrderFallbackReason {
   if (
     error instanceof Anthropic.APIConnectionTimeoutError ||
+    // What the route's own deadline raises when it aborts a stream that ran
+    // past its budget (lib/smart-order/deadline.ts). Checked before the
+    // status-shaped branches below: it is an `APIError` with no status.
+    error instanceof Anthropic.APIUserAbortError ||
     (error instanceof Error && error.name === "AbortError")
   ) {
     return "timeout"
