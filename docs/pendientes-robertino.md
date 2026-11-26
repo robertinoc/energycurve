@@ -7,10 +7,8 @@ las referencias de otros documentos («fila 10», «fila 16», «fila 20»).
 
 **25/11/2026, sin re-verificar el resto de la tabla:** la **35** (aplicar
 la 0035, la tabla que alimenta el aviso de ordenación inteligente del
-backstage) entró y salió el 26/11 (ver «Resuelto»), y **la 4 pasa al frente y
-se simplifica**: el 25/11 viste en
-producción el cartel de `smartFallbackUnfunded`, que es lo que J.4 pedía ver
-antes de cargar crédito, así que ya no hay nada que esperar para cargarlo.
+backstage) entró y salió el 26/11 (ver «Resuelto»). **La 4 (cargar crédito
+en Anthropic) también salió el 26/11.**
 
 Qué cambió en el lote 22:
 
@@ -36,7 +34,6 @@ la estimación es floja, lo dice.
 
 | # | Qué | Qué destraba | Tu costo | Esperando desde | Detalle |
 |---|---|---|---|---|---|
-| 4 | **CARGAR CRÉDITO EN LA CUENTA DE ANTHROPIC** (H-9) | El orden inteligente vuelve a ser IA. Hoy **todas** las ordenaciones caen al heurístico, en todos los planes, y la cuota no se cobra en ese camino: los datos de uso de la función no se pueden leer como demanda (`docs/conversion-plan.md`, «La ordenación inteligente estuvo caída»). Desde el PR del 25/11, el backstage lo grita arriba de todo en Users mientras dure. La mitad de J.4 que pedía ver el cartel de «sin crédito» quedó vista el 25/11 | 5 min + el dinero | 20/09 | Tanda 01 §H-9 y §H-10; banco J.4 y FALLBACK.1 |
 | 34 | **Aplicar la 0032 en producción**: en el SQL Editor de `iwzkzybzadsmnwilcity`, `drop policy if exists feature_usage_own_rows on public.feature_usage;` y volver a correr la consulta de `node scripts/migration-status.mjs --sql`: la fila de la 0032 tiene que decir `applied` | Que el esquema de producción deje de mostrar un control de dueño que no existe (H-26). **No se perdió ningún dato**: la política no matchea nunca. Encontrado el 21/10 (lote 22): producción tiene 33 de 34 migraciones, la 0032 salteada | 2 min | 21/10 | `docs/qa/migraciones-revision-2026-10.md`; tanda 01 §H-26 |
 | 29 | **Aprobar la frase de la política** sobre el primer contacto. Propuesta, sin aplicar: «Si aceptás la analítica, guardamos además, con tu cuenta, de dónde llegó tu primera visita: el sitio o la campaña que te trajo (por ejemplo, Instagram o Google), la página pública por la que entraste y cuándo. Nunca la dirección completa de la que venías. Lo usamos sólo para contar, en conjunto, qué canales traen gente a EnergyCurve.» / «If you accept analytics, we also keep, with your account, where your first visit came from: the site or campaign that sent you (for example Instagram or Google), the public page you arrived on, and when. Never the full address you came from. We use it only to count, in aggregate, which channels bring people to EnergyCurve.» | Que la política diga lo que el producto guarda. **Desde el 21/10 corre en producción**: con la 0034 aplicada, cada registro que aceptó la analítica guarda su primer contacto, y la política todavía no lo menciona. El dato es nuevo; el consentimiento es el mismo de la analítica, y el banner no se tocó. **No es asesoramiento legal** | 10 min de lectura | 20/10 | `docs/seo/primer-contacto.md`; RoPA T5, fila «Primer contacto» |
 | 1 | **PostHog → Settings → Project → «Discard client IP data»**: confirmar que está prendido, y si no, prenderlo | Que el banner y la política digan algo verdadero hoy. El código ya no manda `$ip` en el evento (lote 16), pero la IP llega igual en la conexión, y si PostHog la guarda depende **sólo** de este ajuste | 2 min | 02/10 | `docs/qa/output-test-tanda-01.md` §H-17 |
@@ -71,7 +68,13 @@ la estimación es floja, lo dice.
 
 ## Resuelto
 
-**Resuelta el 26/11/2026, con lo que corrió Robertino:**
+**Resueltas el 26/11/2026, con lo que corrió Robertino:**
+
+- **4 · crédito en la cuenta de Anthropic (H-9).** Cargado el 26/11. Hizo falta
+  además arreglar el corte de tiempo de la ruta (#310 y #311). La primera
+  ordenación hecha por la IA quedó registrada a las 10:34 UTC: «Reordenado con
+  IA», score de 5.5 a 8.8. Historia completa en `docs/conversion-plan.md`,
+  sección 7.
 
 - **35 · la migración 0035.** Pegada en el SQL Editor de dev y de producción:
   «Success. No rows returned» en los dos. Como la migración es
