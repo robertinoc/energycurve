@@ -115,17 +115,14 @@ export async function runSmartOrder(
         }
       }
     } catch (error) {
-      // The deadline may have aborted the call a tick before the race settled;
-      // that abort is the budget doing its job, not a new failure.
-      const reason = controller.signal.aborted
-        ? "timeout"
-        : deps.classify(error)
+      // Only a rejection that beat the deadline lands here: the deadline's own
+      // abort can't — resolving the race locks it in before the abort runs, so
+      // the aborted call's rejection drains into the no-op catch above. (And if
+      // an abort-shaped error ever did arrive, `classify` already reads
+      // APIUserAbortError as "timeout".)
+      const reason = deps.classify(error)
 
-      if (reason === "timeout" && controller.signal.aborted) {
-        deps.onTimeout?.(deps.deadlineMs)
-      } else {
-        deps.onFailure?.(error, reason)
-      }
+      deps.onFailure?.(error, reason)
 
       result = { ...deps.heuristic(), source: "fallback", reason }
     } finally {
