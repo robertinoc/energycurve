@@ -11,6 +11,7 @@ import { analyzePlaylist } from "@/lib/engine/analysis"
 import { resolveTrackEnergies } from "@/lib/engine/energy-score"
 import { optimizeOrder, REORDER_MAX_TRACKS } from "@/lib/engine/reorder"
 import { classifyFailure } from "@/lib/smart-order/classify-failure"
+import { finalMessageWithin } from "@/lib/smart-order/deadline"
 import type { SmartOrderFallbackReason } from "@/lib/smart-order/stream"
 import { logError, logInfo } from "@/lib/observability/logger"
 import { isSuspended, SUSPENDED_RESPONSE } from "@/lib/auth/suspension"
@@ -327,7 +328,10 @@ async function claudeOrder(
     })
   }
 
-  const response = await stream.finalMessage()
+  // The `timeout` above only covers the wait for headers, which for a stream is
+  // the first second; this is what actually holds the call to its budget. See
+  // lib/smart-order/deadline.ts.
+  const response = await finalMessageWithin(stream, CLAUDE_TIMEOUT_MS)
 
   if (response.stop_reason === "refusal") {
     return { ok: false, reason: "refusal" }
