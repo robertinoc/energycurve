@@ -1630,6 +1630,32 @@
       ]
     },
     {
+      code: "PLAZO",
+      title: "Que la ordenación inteligente termine a tiempo, del set chico al tope",
+      meta: "~15 min · necesita el deploy y la cuenta de Anthropic con saldo · cada corrida con IA gasta ~2-8 centavos de dólar · un reloj",
+      why: "Desde que la cuenta tuvo saldo (26/11), cada intento terminaba en el cartel ámbar y cobraba igual (~12-13¢): el límite de la plataforma mataba la función a los 60 s, en plena generación, y el stream se cortaba sin resultado. El timeout del SDK sólo cubre hasta los headers, no lo que tarda en generar. Ahora la ruta tiene un plazo propio de 120 s sobre toda la llamada (si vence, llega el orden heurístico con su cartel), la generación se acortó (medido: 80 temas pasaron de 97,6 s a 24,8 s) y el tope de la plataforma subió a 300 s. Los tests afirman que el stream siempre termina con un evento final y que el plazo responde a tiempo; lo que no pueden medir es cuánto tarda la generación real con datos reales, que es justo lo que falló.",
+      tests: [
+        {
+          code: "PLAZO.1", title: "Un set de 21 temas, cronometrado", sub: "El tamaño que falló en producción el 26/11",
+          steps: ["Abrí el análisis de un set de ~21 temas", "Tocá «Ordenación inteligente» y arrancá el reloj", "Mirá la barra de progreso mientras piensa", "Cuando termine, pará el reloj y mirá el botón, el cartel y el encabezado de la lista"],
+          expect: "Termina en bastante menos de un minuto (medido con datos sintéticos: ~7 s; con datos reales puede ser el doble). El botón dice «Reordenado con IA», el cartel de arriba no es el ámbar, y si la IA no movió nada el encabezado dice que el orden sugerido coincide con el que tenías — nunca «Orden original, sin cambios» junto a un botón que dice que ordenó.",
+          ifNot: "Anotá los segundos y qué cartel salió. Si dice que se cortó antes de terminar, el deploy viejo sigue vivo o el plazo de 120 s quedó corto con datos reales: los segundos que anotaste dicen cuál de los dos."
+        },
+        {
+          code: "PLAZO.2", title: "Un set de 43 temas, cronometrado", sub: "El tamaño de las dos corridas que se midieron en el console de Anthropic",
+          steps: ["Repetí PLAZO.1 con un set de ~43 temas", "Al terminar, anotá los segundos", "En el console de Anthropic (Usage), mirá cuánto costó la corrida"],
+          expect: "Termina con «Reordenado con IA» (medido sintético: ~14 s). El costo por corrida bajó de los ~13¢ que cobraba cada intento muerto a ~4¢ — si cuesta parecido a antes, la configuración nueva (esfuerzo bajo, ids cortos) no está corriendo.",
+          ifNot: "Segundos y costo. Un costo de ~13¢ con resultado bueno no es urgente pero avisa: el prompt largo volvió."
+        },
+        {
+          code: "PLAZO.3", title: "El tope: 80 temas", sub: "El máximo que acepta la ruta (REORDER_MAX_TRACKS)",
+          steps: ["Repetí PLAZO.1 con un set de 80 temas o más (con más de 80, la ruta ordena los primeros 80)", "Anotá los segundos", "Si alguna vez sale el cartel de que tardó demasiado, mirá qué orden quedó en la lista"],
+          expect: "Termina con «Reordenado con IA» en menos de dos minutos (medido sintético: ~25 s; el plazo corta a los 120 s). Si el plazo llegara a vencer, no aparece el cartel ámbar de error: llega igual un orden (el heurístico) con el cartel que explica que la IA tardó demasiado, y el botón dice «Ordenado sin IA».",
+          ifNot: "Si vence el plazo con datos reales, anotá los segundos: el margen medido era de ~5× y algo lo comió. Si en vez del heurístico salió el cartel ámbar genérico o el de «se cortó antes de terminar», eso es el bug que esta sección existe para no repetir — captura y a revisar los logs de Vercel."
+        }
+      ]
+    },
+    {
       code: "ANALIZAR",
       title: "Del import al análisis",
       meta: "~20 min · necesita el deploy · cualquier cuenta (analizar es gratis en todos los planes) · el teléfono con la app instalada",

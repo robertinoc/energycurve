@@ -22,8 +22,11 @@ export function classifyFailure(error: unknown): SmartOrderFallbackReason {
   if (
     error instanceof Anthropic.APIConnectionTimeoutError ||
     // What the route's own deadline raises when it aborts a stream that ran
-    // past its budget (lib/smart-order/deadline.ts). Checked before the
-    // status-shaped branches below: it is an `APIError` with no status.
+    // past its budget (lib/smart-order/run.ts). The route is the only holder
+    // of that AbortController, so a user-abort can only mean the budget
+    // expired. Checked before the status-shaped branches below: it is an
+    // `APIError` with no status, and falling through would read our own
+    // deliberate cut as a generic "error".
     error instanceof Anthropic.APIUserAbortError ||
     (error instanceof Error && error.name === "AbortError")
   ) {

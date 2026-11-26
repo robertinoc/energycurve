@@ -122,7 +122,10 @@ describe("classifying a smart-order failure", () => {
     aborted.name = "AbortError"
 
     expect(classifyFailure(aborted)).toBe("timeout")
-    // The route's own deadline: the SDK raises this when a stream is aborted.
+    // What the SDK throws when the deadline's AbortSignal cuts a stream
+    // mid-generation: `APIUserAbortError`, with no status. Without its own
+    // branch it fell through to the generic `"error"`, telling the DJ
+    // "something went wrong on us" about a cut we made on purpose.
     expect(classifyFailure(new Anthropic.APIUserAbortError())).toBe("timeout")
   })
 

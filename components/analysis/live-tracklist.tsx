@@ -85,6 +85,37 @@ export function smartOrderLabel(status: SmartOrderStatus, locale: SiteLocale): s
 }
 
 /**
+ * The line under the tracklist title. It must agree with the button next to it:
+ * production showed the button saying "Ordered without AI" (status `fallback`)
+ * over a header saying "Original order, no changes" — both true, read as a
+ * contradiction. An ordering can land on the order the DJ already had (the
+ * heuristic agreeing with the original, or a restored session whose moves were
+ * since discarded), so when a run finished and nothing moved, the subtitle says
+ * that, instead of denying that anything happened.
+ *
+ * Exported for tests.
+ */
+export function tracklistSubtitle(
+  movedCount: number,
+  total: number,
+  smartStatus: SmartOrderStatus,
+  locale: SiteLocale
+): string {
+  if (movedCount > 0) {
+    return formatTemplate(ANALYSIS_UI.movedSubtitle[locale], {
+      moved: movedCount,
+      total,
+    })
+  }
+
+  if (smartStatus === "done" || smartStatus === "fallback") {
+    return ANALYSIS_UI.orderedUnmovedSubtitle[locale]
+  }
+
+  return ANALYSIS_UI.unmovedSubtitle[locale]
+}
+
+/**
  * Zone 3 of the analysis redesign: the single live tracklist that replaces
  * the two side-by-side 48-row lists. Purely presentational — the order is
  * derived upstream (original order + applied fix operations + smart order),
@@ -119,13 +150,7 @@ export function LiveTracklist({
               remaining: aiQuota.remaining,
               limit: aiQuota.limit,
             })
-  const subtitle =
-    movedCount > 0
-      ? formatTemplate(ANALYSIS_UI.movedSubtitle[locale], {
-          moved: movedCount,
-          total: rows.length,
-        })
-      : ANALYSIS_UI.unmovedSubtitle[locale]
+  const subtitle = tracklistSubtitle(movedCount, rows.length, smartStatus, locale)
 
   const smartLabel = smartOrderLabel(smartStatus, locale)
 

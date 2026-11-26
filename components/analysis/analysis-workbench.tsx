@@ -57,6 +57,20 @@ import { AiOrderingWall } from "@/components/plans/ai-ordering-wall"
 import { ScoreGainStrip } from "@/components/plans/score-gain-strip"
 import type { UpsellPlan } from "@/lib/product/sales-walls"
 
+/**
+ * The smart-order stream broke mid-flight: it ended without a terminal event,
+ * or the server sent its `{type:"error"}`. Its own class so the catch can tell
+ * "the attempt was cut" apart from "the service answered badly" — they get
+ * different banners, because the first one's honest advice is simply "try
+ * again", not "the service is unavailable".
+ */
+class SmartOrderInterruptedError extends Error {
+  constructor() {
+    super("smart-order stream interrupted")
+    this.name = "SmartOrderInterruptedError"
+  }
+}
+
 /** Per-playlist persistence of the user's decisions (survives reloads). */
 function storageKey(playlistId: string) {
   return `energycurve.analysis.fixes.${playlistId}`
@@ -309,7 +323,16 @@ export function AnalysisWorkbench({
     null
   )
   const [smartStatus, setSmartStatus] = useState<SmartOrderStatus>("idle")
-  const [smartError, setSmartError] = useState(false)
+  /**
+   * "interrupted" is the stream dying mid-flight — cut without a terminal
+   * event, or the server's own `{type:"error"}`. It gets its own sentence
+   * because "unavailable, try again in a minute" was the wrong advice for it:
+   * nothing was unavailable, the attempt itself broke, and the DJ's order is
+   * untouched either way.
+   */
+  const [smartError, setSmartError] = useState<
+    false | "generic" | "interrupted"
+  >(false)
   // The server refused for the month's allowance (402), as opposed to failed.
   const [smartQuotaHit, setSmartQuotaHit] = useState(false)
   // How much of the order Claude has actually committed to. Null until the
@@ -708,6 +731,7 @@ export function AnalysisWorkbench({
       let ids: string[] = []
       let source: "claude" | "fallback" = "claude"
       let reason: SmartOrderFallbackReason | null = null
+      let sawTerminal = false
 
       for (;;) {
         const { done, value } = await reader.read()
@@ -726,13 +750,25 @@ export function AnalysisWorkbench({
           } else if (event.type === "start") {
             setSmartProgress({ placed: 0, total: event.total })
           } else if (event.type === "done") {
+            sawTerminal = true
             ids = event.order
             source = event.source
             reason = isFallbackReason(event.reason) ? event.reason : null
           } else {
-            throw new Error("smart-order stream error")
+            // The server's own terminal error: its plumbing broke after the
+            // stream opened. The order on screen is untouched.
+            throw new SmartOrderInterruptedError()
           }
         }
+      }
+
+      if (!sawTerminal) {
+        // The stream ended with no terminal event at all — the function was
+        // killed mid-flight (the production failure this names), or the
+        // connection dropped. Distinct from "the service answered badly":
+        // what the DJ needs to hear is that the attempt broke and nothing
+        // they had was lost.
+        throw new SmartOrderInterruptedError()
       }
 
       // Same strict validation as the server: exact same id set, no dupes.
@@ -753,9 +789,11 @@ export function AnalysisWorkbench({
       setSmartSource(source)
       setSmartReason(source === "fallback" ? reason : null)
       setSmartStatus(source === "fallback" ? "fallback" : "done")
-    } catch {
+    } catch (error) {
       setSmartStatus(smartOrder ? (smartSource === "fallback" ? "fallback" : "done") : "idle")
-      setSmartError(true)
+      setSmartError(
+        error instanceof SmartOrderInterruptedError ? "interrupted" : "generic"
+      )
     } finally {
       setSmartProgress(null)
     }
@@ -1081,7 +1119,9 @@ export function AnalysisWorkbench({
         <div className="rounded-xl border border-ec-amber/35 bg-ec-amber/[0.06] px-4 py-3 text-sm text-white/80">
           {smartQuotaHit
             ? ANALYSIS_UI.smartOrderQuotaError[locale]
-            : ANALYSIS_UI.smartOrderError[locale]}
+            : smartError === "interrupted"
+              ? ANALYSIS_UI.smartOrderInterrupted[locale]
+              : ANALYSIS_UI.smartOrderError[locale]}
         </div>
       ) : smartStatus === "done" ? (
         <div className="flex items-center gap-3 rounded-xl border border-ec-cyan/35 bg-ec-cyan/[0.06] px-4 py-3 text-sm text-white/80">
