@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">154</strong>
+      <strong id="tally-total">158</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1698,6 +1698,12 @@
           steps: ["En «Signups by channel», mirá la leyenda: debajo de cada canal tienen que estar las fuentes crudas a la vista («chatgpt 3 · perplexity 1»), sin pasar el mouse — el tooltip por hover se sacó el 28/11 porque no andaba ni en desktop (tu nota de DASH.2)", "Elegí «Custom…» y poné un rango de dos semanas: los DOS dashboards (Where they are + adquisición) tienen que decir la misma cantidad de users joined", "En By country, tocá «Show all N countries» y buscá un país que no estaba en el top 8", "En Most active users, cambiá 30d → All time y mirá si el orden cambia con sentido", "En la tabla, filtrá Joined con las mismas dos fechas y comparás el conteo con los dashboards"],
           expect: "El donut agrupa (nada de columnas chatgpt y perplexity separadas), los dos dashboards cuentan la misma cohorte, la lista completa de países scrollea sin romper el layout, el top de activos cambia al abrir la ventana, y la tabla filtrada por Joined da el mismo número que los dashboards con ese rango.",
           ifNot: "Si los dos dashboards dicen cantidades distintas con el mismo rango, es el bug más serio de la sección: anotá los dos números y el rango. Si el donut muestra una fuente cruda, esa fuente no está mapeada a canal (lib/backstage/channels.ts)."
+        },
+        {
+          code: "DASH.3", title: "El Unknown baja con el fallback de PostHog, sin inventar", sub: "Tu nota del 28/11: 97% Unknown y la columna Source vacía",
+          steps: ["Abrí backstage → Users y mirá la columna Source: tiene que haber filas con valor (utm o referrer) para usuarios que aceptaron la analítica", "En «Signups by channel», mirá si Unknown bajó del 97% y qué canales aparecieron", "Leé la línea de arriba del dashboard: tiene que decir que cuando la DB no tiene first touch, vale la primera visita que vio PostHog", "Elegí un usuario con Source y verificá que el canal del donut sea coherente con ese valor"],
+          expect: "La columna Source se llena para los que aceptaron analítica (la consulta ahora une los pageviews anónimos de antes del identify con la persona). El Unknown baja pero NO desaparece: los registrados antes del 21/10 que PostHog tampoco vio, y quienes rechazaron la analítica, siguen siendo Unknown porque no hay dato — y «$direct» no se disfraza de Direct. Nada se infiere por fecha de alta.",
+          ifNot: "Si la columna sigue toda vacía tras el deploy, mirá en Vercel → Logs si aparece backstage.person_facts_failed: ese error trae el mensaje de PostHog y dice qué cambiar en la consulta (lib/backstage/posthog-reporting.ts). Si un Source contradice su canal, anotá los dos valores."
         }
       ]
     }
