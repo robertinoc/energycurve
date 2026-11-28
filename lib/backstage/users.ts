@@ -1,3 +1,4 @@
+import { freeformLabel } from "@/lib/backstage/channels"
 import { effectivePlan, type Plan, type PlanStatus } from "@/lib/product/plans"
 
 /**
@@ -244,47 +245,22 @@ export interface AcquisitionChannel {
   label: string
 }
 
-const CHANNEL_RULES: Array<[RegExp, string]> = [
-  [
-    /chatgpt|openai|perplexity|claude|anthropic|gemini\.google|copilot|bard\.google|^ai$|_ai$/i,
-    "AI",
-  ],
-  [/instagram|^ig$/i, "Instagram"],
-  [/linkedin|^li$/i, "LinkedIn"],
-  [/youtube|^yt$/i, "YouTube"],
-  [/tiktok/i, "TikTok"],
-  [/facebook|^fb$/i, "Facebook"],
-  [/twitter|^x\.com$|^t\.co$/i, "X"],
-  [/reddit/i, "Reddit"],
-  [/google/i, "Google"],
-  [/bing/i, "Bing"],
-  [/duckduckgo/i, "DuckDuckGo"],
-]
-
-function channelLabel(raw: string): string {
-  for (const [pattern, label] of CHANNEL_RULES) {
-    if (pattern.test(raw)) {
-      return label
-    }
-  }
-
-  return raw
-}
-
 /**
  * First UTM source wins, then the referring domain, then direct. PostHog
- * reports direct traffic as the literal "$direct".
+ * reports direct traffic as the literal "$direct". Labels come from the
+ * shared channel vocabulary (lib/backstage/channels.ts) so this column and
+ * the acquisition panels can never disagree about the same user.
  */
 export function acquisitionChannel(user: {
   utmSource: string | null
   referrerDomain: string | null
 }): AcquisitionChannel {
   if (user.utmSource) {
-    return { kind: "campaign", label: channelLabel(user.utmSource) }
+    return { kind: "campaign", label: freeformLabel(user.utmSource) }
   }
 
   if (user.referrerDomain && user.referrerDomain !== "$direct") {
-    return { kind: "referrer", label: channelLabel(user.referrerDomain) }
+    return { kind: "referrer", label: freeformLabel(user.referrerDomain) }
   }
 
   if (user.referrerDomain === "$direct") {
