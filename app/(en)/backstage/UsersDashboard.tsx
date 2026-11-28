@@ -167,6 +167,8 @@ function WorldMapChart({
   )
 }
 
+const COUNTRY_TOP = 8
+
 function CountryList({
   counts,
   unknown,
@@ -176,9 +178,12 @@ function CountryList({
   unknown: number
   total: number
 }) {
-  const top = counts.slice(0, 8)
+  const [expanded, setExpanded] = useState(false)
+  const top = expanded ? counts : counts.slice(0, COUNTRY_TOP)
   const restCount = counts.length - top.length
-  const restUsers = counts.slice(8).reduce((sum, row) => sum + row.count, 0)
+  const restUsers = counts
+    .slice(top.length)
+    .reduce((sum, row) => sum + row.count, 0)
   const max = Math.max(...counts.map((row) => row.count), 1)
 
   if (counts.length === 0) {
@@ -191,7 +196,13 @@ function CountryList({
 
   return (
     <div className="space-y-2">
-      <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+      <ul
+        className={
+          expanded
+            ? "grid max-h-80 gap-x-6 gap-y-2 overflow-y-auto pr-1 sm:grid-cols-2"
+            : "grid gap-x-6 gap-y-2 sm:grid-cols-2"
+        }
+      >
         {top.map((row) => (
           <li key={row.key} className="space-y-1">
             <div className="flex items-center justify-between gap-2 text-[13px]">
@@ -212,11 +223,24 @@ function CountryList({
           </li>
         ))}
       </ul>
-      <p className="font-mono text-[11px] text-white/40">
-        {restCount > 0
-          ? `+${restUsers} in ${restCount} other ${restCount === 1 ? "country" : "countries"} · `
-          : ""}
-        {unknown} with no country recorded
+      <p className="flex flex-wrap items-baseline gap-x-2 font-mono text-[11px] text-white/40">
+        <span>
+          {restCount > 0
+            ? `+${restUsers} in ${restCount} other ${restCount === 1 ? "country" : "countries"} · `
+            : ""}
+          {unknown} with no country recorded
+        </span>
+        {counts.length > COUNTRY_TOP ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((previous) => !previous)}
+            className="text-ec-cyan hover:underline"
+          >
+            {expanded
+              ? `Show top ${COUNTRY_TOP}`
+              : `Show all ${counts.length} countries`}
+          </button>
+        ) : null}
       </p>
     </div>
   )
