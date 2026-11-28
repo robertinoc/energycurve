@@ -16,6 +16,7 @@ import { PendingDeletions } from "./PendingDeletions"
 import { PrivacyRequestQueue } from "./PrivacyRequestQueue"
 import { SmartOrderHealthPanel } from "./SmartOrderHealthPanel"
 import { DecisionDashboards } from "./DecisionDashboards"
+import { MostActiveUsers } from "./MostActiveUsers"
 import { UsersTable } from "./UsersTable"
 
 export const metadata: Metadata = {
@@ -140,6 +141,8 @@ export default async function BackstageUsersPage() {
         acquisition={acquisition}
         toolUsage={toolUsage}
       />
+
+      <MostActiveUsers users={users} />
 
       {/* Feed first by request: what just happened is what gets checked daily;
           the compliance queues below carry their own deadlines and alarms. */}

@@ -76,6 +76,9 @@ export interface BackstageUserRow {
   referrerDomain: string | null
   playlistCount: number
   analysisCount: number
+  /** Analyses run in the last 30/90 days — the "active NOW" ranking's fuel. */
+  analysisCount30d: number
+  analysisCount90d: number
   lastAnalysisAt: string | null
   /** The earliest analysis that still exists (deleting a set deletes its analyses). */
   firstAnalysisAt: string | null
@@ -113,7 +116,8 @@ export function buildBackstageUsers(
   analyses: BackstageAnalysisInput[],
   personFacts: Map<string, BackstagePersonFacts> = new Map(),
   namesByWorkOSId: Map<string, string> = new Map(),
-  acquisition: BackstageAcquisitionInputs = {}
+  acquisition: BackstageAcquisitionInputs = {},
+  now: Date = new Date()
 ): BackstageUserRow[] {
   const playlistCounts = new Map<string, number>()
 
@@ -122,11 +126,25 @@ export function buildBackstageUsers(
   }
 
   const analysisCounts = new Map<string, number>()
+  const analysisCounts30d = new Map<string, number>()
+  const analysisCounts90d = new Map<string, number>()
   const lastAnalysisAt = new Map<string, string>()
   const firstAnalysisAt = new Map<string, string>()
+  const since30d = now.getTime() - 30 * 24 * 60 * 60 * 1000
+  const since90d = now.getTime() - 90 * 24 * 60 * 60 * 1000
 
   for (const row of analyses) {
     analysisCounts.set(row.user_id, (analysisCounts.get(row.user_id) ?? 0) + 1)
+
+    const at = new Date(row.created_at).getTime()
+
+    if (at >= since30d) {
+      analysisCounts30d.set(row.user_id, (analysisCounts30d.get(row.user_id) ?? 0) + 1)
+    }
+
+    if (at >= since90d) {
+      analysisCounts90d.set(row.user_id, (analysisCounts90d.get(row.user_id) ?? 0) + 1)
+    }
 
     const previous = lastAnalysisAt.get(row.user_id)
 
@@ -164,6 +182,8 @@ export function buildBackstageUsers(
         referrerDomain: facts?.referrerDomain ?? null,
         playlistCount: playlistCounts.get(profile.id) ?? 0,
         analysisCount: analysisCounts.get(profile.id) ?? 0,
+        analysisCount30d: analysisCounts30d.get(profile.id) ?? 0,
+        analysisCount90d: analysisCounts90d.get(profile.id) ?? 0,
         lastAnalysisAt: lastAnalysisAt.get(profile.id) ?? null,
         firstAnalysisAt: firstAnalysisAt.get(profile.id) ?? null,
         firstTouchSource: touch?.first_touch_source ?? null,
@@ -612,4 +632,40 @@ export function computeUserKpis(
     neverUsedUsers: statuses.filter((status) => status === "never").length,
     proUsers: users.filter((user) => user.plan !== "free").length,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Most active users
+// ---------------------------------------------------------------------------
+
+export type ActivityWindow = "30d" | "90d" | "all"
+
+export const MOST_ACTIVE_LIMIT = 10
+
+/**
+ * Top users by analyses run in the window, ties broken by playlists and then
+ * by most recently seen. Zero-analysis users never rank: an empty list is the
+ * honest answer, not a top 10 of people who did nothing.
+ */
+export function mostActiveUsers(
+  users: BackstageUserRow[],
+  window: ActivityWindow,
+  limit = MOST_ACTIVE_LIMIT
+): BackstageUserRow[] {
+  const countOf = (user: BackstageUserRow) =>
+    window === "30d"
+      ? user.analysisCount30d
+      : window === "90d"
+        ? user.analysisCount90d
+        : user.analysisCount
+
+  return users
+    .filter((user) => countOf(user) > 0 && user.suspendedAt === null)
+    .sort(
+      (a, b) =>
+        countOf(b) - countOf(a) ||
+        b.playlistCount - a.playlistCount ||
+        b.lastSeenAt.localeCompare(a.lastSeenAt)
+    )
+    .slice(0, limit)
 }

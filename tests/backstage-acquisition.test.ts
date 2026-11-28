@@ -232,6 +232,8 @@ describe("task 8: time to first analysis, tied to the Never used KPI", () => {
       referrerDomain: null,
       playlistCount: 0,
       analysisCount: 0,
+      analysisCount30d: 0,
+      analysisCount90d: 0,
       lastAnalysisAt: null,
       firstAnalysisAt: null,
       firstTouchSource: null,

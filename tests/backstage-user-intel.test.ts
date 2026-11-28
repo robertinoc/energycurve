@@ -32,6 +32,8 @@ function user(overrides: Partial<BackstageUserRow> = {}): BackstageUserRow {
     referrerDomain: overrides.referrerDomain ?? null,
     playlistCount: overrides.playlistCount ?? 1,
     analysisCount: overrides.analysisCount ?? 0,
+    analysisCount30d: overrides.analysisCount30d ?? 0,
+    analysisCount90d: overrides.analysisCount90d ?? 0,
     lastAnalysisAt: overrides.lastAnalysisAt ?? null,
     firstAnalysisAt: overrides.firstAnalysisAt ?? null,
     firstTouchSource: overrides.firstTouchSource ?? null,
@@ -260,5 +262,71 @@ describe("resolveRange / joinedInRange", () => {
       )
     ).toBe(true)
     expect(resolveRange("all", {}, NOW)).toEqual({ from: null, to: null })
+  })
+})
+
+describe("mostActiveUsers", () => {
+  it("ranks by the window's analyses, breaking ties by playlists then last seen", async () => {
+    const { mostActiveUsers } = await import("@/lib/backstage/users")
+    const rows = [
+      user({ id: "all-time-hero", analysisCount: 50, analysisCount30d: 0, analysisCount90d: 2 }),
+      user({ id: "hot", analysisCount: 6, analysisCount30d: 6, analysisCount90d: 6 }),
+      user({ id: "tied-more-sets", analysisCount30d: 3, playlistCount: 5, analysisCount: 3 }),
+      user({ id: "tied-fewer-sets", analysisCount30d: 3, playlistCount: 1, analysisCount: 3 }),
+      user({ id: "idle", analysisCount: 0 }),
+    ]
+
+    expect(mostActiveUsers(rows, "30d").map((row) => row.id)).toEqual([
+      "hot",
+      "tied-more-sets",
+      "tied-fewer-sets",
+    ])
+    // The all-time hero reappears when the window opens up.
+    expect(mostActiveUsers(rows, "all")[0].id).toBe("all-time-hero")
+  })
+
+  it("never ranks suspended accounts or zero-analysis users", async () => {
+    const { mostActiveUsers } = await import("@/lib/backstage/users")
+    const rows = [
+      user({ id: "banned", analysisCount30d: 9, analysisCount: 9, suspendedAt: "2026-11-01T00:00:00Z" }),
+      user({ id: "idle", analysisCount: 0 }),
+    ]
+
+    expect(mostActiveUsers(rows, "30d")).toEqual([])
+  })
+
+  it("windowed counts come out of buildBackstageUsers", async () => {
+    const { buildBackstageUsers } = await import("@/lib/backstage/users")
+    const now = new Date("2026-11-28T12:00:00Z")
+    const [row] = buildBackstageUsers(
+      [
+        {
+          id: "u1",
+          workos_user_id: "wos_u1",
+          email: "u1@example.com",
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-11-27T00:00:00Z",
+          suspended_at: null,
+          plan: "free",
+          plan_status: null,
+          last_seen_at: null,
+          last_seen_country: null,
+        },
+      ],
+      [],
+      [
+        { user_id: "u1", created_at: "2026-11-20T00:00:00Z" }, // 30d y 90d
+        { user_id: "u1", created_at: "2026-10-01T00:00:00Z" }, // solo 90d
+        { user_id: "u1", created_at: "2026-02-01T00:00:00Z" }, // solo total
+      ],
+      new Map(),
+      new Map(),
+      {},
+      now
+    )
+
+    expect(row.analysisCount).toBe(3)
+    expect(row.analysisCount90d).toBe(2)
+    expect(row.analysisCount30d).toBe(1)
   })
 })
