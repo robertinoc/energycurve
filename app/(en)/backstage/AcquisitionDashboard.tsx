@@ -73,6 +73,20 @@ function rawDetail(slice: ChannelSlice | undefined): string | undefined {
   return slice.sources.map((row) => `${row.source} ${row.count}`).join(" · ")
 }
 
+/**
+ * The legend prints the raw sources in plain sight — a native `title` tooltip
+ * was tried first and failed the person it was for: it needs a still mouse on
+ * desktop and does not exist on touch. Skipped only when it would repeat the
+ * channel's own name (the "instagram 4" under Instagram case).
+ */
+function legendDetail(slice: ChannelSlice): string | undefined {
+  if (slice.sources.length === 1 && slice.sources[0]!.source === slice.channel) {
+    return undefined
+  }
+
+  return rawDetail(slice)
+}
+
 function ChannelPanel({ slices }: { slices: ChannelSlice[] }) {
   const total = slices.reduce((sum, slice) => sum + slice.count, 0)
 
@@ -88,30 +102,37 @@ function ChannelPanel({ slices }: { slices: ChannelSlice[] }) {
           }))}
           centerLabel="signups"
         />
-        <ul className="min-w-[180px] flex-1 space-y-1.5">
-          {slices.map((slice) => (
-            <li
-              key={slice.channel}
-              title={rawDetail(slice)}
-              className="flex items-baseline justify-between gap-3 text-[13px]"
-            >
-              <span className="inline-flex items-center gap-2 text-white/80">
-                <span
-                  className="size-2 rounded-[3px]"
-                  style={{ background: channelColor(slice.channel) }}
-                />
-                {sourceLabel(slice.channel)}
-              </span>
-              <span className="font-mono text-[11.5px] text-white/60">
-                <strong className="text-white">{slice.count}</strong> ·{" "}
-                {total > 0 ? Math.round((slice.count / total) * 100) : 0}%
-              </span>
-            </li>
-          ))}
+        <ul className="min-w-[180px] flex-1 space-y-2">
+          {slices.map((slice) => {
+            const detail = legendDetail(slice)
+
+            return (
+              <li key={slice.channel} className="text-[13px]">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="inline-flex items-center gap-2 text-white/80">
+                    <span
+                      className="size-2 rounded-[3px]"
+                      style={{ background: channelColor(slice.channel) }}
+                    />
+                    {sourceLabel(slice.channel)}
+                  </span>
+                  <span className="font-mono text-[11.5px] text-white/60">
+                    <strong className="text-white">{slice.count}</strong> ·{" "}
+                    {total > 0 ? Math.round((slice.count / total) * 100) : 0}%
+                  </span>
+                </div>
+                {detail ? (
+                  <p className="pl-4 font-mono text-[10.5px] leading-4 text-white/40">
+                    {detail}
+                  </p>
+                ) : null}
+              </li>
+            )
+          })}
         </ul>
       </div>
       <p className="text-[11.5px] text-white/45">
-        Hover a channel for the raw sources it folds (chatgpt, perplexity… →
+        Under each channel, the raw sources it folds (chatgpt, perplexity… →
         AI). Unknown is its own slice on purpose: it is most of the truth.
       </p>
     </Bento>
