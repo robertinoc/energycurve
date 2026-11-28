@@ -213,3 +213,87 @@ export function Sparkbars({
     </div>
   )
 }
+
+/**
+ * Dependency-free donut (same stance as Sparkline: SVG we own, no recharts).
+ * Slices are drawn as stroke segments on a circle; zero-value slices are
+ * skipped. The center shows the total so the ring never has to be guessed at.
+ */
+export function Donut({
+  slices,
+  size = 168,
+  thickness = 26,
+  centerLabel,
+}: {
+  slices: Array<{ label: string; value: number; color: string }>
+  size?: number
+  thickness?: number
+  centerLabel?: string
+}) {
+  const total = slices.reduce((sum, slice) => sum + slice.value, 0)
+  const radius = (size - thickness) / 2
+  const circumference = 2 * Math.PI * radius
+
+  if (total === 0) {
+    return (
+      <p className="rounded-xl border border-dashed border-white/10 p-4 text-[13px] text-white/40">
+        Nothing to chart yet.
+      </p>
+    )
+  }
+
+  const positive = slices.filter((slice) => slice.value > 0)
+  const segments = positive.map((slice, index) => {
+    const before = positive
+      .slice(0, index)
+      .reduce((sum, prior) => sum + prior.value, 0)
+
+    return {
+      ...slice,
+      dash: (slice.value / total) * circumference,
+      offset: (before / total) * circumference,
+    }
+  })
+
+  return (
+    <div className="relative inline-block" style={{ width: size, height: size }}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={segments
+          .map((segment) => `${segment.label}: ${segment.value}`)
+          .join(", ")}
+        // Rotated so the first slice starts at 12 o'clock.
+        style={{ transform: "rotate(-90deg)" }}
+      >
+        {segments.map((segment) => (
+          <circle
+            key={segment.label}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={segment.color}
+            strokeWidth={thickness}
+            strokeDasharray={`${segment.dash} ${circumference - segment.dash}`}
+            strokeDashoffset={-segment.offset}
+          >
+            <title>{`${segment.label}: ${segment.value}`}</title>
+          </circle>
+        ))}
+      </svg>
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-heading text-2xl font-bold text-white">
+          {total}
+        </span>
+        {centerLabel ? (
+          <span className="font-mono text-[10px] tracking-[0.1em] text-white/45 uppercase">
+            {centerLabel}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  )
+}

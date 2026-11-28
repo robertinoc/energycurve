@@ -111,7 +111,8 @@ describe("task 5: signup → first analysis, by source", () => {
     const { rows } = conversionBySource([
       ...many(3, (i) => ({ firstTouchSource: "reddit", firstAnalysisAt: i < 2 ? "2026-10-19T11:00:00Z" : null })),
     ])
-    const reddit = rows.find((row) => row.source === "reddit")!
+    // reddit folds into the shared "social" channel since the channel grouping.
+    const reddit = rows.find((row) => row.source === "social")!
 
     expect(reddit.analysed).toEqual({ count: 2, of: 3, rate: null })
   })

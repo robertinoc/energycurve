@@ -1,3 +1,4 @@
+import { channelOfFirstTouch, type ChannelId } from "@/lib/backstage/channels"
 import { activityStatus, type BackstageUserRow } from "@/lib/backstage/users"
 import { splitLocalePath } from "@/lib/content/locale-routing"
 
@@ -118,6 +119,50 @@ export function sourceOf(user: AcquisitionUserInput): string {
   return user.firstTouchSource ?? UNKNOWN_SOURCE
 }
 
+/**
+ * The channel the panels group by (shared vocabulary, channels.ts). Strict
+ * about unknown: only a user with NO touch is `unknown`, so the column always
+ * equals the sum of the unknown-reasons footnote. A touch whose source fell
+ * outside the closed list reads as `other`, which is a different statement.
+ */
+export function channelOf(user: AcquisitionUserInput): ChannelId {
+  if (!user.firstTouchSource) {
+    return "unknown"
+  }
+
+  return channelOfFirstTouch(user.firstTouchSource, user.firstTouchMedium)
+}
+
+/** Users per channel with the raw-source detail, for the donut and tooltips. */
+export interface ChannelSlice {
+  channel: ChannelId
+  count: number
+  sources: Array<{ source: string; count: number }>
+}
+
+export function channelBreakdown(users: AcquisitionUserInput[]): ChannelSlice[] {
+  const byChannel = new Map<ChannelId, Map<string, number>>()
+
+  for (const user of users) {
+    const channel = channelOf(user)
+    const sources = byChannel.get(channel) ?? new Map<string, number>()
+    const source = sourceOf(user)
+
+    sources.set(source, (sources.get(source) ?? 0) + 1)
+    byChannel.set(channel, sources)
+  }
+
+  return [...byChannel.entries()]
+    .map(([channel, sources]) => ({
+      channel,
+      count: [...sources.values()].reduce((sum, n) => sum + n, 0),
+      sources: [...sources.entries()]
+        .map(([source, count]) => ({ source, count }))
+        .sort((a, b) => b.count - a.count || a.source.localeCompare(b.source)),
+    }))
+    .sort((a, b) => b.count - a.count || a.channel.localeCompare(b.channel))
+}
+
 export function unknownReason(
   user: AcquisitionUserInput,
   measurement: AcquisitionMeasurement
@@ -188,6 +233,7 @@ export interface CohortRow {
   /** Monday of the week, or "earlier" for everything before the window. */
   week: string
   total: number
+  /** Keyed by channel id (channels.ts) since the channel grouping. */
   bySource: Record<string, number>
 }
 
@@ -232,7 +278,7 @@ export function cohortsBySource(
       continue
     }
 
-    const source = sourceOf(user)
+    const source = channelOf(user)
 
     row.total += 1
     row.bySource[source] = (row.bySource[source] ?? 0) + 1
@@ -272,7 +318,7 @@ export function conversionBySource(users: AcquisitionUserInput[]): {
   const analysed = new Map<string, number>()
 
   for (const user of users) {
-    const source = sourceOf(user)
+    const source = channelOf(user)
 
     signups.set(source, (signups.get(source) ?? 0) + 1)
 
@@ -372,7 +418,7 @@ export function paidConversion(users: AcquisitionUserInput[]): PaidConversion {
     const groups = new Map<string, AcquisitionUserInput[]>()
 
     for (const user of paidUsers) {
-      const source = sourceOf(user)
+      const source = channelOf(user)
 
       groups.set(source, [...(groups.get(source) ?? []), user])
     }

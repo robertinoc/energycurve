@@ -25,6 +25,7 @@ export const CHANNEL_IDS = [
   "directories",
   "stagelink",
   "referral",
+  "other",
   "direct",
   "unknown",
 ] as const
@@ -43,6 +44,8 @@ export const CHANNEL_META: Record<ChannelId, { label: string; color: string }> =
   directories: { label: "Directories", color: "#FBBF24" },
   stagelink: { label: "StageLink", color: "#6A5CF0" }, // --ec-indigo
   referral: { label: "Referral", color: "#F5A524" }, // --ec-amber
+  /** A touch arrived but named a source outside the closed list. */
+  other: { label: "Other", color: "#8A8FA0" },
   direct: { label: "Direct", color: "#9CA3AF" },
   unknown: { label: "Unknown", color: "#5C6070" },
 }
@@ -77,6 +80,7 @@ const CHANNEL_BY_SOURCE: Record<string, ChannelId> = {
   crunchbase: "directories",
   stagelink: "stagelink",
   direct: "direct",
+  other: "other",
 }
 
 const CHANNEL_BY_MEDIUM: Partial<Record<string, ChannelId>> = {
@@ -86,6 +90,8 @@ const CHANNEL_BY_MEDIUM: Partial<Record<string, ChannelId>> = {
   directory: "directories",
   crosspromo: "stagelink",
   referral: "referral",
+  // A medium of "other" still means a touch happened — not unknown.
+  other: "other",
 }
 
 /** Channel of a first-touch pair (source + medium), `unknown` when neither says. */

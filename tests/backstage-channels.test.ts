@@ -41,7 +41,7 @@ describe("channelOfFirstTouch", () => {
     for (const medium of MEDIUMS) {
       const channel = channelOfFirstTouch(null, medium)
 
-      if (medium === "none" || medium === "other") {
+      if (medium === "none") {
         expect(channel).toBe("unknown")
       } else {
         expect(channel, medium).not.toBe("unknown")
