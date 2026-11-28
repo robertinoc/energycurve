@@ -20,7 +20,11 @@ import {
   type UnknownReason,
 } from "@/lib/backstage/acquisition"
 import { CHANNEL_META, type ChannelId } from "@/lib/backstage/channels"
-import type { BackstageUserRow } from "@/lib/backstage/users"
+import {
+  joinedInRange,
+  type BackstageUserRow,
+  type DateRange,
+} from "@/lib/backstage/users"
 
 import { Bento, BentoLabel, Donut } from "./BackstagePrimitives"
 
@@ -442,16 +446,25 @@ export function AcquisitionDashboard({
   users,
   acquisition,
   toolUsage,
+  range,
+  periodLabel,
 }: {
   users: BackstageUserRow[]
   acquisition: BackstageAcquisitionStatus
   toolUsage: ToolUsage | null
+  /** Shared joined-at window (DecisionDashboards): same cohort as the view above. */
+  range: DateRange
+  periodLabel: string
 }) {
   // Fixed at mount, like the cohort dashboard above it.
   const now = useMemo(() => new Date(), [])
+  const cohort = useMemo(
+    () => users.filter((user) => joinedInRange(user, range)),
+    [users, range]
+  )
   const inputs = useMemo(
     () =>
-      users.map((user) => ({
+      cohort.map((user) => ({
         id: user.id,
         createdAt: user.createdAt,
         plan: user.plan,
@@ -461,7 +474,7 @@ export function AcquisitionDashboard({
         firstAnalysisAt: user.firstAnalysisAt,
         paidAt: user.paidAt,
       })),
-    [users]
+    [cohort]
   )
 
   const cohorts = useMemo(
@@ -472,7 +485,7 @@ export function AcquisitionDashboard({
   const conversion = useMemo(() => conversionBySource(inputs), [inputs])
   const landings = useMemo(() => signupsByToolLanding(inputs), [inputs])
   const paid = useMemo(() => paidConversion(inputs), [inputs])
-  const timing = useMemo(() => firstAnalysisTiming(users, now), [users, now])
+  const timing = useMemo(() => firstAnalysisTiming(cohort, now), [cohort, now])
 
   return (
     <section className="space-y-5" aria-labelledby="acquisition-heading">
@@ -480,6 +493,9 @@ export function AcquisitionDashboard({
         <h2 id="acquisition-heading" className="font-heading text-xl font-bold">
           Where they come from, and what they do next
         </h2>
+        <p className="text-sm text-ec-text-dim">
+          {cohort.length} users joined · {periodLabel}.
+        </p>
         <MeasurementHeader acquisition={acquisition} />
       </div>
 

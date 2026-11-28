@@ -482,8 +482,15 @@ describe("every new read is behind the backstage's access control", () => {
   it("renders inside the backstage layout, which runs the guard before anything else", () => {
     const layout = readFileSync(join(ROOT, "app/(en)/backstage/layout.tsx"), "utf8")
     const page = readFileSync(join(ROOT, "app/(en)/backstage/page.tsx"), "utf8")
+    const dashboards = readFileSync(
+      join(ROOT, "app/(en)/backstage/DecisionDashboards.tsx"),
+      "utf8"
+    )
 
-    expect(page).toContain("<AcquisitionDashboard")
+    // The page mounts DecisionDashboards, which owns the shared period and
+    // renders the acquisition section inside the same guarded layout.
+    expect(page).toContain("<DecisionDashboards")
+    expect(dashboards).toContain("<AcquisitionDashboard")
     expect(layout).toMatch(/const session = await requireBackstageSession\(\)/)
   })
 })

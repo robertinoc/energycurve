@@ -227,3 +227,38 @@ describe("message templates", () => {
     }
   })
 })
+
+describe("resolveRange / joinedInRange", () => {
+  it("reads custom dates as UTC days with an inclusive end", async () => {
+    const { resolveRange, joinedInRange } = await import("@/lib/backstage/users")
+    const range = resolveRange(
+      "custom",
+      { from: "2026-11-01", to: "2026-11-15" },
+      NOW
+    )
+
+    expect(joinedInRange({ createdAt: "2026-11-01T00:00:00Z" }, range)).toBe(true)
+    // The 15th counts whole: picking an end date means "through that day".
+    expect(joinedInRange({ createdAt: "2026-11-15T23:59:00Z" }, range)).toBe(true)
+    expect(joinedInRange({ createdAt: "2026-11-16T00:00:00Z" }, range)).toBe(false)
+    expect(joinedInRange({ createdAt: "2026-10-31T23:59:00Z" }, range)).toBe(false)
+  })
+
+  it("treats empty or garbage fields as open ends, and presets as before", async () => {
+    const { resolveRange, joinedInRange } = await import("@/lib/backstage/users")
+
+    expect(
+      joinedInRange(
+        { createdAt: "2020-01-01T00:00:00Z" },
+        resolveRange("custom", { to: "2026-11-15" }, NOW)
+      )
+    ).toBe(true)
+    expect(
+      joinedInRange(
+        { createdAt: "2020-01-01T00:00:00Z" },
+        resolveRange("custom", { from: "not-a-date" }, NOW)
+      )
+    ).toBe(true)
+    expect(resolveRange("all", {}, NOW)).toEqual({ from: null, to: null })
+  })
+})

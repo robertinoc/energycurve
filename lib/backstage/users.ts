@@ -461,11 +461,60 @@ export function joinedInPeriod(
   period: PeriodId,
   now: Date
 ): boolean {
-  const { from, to } = periodRange(period, now)
+  return joinedInRange(user, periodRange(period, now))
+}
+
+export interface DateRange {
+  from: Date | null
+  to: Date | null
+}
+
+/** The two date inputs of the custom picker, as yyyy-mm-dd or empty. */
+export interface CustomRange {
+  from?: string
+  to?: string
+}
+
+/**
+ * The window a preset or a custom pick describes. Custom dates are read as
+ * UTC days and the end is inclusive (picking 01..15 means the 15th counts) —
+ * the +1 day happens here, once, instead of in every consumer. An unparsable
+ * or empty field is an open end, not an error.
+ */
+export function resolveRange(
+  period: PeriodId | "custom",
+  custom: CustomRange,
+  now: Date
+): DateRange {
+  if (period !== "custom") {
+    return periodRange(period, now)
+  }
+
+  const parse = (value: string | undefined) => {
+    if (!value) return null
+
+    const date = new Date(`${value}T00:00:00Z`)
+
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const from = parse(custom.from)
+  const toStart = parse(custom.to)
+
+  return {
+    from,
+    to: toStart ? new Date(toStart.getTime() + 24 * 60 * 60 * 1000) : null,
+  }
+}
+
+export function joinedInRange(
+  user: { createdAt: string },
+  range: DateRange
+): boolean {
   const joined = new Date(user.createdAt).getTime()
 
-  if (from !== null && joined < from.getTime()) return false
-  if (to !== null && joined >= to.getTime()) return false
+  if (range.from !== null && joined < range.from.getTime()) return false
+  if (range.to !== null && joined >= range.to.getTime()) return false
 
   return true
 }

@@ -15,8 +15,7 @@ import { Bento, BentoLabel } from "./BackstagePrimitives"
 import { PendingDeletions } from "./PendingDeletions"
 import { PrivacyRequestQueue } from "./PrivacyRequestQueue"
 import { SmartOrderHealthPanel } from "./SmartOrderHealthPanel"
-import { AcquisitionDashboard } from "./AcquisitionDashboard"
-import { UsersDashboard } from "./UsersDashboard"
+import { DecisionDashboards } from "./DecisionDashboards"
 import { UsersTable } from "./UsersTable"
 
 export const metadata: Metadata = {
@@ -133,12 +132,10 @@ export default async function BackstageUsersPage() {
           horizontal scroll at desktop widths. */}
       <UsersTable users={users} />
 
-      <UsersDashboard users={users} />
-
-      {/* Lote 20: acquisition and activation. Its own reads (first touch,
-          checkouts) fail on their own and say so; the table above never waits
-          on them. */}
-      <AcquisitionDashboard
+      {/* One joined-at window for both dashboards (cohorts + acquisition),
+          with presets and a custom from/to. Lote 20's reads still fail on
+          their own and say so; the table above never waits on them. */}
+      <DecisionDashboards
         users={users}
         acquisition={acquisition}
         toolUsage={toolUsage}

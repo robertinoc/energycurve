@@ -28,6 +28,9 @@ import {
   acquisitionChannel,
   activityStatus,
   buildUsersCsv,
+  joinedInRange,
+  resolveRange,
+  type CustomRange,
   formatRelative,
   nextSort,
   paginate,
@@ -212,6 +215,7 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
     useState<(typeof PLAN_FILTERS)[number]>("all")
   const [statusFilter, setStatusFilter] =
     useState<(typeof STATUS_FILTERS)[number]>("all")
+  const [joined, setJoined] = useState<CustomRange>({})
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT)
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0])
   // StageLink's viewKey trick: the page number is remembered together with
@@ -246,6 +250,7 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
     query,
     planFilter,
     statusFilter,
+    joined,
     sort,
     pageSize,
   ])
@@ -253,8 +258,13 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
 
   const sortedUsers = useMemo(() => {
     const needle = query.trim().toLowerCase()
+    const joinedRange = resolveRange("custom", joined, now)
 
     const filtered = users.filter((user) => {
+      if (!joinedInRange(user, joinedRange)) {
+        return false
+      }
+
       if (planFilter !== "all" && user.plan !== planFilter) {
         return false
       }
@@ -282,7 +292,7 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
     })
 
     return sortUsers(filtered, sort)
-  }, [users, query, planFilter, statusFilter, sort, now])
+  }, [users, query, planFilter, statusFilter, joined, sort, now])
 
   const paged = paginate(sortedUsers, page, pageSize)
 
@@ -348,7 +358,7 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
     <Card>
       <CardHeader className="flex flex-wrap items-center justify-between gap-3">
         <CardTitle>
-          {query || planFilter !== "all" || statusFilter !== "all"
+          {query || planFilter !== "all" || statusFilter !== "all" || joined.from || joined.to
             ? `${sortedUsers.length} of ${users.length} users`
             : `${users.length} users`}
         </CardTitle>
@@ -386,6 +396,45 @@ export function UsersTable({ users }: { users: BackstageUserRow[] }) {
             }
             onChange={setStatusFilter}
           />
+          <div className="flex items-center gap-1.5">
+            <span className="mr-1 font-mono text-[10px] font-bold tracking-[0.15em] text-ec-text-dim uppercase">
+              Joined
+            </span>
+            <label className="sr-only" htmlFor="joined-from">
+              Joined from
+            </label>
+            <input
+              id="joined-from"
+              type="date"
+              value={joined.from ?? ""}
+              onChange={(event) =>
+                setJoined((prev) => ({ ...prev, from: event.target.value }))
+              }
+              className="rounded-lg border border-ec-border bg-ec-sunken px-2 py-0.5 font-mono text-[12px] text-ec-text [color-scheme:dark]"
+            />
+            <span className="text-ec-text-dim">→</span>
+            <label className="sr-only" htmlFor="joined-to">
+              Joined to
+            </label>
+            <input
+              id="joined-to"
+              type="date"
+              value={joined.to ?? ""}
+              onChange={(event) =>
+                setJoined((prev) => ({ ...prev, to: event.target.value }))
+              }
+              className="rounded-lg border border-ec-border bg-ec-sunken px-2 py-0.5 font-mono text-[12px] text-ec-text [color-scheme:dark]"
+            />
+            {joined.from || joined.to ? (
+              <button
+                type="button"
+                onClick={() => setJoined({})}
+                className="rounded-full border border-ec-border px-2 py-0.5 text-[11px] text-ec-text-dim hover:text-ec-text-muted"
+              >
+                Clear
+              </button>
+            ) : null}
+          </div>
         </div>
 
         {error ? (

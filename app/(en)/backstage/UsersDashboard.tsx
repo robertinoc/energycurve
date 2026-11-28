@@ -7,14 +7,12 @@ import {
   ACTIVITY_STATUSES,
   ACTIVITY_STATUS_META,
   type BackstageUserRow,
-  type PeriodId,
-  PERIOD_OPTIONS,
+  type DateRange,
   activityStatus,
   countBy,
-  joinedInPeriod,
+  joinedInRange,
 } from "@/lib/backstage/users"
 import { PLANS, type Plan } from "@/lib/product/plans"
-import { cn } from "@/lib/utils"
 
 import { Bento, BentoLabel } from "./BackstagePrimitives"
 
@@ -265,14 +263,22 @@ function BarList({
   )
 }
 
-export function UsersDashboard({ users }: { users: BackstageUserRow[] }) {
-  const [period, setPeriod] = useState<PeriodId>("all")
+export function UsersDashboard({
+  users,
+  range,
+  periodLabel,
+}: {
+  users: BackstageUserRow[]
+  /** The joined-at window, owned by DecisionDashboards (shared with acquisition). */
+  range: DateRange
+  periodLabel: string
+}) {
   // Fixed at mount so nobody crosses the 30-day line between renders.
   const now = useMemo(() => new Date(), [])
 
   const cohort = useMemo(
-    () => users.filter((user) => joinedInPeriod(user, period, now)),
-    [users, period, now]
+    () => users.filter((user) => joinedInRange(user, range)),
+    [users, range]
   )
 
   const byCountry = useMemo(
@@ -297,40 +303,16 @@ export function UsersDashboard({ users }: { users: BackstageUserRow[] }) {
     color: ACTIVITY_STATUS_META[status].color,
   }))
 
-  const periodLabel =
-    PERIOD_OPTIONS.find((option) => option.id === period)?.label ?? ""
-
   return (
     <section className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="font-heading text-xl font-bold">
-            Where they are, what they pay, whether they come back
-          </h2>
-          <p className="text-sm text-ec-text-dim">
-            {cohort.length} users joined · {periodLabel}. Plan and status are
-            as of today.
-          </p>
-        </div>
-        <div role="radiogroup" aria-label="Cohort period" className="flex flex-wrap gap-1.5">
-          {PERIOD_OPTIONS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              role="radio"
-              aria-checked={option.id === period}
-              onClick={() => setPeriod(option.id)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-[12px] font-bold transition-colors",
-                option.id === period
-                  ? "ec-gradient-bg border-transparent text-white"
-                  : "border-ec-border text-ec-text-dim hover:text-ec-text-muted"
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+      <div className="space-y-1">
+        <h2 className="font-heading text-xl font-bold">
+          Where they are, what they pay, whether they come back
+        </h2>
+        <p className="text-sm text-ec-text-dim">
+          {cohort.length} users joined · {periodLabel}. Plan and status are as
+          of today.
+        </p>
       </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-[1.6fr_1fr_1fr]">
