@@ -492,7 +492,7 @@
       <p class="standfirst">Las pruebas manuales de EnergyCurve que no puede correr un test: las que necesitan una consola, un oído, o una tarjeta. Ordenadas por lo que desbloquean.</p>
     </div>
     <div class="stamp">
-      <strong id="tally-total">152</strong>
+      <strong id="tally-total">154</strong>
       pruebas · 5 proyectos
     </div>
   </header>
@@ -1678,6 +1678,26 @@
           steps: ["En el SQL Editor de Supabase de producción, corré la consulta de la sección 6 de <code>docs/conversion-plan.md</code> (es de sólo lectura)", "Anotá los cuatro números en esa sección", "Con el deploy hecho y habiendo aceptado la analítica, entrá a un análisis desde el botón de arriba y desde «Lo que sigue»", "En PostHog → Activity, buscá <code>analyze_cta_click</code>"],
           expect: "La consulta devuelve cuántas playlists de la semana del 04/11 al 10/11 se analizaron, cuántas en los primeros diez minutos y la mediana de minutos hasta el primer análisis. En PostHog aparecen los clics con <code>placement</code> distinto según el lugar (<code>header</code>, <code>import_summary</code>, <code>next_step</code>). Con «No, gracias» en el banner, ninguno.",
           ifNot: "Si la consulta falla, copiá el error: puede ser un nombre de columna. Si no aparece ningún evento habiendo aceptado, anotá el navegador y si estaba la cookie <code>ec_analytics_consent</code>."
+        }
+      ]
+    },
+    {
+      code: "DASH",
+      title: "El dashboard de decisión: oportunidades, canales y ventanas",
+      meta: "~25 min · necesita el deploy · tu cuenta de backstage · datos reales",
+      why: "El backstage sumó la capa de decisión: oportunidades calculadas en vivo (activación por cohortes, abandonos, power users dormidos, pegados al muro, canal que activa), el origen agrupado por canal con un donut, una sola ventana de alta para los dos dashboards con rango custom, la lista completa de países y el top de usuarios más activos. Los tests afirman cada regla y cada número contra filas sembradas; lo que ninguna máquina puede juzgar es si una oportunidad dice algo CIERTO y accionable sobre tus usuarios reales, ni si los gráficos se leen de un vistazo.",
+      tests: [
+        {
+          code: "DASH.1", title: "Las oportunidades dicen algo cierto, con tus datos", sub: "La capa de decisión, juzgada por quien decide",
+          steps: ["Abrí el backstage y leé la sección Opportunities entera", "Por cada tarjeta: verificá UN número de la evidencia contra la tabla o los paneles de abajo (los denominadores están para eso)", "Tocá una acción («See them in the table») y mirá que la tabla aterrice filtrada", "Preguntate por cada sugerencia: ¿harías eso, o es relleno?"],
+          expect: "Cada evidencia cuadra con los datos visibles (el mismo snapshot alimenta todo). Las acciones dejan la tabla pre-filtrada. Y al menos una sugerencia te dice algo que no sabías o te empuja a una acción concreta — si todas te suenan obvias o vacías, eso es el hallazgo.",
+          ifNot: "Anotá la tarjeta exacta y qué número no cuadra o qué sugerencia sobra: las reglas viven en lib/backstage/opportunities.ts y se ajustan por separado. Una regla que habla sin muestra suficiente es severidad alta — el contrato es que debajo del mínimo, calla."
+        },
+        {
+          code: "DASH.2", title: "Canales, donut, ventana custom, países y top activos, a ojo", sub: "Lo visual con datos reales, que un fixture no estresa",
+          steps: ["En «Signups by channel», pasá el mouse por AI: el tooltip tiene que listar las fuentes crudas (chatgpt, perplexity…)", "Elegí «Custom…» y poné un rango de dos semanas: los DOS dashboards (Where they are + adquisición) tienen que decir la misma cantidad de users joined", "En By country, tocá «Show all N countries» y buscá un país que no estaba en el top 8", "En Most active users, cambiá 30d → All time y mirá si el orden cambia con sentido", "En la tabla, filtrá Joined con las mismas dos fechas y comparás el conteo con los dashboards"],
+          expect: "El donut agrupa (nada de columnas chatgpt y perplexity separadas), los dos dashboards cuentan la misma cohorte, la lista completa de países scrollea sin romper el layout, el top de activos cambia al abrir la ventana, y la tabla filtrada por Joined da el mismo número que los dashboards con ese rango.",
+          ifNot: "Si los dos dashboards dicen cantidades distintas con el mismo rango, es el bug más serio de la sección: anotá los dos números y el rango. Si el donut muestra una fuente cruda, esa fuente no está mapeada a canal (lib/backstage/channels.ts)."
         }
       ]
     }
