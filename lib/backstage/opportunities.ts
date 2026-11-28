@@ -60,6 +60,8 @@ function toInput(user: BackstageUserRow): AcquisitionUserInput {
     firstTouchSource: user.firstTouchSource,
     firstTouchMedium: user.firstTouchMedium,
     firstTouchLanding: user.firstTouchLanding,
+    posthogUtmSource: user.utmSource,
+    posthogReferrerDomain: user.referrerDomain,
     firstAnalysisAt: user.firstAnalysisAt,
     paidAt: user.paidAt,
   }

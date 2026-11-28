@@ -1,4 +1,8 @@
-import { channelOfFirstTouch, type ChannelId } from "@/lib/backstage/channels"
+import {
+  channelOfFirstTouch,
+  channelOfFreeform,
+  type ChannelId,
+} from "@/lib/backstage/channels"
 import { activityStatus, type BackstageUserRow } from "@/lib/backstage/users"
 import { splitLocalePath } from "@/lib/content/locale-routing"
 
@@ -77,6 +81,14 @@ export interface AcquisitionUserInput {
   firstTouchSource: string | null
   firstTouchMedium: string | null
   firstTouchLanding: string | null
+  /**
+   * The first visit PostHog saw for this person (consented visitors only):
+   * earliest utm_source, earliest external referrer. The attribution
+   * fallback when the database recorded no first touch — observed data,
+   * never an inference.
+   */
+  posthogUtmSource?: string | null
+  posthogReferrerDomain?: string | null
   firstAnalysisAt: string | null
   /** The first checkout that completed, from billing_events. */
   paidAt: string | null
@@ -114,23 +126,52 @@ export function toolOfLanding(landing: string | null): ToolId | null {
   return TOOL_BY_PATH[splitLocalePath(landing).path] ?? null
 }
 
-/** `unknown`, or the source. */
+/**
+ * What PostHog observed when the database has no first touch: a utm from any
+ * of the person's events, or a real external referrer. `$direct` is NOT a
+ * signal — with consent-gated init it mostly means "accepted the banner
+ * mid-visit" — so it never becomes the Direct channel; the user stays
+ * unknown. Only positive evidence moves someone out of unknown.
+ */
+export function posthogObservedSource(
+  user: AcquisitionUserInput
+): { source: string; channel: ChannelId } | null {
+  const utm = user.posthogUtmSource?.trim()
+
+  if (utm) {
+    return { source: utm, channel: channelOfFreeform(utm) ?? "other" }
+  }
+
+  const referrer = user.posthogReferrerDomain?.trim()
+
+  if (referrer && referrer !== "$direct") {
+    return { source: referrer, channel: channelOfFreeform(referrer) ?? "referral" }
+  }
+
+  return null
+}
+
+/** `unknown`, or the source: DB first touch, else what PostHog observed. */
 export function sourceOf(user: AcquisitionUserInput): string {
-  return user.firstTouchSource ?? UNKNOWN_SOURCE
+  return (
+    user.firstTouchSource ?? posthogObservedSource(user)?.source ?? UNKNOWN_SOURCE
+  )
 }
 
 /**
- * The channel the panels group by (shared vocabulary, channels.ts). Strict
- * about unknown: only a user with NO touch is `unknown`, so the column always
- * equals the sum of the unknown-reasons footnote. A touch whose source fell
- * outside the closed list reads as `other`, which is a different statement.
+ * The channel the panels group by (shared vocabulary, channels.ts). Two
+ * tiers, both observed: the database first touch when it was recorded, else
+ * the first visit PostHog saw for that person. Strict about unknown: only a
+ * user with NEITHER is `unknown`, so the column always equals the sum of the
+ * unknown-reasons footnote. A touch whose source fell outside the closed
+ * list reads as `other`, which is a different statement.
  */
 export function channelOf(user: AcquisitionUserInput): ChannelId {
-  if (!user.firstTouchSource) {
-    return "unknown"
+  if (user.firstTouchSource) {
+    return channelOfFirstTouch(user.firstTouchSource, user.firstTouchMedium)
   }
 
-  return channelOfFirstTouch(user.firstTouchSource, user.firstTouchMedium)
+  return posthogObservedSource(user)?.channel ?? "unknown"
 }
 
 /** Users per channel with the raw-source detail, for the donut and tooltips. */
@@ -167,7 +208,7 @@ export function unknownReason(
   user: AcquisitionUserInput,
   measurement: AcquisitionMeasurement
 ): UnknownReason | null {
-  if (user.firstTouchSource) {
+  if (user.firstTouchSource || posthogObservedSource(user)) {
     return null
   }
 
