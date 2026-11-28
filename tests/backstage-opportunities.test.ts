@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { describe, expect, it } from "vitest"
 
 import {
@@ -189,5 +192,25 @@ describe("ordering and emptiness", () => {
 
   it("an empty dataset flags nothing", () => {
     expect(build([])).toEqual([])
+  })
+})
+
+describe("where the panel lives", () => {
+  const ROOT = join(__dirname, "..")
+
+  it("is its own tab, not a block inside Users — that page got crowded", () => {
+    const opportunitiesPage = readFileSync(
+      join(ROOT, "app/(en)/backstage/opportunities/page.tsx"),
+      "utf8"
+    )
+    const usersPage = readFileSync(join(ROOT, "app/(en)/backstage/page.tsx"), "utf8")
+    const nav = readFileSync(join(ROOT, "app/(en)/backstage/BackstageNav.tsx"), "utf8")
+    const layout = readFileSync(join(ROOT, "app/(en)/backstage/layout.tsx"), "utf8")
+
+    expect(opportunitiesPage).toContain("<OpportunitiesPanel")
+    expect(usersPage).not.toContain("OpportunitiesPanel")
+    expect(nav).toContain("/backstage/opportunities")
+    // The new page renders inside the layout whose guard runs first.
+    expect(layout).toMatch(/const session = await requireBackstageSession\(\)/)
   })
 })

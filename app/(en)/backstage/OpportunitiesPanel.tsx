@@ -28,19 +28,7 @@ export function OpportunitiesPanel({
   opportunities: Opportunity[]
 }) {
   return (
-    <section className="space-y-3" aria-labelledby="opportunities-heading">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2
-          id="opportunities-heading"
-          className="font-heading text-xl font-bold"
-        >
-          Opportunities
-        </h2>
-        <p className="text-[12px] text-ec-text-dim">
-          Computed live from the data below — nothing here is stored or stale.
-        </p>
-      </div>
-
+    <section className="space-y-3" aria-label="Opportunities">
       {opportunities.length === 0 ? (
         <Bento tone="panel" className="p-5">
           <p className="text-[13px] text-white/50">

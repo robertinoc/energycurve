@@ -15,10 +15,8 @@ import { Bento, BentoLabel } from "./BackstagePrimitives"
 import { PendingDeletions } from "./PendingDeletions"
 import { PrivacyRequestQueue } from "./PrivacyRequestQueue"
 import { SmartOrderHealthPanel } from "./SmartOrderHealthPanel"
-import { buildOpportunities } from "@/lib/backstage/opportunities"
 
 import { DecisionDashboards } from "./DecisionDashboards"
-import { OpportunitiesPanel } from "./OpportunitiesPanel"
 import { MostActiveUsers } from "./MostActiveUsers"
 import { UsersTable } from "./UsersTable"
 
@@ -136,9 +134,6 @@ export default async function BackstageUsersPage({
           </Bento>
         ))}
       </div>
-
-      {/* The decision layer: what the data says, before the data. */}
-      <OpportunitiesPanel opportunities={buildOpportunities(users, kpis)} />
 
       {/* Full width on purpose: with a side column the 8-column table forced
           horizontal scroll at desktop widths. The anchor is the landing spot
