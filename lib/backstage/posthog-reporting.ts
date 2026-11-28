@@ -226,11 +226,17 @@ export async function getBackstageAnalyticsSummary(
 }
 
 /**
- * Read-side enrichment for the Users table: last geoip country and
- * first-touch attribution per identified person. Keyed by distinct_id,
- * which equals the profile id once the dashboard identify() has run — the
- * UUID filter drops anonymous device ids. Fails open to an empty map:
+ * Read-side enrichment for the Users table: last geoip country and the first
+ * visit PostHog saw per identified person. Keyed by profile id (the distinct
+ * id once the dashboard identify() has run). Fails open to an empty map:
  * the Users table must render without PostHog.
+ *
+ * Grouped by person_id, not distinct_id: the pageviews that carry the
+ * referrer and the utm params happen BEFORE identify(), under an anonymous
+ * device id, and the person is what ties the two together. The person's own
+ * $initial_* properties win when they exist; otherwise the earliest utm /
+ * external referrer seen on any of the person's events stands in — posthog-js
+ * runs as identified_only here, so many persons never get $initial_* at all.
  */
 export interface BackstagePersonFactsRow {
   countryCode: string | null
@@ -256,34 +262,68 @@ export async function fetchBackstagePersonFacts(): Promise<
     return facts
   }
 
+  // '$direct' is "no referrer when the SDK booted", which with consent-gated
+  // init often just means "accepted the banner mid-visit" — so a real external
+  // referrer from any event outranks it, and our own domain never counts.
   const query = `
     SELECT
-      distinct_id,
+      groupUniqArrayIf(distinct_id, match(distinct_id, '${UUID_LIKE}')) AS profile_ids,
       argMaxIf(
         toString(properties.$geoip_country_code),
         timestamp,
         isNotNull(properties.$geoip_country_code)
       ) AS country,
-      any(toString(person.properties.$initial_utm_source)) AS utm_source,
-      any(toString(person.properties.$initial_referring_domain)) AS referrer
+      coalesce(
+        anyIf(
+          toString(person.properties.$initial_utm_source),
+          isNotNull(person.properties.$initial_utm_source)
+        ),
+        argMinIf(
+          toString(properties.utm_source),
+          timestamp,
+          isNotNull(properties.utm_source) AND toString(properties.utm_source) != ''
+        )
+      ) AS utm_source,
+      coalesce(
+        anyIf(
+          toString(person.properties.$initial_referring_domain),
+          isNotNull(person.properties.$initial_referring_domain)
+            AND toString(person.properties.$initial_referring_domain) NOT IN ('$direct', '')
+        ),
+        argMinIf(
+          toString(properties.$referring_domain),
+          timestamp,
+          isNotNull(properties.$referring_domain)
+            AND toString(properties.$referring_domain) NOT IN ('$direct', '')
+            AND toString(properties.$referring_domain) NOT ILIKE '%energycurve%'
+        ),
+        anyIf(
+          toString(person.properties.$initial_referring_domain),
+          toString(person.properties.$initial_referring_domain) = '$direct'
+        )
+      ) AS referrer
     FROM events
     WHERE timestamp >= now() - INTERVAL 365 DAY
-      AND match(distinct_id, '${UUID_LIKE}')
-    GROUP BY distinct_id
+    GROUP BY person_id
+    HAVING length(profile_ids) > 0
   `
 
   try {
     const rows = await runHogQLQuery(config, query)
 
     for (const row of rows) {
-      const id = String(row[0] ?? "")
+      const ids = Array.isArray(row[0]) ? row[0].map((id) => String(id)) : []
       const country = cleanFact(row[1])?.toUpperCase() ?? null
-
-      facts.set(id, {
+      const fact: BackstagePersonFactsRow = {
         countryCode: country && /^[A-Z]{2}$/.test(country) ? country : null,
         utmSource: cleanFact(row[2]),
         referrerDomain: cleanFact(row[3]),
-      })
+      }
+
+      // Rarely a merged person carries two profile ids; both get the facts.
+      for (const id of ids) {
+        facts.set(id, fact)
+      }
     }
   } catch (error) {
     logError("backstage.person_facts_failed", error, {})

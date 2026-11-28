@@ -133,7 +133,8 @@ function ChannelPanel({ slices }: { slices: ChannelSlice[] }) {
       </div>
       <p className="text-[11.5px] text-white/45">
         Under each channel, the raw sources it folds (chatgpt, perplexity… →
-        AI). Unknown is its own slice on purpose: it is most of the truth.
+        AI) — from the database first touch, or the first visit PostHog saw.
+        Unknown is its own slice on purpose: it is most of the truth.
       </p>
     </Bento>
   )
@@ -206,8 +207,11 @@ function MeasurementHeader({
           {counts.profiles} signups have one, counted by the database.{" "}
         </>
       ) : null}
-      Partial by design: only visitors who accept analytics are measured, Do
-      Not Track counts as no, and everyone else is <strong>Unknown</strong>.
+      When the database has none, the first visit PostHog saw for that person
+      stands in (a utm or a real referrer — never &ldquo;no referrer&rdquo;
+      dressed up as Direct). Partial by design: only visitors who accept
+      analytics are measured, Do Not Track counts as no, and everyone else is{" "}
+      <strong>Unknown</strong>.
     </p>
   )
 }
@@ -492,6 +496,8 @@ export function AcquisitionDashboard({
         firstTouchSource: user.firstTouchSource,
         firstTouchMedium: user.firstTouchMedium,
         firstTouchLanding: user.firstTouchLanding,
+        posthogUtmSource: user.utmSource,
+        posthogReferrerDomain: user.referrerDomain,
         firstAnalysisAt: user.firstAnalysisAt,
         paidAt: user.paidAt,
       })),

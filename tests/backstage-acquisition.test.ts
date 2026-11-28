@@ -38,6 +38,8 @@ function input(overrides: Partial<AcquisitionUserInput> = {}): AcquisitionUserIn
     firstTouchSource: overrides.firstTouchSource ?? null,
     firstTouchMedium: overrides.firstTouchMedium ?? null,
     firstTouchLanding: overrides.firstTouchLanding ?? null,
+    posthogUtmSource: overrides.posthogUtmSource ?? null,
+    posthogReferrerDomain: overrides.posthogReferrerDomain ?? null,
     firstAnalysisAt: overrides.firstAnalysisAt ?? null,
     paidAt: overrides.paidAt ?? null,
   }
@@ -103,6 +105,55 @@ describe("task 4: signups by source and weekly cohort", () => {
 
     expect(table.sources).toEqual([UNKNOWN_SOURCE])
     expect(table.unknownByReason.not_measured).toBe(3)
+  })
+})
+
+describe("the PostHog fallback: observed, never inferred", () => {
+  const measured = { available: true, since: "2026-10-12T00:00:00Z" }
+
+  it("a person PostHog saw arrive with a utm is that channel, not unknown", () => {
+    const table = cohortsBySource(
+      [input({ posthogUtmSource: "chatgpt" })],
+      measured,
+      NOW
+    )
+
+    expect(table.sources).toEqual([UNKNOWN_SOURCE, "ai"])
+    expect(table.unknownByReason.no_touch).toBe(0)
+  })
+
+  it("a real referrer counts; an unmapped one is Referral, not noise", () => {
+    const rows = [
+      input({ id: "ig", posthogReferrerDomain: "l.instagram.com" }),
+      input({ id: "blog", posthogReferrerDomain: "djtechtools.com" }),
+    ]
+    const table = cohortsBySource(rows, measured, NOW)
+
+    expect(table.sources).toEqual(
+      expect.arrayContaining(["instagram", "referral"])
+    )
+  })
+
+  it("'$direct' is not evidence: the user stays unknown, with a reason", () => {
+    const table = cohortsBySource(
+      [input({ createdAt: "2026-10-15T00:00:00Z", posthogReferrerDomain: "$direct" })],
+      measured,
+      NOW
+    )
+
+    expect(table.sources).toEqual([UNKNOWN_SOURCE])
+    expect(table.unknownByReason.no_touch).toBe(1)
+  })
+
+  it("the database first touch wins over what PostHog saw", () => {
+    const table = cohortsBySource(
+      [input({ firstTouchSource: "instagram", posthogUtmSource: "chatgpt" })],
+      measured,
+      NOW
+    )
+
+    expect(table.sources).toEqual([UNKNOWN_SOURCE, "instagram"])
+    expect(table.rows[0]!.bySource).toEqual({ instagram: 1 })
   })
 })
 
