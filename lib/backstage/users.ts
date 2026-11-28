@@ -1,3 +1,4 @@
+import { freeformLabel } from "@/lib/backstage/channels"
 import { effectivePlan, type Plan, type PlanStatus } from "@/lib/product/plans"
 
 /**
@@ -75,6 +76,9 @@ export interface BackstageUserRow {
   referrerDomain: string | null
   playlistCount: number
   analysisCount: number
+  /** Analyses run in the last 30/90 days — the "active NOW" ranking's fuel. */
+  analysisCount30d: number
+  analysisCount90d: number
   lastAnalysisAt: string | null
   /** The earliest analysis that still exists (deleting a set deletes its analyses). */
   firstAnalysisAt: string | null
@@ -112,7 +116,8 @@ export function buildBackstageUsers(
   analyses: BackstageAnalysisInput[],
   personFacts: Map<string, BackstagePersonFacts> = new Map(),
   namesByWorkOSId: Map<string, string> = new Map(),
-  acquisition: BackstageAcquisitionInputs = {}
+  acquisition: BackstageAcquisitionInputs = {},
+  now: Date = new Date()
 ): BackstageUserRow[] {
   const playlistCounts = new Map<string, number>()
 
@@ -121,11 +126,25 @@ export function buildBackstageUsers(
   }
 
   const analysisCounts = new Map<string, number>()
+  const analysisCounts30d = new Map<string, number>()
+  const analysisCounts90d = new Map<string, number>()
   const lastAnalysisAt = new Map<string, string>()
   const firstAnalysisAt = new Map<string, string>()
+  const since30d = now.getTime() - 30 * 24 * 60 * 60 * 1000
+  const since90d = now.getTime() - 90 * 24 * 60 * 60 * 1000
 
   for (const row of analyses) {
     analysisCounts.set(row.user_id, (analysisCounts.get(row.user_id) ?? 0) + 1)
+
+    const at = new Date(row.created_at).getTime()
+
+    if (at >= since30d) {
+      analysisCounts30d.set(row.user_id, (analysisCounts30d.get(row.user_id) ?? 0) + 1)
+    }
+
+    if (at >= since90d) {
+      analysisCounts90d.set(row.user_id, (analysisCounts90d.get(row.user_id) ?? 0) + 1)
+    }
 
     const previous = lastAnalysisAt.get(row.user_id)
 
@@ -163,6 +182,8 @@ export function buildBackstageUsers(
         referrerDomain: facts?.referrerDomain ?? null,
         playlistCount: playlistCounts.get(profile.id) ?? 0,
         analysisCount: analysisCounts.get(profile.id) ?? 0,
+        analysisCount30d: analysisCounts30d.get(profile.id) ?? 0,
+        analysisCount90d: analysisCounts90d.get(profile.id) ?? 0,
         lastAnalysisAt: lastAnalysisAt.get(profile.id) ?? null,
         firstAnalysisAt: firstAnalysisAt.get(profile.id) ?? null,
         firstTouchSource: touch?.first_touch_source ?? null,
@@ -244,47 +265,22 @@ export interface AcquisitionChannel {
   label: string
 }
 
-const CHANNEL_RULES: Array<[RegExp, string]> = [
-  [
-    /chatgpt|openai|perplexity|claude|anthropic|gemini\.google|copilot|bard\.google|^ai$|_ai$/i,
-    "AI",
-  ],
-  [/instagram|^ig$/i, "Instagram"],
-  [/linkedin|^li$/i, "LinkedIn"],
-  [/youtube|^yt$/i, "YouTube"],
-  [/tiktok/i, "TikTok"],
-  [/facebook|^fb$/i, "Facebook"],
-  [/twitter|^x\.com$|^t\.co$/i, "X"],
-  [/reddit/i, "Reddit"],
-  [/google/i, "Google"],
-  [/bing/i, "Bing"],
-  [/duckduckgo/i, "DuckDuckGo"],
-]
-
-function channelLabel(raw: string): string {
-  for (const [pattern, label] of CHANNEL_RULES) {
-    if (pattern.test(raw)) {
-      return label
-    }
-  }
-
-  return raw
-}
-
 /**
  * First UTM source wins, then the referring domain, then direct. PostHog
- * reports direct traffic as the literal "$direct".
+ * reports direct traffic as the literal "$direct". Labels come from the
+ * shared channel vocabulary (lib/backstage/channels.ts) so this column and
+ * the acquisition panels can never disagree about the same user.
  */
 export function acquisitionChannel(user: {
   utmSource: string | null
   referrerDomain: string | null
 }): AcquisitionChannel {
   if (user.utmSource) {
-    return { kind: "campaign", label: channelLabel(user.utmSource) }
+    return { kind: "campaign", label: freeformLabel(user.utmSource) }
   }
 
   if (user.referrerDomain && user.referrerDomain !== "$direct") {
-    return { kind: "referrer", label: channelLabel(user.referrerDomain) }
+    return { kind: "referrer", label: freeformLabel(user.referrerDomain) }
   }
 
   if (user.referrerDomain === "$direct") {
@@ -485,11 +481,60 @@ export function joinedInPeriod(
   period: PeriodId,
   now: Date
 ): boolean {
-  const { from, to } = periodRange(period, now)
+  return joinedInRange(user, periodRange(period, now))
+}
+
+export interface DateRange {
+  from: Date | null
+  to: Date | null
+}
+
+/** The two date inputs of the custom picker, as yyyy-mm-dd or empty. */
+export interface CustomRange {
+  from?: string
+  to?: string
+}
+
+/**
+ * The window a preset or a custom pick describes. Custom dates are read as
+ * UTC days and the end is inclusive (picking 01..15 means the 15th counts) —
+ * the +1 day happens here, once, instead of in every consumer. An unparsable
+ * or empty field is an open end, not an error.
+ */
+export function resolveRange(
+  period: PeriodId | "custom",
+  custom: CustomRange,
+  now: Date
+): DateRange {
+  if (period !== "custom") {
+    return periodRange(period, now)
+  }
+
+  const parse = (value: string | undefined) => {
+    if (!value) return null
+
+    const date = new Date(`${value}T00:00:00Z`)
+
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const from = parse(custom.from)
+  const toStart = parse(custom.to)
+
+  return {
+    from,
+    to: toStart ? new Date(toStart.getTime() + 24 * 60 * 60 * 1000) : null,
+  }
+}
+
+export function joinedInRange(
+  user: { createdAt: string },
+  range: DateRange
+): boolean {
   const joined = new Date(user.createdAt).getTime()
 
-  if (from !== null && joined < from.getTime()) return false
-  if (to !== null && joined >= to.getTime()) return false
+  if (range.from !== null && joined < range.from.getTime()) return false
+  if (range.to !== null && joined >= range.to.getTime()) return false
 
   return true
 }
@@ -587,4 +632,40 @@ export function computeUserKpis(
     neverUsedUsers: statuses.filter((status) => status === "never").length,
     proUsers: users.filter((user) => user.plan !== "free").length,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Most active users
+// ---------------------------------------------------------------------------
+
+export type ActivityWindow = "30d" | "90d" | "all"
+
+export const MOST_ACTIVE_LIMIT = 10
+
+/**
+ * Top users by analyses run in the window, ties broken by playlists and then
+ * by most recently seen. Zero-analysis users never rank: an empty list is the
+ * honest answer, not a top 10 of people who did nothing.
+ */
+export function mostActiveUsers(
+  users: BackstageUserRow[],
+  window: ActivityWindow,
+  limit = MOST_ACTIVE_LIMIT
+): BackstageUserRow[] {
+  const countOf = (user: BackstageUserRow) =>
+    window === "30d"
+      ? user.analysisCount30d
+      : window === "90d"
+        ? user.analysisCount90d
+        : user.analysisCount
+
+  return users
+    .filter((user) => countOf(user) > 0 && user.suspendedAt === null)
+    .sort(
+      (a, b) =>
+        countOf(b) - countOf(a) ||
+        b.playlistCount - a.playlistCount ||
+        b.lastSeenAt.localeCompare(a.lastSeenAt)
+    )
+    .slice(0, limit)
 }

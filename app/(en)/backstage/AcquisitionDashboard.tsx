@@ -7,20 +7,26 @@ import {
   MIN_SAMPLE_FOR_MEDIAN,
   MIN_SAMPLE_FOR_RATE,
   TOOL_LABELS,
-  UNKNOWN_SOURCE,
+  channelBreakdown,
   cohortsBySource,
   conversionBySource,
   firstAnalysisTiming,
   paidConversion,
   signupsByToolLanding,
   type BackstageAcquisitionStatus,
+  type ChannelSlice,
   type Ratio,
   type ToolUsage,
   type UnknownReason,
 } from "@/lib/backstage/acquisition"
-import type { BackstageUserRow } from "@/lib/backstage/users"
+import { CHANNEL_META, type ChannelId } from "@/lib/backstage/channels"
+import {
+  joinedInRange,
+  type BackstageUserRow,
+  type DateRange,
+} from "@/lib/backstage/users"
 
-import { Bento, BentoLabel } from "./BackstagePrimitives"
+import { Bento, BentoLabel, Donut } from "./BackstagePrimitives"
 
 /**
  * Where users come from and what they do next (lote 20, tasks 4–8).
@@ -49,8 +55,67 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
 })
 
+/** The tables and lists are keyed by channel id since the channel grouping. */
 function sourceLabel(source: string): string {
-  return source === UNKNOWN_SOURCE ? "Unknown" : source
+  return CHANNEL_META[source as ChannelId]?.label ?? source
+}
+
+function channelColor(source: string): string {
+  return CHANNEL_META[source as ChannelId]?.color ?? "#8A8FA0"
+}
+
+/** "chatgpt 3 · perplexity 1" — the raw sources a channel folds. */
+function rawDetail(slice: ChannelSlice | undefined): string | undefined {
+  if (!slice || slice.sources.length === 0) {
+    return undefined
+  }
+
+  return slice.sources.map((row) => `${row.source} ${row.count}`).join(" · ")
+}
+
+function ChannelPanel({ slices }: { slices: ChannelSlice[] }) {
+  const total = slices.reduce((sum, slice) => sum + slice.count, 0)
+
+  return (
+    <Bento tone="panel" className="space-y-3 p-5">
+      <BentoLabel>Signups by channel</BentoLabel>
+      <div className="flex flex-wrap items-center gap-6">
+        <Donut
+          slices={slices.map((slice) => ({
+            label: sourceLabel(slice.channel),
+            value: slice.count,
+            color: channelColor(slice.channel),
+          }))}
+          centerLabel="signups"
+        />
+        <ul className="min-w-[180px] flex-1 space-y-1.5">
+          {slices.map((slice) => (
+            <li
+              key={slice.channel}
+              title={rawDetail(slice)}
+              className="flex items-baseline justify-between gap-3 text-[13px]"
+            >
+              <span className="inline-flex items-center gap-2 text-white/80">
+                <span
+                  className="size-2 rounded-[3px]"
+                  style={{ background: channelColor(slice.channel) }}
+                />
+                {sourceLabel(slice.channel)}
+              </span>
+              <span className="font-mono text-[11.5px] text-white/60">
+                <strong className="text-white">{slice.count}</strong> ·{" "}
+                {total > 0 ? Math.round((slice.count / total) * 100) : 0}%
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="text-[11.5px] text-white/45">
+        Hover a channel for the raw sources it folds (chatgpt, perplexity… →
+        AI). Unknown is its own slice on purpose: it is most of the truth.
+      </p>
+    </Bento>
+  )
 }
 
 function percent(rate: number): string {
@@ -126,7 +191,11 @@ function MeasurementHeader({
   )
 }
 
-function CohortPanel({ table }: { table: ReturnType<typeof cohortsBySource> }) {
+function CohortPanel({
+  table,
+}: {
+  table: ReturnType<typeof cohortsBySource> & { detail: ChannelSlice[] }
+}) {
   const shown = table.sources.slice(0, VISIBLE_SOURCES)
   const folded = table.sources.slice(VISIBLE_SOURCES)
 
@@ -147,7 +216,12 @@ function CohortPanel({ table }: { table: ReturnType<typeof cohortsBySource> }) {
                 Signups
               </th>
               {shown.map((source) => (
-                <th key={source} scope="col" className="py-1.5 pr-3 text-right font-medium">
+                <th
+                  key={source}
+                  scope="col"
+                  title={rawDetail(table.detail.find((slice) => slice.channel === source))}
+                  className="py-1.5 pr-3 text-right font-medium"
+                >
                   {sourceLabel(source)}
                 </th>
               ))}
@@ -372,16 +446,25 @@ export function AcquisitionDashboard({
   users,
   acquisition,
   toolUsage,
+  range,
+  periodLabel,
 }: {
   users: BackstageUserRow[]
   acquisition: BackstageAcquisitionStatus
   toolUsage: ToolUsage | null
+  /** Shared joined-at window (DecisionDashboards): same cohort as the view above. */
+  range: DateRange
+  periodLabel: string
 }) {
   // Fixed at mount, like the cohort dashboard above it.
   const now = useMemo(() => new Date(), [])
+  const cohort = useMemo(
+    () => users.filter((user) => joinedInRange(user, range)),
+    [users, range]
+  )
   const inputs = useMemo(
     () =>
-      users.map((user) => ({
+      cohort.map((user) => ({
         id: user.id,
         createdAt: user.createdAt,
         plan: user.plan,
@@ -391,17 +474,18 @@ export function AcquisitionDashboard({
         firstAnalysisAt: user.firstAnalysisAt,
         paidAt: user.paidAt,
       })),
-    [users]
+    [cohort]
   )
 
   const cohorts = useMemo(
     () => cohortsBySource(inputs, acquisition.measurement, now),
     [inputs, acquisition.measurement, now]
   )
+  const channels = useMemo(() => channelBreakdown(inputs), [inputs])
   const conversion = useMemo(() => conversionBySource(inputs), [inputs])
   const landings = useMemo(() => signupsByToolLanding(inputs), [inputs])
   const paid = useMemo(() => paidConversion(inputs), [inputs])
-  const timing = useMemo(() => firstAnalysisTiming(users, now), [users, now])
+  const timing = useMemo(() => firstAnalysisTiming(cohort, now), [cohort, now])
 
   return (
     <section className="space-y-5" aria-labelledby="acquisition-heading">
@@ -409,10 +493,16 @@ export function AcquisitionDashboard({
         <h2 id="acquisition-heading" className="font-heading text-xl font-bold">
           Where they come from, and what they do next
         </h2>
+        <p className="text-sm text-ec-text-dim">
+          {cohort.length} users joined · {periodLabel}.
+        </p>
         <MeasurementHeader acquisition={acquisition} />
       </div>
 
-      <CohortPanel table={cohorts} />
+      <div className="grid items-start gap-6 xl:grid-cols-[1fr_1.7fr]">
+        <ChannelPanel slices={channels} />
+        <CohortPanel table={{ ...cohorts, detail: channels }} />
+      </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-2">
         <ConversionPanel data={conversion} />

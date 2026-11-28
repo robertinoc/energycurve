@@ -111,7 +111,8 @@ describe("task 5: signup → first analysis, by source", () => {
     const { rows } = conversionBySource([
       ...many(3, (i) => ({ firstTouchSource: "reddit", firstAnalysisAt: i < 2 ? "2026-10-19T11:00:00Z" : null })),
     ])
-    const reddit = rows.find((row) => row.source === "reddit")!
+    // reddit folds into the shared "social" channel since the channel grouping.
+    const reddit = rows.find((row) => row.source === "social")!
 
     expect(reddit.analysed).toEqual({ count: 2, of: 3, rate: null })
   })
@@ -231,6 +232,8 @@ describe("task 8: time to first analysis, tied to the Never used KPI", () => {
       referrerDomain: null,
       playlistCount: 0,
       analysisCount: 0,
+      analysisCount30d: 0,
+      analysisCount90d: 0,
       lastAnalysisAt: null,
       firstAnalysisAt: null,
       firstTouchSource: null,
@@ -481,8 +484,15 @@ describe("every new read is behind the backstage's access control", () => {
   it("renders inside the backstage layout, which runs the guard before anything else", () => {
     const layout = readFileSync(join(ROOT, "app/(en)/backstage/layout.tsx"), "utf8")
     const page = readFileSync(join(ROOT, "app/(en)/backstage/page.tsx"), "utf8")
+    const dashboards = readFileSync(
+      join(ROOT, "app/(en)/backstage/DecisionDashboards.tsx"),
+      "utf8"
+    )
 
-    expect(page).toContain("<AcquisitionDashboard")
+    // The page mounts DecisionDashboards, which owns the shared period and
+    // renders the acquisition section inside the same guarded layout.
+    expect(page).toContain("<DecisionDashboards")
+    expect(dashboards).toContain("<AcquisitionDashboard")
     expect(layout).toMatch(/const session = await requireBackstageSession\(\)/)
   })
 })

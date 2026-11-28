@@ -1,3 +1,4 @@
+import { channelOfFirstTouch } from "@/lib/backstage/channels"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -79,7 +80,19 @@ describe("the acquisition scenario, through the panel's code", () => {
       const paid = paidConversion(inputs)
 
       expect(perWeek).toEqual(expected.perWeek)
-      expect(bySource).toEqual(expected.bySource)
+      // The seed states its expectation in raw sources; the panel groups by
+      // channel since channels.ts. The scenario's sources map 1:1, so the
+      // comparison just speaks the panel's vocabulary.
+      const expectedByChannel = Object.fromEntries(
+        Object.entries(expected.bySource as Record<string, number>).map(
+          ([source, count]) => [
+            source === "unknown" ? "unknown" : channelOfFirstTouch(source, null),
+            count,
+          ]
+        )
+      )
+
+      expect(bySource).toEqual(expectedByChannel)
       expect(timing.reached.count).toBe(expected.analysed)
       expect(timing.never).toBe(expected.never)
       expect(timing.neverUsed).toBe(expected.neverUsed)
