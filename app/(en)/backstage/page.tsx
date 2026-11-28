@@ -15,7 +15,10 @@ import { Bento, BentoLabel } from "./BackstagePrimitives"
 import { PendingDeletions } from "./PendingDeletions"
 import { PrivacyRequestQueue } from "./PrivacyRequestQueue"
 import { SmartOrderHealthPanel } from "./SmartOrderHealthPanel"
+import { buildOpportunities } from "@/lib/backstage/opportunities"
+
 import { DecisionDashboards } from "./DecisionDashboards"
+import { OpportunitiesPanel } from "./OpportunitiesPanel"
 import { MostActiveUsers } from "./MostActiveUsers"
 import { UsersTable } from "./UsersTable"
 
@@ -71,7 +74,12 @@ function kpiCards(kpis: BackstageUserKpis): Array<{
   ]
 }
 
-export default async function BackstageUsersPage() {
+export default async function BackstageUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; plan?: string; q?: string }>
+}) {
+  const initialFilters = await searchParams
   const [
     { users, kpis, acquisition },
     recentAnalyses,
@@ -129,9 +137,15 @@ export default async function BackstageUsersPage() {
         ))}
       </div>
 
+      {/* The decision layer: what the data says, before the data. */}
+      <OpportunitiesPanel opportunities={buildOpportunities(users, kpis)} />
+
       {/* Full width on purpose: with a side column the 8-column table forced
-          horizontal scroll at desktop widths. */}
-      <UsersTable users={users} />
+          horizontal scroll at desktop widths. The anchor is the landing spot
+          for the Opportunities actions (?status=never#users-table). */}
+      <div id="users-table">
+        <UsersTable users={users} initialFilters={initialFilters} />
+      </div>
 
       {/* One joined-at window for both dashboards (cohorts + acquisition),
           with presets and a custom from/to. Lote 20's reads still fail on

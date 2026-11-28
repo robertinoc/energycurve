@@ -208,13 +208,37 @@ function StatusBadge({ status }: { status: ActivityStatus }) {
   )
 }
 
-export function UsersTable({ users }: { users: BackstageUserRow[] }) {
+export interface UsersTableInitialFilters {
+  status?: string
+  plan?: string
+  q?: string
+}
+
+function pick<T extends string>(
+  options: readonly T[],
+  value: string | undefined
+): T | null {
+  return value && (options as readonly string[]).includes(value)
+    ? (value as T)
+    : null
+}
+
+export function UsersTable({
+  users,
+  initialFilters = {},
+}: {
+  users: BackstageUserRow[]
+  /** From the page URL, so an Opportunities action can land pre-filtered. */
+  initialFilters?: UsersTableInitialFilters
+}) {
   const router = useRouter()
-  const [query, setQuery] = useState("")
-  const [planFilter, setPlanFilter] =
-    useState<(typeof PLAN_FILTERS)[number]>("all")
-  const [statusFilter, setStatusFilter] =
-    useState<(typeof STATUS_FILTERS)[number]>("all")
+  const [query, setQuery] = useState(initialFilters.q ?? "")
+  const [planFilter, setPlanFilter] = useState<(typeof PLAN_FILTERS)[number]>(
+    pick(PLAN_FILTERS, initialFilters.plan) ?? "all"
+  )
+  const [statusFilter, setStatusFilter] = useState<
+    (typeof STATUS_FILTERS)[number]
+  >(pick(STATUS_FILTERS, initialFilters.status) ?? "all")
   const [joined, setJoined] = useState<CustomRange>({})
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT)
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0])
